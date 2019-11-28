@@ -10,7 +10,7 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
 setup(
     name='twclient',
     version='0.1.0',
-    description='A command-line Twitter client',
+    description='A high-level command-line client for the Twitter API',
     url='https://github.com/wwbrannon/twclient',
     author='William Brannon',
     author_email='will.brannon@gmail.com',
