@@ -45,6 +45,8 @@ def main():
                         help="abort if a requested user doesn't exist")
         sp.add_argument('-e', '--transaction', action='store_true',
                         help='load in one transaction')
+        sp.add_argument('-z', '--load-batch-size',
+                        help='run loads to DB in batches of this size')
 
         grp = sp.add_mutually_exclusive_group(required=True)
         grp.add_argument('-s', '--user-spec',
@@ -59,7 +61,8 @@ def main():
 
         return sp, grp
 
-    sp = parser.add_subparsers(dest='command', required=True)
+    sp = parser.add_subparsers(dest='command')
+    sp.required = True
 
     inp = sp.add_parser('initialize', help='Initialize the database schema '
                                            '(WARNING: deletes all data!)'
