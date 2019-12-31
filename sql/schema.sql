@@ -101,7 +101,9 @@ create table twitter.follow
 
     unique(follow_fetch_id, source_user_id, target_user_id)
 );
-create index on twitter.follow using btree (follow_fetch_id);
+create unique index on twitter.follow using btree
+    (follow_fetch_id, target_user_id, source_user_id);
+
 create index on twitter.follow using btree (target_user_id);
 create index on twitter.follow using btree (source_user_id);
 
@@ -117,7 +119,7 @@ create table twitter.tweet
         references twitter.user
         deferrable initially immediate,
 
-    content text not null,
+    content text not null check(length(content) > 0),
     api_response jsonb not null,
     tweet_create_dt timestamptz not null,
 
@@ -126,13 +128,12 @@ create table twitter.tweet
     truncated boolean,
 
     retweeted_status_id bigint,
-    retweeted_status_content text,
 
     quoted_status_id bigint,
     quoted_status_content text,
 
     in_reply_to_user_id bigint,
-    in_reply_to_screen_name varchar(256),
+    in_reply_to_status_id bigint,
 
     retweet_count int,
     favorite_count int,
