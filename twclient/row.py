@@ -247,11 +247,10 @@ class TweetRow(Row):
         'source': 'text',
         'truncated': 'boolean',
         'retweeted_status_id': 'bigint',
-        'retweeted_status_content': 'text',
         'quoted_status_id': 'bigint',
         'quoted_status_content': 'text',
         'in_reply_to_user_id': 'bigint',
-        'in_reply_to_screen_name': 'varchar(256)',
+        'in_reply_to_status_id': 'bigint',
         'retweet_count': 'int',
         'favorite_count': 'int'
     }
@@ -261,11 +260,10 @@ class TweetRow(Row):
         'source': None,
         'truncated': None,
         'retweeted_status_id': None,
-        'retweeted_status_content': None,
         'quoted_status_id': None,
         'quoted_status_content': None,
         'in_reply_to_user_id': None,
-        'in_reply_to_screen_name': None,
+        'in_reply_to_status_id': None,
         'retweet_count': None,
         'favorite_count': None
     }
@@ -294,18 +292,20 @@ class TweetRow(Row):
             'source',
             'truncated',
             # 'retweeted_status_id',
-            # 'retweeted_status_content',
-            'quoted_status_id'
+            'quoted_status_id',
             # 'quoted_status_content',
             'in_reply_to_user_id',
-            'in_reply_to_screen_name',
+            'in_reply_to_status_id',
             'retweet_count',
-            'favorite_count',
+            'favorite_count'
         ]
 
         for t in extra_fields:
             if hasattr(obj, t):
-                args[t] = getattr(obj, t)
+                val = getattr(obj, t)
+                val = (val if val != 'null' else None)
+
+                args[t] = val
 
         if hasattr(obj, 'quoted_status'):
             if hasattr(obj.quoted_status, 'full_text'):
@@ -313,13 +313,10 @@ class TweetRow(Row):
             else:
                 args['quoted_status_content'] = obj.quoted_status.text
 
+        # Native retweets take some special handling
         if hasattr(obj, 'retweeted_status'):
             args['retweeted_status_id'] = obj.retweeted_status.id
 
-        if hasattr(obj, 'retweeted_status'):
-            args['retweeted_status_content'] = obj.retweeted_status.id
-
-        if hasattr(obj, 'retweeted_status'):
             # From the Twitter docs: "Note that while native retweets may have
             # their toplevel text property shortened, the original text will be
             # available under the retweeted_status object and the truncated
