@@ -23,7 +23,7 @@ setup(
 
     packages=['twclient'],
     python_requires='>=3.7, <4',
-    install_requires=['yaml', 'tweepy', 'psycopg2'],
+    install_requires=['pyyaml', 'tweepy', 'psycopg2'],
 
     long_description=long_description,
     long_description_content_type='text/markdown',
@@ -34,7 +34,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'twitter=twclient:main',
+            'twitter=twclient.main:main',
         ],
     }
 )
