@@ -65,7 +65,7 @@ def main():
     sp.required = True
 
     inp = sp.add_parser('initialize', help='Initialize the database schema '
-                                           '(WARNING: deletes all data!)'
+                                           '(WARNING: deletes all data!)')
     inp.add_argument('-y', '--yes', help='Must specify this option to initialize')
 
     stp = sp.add_parser('stats', help='Report stats on loaded data')
