@@ -12,12 +12,12 @@ import psycopg2
 
 from psycopg2 import sql
 
-import utils as ut
+import twclient.utils as ut
 
-from row import Rowset
-from row import UserRow, TweetRow, UserTagRow, TweetTagRow
-from row import FollowRow, FollowFetchRow, MentionRow
-from authpool import AuthPoolAPI
+from twclient.row import Rowset
+from twclient.row import UserRow, TweetRow, UserTagRow, TweetTagRow
+from twclient.row import FollowRow, FollowFetchRow, MentionRow
+from twclient.authpool import AuthPoolAPI
 
 fmt = '%(asctime)s : %(module)s : %(levelname)s : %(message)s'
 logging.basicConfig(format=fmt, level=logging.WARNING)

@@ -8,9 +8,9 @@ import json
 import logging
 import argparse
 
-import utils as ut
+import twclient.utils as ut
 
-from job import StatsJob, InitializeJob, UserInfoJob, FollowJob, TweetsJob
+from twclient.job import StatsJob, InitializeJob, UserInfoJob, FollowJob, TweetsJob
 
 fmt = '%(asctime)s : %(module)s : %(levelname)s : %(message)s'
 logging.basicConfig(format=fmt, level=logging.WARNING)
