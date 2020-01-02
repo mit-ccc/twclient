@@ -1,3 +1,5 @@
+# FIXME option for copy/insert loading method
+
 import sys
 import random
 import logging
@@ -91,7 +93,7 @@ class DatabaseJob(ABC):
         self.conn.commit()
 
     @staticmethod
-    def _copy_stmt(table, cols, schema=None):
+    def _copy_stmt(table, cols, sep=',', schema=None):
         query = [sql.SQL('copy')]
 
         if schema is not None:
@@ -106,7 +108,9 @@ class DatabaseJob(ABC):
 
             sql.SQL('from stdin'),
 
-            sql.SQL('csv'), sql.SQL('header')
+            sql.SQL('csv'),
+            sql.SQL('header'),
+            sql.SQL('delimiter'), sql.Literal(sep)
         ]
 
         return query
@@ -285,7 +289,7 @@ class DatabaseJob(ABC):
 
         return res
 
-    def db_load_data(self, data, how='insert', returning=[],
+    def db_load_data(self, data, how='copy', returning=[],
                      conflict='raise', conflict_constraint=['id']):
         assert how in ('copy', 'insert')
         assert conflict in ('raise', 'merge', 'skip')
@@ -460,7 +464,7 @@ class DatabaseJob(ABC):
 
 class InitializeJob(DatabaseJob):
     def run(self):
-        self.initialize()
+        self.db_initialize()
 
 class StatsJob(DatabaseJob):
     def run(self):
@@ -530,7 +534,7 @@ class ApiJob(DatabaseJob):
             raise ValueError("auths argument is required")
 
         user_tag = kwargs.pop('user_tag', None)
-        load_batch_size = kwargs.pop('load_batch_size', 5000)
+        load_batch_size = kwargs.pop('load_batch_size', None)
         abort_on_bad_targets = kwargs.pop('abort_on_bad_targets', False)
         transaction = kwargs.pop('transaction', False)
 
@@ -662,7 +666,7 @@ class ApiJob(DatabaseJob):
         mentioned_ids = list(set([x['user_id'] for x in mentioned_users]))
 
         self.sync_users(targets=mentioned_ids, target_type='user_ids',
-                        full=self.full, new=True)
+                        full=self.full, new=True, commit=False)
 
         self.db_load_data(
             data=Rowset.from_records(MentionRow, mentions),
@@ -720,7 +724,7 @@ class ApiJob(DatabaseJob):
 
         user_ids = list(set([x for y in edges for x in y]))
         self.sync_users(targets=user_ids, target_type='user_ids',
-                        full=self.full, new=True)
+                        full=self.full, new=True, commit=False)
 
         rows = Rowset(rows=(
             FollowRow(
@@ -761,9 +765,6 @@ class ApiJob(DatabaseJob):
 
             self.db_load_data(tag_rows, conflict='merge',
                               conflict_constraint=['user_id', 'tag'])
-
-        if not self.transaction:
-            self.commit()
 
     def user_objects_for(self, objs, kind):
         logger.debug('Fetching user objects for {0}'.format(kind))
@@ -889,6 +890,7 @@ class ApiJob(DatabaseJob):
             common_twargs = {
                 'count': 200, # the max in one call
                 'tweet_mode': 'extended',
+                'include_rts': True,
                 'since_id': since_id
             }
 
@@ -1003,11 +1005,10 @@ class ApiJob(DatabaseJob):
     # users in a Twitter list and which may not exist in the twitter.user
     # table yet, we want to a) resolve them all to user ids
     # and b) ensure they all exist in the twitter.user table.
-    # This method will change target_type to 'user_ids' if it's
-    # 'screen_names' and update the self.targets values.
-    def sync_users(self, targets, target_type, new=True, full=False):
-        msg = 'Syncing {0} users, new={1}, full={2}'
-        logger.debug(msg.format(target_type, new, full))
+    def sync_users(self, targets, target_type, new=True, full=False,
+                   commit=False):
+        msg = 'Syncing {0} users, new={1}, full={2}, commit={3}'
+        logger.debug(msg.format(target_type, new, full, commit))
 
         # full doesn't matter in the first two cases: we have to fetch
         # every user from the twitter API anyway because all we have
@@ -1015,21 +1016,35 @@ class ApiJob(DatabaseJob):
         if target_type == 'twitter_lists':
             # "new" is ignored here: we have to fetch them all from the
             # list members endpoint anyway to even learn who they are
+            kind = 'users'
             users = self.user_objects_for_lists(self.targets)
-            self.load_users(targets=users, kind='users')
         elif target_type == 'screen_names':
+            kind = 'users'
             users = self.user_objects_for_screen_names(targets, new=new)
-            self.load_users(targets=users, kind='users')
         elif full:
+            kind = 'users'
             users = self.user_objects_for_ids(targets, new=new)
-            self.load_users(targets=users, kind='users')
         else:
-            self.load_users(targets=targets, kind='user_ids')
+            kind = 'user_ids'
+            users = targets
+
+        n_items = 0
+        for i, batch in enumerate(ut.grouper(users, self.load_batch_size)):
+            msg = 'Running user batch {0}, cumulative users {1}'
+            msg = msg.format(i, n_items)
+            logger.info(msg)
+
+            self.load_users(targets=batch, kind=kind)
+
+            n_items += len(batch)
+
+            if commit:
+                self.commit()
 
 class UserInfoJob(ApiJob):
     def run(self):
         self.sync_users(targets=self.targets, target_type=self.target_type,
-                        new=False, full=True)
+                        new=False, full=True, commit=(not self.transaction))
 
         if self.transaction:
             self.commit()
@@ -1059,7 +1074,7 @@ class FollowJob(ApiJob):
         # 3d) load the follow rows to twitter.follow, using ff_id
     def run(self):
         self.sync_users(targets=self.targets, target_type=self.target_type,
-                        new=True, full=self.full)
+                        new=True, full=self.full, commit=(not self.transaction))
 
         if self.target_type == 'user_ids':
             user_ids = self.targets
@@ -1070,7 +1085,9 @@ class FollowJob(ApiJob):
         # them incrementally rather than building one giant list
         n_items = 0
         for i, user_id in enumerate(user_ids):
-            logger.debug('Processing user {0}'.format(user_id))
+            msg = 'Processing user {0} ({1} / {2})'
+            msg = msg.format(user_id, i, len(user_ids))
+            logger.debug(msg)
 
             ff_id = self.load_follow_fetch(user_id=user_id,
                                            direction=self.direction)
@@ -1081,8 +1098,9 @@ class FollowJob(ApiJob):
                 edges = ut.grouper(edges, self.load_batch_size)
 
                 for j, batch in enumerate(edges):
-                    msg = 'Running user {0} batch {1}, cumulative {2}'
-                    logger.info(msg.format(i, j, n_items))
+                    msg = 'Running user {0} ({1}/{2}) batch {3}, cumulative {4}'
+                    msg = msg.format(user_id, i, len(user_ids), j, n_items)
+                    logger.info(msg)
 
                     self.load_follow_edges(edges=batch, follow_fetch_id=ff_id)
                     n_items += len(batch)
@@ -1123,11 +1141,9 @@ class TweetsJob(ApiJob):
         self.tweet_tag = tweet_tag
         self.full = full
 
-        self.load_batch_size = 200
-
     def run(self):
         self.sync_users(targets=self.targets, target_type=self.target_type,
-                        new=True, full=self.full)
+                        new=True, full=self.full, commit=(not self.transaction))
 
         if self.target_type == 'user_ids':
             user_ids = self.targets
@@ -1136,27 +1152,44 @@ class TweetsJob(ApiJob):
 
         if self.old_tweets:
             logger.debug('Allowing old tweets')
-            since_ids = None
+            since_ids = [None for x in user_ids]
         else:
             logger.debug('Skipping old tweets')
             since_ids = self.max_tweet_ids_for_user_ids(user_ids)
             since_ids = [x[1] for x in since_ids]
 
-        args = {
-            'user_ids': user_ids,
-            'since_ids': since_ids,
-            'max_tweets': self.max_tweets,
-            'since_timestamp': self.since_timestamp
-        }
-
         n_items = 0
-        tweets = self.tweet_objects_for_ids(**args)
+        for i, (user_id, since_id) in enumerate(zip(user_ids, since_ids)):
+            msg = 'Processing user {0} ({1} / {2})'
+            msg = msg.format(user_id, i, len(user_ids))
+            logger.debug(msg)
 
-        for i, batch in enumerate(ut.grouper(tweets, self.load_batch_size)):
-            logger.info('Running batch {0}, cumulative {1}'.format(i, n_items))
+            try:
+                tweets = self.tweet_objects_for_ids(**{
+                    'user_ids': [user_id],
+                    'since_ids': [since_id],
+                    'max_tweets': self.max_tweets,
+                    'since_timestamp': self.since_timestamp
+                })
 
-            self.load_tweets(batch, load_mentions=True)
-            n_items += len(batch)
+                for j, batch in enumerate(ut.grouper(tweets, self.load_batch_size)):
+                    msg = 'Running user {0} ({1} / {2}) batch {3}, cumulative {4}'
+                    msg = msg.format(user_id, i, len(user_ids), j, n_items)
+                    logger.info(msg)
+
+                    self.load_tweets(batch, load_mentions=True)
+                    n_items += len(batch)
+            except tweepy.error.TweepError as e:
+                if not is_bad_user_error(e):
+                    raise
+
+                if self.abort_on_bad_targets:
+                    raise
+
+                msg = 'Skipping bad user with user_id {0}: {1}'
+                logger.warning(msg.format(user_id, sys.exc_info()))
+
+                continue
 
             if not self.transaction:
                 self.commit()
