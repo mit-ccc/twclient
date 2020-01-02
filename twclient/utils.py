@@ -12,10 +12,6 @@ fmt = '%(asctime)s : %(module)s : %(levelname)s : %(message)s'
 logging.basicConfig(format=fmt, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-##
-## Misc utils
-##
-
 # Write datasets to DBs
 # data assumed to be a list of dicts
 def write_to_tempfile(data, fieldnames=None, mode='r+t',
@@ -68,7 +64,7 @@ def grouper(it, n=None):
     assert n is None or n > 0
 
     if n is None:
-        yield it
+        yield [x for x in it]
     else:
         ret = []
 
