@@ -30,7 +30,7 @@ def is_bad_user_error(ex):
 # Attempts to access protected users' friends/followers/tweets
 # come back as an HTTP 401 with message "Not authorized." and no
 # Twitter status code
-def is_protected_user(ex):
+def is_protected_user_error(ex):
     return ex.api_code is None and ex.response.status_code == 401
 
 ##
@@ -620,8 +620,8 @@ class ApiJob(DatabaseJob):
                     yield from cur.items()
             else:
                 yield from method(**kwargs)
-        except Exception:
-            logger.debug('Unexpected error in API call', exc_info=True)
+        except tweepy.error.TweepError:
+            logger.debug('Error returned by Twitter API', exc_info=True)
 
             raise
 
@@ -926,7 +926,7 @@ class ApiJob(DatabaseJob):
 
                     yield tweet
             except tweepy.error.TweepError as e:
-                if is_protected_user(e):
+                if is_protected_user_error(e):
                     msg = 'Ignoring protected {0} {1}'
                     msg = msg.format(kind, obj)
                     logger.warning(msg)
@@ -980,7 +980,7 @@ class ApiJob(DatabaseJob):
                     else: # direction == 'friends'
                         yield [obj, item]
             except tweepy.error.TweepError as e:
-                if is_protected_user(e):
+                if is_protected_user_error(e):
                     msg = 'Ignoring protected {0} {1}'
                     msg = msg.format(kind, obj)
                     logger.warning(msg)
