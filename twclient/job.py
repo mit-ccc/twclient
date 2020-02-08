@@ -12,6 +12,7 @@ import psycopg2
 
 from psycopg2 import sql
 
+import twclient.error as err
 import twclient.utils as ut
 
 from twclient.row import Rowset
@@ -22,16 +23,6 @@ from twclient.authpool import AuthPoolAPI
 fmt = '%(asctime)s : %(module)s : %(levelname)s : %(message)s'
 logging.basicConfig(format=fmt, level=logging.WARNING)
 logger = logging.getLogger(__name__)
-
-# NOTE both of these are mostly right but may not cover every edge case
-def is_bad_user_error(ex):
-    return ex.api_code in (17, 34)
-
-# Attempts to access protected users' friends/followers/tweets
-# come back as an HTTP 401 with message "Not authorized." and no
-# Twitter status code
-def is_protected_user_error(ex):
-    return ex.api_code is None and ex.response.status_code == 401
 
 ##
 ## Job classes
@@ -799,7 +790,7 @@ class ApiJob(DatabaseJob):
                     yield from self.make_api_call(self.api.list_members,
                                                 cursor=True, **twargs)
                 except tweepy.error.TweepError as e:
-                    if not is_bad_user_error(e):
+                    if not err.is_bad_user_error(e):
                         raise
 
                     if self.abort_on_bad_targets:
@@ -839,7 +830,7 @@ class ApiJob(DatabaseJob):
 
                     yield from ret
                 except tweepy.error.TweepError as e:
-                    if not is_bad_user_error(e):
+                    if not err.is_bad_user_error(e):
                         raise
 
                     if self.abort_on_bad_targets:
@@ -926,14 +917,14 @@ class ApiJob(DatabaseJob):
 
                     yield tweet
             except tweepy.error.TweepError as e:
-                if is_protected_user_error(e):
+                if err.is_protected_user_error(e):
                     msg = 'Ignoring protected {0} {1}'
                     msg = msg.format(kind, obj)
                     logger.warning(msg)
 
                     continue
 
-                if not is_bad_user_error(e):
+                if not err.is_bad_user_error(e):
                     raise
 
                 if self.abort_on_bad_targets:
@@ -980,14 +971,14 @@ class ApiJob(DatabaseJob):
                     else: # direction == 'friends'
                         yield [obj, item]
             except tweepy.error.TweepError as e:
-                if is_protected_user_error(e):
+                if err.is_protected_user_error(e):
                     msg = 'Ignoring protected {0} {1}'
                     msg = msg.format(kind, obj)
                     logger.warning(msg)
 
                     continue
 
-                if not is_bad_user_error(e):
+                if not err.is_bad_user_error(e):
                     raise
 
                 if self.abort_on_bad_targets:
@@ -1110,7 +1101,7 @@ class FollowJob(ApiJob):
                     self.load_follow_edges(edges=batch, follow_fetch_id=ff_id)
                     n_items += len(batch)
             except tweepy.error.TweepError as e:
-                if not is_bad_user_error(e):
+                if not err.is_bad_user_error(e):
                     raise
 
                 if self.abort_on_bad_targets:
@@ -1185,7 +1176,7 @@ class TweetsJob(ApiJob):
                     self.load_tweets(batch, load_mentions=True)
                     n_items += len(batch)
             except tweepy.error.TweepError as e:
-                if not is_bad_user_error(e):
+                if not err.is_bad_user_error(e):
                     raise
 
                 if self.abort_on_bad_targets:
