@@ -621,7 +621,7 @@ class ApiJob(DatabaseJob):
             else:
                 yield from method(**kwargs)
         except Exception:
-            logger.exception('Unexpected error in API call')
+            logger.debug('Unexpected error in API call', exc_info=True)
 
             raise
 
