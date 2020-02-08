@@ -610,15 +610,20 @@ class ApiJob(DatabaseJob):
 
         twargs = dict({'method': method}, **kwargs)
 
-        if cursor:
-            cur = tweepy.Cursor(**twargs)
+        try:
+            if cursor:
+                cur = tweepy.Cursor(**twargs)
 
-            if max_items is not None:
-                yield from cur.items(max_items)
+                if max_items is not None:
+                    yield from cur.items(max_items)
+                else:
+                    yield from cur.items()
             else:
-                yield from cur.items()
-        else:
-            yield from method(**kwargs)
+                yield from method(**kwargs)
+        except Exception:
+            logger.debug('Unexpected error in API call', exc_info=True)
+
+            raise
 
     @staticmethod
     def mentions_for_tweet(tweet):
