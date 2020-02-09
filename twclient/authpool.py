@@ -77,7 +77,7 @@ class AuthPoolAPI(object):
         # we use "iself" to avoid confusing shadowing of the binding.
         def func(iself, *args, **kwargs):
             # rate limit retry counts are API instance specific, but if
-            # Twitter returns an over-capacity error, that applies to the whole
+            # Twitter returns a capacity error, that applies to the whole
             # service however we access it
             #rl_retry_cnt = [0 for x in self._authpool_apis]
             rl_retry_cnt = 0
