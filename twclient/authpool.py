@@ -9,6 +9,14 @@ fmt = '%(asctime)s : %(module)s : %(levelname)s : %(message)s'
 logging.basicConfig(format=fmt, level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
+# This class transparently multiplexes access to multiple sets of Twitter API
+# credentials. It creates as many tweepy.API instances as it gets sets of API
+# creds, and then dispatches method calls to the appropriate instance, handling
+# rate limit and over-capacity errors. When one instance hits its rate limit,
+# we transparently switch over to the next.
+
+# User code can treat it as a drop-in replacement for tweepy.API.
+
 class AuthPoolAPI(object):
     def __init__(self, **kwargs):
         try:
@@ -23,7 +31,10 @@ class AuthPoolAPI(object):
         capacity_sleep = kwargs.pop('capacity_sleep', 15 * 60)
         capacity_retries = kwargs.pop('capacity_retries', 3)
 
-        super(AuthPoolAPI, self).__init__(**kwargs)
+        super(AuthPoolAPI, self).__init__()
+
+        # These attributes all have an "_authpool" prefix to avoid clashing
+        # with attributes of the underlying tweepy.API instances
 
         self._authpool_rate_limit_sleep = rate_limit_sleep
         self._authpool_rate_limit_retries = rate_limit_retries
@@ -31,7 +42,7 @@ class AuthPoolAPI(object):
         self._authpool_capacity_sleep = capacity_sleep
         self._authpool_capacity_retries = capacity_retries
 
-        self._authpool_apis = [tweepy.API(auth) for auth in auths]
+        self._authpool_apis = [tweepy.API(auth, **kwargs) for auth in auths]
         self._authpool_current_api_index = 0
 
     @property
@@ -57,9 +68,13 @@ class AuthPoolAPI(object):
         if not all(is_method):
             return getattr(self._authpool_current_api, name)
 
-        # this function will proxy for the tweepy methods.
+        # this function proxies for the tweepy methods.
         # we use "iself" to avoid confusing shadowing of the binding.
         def func(iself, *args, **kwargs):
+            # rate limit retry counts are API instance specific, but if
+            # Twitter returns a capacity error, that applies to the whole
+            # service however we access it
+            #rl_retry_cnt = [0 for x in self._authpool_apis]
             rl_retry_cnt = 0
             cp_retry_cnt = 0
 
