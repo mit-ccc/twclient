@@ -8,8 +8,6 @@ import tempfile
 
 import tweepy
 
-fmt = '%(asctime)s : %(module)s : %(levelname)s : %(message)s'
-logging.basicConfig(format=fmt, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 # Write datasets to DBs

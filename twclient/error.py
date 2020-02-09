@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 ##
 ## Base class for any further custom exceptions
 ##

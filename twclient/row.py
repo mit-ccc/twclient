@@ -3,8 +3,6 @@ import logging
 
 from abc import ABC, abstractmethod
 
-fmt = '%(asctime)s : %(module)s : %(levelname)s : %(message)s'
-logging.basicConfig(format=fmt, level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 ##

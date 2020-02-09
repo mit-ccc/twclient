@@ -5,8 +5,6 @@ import tweepy
 
 import twclient.error as err
 
-fmt = '%(asctime)s : %(module)s : %(levelname)s : %(message)s'
-logging.basicConfig(format=fmt, level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 # This class transparently multiplexes access to multiple sets of Twitter API

@@ -12,8 +12,6 @@ import twclient.utils as ut
 
 from twclient.job import StatsJob, InitializeJob, UserInfoJob, FollowJob, TweetsJob
 
-fmt = '%(asctime)s : %(module)s : %(levelname)s : %(message)s'
-logging.basicConfig(format=fmt, level=logging.WARNING)
 logger = logging.getLogger(__name__)
 
 def main():
@@ -119,16 +117,15 @@ def main():
     ## Set up logging
     ##
 
-    modules = ['authpool', 'job', 'row', 'utils']
-    loggers = [logger] + [logging.getLogger(m) for m in modules]
+    if verbose == 0:
+        lvl = logging.WARNING
+    elif verbose == 1:
+        lvl = logging.INFO
+    else: # verbose >= 2
+        lvl = logging.DEBUG
 
-    for lg in loggers:
-        if verbose == 0:
-            lg.setLevel(logging.WARNING)
-        elif verbose == 1:
-            lg.setLevel(logging.INFO)
-        else: # verbose >= 2
-            lg.setLevel(logging.DEBUG)
+    fmt = '%(asctime)s : %(module)s : %(levelname)s : %(message)s'
+    logging.basicConfig(format=fmt, level=lvl)
 
     ##
     ## Do requested work
