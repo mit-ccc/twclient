@@ -610,12 +610,10 @@ class ApiJob(DatabaseJob):
             else:
                 yield from method(**kwargs)
         except tweepy.error.TweepError as e:
-            status_code = e.api_code
-            http_code = e.response.status_code
-            emsg = e.message
-
             msg = 'Error returned by Twitter API: API code {0}, HTTP status ' \
-                  'code {1}, message {2}'.format(status_code, http_code, emsg)
+                  'code {1}, message {2}'
+            msg = msg.format(e.api_code, e.response.status_code, e.reason)
+
             logger.debug(msg, exc_info=True)
 
             raise
@@ -1032,7 +1030,7 @@ class ApiJob(DatabaseJob):
         for i, batch in enumerate(ut.grouper(users, self.load_batch_size)):
             msg = 'Running user batch {0}, cumulative users {1}'
             msg = msg.format(i, n_items)
-            logger.info(msg)
+            logger.debug(msg)
 
             self.load_users(targets=batch, kind=kind)
 
@@ -1043,6 +1041,11 @@ class ApiJob(DatabaseJob):
 
 class UserInfoJob(ApiJob):
     def run(self):
+        # NOTE self.targets isn't a generator, so we can safely take its len()
+        msg = 'Loading info for {0} new or existing users'
+        msg = msg.format(len(self.targets))
+        logger.info(msg)
+
         self.sync_users(targets=self.targets, target_type=self.target_type,
                         new=False, full=True, commit=(not self.transaction))
 
@@ -1133,7 +1136,8 @@ class TweetsJob(ApiJob):
         super(TweetsJob, self).__init__(**kwargs)
 
         # NOTE this could be implemented but has not been
-        assert self.target_type != 'twitter_lists'
+        if self.target_type == 'twitter_lists':
+            raise NotImplementedError()
 
         self.since_timestamp = since_timestamp
         self.max_tweets = max_tweets
