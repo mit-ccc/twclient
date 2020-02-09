@@ -119,7 +119,7 @@ def main():
     ## Set up logging
     ##
 
-    modules = ['auth_pool_api', 'job', 'row']
+    modules = ['authpool', 'job', 'row', 'utils']
     loggers = [logger] + [logging.getLogger(m) for m in modules]
 
     for lg in loggers:
