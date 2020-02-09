@@ -611,8 +611,14 @@ class ApiJob(DatabaseJob):
                     yield from cur.items()
             else:
                 yield from method(**kwargs)
-        except tweepy.error.TweepError:
-            logger.debug('Error returned by Twitter API', exc_info=True)
+        except tweepy.error.TweepError as e:
+            status_code = e.api_code
+            http_code = e.response.status_code
+            emsg = e.message
+
+            msg = 'Error returned by Twitter API: API code {0}, HTTP status ' \
+                  'code {1}, message {2}'.format(status_code, http_code, emsg)
+            logger.debug(msg, exc_info=True)
 
             raise
 
