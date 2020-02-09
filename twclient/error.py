@@ -27,7 +27,7 @@ class CapacityError(TWClientError):
 # See Twitter docs: https://developer.twitter.com/en/docs/basics/response-codes
 
 def is_bad_user_error(ex):
-    return ex.api_code in (17, 34)
+    return ex.api_code in (17, 34, 50, 63)
 
 def is_protected_user_error(ex):
     return ex.api_code is None and ex.response.status_code == 401
