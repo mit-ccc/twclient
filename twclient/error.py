@@ -36,7 +36,7 @@ def is_bad_user_error(ex):
 def is_protected_user_error(ex):
     return ex.api_code is None and ex.response.status_code == 401
 
-def is_probable_capacity_error(ex):
+def is_capacity_error(ex):
     return ex.api_code in (130, 131) or \
            ex.response.status_code in (500, 503, 504)
 

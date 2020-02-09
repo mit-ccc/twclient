@@ -1,3 +1,7 @@
+# FIXME this isn't quite right: what if rate limited several
+# times widely separated in time, with successful calls in
+# between?
+
 import time
 import logging
 
@@ -40,8 +44,11 @@ class AuthPoolAPI(object):
         self._authpool_capacity_sleep = capacity_sleep
         self._authpool_capacity_retries = capacity_retries
 
-        self._authpool_apis = [tweepy.API(auth, **kwargs) for auth in auths]
         self._authpool_current_api_index = 0
+        self._authpool_apis = [
+            tweepy.API(auth, wait_on_rate_limit=False, **kwargs)
+            for auth in auths
+        ]
 
     @property
     def _authpool_current_api(self):
@@ -70,10 +77,11 @@ class AuthPoolAPI(object):
         # we use "iself" to avoid confusing shadowing of the binding.
         def func(iself, *args, **kwargs):
             # rate limit retry counts are API instance specific, but if
-            # Twitter returns a capacity error, that applies to the whole
+            # Twitter returns an over-capacity error, that applies to the whole
             # service however we access it
             #rl_retry_cnt = [0 for x in self._authpool_apis]
             rl_retry_cnt = 0
+
             cp_retry_cnt = 0
 
             while True:
@@ -91,9 +99,9 @@ class AuthPoolAPI(object):
                     # retry with the next API object in line
                     iself._authpool_next_api()
                 except tweepy.error.TweepError as e:
-                    if err.is_probable_capacity_error(e):
+                    if err.is_capacity_error(e):
                         if cp_retry_cnt < iself._authpool_capacity_retries:
-                            msg = 'Capacity error on try {0}; sleeping {1}'
+                            msg = 'Over-capacity error on try {0}; sleeping {1}'
                             msg = msg.format(cp_retry_cnt, iself._authpool_capacity_sleep)
                             logger.warning(msg)
 
@@ -101,14 +109,12 @@ class AuthPoolAPI(object):
 
                             cp_retry_cnt += 1
                         else:
-                            msg = 'Capacity error in call to {0}'.format(name)
+                            msg = 'Over-capacity error in call to {0}'
+                            msg = msg.format(name)
+
                             raise err.CapacityError(msg)
                     else:
                         raise
-
-                # FIXME this isn't quite right: what if rate limited several
-                # times widely separated in time, with successful calls in
-                # between?
 
                 # we've tried all API objects and been rate
                 # limited on all of them, back to the 0th one
