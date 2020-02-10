@@ -527,9 +527,6 @@ class ApiJob(DatabaseJob):
         abort_on_bad_targets = kwargs.pop('abort_on_bad_targets', False)
         transaction = kwargs.pop('transaction', False)
 
-        rate_limit_retries = kwargs.pop('rate_limit_retries', 3)
-        rate_limit_sleep = kwargs.pop('rate_limit_sleep', 15 * 60)
-
         user_ids = kwargs.pop('user_ids', None)
         screen_names = kwargs.pop('screen_names', None)
         user_spec = kwargs.pop('user_spec', None)
@@ -585,8 +582,7 @@ class ApiJob(DatabaseJob):
         self.abort_on_bad_targets = abort_on_bad_targets
         self.transaction = transaction
 
-        self.api = AuthPoolAPI(auths=auths, rate_limit_sleep=rate_limit_sleep,
-                               rate_limit_retries=rate_limit_retries)
+        self.api = AuthPoolAPI(auths=auths, wait_on_rate_limit=True)
 
     def make_api_call(self, method, cursor=False, max_items=None, **kwargs):
         msg = 'API call: {0} with params {1}, cursor {2}'
