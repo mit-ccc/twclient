@@ -1,3 +1,7 @@
+import logging
+
+logger = logging.getLogger(__name__)
+
 ##
 ## Base class for any further custom exceptions
 ##
@@ -27,12 +31,13 @@ class CapacityError(TWClientError):
 # See Twitter docs: https://developer.twitter.com/en/docs/basics/response-codes
 
 def is_bad_user_error(ex):
-    return ex.api_code in (17, 34)
+    return ex.api_code in (17, 34, 50, 63) or \
+           (ex.api_code is None and ex.response.status_code == 404)
 
 def is_protected_user_error(ex):
     return ex.api_code is None and ex.response.status_code == 401
 
-def is_probable_capacity_error(ex):
+def is_capacity_error(ex):
     return ex.api_code in (130, 131) or \
            ex.response.status_code in (500, 503, 504)
 
