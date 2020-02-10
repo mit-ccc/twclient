@@ -62,7 +62,7 @@ class AuthPoolAPI(object):
         self._authpool_rate_limit_resets[ind] = resume_time
 
     def _authpool_switch_api(self):
-        for i in range(len(self._authpool_apis)]:
+        for i in range(len(self._authpool_apis)):
             t = self._authpool_rate_limit_resets[i]
 
             if t is not None and t < time.time():
