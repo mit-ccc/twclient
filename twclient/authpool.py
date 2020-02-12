@@ -22,7 +22,7 @@ class AuthPoolAPI(object):
             auths = kwargs.pop('auths')
             assert len(auths) > 0
         except KeyError:
-            raise ValueError("Must provide auths")
+            raise ValueError("Must provide more than 0 Twitter credential sets")
 
         wait_on_rate_limit = kwargs.pop('wait_on_rate_limit', True)
 

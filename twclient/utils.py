@@ -10,7 +10,35 @@ import tweepy
 
 logger = logging.getLogger(__name__)
 
-# Write datasets to DBs
+# Like SQL's coalesce() - returns the first argument that's not None
+def coalesce(*args):
+    try:
+        return next(filter(lambda x: x is not None, args))
+    except StopIteration:
+        return None
+
+# Generate chunks of n from the iterable it
+def grouper(it, n=None):
+    assert n is None or n > 0
+
+    if n is None:
+        yield [x for x in it]
+    else:
+        ret = []
+
+        for obj in it:
+            if len(ret) == n:
+                yield ret
+                ret = []
+
+            if len(ret) < n:
+                ret += [obj]
+
+        # at this point, we're out of
+        # objects but len(ret) < n
+        if len(ret) > 0:
+            yield ret
+
 # data assumed to be a list of dicts
 def write_to_tempfile(data, fieldnames=None, mode='r+t',
                       noneval=None, **kwargs):
@@ -49,64 +77,4 @@ def unique_name_gen(length=10, prefix=''):
             yield cand
 
 unique_names = unique_name_gen()
-
-# Like SQL's coalesce() - returns the first argument that's not None
-def coalesce(*args):
-    try:
-        return next(filter(lambda x: x is not None, args))
-    except StopIteration:
-        return None
-
-# Generate chunks of n from the iterable it
-def grouper(it, n=None):
-    assert n is None or n > 0
-
-    if n is None:
-        yield [x for x in it]
-    else:
-        ret = []
-
-        for obj in it:
-            if len(ret) == n:
-                yield ret
-                ret = []
-
-            if len(ret) < n:
-                ret += [obj]
-
-        # at this point, we're out of
-        # objects but len(ret) < n
-        if len(ret) > 0:
-            yield ret
-
-def get_twitter_auth(filename='~/.twurlrc', app_only=True):
-    try:
-        rcpath = os.path.expanduser(filename)
-        with open(rcpath, 'rt') as f:
-            twurlrc = yaml.safe_load(f)
-    except FileNotFoundError:
-        raise ValueError('No twurlrc found')
-
-    auths = []
-
-    try:
-        for user, creds in twurlrc['profiles'].items():
-            for credname, cred in creds.items():
-                if app_only:
-                    auth = tweepy.AppAuthHandler(cred['consumer_key'],
-                                                 cred['consumer_secret'])
-                else:
-                    auth = tweepy.OAuthHandler(cred['consumer_key'],
-                                               cred['consumer_secret'])
-                    auth.set_access_token(cred['token'], cred['secret'])
-
-                auths += [auth]
-
-                msg = 'Found profile with consumer key {0}'
-                logger.debug(msg.format(cred['consumer_key']))
-
-    except KeyError:
-        raise ValueError('Malformed ~/.twurlrc or bad profile specification')
-
-    return auths
 
