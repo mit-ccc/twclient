@@ -5,7 +5,6 @@
 ##
 
 import os
-import json
 import logging
 import argparse as ap
 import collections as cl
@@ -15,7 +14,7 @@ import tweepy
 
 import twclient.utils as ut
 
-from twclient.job import StatsJob, InitializeJob, UserInfoJob, FollowJob, TweetsJob
+from twclient.job import InitializeJob, UserInfoJob, FollowJob, TweetsJob
 
 logger = logging.getLogger(__name__)
 
@@ -100,10 +99,6 @@ def main():
     inp = sp.add_parser('initialize', help='Initialize the DB schema '
                                            '(WARNING: deletes all data!)')
     inp.add_argument('-y', '--yes', help='Must specify this option to initialize')
-
-    stp = sp.add_parser('stats', help='Report stats on loaded data')
-    stp.add_argument('-j', '--json', action='store_true',
-                     help='Report data as json')
 
     uip = sp.add_parser('user_info', help='Get user info / "hydrate" users')
     uip, uipgrp = common_arguments(uip)
@@ -325,20 +320,18 @@ def main():
 
     ## Massage the arguments a bit for passing on to job classes
     command = vars(args).pop('command')
+    vars(args)['auths'] = auths
     vars(args)['socket'] = socket
     vars(args).pop('verbose')
     vars(args).pop('database')
     vars(args).pop('apis')
     vars(args).pop('config_file')
 
-    if command != 'stats':
-        vars(args)['auths'] = auths
+    if args.user_spec == 'missing':
+        vars(args)['user_spec'] = 'missing_' + args.command
 
-        if args.user_spec == 'missing':
-            vars(args)['user_spec'] = 'missing_' + args.command
-
-        if len(auths) == 0:
-            parser.error('No Twitter credentials provided (use add-api)')
+    if len(auths) == 0:
+        parser.error('No Twitter credentials provided (use add-api)')
 
     ## Actually run jobs
     if command == 'initialize':
@@ -352,21 +345,6 @@ def main():
             job = InitializeJob(**vars(args))
 
             job.run()
-    if command == 'stats':
-        use_json = vars(args).pop('json')
-
-        job = StatsJob(**vars(args))
-        stats = job.run()
-
-        if use_json:
-            msg = json.dumps(stats, indent=4)
-        else:
-            msg = '\n'.join([
-                k.replace('_', ' ').capitalize() + ': ' + str(stats[k])
-                for k in stats
-            ])
-
-        print(msg)
     elif command in ('friends', 'followers'):
         FollowJob(direction=command, **vars(args)).run()
     elif command == 'user_info':

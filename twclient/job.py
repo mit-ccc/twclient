@@ -455,66 +455,6 @@ class InitializeJob(DatabaseJob):
     def run(self):
         self.db_initialize()
 
-class StatsJob(DatabaseJob):
-    def run(self):
-        queries = [
-            # how many users loaded?
-            # how many have been fully populated?
-            """
-            select
-                count(*) as users,
-                coalesce(sum((u.api_response is not null)::int), 0) as populated
-            from twitter.user u;
-            """,
-
-            # how many tweets loaded?
-            # how many users have tweets loaded?
-            """
-            select
-                count(*) as tweets,
-                count(distinct user_id) as users
-            from twitter.tweet;
-            """,
-
-            # how many mentioning tweets?
-            # how many have mentions?
-            """
-            select
-                count(*),
-                count(distinct mentioned_user_id) as users
-            from twitter.mention;
-            """,
-
-            # how many graph edges?
-            # how many have ever had followers recorded?
-            # how many have ever had friends recorded?
-            """
-            select
-                count(*) as edges,
-                count(distinct source_user_id) as sources,
-                count(distinct target_user_id) as targets
-            from twitter.follow;
-            """
-        ]
-
-        names = [
-            'users_loaded',
-            'users_populated',
-            'tweets_loaded',
-            'users_with_tweets',
-            'mentions_loaded',
-            'users_mentioned',
-            'follow_graph_edges',
-            'users_with_friends',
-            'users_with_followers'
-        ]
-
-        vals = [self.db_get_data(query) for query in queries]
-        vals = [x for y in vals for x in y] # flatten to list of tuples
-        vals = [x for y in vals for x in y] # flatten to list of values
-
-        return dict(zip(names, vals))
-
 class ApiJob(DatabaseJob):
     def __init__(self, **kwargs):
         try:

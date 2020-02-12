@@ -209,3 +209,51 @@ before update on twitter.tweet
 for each row
 execute procedure trigger_set_modified_dt();
 
+/*
+ * Analytics views
+ */
+
+drop schema if exists analytics cascade;
+create schema analytics;
+
+create or replace view analytics.summary_stats as
+with users as
+(
+    select
+        count(*) as users_loaded,
+        coalesce(sum((u.api_response is not null)::int), 0) as users_populated
+    from twitter.user u
+),
+
+tweets as
+(
+    select
+        count(*) as tweets_loaded,
+        count(distinct user_id) as users_with_tweets
+    from twitter.tweet
+),
+
+mentions as
+(
+    select
+        count(*) as mentions_loaded,
+        count(distinct mentioned_user_id) as users_mentioned
+    from twitter.mention
+),
+
+follows as
+(
+    select
+        count(*) as follow_graph_edges,
+        count(distinct source_user_id) as users_with_friends,
+        count(distinct target_user_id) as users_with_followers
+    from twitter.follow
+)
+
+select
+    *
+from users
+    cross join tweets
+    cross join mentions
+    cross join follows;
+
