@@ -257,3 +257,81 @@ from users
     cross join mentions
     cross join follows;
 
+create or replace view analytics.all_mentions as
+select
+    tw.tweet_id,
+
+    tw.user_id as source_user_id,
+    mt.mentioned_user_id as target_user_id,
+
+    extract(epoch from tw.tweet_create_dt) as currency_dt
+from twitter.tweet tw
+    inner join twitter.mention mt using(tweet_id);
+
+create or replace view analytics.all_replies as
+select
+    tw.tweet_id,
+
+    tw.user_id as source_user_id,
+    tw.in_reply_to_user_id as target_user_id,
+
+    extract(epoch from tw.tweet_create_dt) as currency_dt
+from twitter.tweet tw;
+
+create or replace view analytics.mention_graph as
+select
+    tw.user_id as source_user_id,
+    mt.mentioned_user_id as target_user_id,
+
+    count(*) as mentions,
+
+    min(extract(epoch from tw.tweet_create_dt)) as first_dt,
+    max(extract(epoch from tw.tweet_create_dt)) as last_dt
+from twitter.tweet tw
+    inner join twitter.mention mt using(tweet_id)
+group by 1,2;
+
+create or replace view analytics.reply_graph as
+select
+    tw.user_id as source_user_id,
+    tw.in_reply_to_user_id as target_user_id,
+
+    count(*) as replies,
+
+    min(extract(epoch from tw.tweet_create_dt)) as first_dt,
+    max(extract(epoch from tw.tweet_create_dt)) as last_dt
+from twitter.tweet tw
+group by 1,2;
+
+create or replace view analytics.tweets as
+select
+    tw.tweet_id,
+    tw.user_id,
+
+    regexp_replace(
+        tw.content || coalesce(' ' || tw.quoted_status_content, ''),
+        '[\n\r]+', ' ', 'g'
+    ) as content,
+
+    tw.tweet_create_dt,
+    tw.lang,
+    tw.source,
+    tw.truncated,
+    tw.retweeted_status_id is not null as is_retweet,
+    tw.in_reply_to_status_id is not null as is_reply,
+    tw.quoted_status_id is not null as is_quote_tweet,
+    tw.retweet_count,
+    tw.favorite_count,
+
+    case tw.source
+        when 'Twitter for iPhone' then 'iPhone'
+        when 'Twitter for Android' then 'Android'
+        when 'Twitter Web App' then 'Desktop'
+        when 'Twitter Web Client' then 'Desktop'
+        when 'TweetDeck' then 'Desktop'
+        else 'Other'
+    end as source_collapsed,
+
+    tw.modified_dt as currency_dt
+from twitter.tweet tw;
+
