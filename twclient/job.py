@@ -345,8 +345,8 @@ class DatabaseJob(ABC):
         group by 1;
         """.format(','.join(['(%s)' for u in user_ids]))
 
-        ret = self.db_get_data(query, user_ids)
-        ret = [row for uid, row in sorted(zip(user_ids, ret))]
+        tweet_ids = dict(self.db_get_data(query, user_ids))
+        ret = [tweet_ids[u] if u is not None else None for u in user_ids]
 
         return ret
 
@@ -564,13 +564,13 @@ class ApiJob(DatabaseJob):
             user_ids = list(set(user_ids))
 
         if user_ids is not None:
-            self.targets = user_ids
+            self.targets = list(set(user_ids))
             self.target_type = 'user_ids'
         elif screen_names is not None:
-            self.targets = screen_names
+            self.targets = list(set(screen_names))
             self.target_type = 'screen_names'
         else: # twitter_lists is not None
-            self.targets = twitter_lists
+            self.targets = list(set(twitter_lists))
             self.target_type = 'twitter_lists'
 
         # Make partial loads more statistically useful
@@ -977,7 +977,7 @@ class ApiJob(DatabaseJob):
         n_items = 0
         for i, batch in enumerate(ut.grouper(users, self.load_batch_size)):
             msg = 'Running user batch {0}, cumulative users {1}'
-            msg = msg.format(i, n_items)
+            msg = msg.format(i + 1, n_items)
             logger.debug(msg)
 
             self.load_users(targets=batch, kind=kind)
@@ -1043,7 +1043,7 @@ class FollowJob(ApiJob):
                 continue
 
             msg = 'Processing user {0} ({1} / {2})'
-            logger.debug(msg.format(user_id, i, len(user_ids)))
+            logger.debug(msg.format(user_id, i + 1, len(user_ids)))
 
             ff_id = self.load_follow_fetch(user_id=user_id,
                                            direction=self.direction)
@@ -1053,8 +1053,9 @@ class FollowJob(ApiJob):
             edges = ut.grouper(edges, self.load_batch_size)
 
             for j, batch in enumerate(edges):
-                msg = 'Running user {0} ({1}/{2}) batch {3}, cumulative {4}'
-                msg = msg.format(user_id, i, len(user_ids), j, n_items)
+                msg = 'Running user {0} ({1}/{2}) batch {3}, ' \
+                      'cumulative edges {4}'
+                msg = msg.format(user_id, i + 1, len(user_ids), j + 1, n_items)
                 logger.info(msg)
 
                 self.load_follow_edges(edges=batch, follow_fetch_id=ff_id)
@@ -1104,7 +1105,6 @@ class TweetsJob(ApiJob):
         else:
             logger.debug('Skipping old tweets')
             since_ids = self.max_tweet_ids_for_user_ids(user_ids)
-            since_ids = [x[1] for x in since_ids]
 
         n_items = 0
         for i, (user_id, since_id, target) in enumerate(zip(user_ids, since_ids,
@@ -1116,7 +1116,7 @@ class TweetsJob(ApiJob):
                 continue
 
             msg = 'Processing user {0} ({1} / {2})'
-            logger.debug(msg.format(user_id, i, len(user_ids)))
+            logger.debug(msg.format(user_id, i + 1, len(user_ids)))
 
             tweets = self.tweet_objects_for_ids(**{
                 'user_ids': [user_id],
@@ -1126,8 +1126,10 @@ class TweetsJob(ApiJob):
             })
 
             for j, batch in enumerate(ut.grouper(tweets, self.load_batch_size)):
-                msg = 'Running user {0} ({1} / {2}) batch {3}, cumulative {4}'
-                logger.info(msg.format(user_id, i, len(user_ids), j, n_items))
+                msg = 'Running user {0} ({1} / {2}) batch {3}, ' \
+                      'cumulative tweets {4}'
+                msg = msg.format(user_id, i + 1, len(user_ids), j + 1, n_items))
+                logger.info(msg)
 
                 self.load_tweets(batch, load_mentions=True)
                 n_items += len(batch)
