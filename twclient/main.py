@@ -8,13 +8,14 @@ import os
 import json
 import logging
 import argparse as ap
+import collections as cl
 import configparser as cp
 
 import tweepy
 
-# import twclient.utils as ut
-#
-# from twclient.job import StatsJob, InitializeJob, UserInfoJob, FollowJob, TweetsJob
+import twclient.utils as ut
+
+from twclient.job import StatsJob, InitializeJob, UserInfoJob, FollowJob, TweetsJob
 
 logger = logging.getLogger(__name__)
 
@@ -63,12 +64,10 @@ def main():
     aap.add_argument('-s', '--token-secret', help='OAuth token secret')
 
     rdp = sp.add_parser('rm-db', help='remove database configuration')
-    rdp.add_argument('-n', '--name', required=True,
-                     help='name of DB config to remove')
+    rdp.add_argument('name', help='name of DB config to remove')
 
     rap = sp.add_parser('rm-api', help='remove Twitter API configuration')
-    rap.add_argument('-n', '--name', required=True,
-                     help='name of API config to remove')
+    rap.add_argument('name', help='name of API config to remove')
 
     ## Other arguments
 
@@ -153,15 +152,18 @@ def main():
     ## Interact with config file
     ##
 
-    config = cp.ConfigParser()
-    config.read(os.path.expanduser(args.config_file))
+    config_file = os.path.expanduser(args.config_file)
 
-    profiles = list(set(config.keys()) - set(['general', 'DEFAULT']))
+    config = cp.ConfigParser(dict_type=cl.OrderedDict)
+    config.read(config_file)
+
+    # preserve order
+    profiles = [x for x in config.keys() if x != 'DEFAULT']
 
     for s in profiles:
         if 'type' not in config[s].keys():
             raise ValueError("Bad configuration file {0}: section missing "
-                            "type declaration field".format(s))
+                             "type declaration field".format(s))
 
     db_profiles = [x for x in profiles if config[x]['type'] == 'database']
     api_profiles = [x for x in profiles if config[x]['type'] == 'api']
@@ -192,7 +194,7 @@ def main():
         if args.name not in profiles:
             msg = 'DB profile {0} not found'
             raise ValueError(msg.format(args.name))
-        if args.name in api_profiles:
+        elif args.name in api_profiles:
             msg = 'Profile {0} is an API profile'
             raise ValueError(msg.format(args.name))
         else:
@@ -206,7 +208,7 @@ def main():
         if args.name not in profiles:
             msg = 'API profile {0} not found'
             raise ValueError(msg.format(args.name))
-        if args.name in api_profiles:
+        elif args.name in api_profiles:
             msg = 'Profile {0} is a DB profile'
             raise ValueError(msg.format(args.name))
         else:
@@ -217,8 +219,8 @@ def main():
 
         return
     elif args.command == 'add-db':
-        if args.name in ('general', 'DEFAULT'):
-            raise ValueError('Profile name not be "general" or "DEFAULT"')
+        if args.name == 'DEFAULT':
+            raise ValueError('Profile name may not be "DEFAULT"')
         elif args.name in profiles:
             msg = 'Profile {0} already exists'
             raise ValueError(msg.format(args.name))
@@ -228,16 +230,13 @@ def main():
                 'socket': args.socket
             }
 
-        # Default DB if none specified is the one most recently added
-        config['general']['database'] = args.name
-
         with open(config_file, 'wt') as f:
             config.write(f)
 
         return
     elif args.command == 'add-api':
-        if args.name in ('general', 'DEFAULT'):
-            raise ValueError('Profile name not be "general" or "DEFAULT"')
+        if args.name == 'DEFAULT':
+            raise ValueError('Profile name may not be "DEFAULT"')
         elif args.name in profiles:
             msg = 'Profile {0} already exists'
             raise ValueError(msg.format(args.name))
@@ -269,10 +268,10 @@ def main():
                 raise ValueError(msg.format(args.database))
             else:
                 db_to_use = args.database
-        elif 'database' in args['general'].keys():
-            db_to_use = config['general']['database']
+        elif len(db_profiles) > 0:
+            db_to_use = db_profiles[-1] # order in the file is preserved
         else:
-            raise ValueError("No database specified")
+            raise ValueError("No database profiles configured (use add-db)")
 
         socket = config[db_to_use]['socket']
 
@@ -316,17 +315,15 @@ def main():
 
             auths += [auth]
 
-    return
-
     ##
     ## Business logic
     ##
 
     # Massage the arguments a bit for passing on to job classes
-    command = vars(args).pop('command')
-
     vars(args)['auths'] = auths
     vars(args)['socket'] = socket
+
+    command = vars(args).pop('command')
 
     vars(args).pop('verbose')
     vars(args).pop('database')
