@@ -606,13 +606,36 @@ class ApiJob(DatabaseJob):
             else:
                 yield from method(**kwargs)
         except tweepy.error.TweepError as e:
-            msg = 'Error returned by Twitter API: API code {0}, HTTP status ' \
-                  'code {1}, message {2}'
-            msg = msg.format(e.api_code, e.response.status_code, e.reason)
+            de = err.dispatch(e)
 
-            logger.debug(msg, exc_info=True)
+            if isinstance(de, err.ProtectedUserError):
+                msg = 'Ignoring protected user in call to method {0} ' \
+                      'with arguments {1}'
+                msg = msg.format(method, kwargs)
+                logger.warning(msg)
+            elif isinstance(de, err.BadUserError):
+                if self.abort_on_bad_targets:
+                    raise de
+                else:
+                    msg = 'Ignoring bad user in call to method {0} ' \
+                          'with arguments {1}'
+                    msg = msg.format(method, kwargs)
+                    logger.warning(msg)
+            else:
+                message = e.message
+                api_code = e.api_code
+                if e.response is not None:
+                    http_code = e.response.status_code
+                else:
+                    http_code = None
 
-            raise
+                msg = 'Error returned by Twitter API: API code {0}, HTTP ' \
+                      'status code {1}, message {2}'
+                msg = msg.format(api_code, http_code, message)
+
+                logger.debug(msg, exc_info=True)
+
+                raise
 
     @staticmethod
     def mentions_for_tweet(tweet):
@@ -765,81 +788,35 @@ class ApiJob(DatabaseJob):
 
         assert kind in ('user_ids', 'screen_names', 'twitter_lists')
 
-        # NOTE we don't need to catch protected user errors here:
-        # the docs say they'll be returned by users_lookup
-        # and list_members
-
         if kind == 'twitter_lists':
-            n_items = 0
-
             for i, obj in enumerate(objs):
-                msg = 'Running {0} {1}, cumulative {2}'
-                msg = msg.format(kind, obj, n_items)
-                logger.info(msg)
+                logger.info('Running list {1}: {2}'.format(i, obj))
 
                 owner_screen_name, slug = obj.split('/')
 
-                twargs = {
-                    'slug': slug,
-                    'owner_screen_name': owner_screen_name
-                }
-
-                try:
-                    yield from self.make_api_call(self.api.list_members,
-                                                cursor=True, **twargs)
-                except tweepy.error.TweepError as e:
-                    if not err.is_bad_user_error(e):
-                        raise
-
-                    if self.abort_on_bad_targets:
-                        raise
-
-                    msg = 'Skipping bad user with {0} {1}: {2}'
-                    logger.warning(msg.format(kind, obj, sys.exc_info()))
-
-                    continue
-                finally:
-                    n_items += 1
-
+                yield from self.make_api_call(
+                    method=self.api.list_members,
+                    cursor=True,
+                    slug=slug,
+                    owner_screen_name=owner_screen_name
+                )
         else:
-            n_batches = 0
-
             for i, grp in enumerate(ut.grouper(objs, 100)): # max 100 per call
-                # we can't yield directly from ret because we have to check
-                # length etc; this is not a big problem because non-cursored
-                # API calls aren't generators at the tweepy level anyway
+                logger.info('Running {0} batch {1}'.format(kind, i))
 
-                msg = 'Running {0} batch {1}, cumulative batches {2}'
-                msg = msg.format(kind, i, n_batches)
-                logger.info(msg)
+                ret = self.make_api_call(self.api.lookup_users, **{kind: grp})
+                for j, hobj in enumerate(ret):
+                    yield hobj
 
-                try:
-                    ret = self.make_api_call(self.api.lookup_users,
-                                            **{kind: grp})
-                    ret = [x for x in ret]
-
-                    missing_users = len(grp) - len(ret)
-                    if missing_users > 0 and self.abort_on_bad_targets:
-                        # NOTE the api code here is a dummy to satisfy the
-                        # is_bad_user_error function defined above
-                        msg = 'Missing users: {0} not returned by users/lookup'
-                        raise tweepy.error.TweepError(msg.format(missing_users),
-                                                      api_code=17)
-
-                    yield from ret
-                except tweepy.error.TweepError as e:
-                    if not err.is_bad_user_error(e):
-                        raise
-
+                if j + 1 < len(grp):
                     if self.abort_on_bad_targets:
-                        raise
+                        msg = 'Missing users: {0} not returned by users/lookup'
+                        raise err.BadUserError(msg.format(missing_users))
+                    else:
+                        msg = 'Missing users: {0} not returned by users/lookup'
+                        logger.warning(msg.format(missing_users))
 
-                    msg = 'Skipping bad user(s) in users/lookup of {0}: {2}'
-                    logger.warning(msg.format(kind, sys.exc_info()))
-
-                    continue
-                finally:
-                    n_batches += 1
+                yield from ret
 
     def user_objects_for_lists(self, twitter_lists):
         yield from self.user_objects_for(twitter_lists, kind='twitter_lists')
@@ -881,9 +858,9 @@ class ApiJob(DatabaseJob):
             else:
                 since_id = None
 
-            common_twargs = {
+            twargs = {
                 'count': 200, # the max in one call
-                'tweet_mode': 'extended',
+                'tweet_mode': 'extended', # don't truncate tweet text
                 'include_rts': True,
                 'since_id': since_id
             }
@@ -892,7 +869,7 @@ class ApiJob(DatabaseJob):
                 method = self.api.list_timeline
 
                 owner_screen_name, slug = twitter_list.split('/')
-                twargs = dict(common_twargs, **{
+                twargs = dict(twargs, **{
                     'slug': slug,
                     'owner_screen_name': owner_screen_name
                 })
@@ -900,39 +877,17 @@ class ApiJob(DatabaseJob):
                 method = self.api.user_timeline
 
                 param = 'user_id' if kind == 'user_ids' else 'screen_name'
-                twargs = dict(common_twargs, **{param: obj})
+                twargs = dict(twargs, **{param: obj})
 
-            try:
-                tweets = self.make_api_call(method, cursor=True,
-                                            max_items=max_tweets, **twargs)
+            tweets = self.make_api_call(method, cursor=True,
+                                        max_items=max_tweets, **twargs)
 
-                for tweet in tweets:
-                    if since_timestamp is not None:
-                        if tweet.created_at.timestamp() < since_timestamp:
-                            # NOTE the tweets must be returned in reverse
-                            # chronological order or this won't work
-                            break
-
-                    yield tweet
-            except tweepy.error.TweepError as e:
-                if err.is_protected_user_error(e):
-                    msg = 'Ignoring protected {0} {1}'
-                    msg = msg.format(kind, obj)
-                    logger.warning(msg)
-
-                    continue
-
-                if not err.is_bad_user_error(e):
-                    raise
-
-                if self.abort_on_bad_targets:
-                    raise
-
-                msg = 'Skipping bad user with {0} {1}: {2}'
-                msg = msg.format(kind, obj, sys.exc_info())
-                logger.warning(msg)
-
-                continue
+            yield from (
+                tweet
+                for tweet in tweets
+                if (since_timestamp is None) or \
+                   (tweet.created_at.timestamp() >= since_timestamp)
+            )
 
     def tweet_objects_for_lists(self, twitter_lists, **kwargs):
         yield from self.tweet_objects_for(objs=twitter_lists,
@@ -960,32 +915,13 @@ class ApiJob(DatabaseJob):
             if direction == 'friends':
                 method = self.api.friends_ids
 
-            try:
-                edges = self.make_api_call(method, cursor=True, **{param: obj})
+            edges = self.make_api_call(method, cursor=True, **{param: obj})
 
-                for item in edges:
-                    if direction == 'followers':
-                        yield [item, obj]
-                    else: # direction == 'friends'
-                        yield [obj, item]
-            except tweepy.error.TweepError as e:
-                if err.is_protected_user_error(e):
-                    msg = 'Ignoring protected {0} {1}'
-                    msg = msg.format(kind, obj)
-                    logger.warning(msg)
-
-                    continue
-
-                if not err.is_bad_user_error(e):
-                    raise
-
-                if self.abort_on_bad_targets:
-                    raise
-
-                msg = 'Skipping bad user with {0} {1}: {2}'
-                logger.warning(msg.format(kind, obj, sys.exc_info()))
-
-                continue
+            for item in edges:
+                if direction == 'followers':
+                    yield [item, obj]
+                else: # direction == 'friends'
+                    yield [obj, item]
 
     def follow_objects_for_ids(self, user_ids, **kwargs):
         yield from self.follow_objects_for(objs=user_ids,
@@ -1085,8 +1021,7 @@ class FollowJob(ApiJob):
         n_items = 0
         for i, user_id in enumerate(user_ids):
             msg = 'Processing user {0} ({1} / {2})'
-            msg = msg.format(user_id, i, len(user_ids))
-            logger.debug(msg)
+            logger.debug(msg.format(user_id, i, len(user_ids))
 
             ff_id = self.load_follow_fetch(user_id=user_id,
                                            direction=self.direction)
@@ -1112,11 +1047,9 @@ class FollowJob(ApiJob):
 
                 msg = 'Skipping bad user with user_id {0}: {1}'
                 logger.warning(msg.format(user_id, sys.exc_info()))
-
-                continue
-
-            if not self.transaction:
-                self.commit()
+            else:
+                if not self.transaction:
+                    self.commit()
 
         if self.transaction:
             self.commit()
@@ -1161,8 +1094,7 @@ class TweetsJob(ApiJob):
         n_items = 0
         for i, (user_id, since_id) in enumerate(zip(user_ids, since_ids)):
             msg = 'Processing user {0} ({1} / {2})'
-            msg = msg.format(user_id, i, len(user_ids))
-            logger.debug(msg)
+            logger.debug(msg.format(user_id, i, len(user_ids))
 
             try:
                 tweets = self.tweet_objects_for_ids(**{
@@ -1174,8 +1106,7 @@ class TweetsJob(ApiJob):
 
                 for j, batch in enumerate(ut.grouper(tweets, self.load_batch_size)):
                     msg = 'Running user {0} ({1} / {2}) batch {3}, cumulative {4}'
-                    msg = msg.format(user_id, i, len(user_ids), j, n_items)
-                    logger.info(msg)
+                    logger.info(msg.format(user_id, i, len(user_ids), j, n_items)
 
                     self.load_tweets(batch, load_mentions=True)
                     n_items += len(batch)
@@ -1188,11 +1119,9 @@ class TweetsJob(ApiJob):
 
                 msg = 'Skipping bad user with user_id {0}: {1}'
                 logger.warning(msg.format(user_id, sys.exc_info()))
-
-                continue
-
-            if not self.transaction:
-                self.commit()
+            else:
+                if not self.transaction:
+                    self.commit()
 
         if self.transaction:
             self.commit()

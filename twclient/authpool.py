@@ -135,22 +135,20 @@ class AuthPoolAPI(object):
 
                     iself._authpool_switch_api()
                 except tweepy.error.TweepError as e:
-                    if err.is_capacity_error(e):
-                        if cp_retry_cnt < iself._authpool_capacity_retries:
-                            msg = 'Over-capacity error on try {0}; sleeping {1}'
-                            msg = msg.format(cp_retry_cnt, iself._authpool_capacity_sleep)
-                            logger.warning(msg)
+                    de = err.dispatch(e)
 
-                            time.sleep(iself._authpool_capacity_sleep)
-
-                            cp_retry_cnt += 1
-                        else:
-                            msg = 'Over-capacity error in call to {0}'
-                            msg = msg.format(name)
-
-                            raise err.CapacityError(msg)
+                    if not isinstance(de, err.CapacityError):
+                        raise de
+                    elif cp_retry_cnt >= iself._authpool_capacity_retries:
+                        raise de
                     else:
-                        raise
+                        msg = 'Over-capacity error on try {0}; sleeping {1}'
+                        msg = msg.format(cp_retry_cnt, iself._authpool_capacity_sleep)
+                        logger.warning(msg)
+
+                        time.sleep(iself._authpool_capacity_sleep)
+
+                        cp_retry_cnt += 1
 
         # tweepy uses attributes to control cursors and pagination, so
         # we need to set them
