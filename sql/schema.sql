@@ -320,7 +320,8 @@ select
     extract(epoch from tw.tweet_create_dt) as currency_dt
 from twitter.tweet tw;
 
-create or replace materialized view analytics.mention_graph_materialized as
+drop materialized view if exists analytics.mention_graph_materialized;
+create materialized view analytics.mention_graph_materialized as
 select
     tw.user_id as source_user_id,
     mt.mentioned_user_id as target_user_id,
@@ -333,7 +334,8 @@ from twitter.tweet tw
     inner join twitter.mention mt using(tweet_id)
 group by 1,2;
 
-create or replace materialized view analytics.reply_graph_materialized as
+drop materialized view if exists analytics.reply_graph_materialized;
+create materialized view analytics.reply_graph_materialized as
 select
     tw.user_id as source_user_id,
     tw.in_reply_to_user_id as target_user_id,
@@ -436,7 +438,8 @@ select
     tw.modified_dt as currency_dt
 from twitter.tweet tw;
 
-create or replace materialized view analytics.tweet_activity_by_date_materialized as
+drop materialized view if exists analytics.tweet_activity_by_date_materialized;
+create materialized view analytics.tweet_activity_by_date_materialized as
 with
     tmp_date_range as
     (
