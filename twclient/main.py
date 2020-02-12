@@ -30,8 +30,8 @@ def main():
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='verbosity level (repeat for more)')
 
-    parser.add_argument('-c', '--config-file', default='~/.twclientrc.ini',
-                        help='path to config file (default ~/.twclientrc.ini)')
+    parser.add_argument('-c', '--config-file', default='~/.twclientrc',
+                        help='path to config file (default ~/.twclientrc)')
     parser.add_argument('-d', '--database', help='name of stored DB profile')
     parser.add_argument('-a', '--api', dest='apis', nargs='+',
                         help='name of stored API profile(s)')
@@ -51,7 +51,8 @@ def main():
 
     # see https://docs.sqlalchemy.org/en/13/dialects/postgresql.html#empty-dsn-connections-environment-variable-connections
     adp = sp.add_parser('add-db', help='add database profile and make default')
-    adp.add_argument('-n', '--name', required=True, help='name of DB config')
+    adp.add_argument('-n', '--name', required=True,
+                     help='name to use for DB config')
     adp.add_argument('-s', '--socket', help='local postgres unix socket')
 
     aap = sp.add_parser('add-api', help='add Twitter API profile')
@@ -162,8 +163,8 @@ def main():
 
     for s in profiles:
         if 'type' not in config[s].keys():
-            raise ValueError("Bad configuration file {0}: section missing "
-                             "type declaration field".format(s))
+            parser.error("Bad configuration file {0}: section missing "
+                         "type declaration field".format(s))
 
     db_profiles = [x for x in profiles if config[x]['type'] == 'database']
     api_profiles = [x for x in profiles if config[x]['type'] == 'api']
@@ -193,10 +194,10 @@ def main():
     elif args.command == 'rm-db':
         if args.name not in profiles:
             msg = 'DB profile {0} not found'
-            raise ValueError(msg.format(args.name))
+            parser.error(msg.format(args.name))
         elif args.name in api_profiles:
             msg = 'Profile {0} is an API profile'
-            raise ValueError(msg.format(args.name))
+            parser.error(msg.format(args.name))
         else:
             config.pop(args.name)
 
@@ -207,10 +208,10 @@ def main():
     elif args.command == 'rm-api':
         if args.name not in profiles:
             msg = 'API profile {0} not found'
-            raise ValueError(msg.format(args.name))
+            parser.error(msg.format(args.name))
         elif args.name in api_profiles:
             msg = 'Profile {0} is a DB profile'
-            raise ValueError(msg.format(args.name))
+            parser.error(msg.format(args.name))
         else:
             config.pop(args.name)
 
@@ -220,10 +221,10 @@ def main():
         return
     elif args.command == 'add-db':
         if args.name == 'DEFAULT':
-            raise ValueError('Profile name may not be "DEFAULT"')
+            parser.error('Profile name may not be "DEFAULT"')
         elif args.name in profiles:
             msg = 'Profile {0} already exists'
-            raise ValueError(msg.format(args.name))
+            parser.error(msg.format(args.name))
         else:
             config[args.name] = {
                 'type': 'database',
@@ -236,10 +237,10 @@ def main():
         return
     elif args.command == 'add-api':
         if args.name == 'DEFAULT':
-            raise ValueError('Profile name may not be "DEFAULT"')
+            parser.error('Profile name may not be "DEFAULT"')
         elif args.name in profiles:
             msg = 'Profile {0} already exists'
-            raise ValueError(msg.format(args.name))
+            parser.error(msg.format(args.name))
         else:
             config[args.name] = {
                 'type': 'database',
@@ -262,16 +263,16 @@ def main():
             # NOTE will become slightly more complicated with sqlalchemy
             if args.database in profiles and args.database not in db_profiles:
                 msg = 'Profile {0} is not a DB profile'
-                raise ValueError(msg.format(args.database))
+                parser.error(msg.format(args.database))
             elif args.database not in profiles:
                 msg = 'Profile {0} not found'
-                raise ValueError(msg.format(args.database))
+                parser.error(msg.format(args.database))
             else:
                 db_to_use = args.database
         elif len(db_profiles) > 0:
             db_to_use = db_profiles[-1] # order in the file is preserved
         else:
-            raise ValueError("No database profiles configured (use add-db)")
+            parser.error("No database profiles configured (use add-db)")
 
         socket = config[db_to_use]['socket']
 
@@ -298,7 +299,7 @@ def main():
                     not 'token' in config[p].keys() \
                 )
             except AssertionError:
-                raise ValueError('Bad API profile {0}'.format(p))
+                parser.error('Bad API profile {0}'.format(p))
 
             if 'token' in config[p].keys():
                 auth = tweepy.OAuthHandler(
@@ -319,20 +320,21 @@ def main():
     ## Business logic
     ##
 
-    # Massage the arguments a bit for passing on to job classes
-    vars(args)['auths'] = auths
-    vars(args)['socket'] = socket
-
+    ## Massage the arguments a bit for passing on to job classes
     command = vars(args).pop('command')
-
+    vars(args)['socket'] = socket
     vars(args).pop('verbose')
     vars(args).pop('database')
     vars(args).pop('apis')
     vars(args).pop('config_file')
 
-    if command != 'stats' and args.user_spec == 'missing':
-        vars(args)['user_spec'] = 'missing_' + args.command
+    if command != 'stats':
+        vars(args)['auths'] = auths
 
+        if args.user_spec == 'missing':
+            vars(args)['user_spec'] = 'missing_' + args.command
+
+    ## Actually run jobs
     if command == 'initialize':
         yes = vars(args).pop('yes')
 
