@@ -251,13 +251,13 @@ for each row
 execute procedure trigger_set_modified_dt();
 
 /*
- * Analytics views
+ * Analytics views - some live, some materialized
  */
 
 drop schema if exists analytics cascade;
 create schema analytics;
 
-create or replace view analytics.summary_stats as
+create or replace view analytics.summary_stats_live as
 with users as
 (
     select
@@ -298,7 +298,7 @@ from users
     cross join mentions
     cross join follows;
 
-create or replace view analytics.all_mentions as
+create or replace view analytics.all_mentions_live as
 select
     tw.tweet_id,
 
@@ -309,7 +309,7 @@ select
 from twitter.tweet tw
     inner join twitter.mention mt using(tweet_id);
 
-create or replace view analytics.all_replies as
+create or replace view analytics.all_replies_live as
 select
     tw.tweet_id,
 
@@ -319,7 +319,7 @@ select
     extract(epoch from tw.tweet_create_dt) as currency_dt
 from twitter.tweet tw;
 
-create or replace view analytics.mention_graph as
+create or replace materialized view analytics.mention_graph_materialized as
 select
     tw.user_id as source_user_id,
     mt.mentioned_user_id as target_user_id,
@@ -332,7 +332,7 @@ from twitter.tweet tw
     inner join twitter.mention mt using(tweet_id)
 group by 1,2;
 
-create or replace view analytics.reply_graph as
+create or replace materialized view analytics.reply_graph_materialized as
 select
     tw.user_id as source_user_id,
     tw.in_reply_to_user_id as target_user_id,
@@ -344,7 +344,7 @@ select
 from twitter.tweet tw
 group by 1,2;
 
-create or replace view analytics.tweets as
+create or replace view analytics.tweets_live as
 select
     tw.tweet_id,
     tw.user_id,
@@ -376,7 +376,7 @@ select
     tw.modified_dt as currency_dt
 from twitter.tweet tw;
 
-create or replace view analytics.tweet_activity_by_date as
+create or replace materialized view analytics.tweet_activity_by_date_materialized as
 with
     tmp_date_range as
     (
