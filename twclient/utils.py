@@ -1,6 +1,5 @@
 import os
 import csv
-import yaml
 import string
 import random
 import logging
