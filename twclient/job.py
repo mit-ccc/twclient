@@ -1021,35 +1021,28 @@ class FollowJob(ApiJob):
         n_items = 0
         for i, user_id in enumerate(user_ids):
             msg = 'Processing user {0} ({1} / {2})'
-            logger.debug(msg.format(user_id, i, len(user_ids))
+            logger.debug(msg.format(user_id, i, len(user_ids)))
 
             ff_id = self.load_follow_fetch(user_id=user_id,
                                            direction=self.direction)
 
-            try:
-                edges = self.follow_objects_for(objs=[user_id], kind='user_ids',
-                                                direction=self.direction)
-                edges = ut.grouper(edges, self.load_batch_size)
+            edges = self.follow_objects_for(objs=[user_id], kind='user_ids',
+                                            direction=self.direction)
+            edges = ut.grouper(edges, self.load_batch_size)
 
-                for j, batch in enumerate(edges):
-                    msg = 'Running user {0} ({1}/{2}) batch {3}, cumulative {4}'
-                    msg = msg.format(user_id, i, len(user_ids), j, n_items)
-                    logger.info(msg)
+            for j, batch in enumerate(edges):
+                msg = 'Running user {0} ({1}/{2}) batch {3}, cumulative {4}'
+                msg = msg.format(user_id, i, len(user_ids), j, n_items)
+                logger.info(msg)
 
-                    self.load_follow_edges(edges=batch, follow_fetch_id=ff_id)
-                    n_items += len(batch)
-            except tweepy.error.TweepError as e:
-                if not err.is_bad_user_error(e):
-                    raise
+                self.load_follow_edges(edges=batch, follow_fetch_id=ff_id)
+                n_items += len(batch)
 
-                if self.abort_on_bad_targets:
-                    raise
-
-                msg = 'Skipping bad user with user_id {0}: {1}'
-                logger.warning(msg.format(user_id, sys.exc_info()))
-            else:
-                if not self.transaction:
-                    self.commit()
+            # NOTE: it's safe to commit here even if make_api_call caught a
+            # BadUserError, because in that case it just won't return any rows
+            # and the loop above is a no-op
+            if not self.transaction:
+                self.commit()
 
         if self.transaction:
             self.commit()
@@ -1094,34 +1087,27 @@ class TweetsJob(ApiJob):
         n_items = 0
         for i, (user_id, since_id) in enumerate(zip(user_ids, since_ids)):
             msg = 'Processing user {0} ({1} / {2})'
-            logger.debug(msg.format(user_id, i, len(user_ids))
+            logger.debug(msg.format(user_id, i, len(user_ids)))
 
-            try:
-                tweets = self.tweet_objects_for_ids(**{
-                    'user_ids': [user_id],
-                    'since_ids': [since_id],
-                    'max_tweets': self.max_tweets,
-                    'since_timestamp': self.since_timestamp
-                })
+            tweets = self.tweet_objects_for_ids(**{
+                'user_ids': [user_id],
+                'since_ids': [since_id],
+                'max_tweets': self.max_tweets,
+                'since_timestamp': self.since_timestamp
+            })
 
-                for j, batch in enumerate(ut.grouper(tweets, self.load_batch_size)):
-                    msg = 'Running user {0} ({1} / {2}) batch {3}, cumulative {4}'
-                    logger.info(msg.format(user_id, i, len(user_ids), j, n_items)
+            for j, batch in enumerate(ut.grouper(tweets, self.load_batch_size)):
+                msg = 'Running user {0} ({1} / {2}) batch {3}, cumulative {4}'
+                logger.info(msg.format(user_id, i, len(user_ids), j, n_items))
 
-                    self.load_tweets(batch, load_mentions=True)
-                    n_items += len(batch)
-            except tweepy.error.TweepError as e:
-                if not err.is_bad_user_error(e):
-                    raise
+                self.load_tweets(batch, load_mentions=True)
+                n_items += len(batch)
 
-                if self.abort_on_bad_targets:
-                    raise
-
-                msg = 'Skipping bad user with user_id {0}: {1}'
-                logger.warning(msg.format(user_id, sys.exc_info()))
-            else:
-                if not self.transaction:
-                    self.commit()
+            # NOTE: it's safe to commit here even if make_api_call caught a
+            # BadUserError, because in that case it just won't return any rows
+            # and the loop above is a no-op
+            if not self.transaction:
+                self.commit()
 
         if self.transaction:
             self.commit()
