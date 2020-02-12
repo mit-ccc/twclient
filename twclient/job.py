@@ -1128,7 +1128,7 @@ class TweetsJob(ApiJob):
             for j, batch in enumerate(ut.grouper(tweets, self.load_batch_size)):
                 msg = 'Running user {0} ({1} / {2}) batch {3}, ' \
                       'cumulative tweets {4}'
-                msg = msg.format(user_id, i + 1, len(user_ids), j + 1, n_items))
+                msg = msg.format(user_id, i + 1, len(user_ids), j + 1, n_items)
                 logger.info(msg)
 
                 self.load_tweets(batch, load_mentions=True)
