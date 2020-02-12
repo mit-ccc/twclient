@@ -603,20 +603,48 @@ class ApiJob(DatabaseJob):
             else:
                 ret = method(**kwargs)
 
-            yield from ret
-        except err.TWClientError as e:
-            if isinstance(e, err.ProtectedUserError):
+            # yield from ret
+            j = 0
+            for obj in ret:
+                yield obj
+                j += 1
+
+            # NOTE users/lookup doesn't raise an error condition on bad users,
+            # it just doesn't return them, so we need to check the length of the
+            # input and the number of user objects returned
+            if method.__self__ is self.api and method == self.api.lookup_users:
+                assert 'screen_names' in twargs.keys() or \
+                       'user_ids' in twargs.keys()
+
+                if 'screen_names' in twargs.keys():
+                    kind = 'screen_names'
+                else:
+                    kind = 'user_ids'
+
+                # don't risk it being a generator
+                nmissing = len([x for x in twargs[kind]]) - j
+
+                if nmissing > 0:
+                    msg = "{0} bad/missing user(s) in users/lookup call"
+                    raise err.BadUserError(msg.format(nmissing))
+        except (tweepy.error.TweepError, err.TWClientError) as e:
+            if isinstance(e, err.CapacityError):
+                raise
+            elif isinstance(e, err.ProtectedUserError):
                 msg = 'Ignoring protected user in call to method {0} ' \
-                      'with arguments {1}'
-                msg = msg.format(method, kwargs)
+                      'with arguments {1}; original exception message: {2}'
+                msg = msg.format(method, kwargs, e.message)
                 logger.warning(msg)
             elif isinstance(e, err.BadUserError):
+                msg = 'Ignoring bad user(s) in call to method {0} ' \
+                      'with arguments {1}; original exception message: {2}'
+                msg = msg.format(method, kwargs, e.message)
+
                 if self.abort_on_bad_targets:
+                    logger.exception(msg)
+
                     raise
                 else:
-                    msg = 'Ignoring bad user in call to method {0} ' \
-                          'with arguments {1}'
-                    msg = msg.format(method, kwargs)
                     logger.warning(msg)
             else:
                 message = e.message
@@ -801,22 +829,10 @@ class ApiJob(DatabaseJob):
             for i, grp in enumerate(ut.grouper(objs, 100)): # max 100 per call
                 logger.info('Running {0} batch {1}'.format(kind, i))
 
-                ret = self.make_api_call(self.api.lookup_users, **{kind: grp})
-
-                j = 0
-                for hobj in ret:
-                    yield hobj
-                    j += 1
-
-                if j < len(grp):
-                    if self.abort_on_bad_targets:
-                        msg = 'Missing users: {0} not returned by users/lookup'
-                        raise err.BadUserError(msg.format(len(grp) - j))
-                    else:
-                        msg = 'Missing users: {0} not returned by users/lookup'
-                        logger.warning(msg.format(len(grp) - j))
-
-                yield from ret
+                yield from self.make_api_call(
+                    method=self.api.lookup_users,
+                    **{kind: grp}
+                )
 
     def user_objects_for_lists(self, twitter_lists):
         yield from self.user_objects_for(twitter_lists, kind='twitter_lists')
@@ -1019,7 +1035,13 @@ class FollowJob(ApiJob):
         # there may be very very many users returned, so let's process
         # them incrementally rather than building one giant list
         n_items = 0
-        for i, user_id in enumerate(user_ids):
+        for i, (user_id, target) in enumerate(zip(user_ids, self.targets)):
+            if user_id is None and self.target_type == 'screen_names':
+                msg = 'Skipping unknown screen name {0}'.format(target)
+                logger.warning(msg)
+
+                continue
+
             msg = 'Processing user {0} ({1} / {2})'
             logger.debug(msg.format(user_id, i, len(user_ids)))
 
@@ -1085,7 +1107,14 @@ class TweetsJob(ApiJob):
             since_ids = [x[1] for x in since_ids]
 
         n_items = 0
-        for i, (user_id, since_id) in enumerate(zip(user_ids, since_ids)):
+        for i, (user_id, since_id, target) in enumerate(zip(user_ids, since_ids,
+                                                            self.targets)):
+            if user_id is None and self.target_type == 'screen_names':
+                msg = 'Skipping unknown screen name {0}'.format(target)
+                logger.warning(msg)
+
+                continue
+
             msg = 'Processing user {0} ({1} / {2})'
             logger.debug(msg.format(user_id, i, len(user_ids)))
 
