@@ -357,7 +357,7 @@ returns table (
 
     replies bigint,
 
-    first_dt timestamp
+    first_dt timestamp,
     last_dt timestamp
 ) as
 $func$
@@ -386,7 +386,7 @@ returns table (
 
     mentions bigint,
 
-    first_dt timestamp
+    first_dt timestamp,
     last_dt timestamp
 ) as
 $func$
