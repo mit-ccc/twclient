@@ -357,8 +357,8 @@ returns table (
 
     replies bigint,
 
-    first_dt timestamp,
-    last_dt timestamp
+    first_dt timestamp with time zone,
+    last_dt timestamp with time zone
 ) as
 $func$
 select
@@ -386,8 +386,8 @@ returns table (
 
     mentions bigint,
 
-    first_dt timestamp,
-    last_dt timestamp
+    first_dt timestamp with time zone,
+    last_dt timestamp with time zone
 ) as
 $func$
 select
