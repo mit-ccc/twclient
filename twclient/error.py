@@ -49,7 +49,9 @@ class CapacityError(TWClientError):
             ex.response.status_code in (500, 503, 504)
 
 def dispatch(ex):
-    if BadUserError.tweepy_is_instance(ex):
+    if isinstance(ex, TWClientError):
+        return ex
+    elif BadUserError.tweepy_is_instance(ex):
         return BadUserError.from_tweepy(ex)
     elif ProtectedUserError.tweepy_is_instance(ex):
         return ProtectedUserError.from_tweepy(ex)
