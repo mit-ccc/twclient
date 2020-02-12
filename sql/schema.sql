@@ -183,6 +183,7 @@ create table twitter.tweet
     modified_dt timestamptz not null default now()
 );
 create index on twitter.tweet using btree (user_id);
+create index on twitter.tweet using btree (tweet_create_dt);
 
 drop table if exists twitter.mention;
 create table twitter.mention
@@ -326,8 +327,8 @@ select
 
     count(*) as mentions,
 
-    min(extract(epoch from tw.tweet_create_dt)) as first_dt,
-    max(extract(epoch from tw.tweet_create_dt)) as last_dt
+    min(tw.tweet_create_dt) as first_dt,
+    max(tw.tweet_create_dt) as last_dt
 from twitter.tweet tw
     inner join twitter.mention mt using(tweet_id)
 group by 1,2;
@@ -339,10 +340,69 @@ select
 
     count(*) as replies,
 
-    min(extract(epoch from tw.tweet_create_dt)) as first_dt,
-    max(extract(epoch from tw.tweet_create_dt)) as last_dt
+    min(tw.tweet_create_dt) as first_dt,
+    max(tw.tweet_create_dt) as last_dt
 from twitter.tweet tw
 group by 1,2;
+
+create or replace function reply_graph_by_time(
+    _start timestamp,
+    _end timestamp
+)
+returns table (
+    source_user_id bigint,
+    target_user_id bigint,
+
+    replies bigint,
+
+    first_dt timestamp
+    last_dt timestamp
+) as
+$func$
+select
+    tw.user_id as source_user_id,
+    tw.in_reply_to_user_id as target_user_id,
+
+    count(*) as replies,
+
+    min(tw.tweet_create_dt) as first_dt,
+    max(tw.tweet_create_dt) as last_dt
+from twitter.tweet tw
+where
+    tw.tweet_create_dt >= $1 and
+    tw.tweet_create_dt <= $2
+group by 1,2;
+$func$ language sql;
+
+create or replace function mention_graph_by_time(
+    _start timestamp,
+    _end timestamp
+)
+returns table (
+    source_user_id bigint,
+    target_user_id bigint,
+
+    mentions bigint,
+
+    first_dt timestamp
+    last_dt timestamp
+) as
+$func$
+select
+    tw.user_id as source_user_id,
+    mt.mentioned_user_id as target_user_id,
+
+    count(*) as mentions,
+
+    min(tw.tweet_create_dt) as first_dt,
+    max(tw.tweet_create_dt) as last_dt
+from twitter.tweet tw
+    inner join twitter.mention mt using(tweet_id)
+where
+    tw.tweet_create_dt >= $1 and
+    tw.tweet_create_dt <= $2
+group by 1,2;
+$func$ language sql;
 
 create or replace view analytics.tweets_live as
 select
