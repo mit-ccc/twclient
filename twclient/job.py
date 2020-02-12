@@ -367,90 +367,6 @@ class DatabaseJob(ABC):
         # NOTE could be more efficient...
         return [self.user_id_for_screen_name(s) for s in screen_names]
 
-    def resolve_user_spec(self, user_spec):
-        logger.debug('Resolving user_spec {0}'.format(user_spec))
-
-        assert user_spec in ('all', 'missing_user_info',
-                             'missing_friends', 'missing_followers',
-                             'missing_tweets')
-
-        if user_spec == 'all':
-            return self._get_all_user_ids()
-        elif user_spec == 'missing_user_info':
-            return self._get_user_ids_missing_info()
-        elif user_spec == 'missing_friends':
-            return self._get_user_ids_missing_friends()
-        elif user_spec == 'missing_followers':
-            return self._get_user_ids_missing_followers()
-        else: # user_spec == 'missing_tweets'
-            return self._get_user_ids_missing_tweets()
-
-    def _get_user_ids_all(self):
-        return self.db_get_data("""
-        select
-            u.user_id
-        from twitter.user u;
-        """, flatten=True)
-
-    def _get_user_ids_missing_info(self):
-        return self.db_get_data("""
-        select
-            u.user_id
-        from twitter.user u
-        where
-            u.api_response is null;
-        """, flatten=True)
-
-    def _get_user_ids_missing_friends(self):
-        return self.db_get_data("""
-        select
-            u.user_id
-        from twitter.user u
-        where
-            not exists
-            (
-                select
-                    1
-                from twitter.follow_fetch ff
-                where
-                    ff.is_friends and
-                    ff.user_id = u.user_id
-            );
-        """, flatten=True)
-
-    def _get_user_ids_missing_followers(self):
-        return self.db_get_data("""
-        select
-            u.user_id
-        from twitter.user u
-        where
-            not exists
-            (
-                select
-                    1
-                from twitter.follow_fetch ff
-                where
-                    ff.is_followers and
-                    ff.user_id = u.user_id
-            );
-        """, flatten=True)
-
-    def _get_user_ids_missing_tweets(self):
-        return self.db_get_data("""
-        select
-            u.user_id
-        from twitter.user u
-        where
-            not exists
-            (
-                select
-                    1
-                from twitter.tweet t
-                where
-                    t.user_id = u.user_id
-            );
-        """, flatten=True)
-
 class InitializeJob(DatabaseJob):
     def run(self):
         self.db_initialize()
@@ -469,7 +385,6 @@ class ApiJob(DatabaseJob):
 
         user_ids = kwargs.pop('user_ids', None)
         screen_names = kwargs.pop('screen_names', None)
-        user_spec = kwargs.pop('user_spec', None)
         twitter_lists = kwargs.pop('twitter_lists', None)
         select_tag = kwargs.pop('select_tag', None)
 
@@ -477,7 +392,7 @@ class ApiJob(DatabaseJob):
         assert sum([
             twitter_lists is not None,
             screen_names is not None,
-            ut.coalesce(user_ids, user_spec, select_tag) is not None
+            ut.coalesce(user_ids, select_tag) is not None
         ]) == 1
 
         super(ApiJob, self).__init__(**kwargs)
@@ -487,12 +402,6 @@ class ApiJob(DatabaseJob):
 
         if twitter_lists is not None:
             twitter_lists = list(set(twitter_lists))
-
-        if user_spec is not None:
-            if user_ids is not None:
-                user_ids += self.resolve_user_spec(user_spec)
-            else:
-                user_ids = self.resolve_user_spec(user_spec)
 
         if select_tag is not None:
             if user_ids is not None:

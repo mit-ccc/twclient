@@ -84,9 +84,6 @@ def main():
                         help='run loads to DB in batches of this size')
 
         grp = sp.add_mutually_exclusive_group(required=True)
-        grp.add_argument('-s', '--user-spec',
-                         choices=['all', 'missing'],
-                         help='Canned user specification')
         grp.add_argument('-g', '--select-tag',
                          help='process only users with this tag')
         grp.add_argument('-i', '--user-ids', nargs='+',
@@ -326,9 +323,6 @@ def main():
     vars(args).pop('database')
     vars(args).pop('apis')
     vars(args).pop('config_file')
-
-    if args.user_spec == 'missing':
-        vars(args)['user_spec'] = 'missing_' + args.command
 
     if len(auths) == 0:
         parser.error('No Twitter credentials provided (use add-api)')
