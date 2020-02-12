@@ -212,7 +212,7 @@ def main():
         if args.name not in profiles:
             msg = 'API profile {0} not found'
             parser.error(msg.format(args.name))
-        elif args.name in api_profiles:
+        elif args.name in db_profiles:
             msg = 'Profile {0} is a DB profile'
             parser.error(msg.format(args.name))
         else:
