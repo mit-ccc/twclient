@@ -32,9 +32,11 @@ def main():
 
     parser.add_argument('-c', '--config-file', default='~/.twclientrc',
                         help='path to config file (default ~/.twclientrc)')
-    parser.add_argument('-d', '--database', help='name of stored DB profile')
+    parser.add_argument('-d', '--database',
+                        help='use this stored DB profile instead of default')
     parser.add_argument('-a', '--api', dest='apis', nargs='+',
-                        help='name of stored API profile(s)')
+                        help='use only these stored API profiles instead ' \
+                             'of default')
 
     sp = parser.add_subparsers(dest='command')
     sp.required = True
@@ -50,13 +52,13 @@ def main():
                      help='print all profile info')
 
     # see https://docs.sqlalchemy.org/en/13/dialects/postgresql.html#empty-dsn-connections-environment-variable-connections
-    adp = sp.add_parser('add-db', help='add database profile and make default')
+    adp = sp.add_parser('add-db', help='add DB profile and make default')
     adp.add_argument('-n', '--name', required=True,
-                     help='name to use for DB config')
+                     help='name to use for DB profile')
     adp.add_argument('-s', '--socket', help='local postgres unix socket')
 
     aap = sp.add_parser('add-api', help='add Twitter API profile')
-    aap.add_argument('-n', '--name', required=True, help='name of API config')
+    aap.add_argument('-n', '--name', required=True, help='name of API profile')
     aap.add_argument('-k', '--consumer-key', required=True,
                      help='consumer key')
     aap.add_argument('-c', '--consumer-secret', required=True,
@@ -64,11 +66,11 @@ def main():
     aap.add_argument('-t', '--token', help='OAuth token')
     aap.add_argument('-s', '--token-secret', help='OAuth token secret')
 
-    rdp = sp.add_parser('rm-db', help='remove database configuration')
-    rdp.add_argument('name', help='name of DB config to remove')
+    rdp = sp.add_parser('rm-db', help='remove DB profile')
+    rdp.add_argument('name', help='name of DB profile to remove')
 
-    rap = sp.add_parser('rm-api', help='remove Twitter API configuration')
-    rap.add_argument('name', help='name of API config to remove')
+    rap = sp.add_parser('rm-api', help='remove Twitter API profile')
+    rap.add_argument('name', help='name of API profile to remove')
 
     ## Other arguments
 
@@ -95,7 +97,7 @@ def main():
 
         return sp, grp
 
-    inp = sp.add_parser('initialize', help='Initialize the database schema '
+    inp = sp.add_parser('initialize', help='Initialize the DB schema '
                                            '(WARNING: deletes all data!)')
     inp.add_argument('-y', '--yes', help='Must specify this option to initialize')
 
@@ -103,7 +105,7 @@ def main():
     stp.add_argument('-j', '--json', action='store_true',
                      help='Report data as json')
 
-    uip = sp.add_parser('user_info', help='Update / fill in user info table')
+    uip = sp.add_parser('user_info', help='Get user info / "hydrate" users')
     uip, uipgrp = common_arguments(uip)
     uipgrp.add_argument('-l', '--twitter-lists', nargs='+',
                         help='get info for all users in given Twitter lists')
@@ -120,7 +122,8 @@ def main():
     flp.add_argument('-f', '--full', action='store_true',
                      help='Load full user objects (slower)')
 
-    twp = sp.add_parser('tweets', help='Get user timeline')
+    twp = sp.add_parser('tweets',
+                        help="Get users' tweets (may load new users rows")
     twp, twpgrp = common_arguments(twp)
     twp.add_argument('-o', '--old-tweets', action='store_true',
                      help="Load tweets older than user's most recent in DB")
@@ -163,8 +166,8 @@ def main():
 
     for s in profiles:
         if 'type' not in config[s].keys():
-            parser.error("Bad configuration file {0}: section missing "
-                         "type declaration field".format(s))
+            parser.error('Bad configuration file {0}: section missing '
+                         'type declaration field'.format(s))
 
     db_profiles = [x for x in profiles if config[x]['type'] == 'database']
     api_profiles = [x for x in profiles if config[x]['type'] == 'api']
@@ -272,7 +275,7 @@ def main():
         elif len(db_profiles) > 0:
             db_to_use = db_profiles[-1] # order in the file is preserved
         else:
-            parser.error("No database profiles configured (use add-db)")
+            parser.error('No database profiles configured (use add-db)')
 
         socket = config[db_to_use]['socket']
 
@@ -333,6 +336,9 @@ def main():
 
         if args.user_spec == 'missing':
             vars(args)['user_spec'] = 'missing_' + args.command
+
+        if len(auths) == 0:
+            parser.error('No Twitter credentials provided (use add-api)')
 
     ## Actually run jobs
     if command == 'initialize':
