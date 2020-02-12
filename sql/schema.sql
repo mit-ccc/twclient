@@ -4,12 +4,6 @@
 
 create extension if not exists tablefunc;
 
-create or replace function unixtime_to_date(double precision)
-  returns date as
-$$
-select to_char(to_timestamp($1) at time zone 'UTC', 'YYYY-MM-DD')::date
-$$ language sql immutable;
-
 create or replace function trigger_set_modified_dt()
 returns trigger as $$
 begin
