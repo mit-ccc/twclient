@@ -246,7 +246,7 @@ def main():
             parser.error(msg.format(args.name))
         else:
             config[args.name] = {
-                'type': 'database',
+                'type': 'api',
                 'consumer_key': args.consumer_key,
                 'consumer_secret': args.consumer_secret
             }
