@@ -596,26 +596,23 @@ class ApiJob(DatabaseJob):
         twargs = dict({'method': method}, **kwargs)
 
         try:
-            if cursor:
-                cur = tweepy.Cursor(**twargs)
-
-                if max_items is not None:
-                    yield from cur.items(max_items)
-                else:
-                    yield from cur.items()
+            if cursor and max_items is not None:
+                ret = tweepy.Cursor(**twargs).items(max_items)
+            elif cursor:
+                ret = tweepy.Cursor(**twargs).items()
             else:
-                yield from method(**kwargs)
-        except tweepy.error.TweepError as e:
-            de = err.dispatch(e)
+                ret = method(**kwargs)
 
-            if isinstance(de, err.ProtectedUserError):
+            yield from ret
+        except err.TWClientError as e:
+            if isinstance(e, err.ProtectedUserError):
                 msg = 'Ignoring protected user in call to method {0} ' \
                       'with arguments {1}'
                 msg = msg.format(method, kwargs)
                 logger.warning(msg)
-            elif isinstance(de, err.BadUserError):
+            elif isinstance(e, err.BadUserError):
                 if self.abort_on_bad_targets:
-                    raise de
+                    raise
                 else:
                     msg = 'Ignoring bad user in call to method {0} ' \
                           'with arguments {1}'
@@ -805,16 +802,19 @@ class ApiJob(DatabaseJob):
                 logger.info('Running {0} batch {1}'.format(kind, i))
 
                 ret = self.make_api_call(self.api.lookup_users, **{kind: grp})
-                for j, hobj in enumerate(ret):
-                    yield hobj
 
-                if j + 1 < len(grp):
+                j = 0
+                for hobj in ret:
+                    yield hobj
+                    j += 1
+
+                if j < len(grp):
                     if self.abort_on_bad_targets:
                         msg = 'Missing users: {0} not returned by users/lookup'
-                        raise err.BadUserError(msg.format(missing_users))
+                        raise err.BadUserError(msg.format(len(grp) - j))
                     else:
                         msg = 'Missing users: {0} not returned by users/lookup'
-                        logger.warning(msg.format(missing_users))
+                        logger.warning(msg.format(len(grp) - j))
 
                 yield from ret
 
