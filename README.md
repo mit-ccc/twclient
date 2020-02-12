@@ -1,6 +1,4 @@
 # twclient
-A high-level command-line client for the Twitter API
-
 This package provides a high-level command-line client for the Twitter API, with a focus on loading data into a Postgres instance. The goal is to be higher-level than twurl and offer useful primitives for researchers who want to get data out of Twitter, without worrying about the details. The client can handle multiple sets of API credentials seamlessly, helping avoid rate limit issues.
 
 An example of usage (API credentials are pulled from `~/.twurlrc`):
