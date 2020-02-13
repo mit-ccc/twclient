@@ -347,7 +347,7 @@ select
 from twitter.tweet tw
 group by 1,2;
 
-create or replace function reply_graph_by_time(
+create or replace function analytics.reply_graph_by_time(
     _start timestamp,
     _end timestamp
 )
@@ -376,7 +376,7 @@ where
 group by 1,2;
 $func$ language sql;
 
-create or replace function mention_graph_by_time(
+create or replace function analytics.mention_graph_by_time(
     _start timestamp,
     _end timestamp
 )
