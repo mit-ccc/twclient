@@ -317,15 +317,17 @@ def main():
 
     ## Massage the arguments a bit for passing on to job classes
     command = vars(args).pop('command')
-    vars(args)['auths'] = auths
     vars(args)['socket'] = socket
     vars(args).pop('verbose')
     vars(args).pop('database')
     vars(args).pop('apis')
     vars(args).pop('config_file')
 
-    if len(auths) == 0:
-        parser.error('No Twitter credentials provided (use add-api)')
+    if command != 'initialize':
+        vars(args)['auths'] = auths
+
+        if len(auths) == 0:
+            parser.error('No Twitter credentials provided (use add-api)')
 
     ## Actually run jobs
     if command == 'initialize':
