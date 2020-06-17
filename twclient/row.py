@@ -1,5 +1,6 @@
 import json
 import logging
+import datetime as dt
 
 from abc import ABC, abstractmethod
 
@@ -161,11 +162,11 @@ class UserRow(Row):
         args = {
             'user_id': obj.id,
             'screen_name': obj.screen_name,
-            'api_response': api_response # NOTE is this public API?
+            'api_response': api_response, # NOTE is this public API?
+            'account_create_dt': obj.created_at.replace(tzinfo=dt.timezone.utc)
         }
 
         extra_fields = {
-            'account_create_dt': 'created_at',
             'protected': 'protected',
             'verified': 'verified',
             'name': 'name',
@@ -276,7 +277,7 @@ class TweetRow(Row):
             'tweet_id': obj.id,
             'user_id': obj.user.id,
             'api_response': api_response, # NOTE is this public API?
-            'tweet_create_dt': obj.created_at
+            'tweet_create_dt': obj.created_at.replace(tzinfo=dt.timezone.utc)
         }
 
         if hasattr(obj, 'full_text'):
