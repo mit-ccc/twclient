@@ -10,7 +10,7 @@ import sqlalchemy.sql.functions as func
 
 from sqlalchemy.schema import Table, Column
 from sqlalchemy.orm import relationship
-from sqlalchemy.types import INT, BIGINT, STRING, TEXT, TIMESTAMP, BOOLEAN
+from sqlalchemy.types import INT, BIGINT, VARCHAR, TEXT, TIMESTAMP, BOOLEAN
 from sqlalchemy.ext.declarative import declarative_base
 
 logger = logging.getLogger(__name__)
@@ -35,7 +35,7 @@ class User(Base, TweepyMixin):
     user_id = Column(BIGINT, primary_key=True, autoincrement=False)
 
     api_response = Column(TEXT, nullable=True)
-    screen_name = Column(STRING(256), nullable=True)
+    screen_name = Column(VARCHAR(256), nullable=True)
     account_create_dt = Column(TIMESTAMP(timezone=True), nullable=True)
     protected = Column(BOOLEAN, nullable=True)
     verified = Column(BOOLEAN, nullable=True)
@@ -49,9 +49,11 @@ class User(Base, TweepyMixin):
     modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now,
                          onupdate=func.now, nullable=False)
 
-    follow_fetches = relationship('FollowFetch', back_populates='user')
-    tweets = relationship('Tweet', back_populates='tweets')
     tags = relationship('Tag', secondary='user_tag', back_populates='users')
+
+    # follow_fetches = relationship('FollowFetch', back_populates='user')
+
+    tweets = relationship('Tweet', back_populates='tweets')
     mentions = relationship('Tweet', secondary='tweet_mentions_user',
                                 back_populates='mentions')
 
@@ -90,14 +92,14 @@ class Tweet(Base, TweepyMixin):
 
     # as in User, this is the Twitter id rather than a surrogate key
     tweet_id = Column(BIGINT, primary_key=True, autoincrement=False)
-    user_id = Column(BIGINT, nullable=False,
-                     ForeignKey('user.user_id', deferrable=True))
+    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+                     nullable=False)
 
     api_response = Column(TEXT, nullable=False)
     content = Column(TEXT, nullable=False)
-    tweet_create_dt(TIMESTAMP(timezone=True, nullable=False)
+    tweet_create_dt(TIMESTAMP(timezone=True), nullable=False)
 
-    lang = Column(STRING(8), nullable=True)
+    lang = Column(VARCHAR(8), nullable=True)
     source = Column(TEXT, nullable=True)
     truncated = Column(BOOLEAN, nullable=True)
     retweet_count = Column(INT, nullable=True)
@@ -190,61 +192,75 @@ class Tag(Base):
     users = relationship('User', secondary='user_tag', back_populates='tags')
     tweets = relationship('Tweet', secondary='tweet_tag', back_populates='tags')
 
-class FollowFetch(Base):
-    __tablename__ = 'follow_fetch'
-
-    follow_fetch_id = Column(INT, primary_key=True, autoincrement=True)
-
-    user_id = Column(BIGINT, nullable=False,
-                     ForeignKey('user.user_id', deferrable=True))
-
-    is_followers = Column(BOOLEAN, nullable=False)
-
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now,
-                       nullable=False)
-
-    user = relationship('User', back_populates='follow_fetches')
-
-class Follow(Base):
-
-# class FollowRow(Row):
-#     table = 'follow'
+# class FollowFetch(Base):
+#     __tablename__ = 'follow_fetch'
 #
-#     column_type_map = {
-#         'follow_fetch_id': 'bigint',
-#         'source_user_id': 'bigint',
-#         'target_user_id': 'bigint'
-#     }
+#     follow_fetch_id = Column(INT, primary_key=True, autoincrement=True)
 #
-#     column_default_map = {}
+#     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+#                      nullable=False)
+#
+#     is_followers = Column(BOOLEAN, nullable=False)
+#
+#     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now,
+#                        nullable=False)
+#
+#     user = relationship('User', back_populates='follow_fetches')
+#
+# class Follow(Base):
+#     __tablename__ = 'follow'
+#
+#     follow_id = Column(BIGINT, primary_key=True, autoincrement=True)
+#
+#     follow_fetch_id = Column(INT, ForeignKey('follow_fetch.follow_fetch_id',
+#                                              deferrable=True),
+#                              nullable=False)
+#
+#     source_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+#                             nullable=False)
+#     target_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+#                             nullable=False)
+#
+#     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now,
+#                        nullable=False)
+#
+#     followers = relationship('User', foreign_keys=[],
+#                              back_populates='followers')
+#     friends = relationship('User', foreign_keys=[],
+#                            back_populates='friends')
+#
+#     __table_args__ = (
+#         UniqueConstraint('follow_fetch_id', 'source_user_id', 'target_user_id')
+#     )
 
 ##
 ## Link tables, whether or not considered as objects
 ##
 
 user_tag = Table('user_tag', Base.metadata,
-    Column('user_id', BIGINT, nullable=False,
-           ForeignKey('user.user_id', deferrable=True))),
-    Column('tag_id', BIGINT, nullable=False,
-           ForeignKey('tag.tag_id', deferrable=True))),
+    Column('user_id', BIGINT, ForeignKey('user.user_id', deferrable=True),
+           nullable=False),
+    Column('tag_id', BIGINT, ForeignKey('tag.tag_id', deferrable=True),
+           nullable=False),
 
     UniqueConstraint('tweet_id', 'user_id', deferrable=True)
 )
 
 tweet_tag = Table('tweet_tag', Base.metadata,
-    Column('tweet_id', BIGINT, nullable=False,
-           ForeignKey('user.user_id', deferrable=True))),
-    Column('tag_id', BIGINT, nullable=False,
-           ForeignKey('tag.tag_id', deferrable=True))),
+    Column('tweet_id', BIGINT, ForeignKey('user.user_id', deferrable=True),
+           nullable=False),
+    Column('tag_id', BIGINT, ForeignKey('tag.tag_id', deferrable=True),
+           nullable=False),
 
     UniqueConstraint('tweet_id', 'tag_id', deferrable=True)
 )
 
 tweet_mentions_user = Table('tweet_mentions_user', Base.metadata,
-    Column('tweet_id', BIGINT, nullable=False,
-           ForeignKey('tweet.tweet_id', deferrable=True))),
-    Column('mentioned_user_id', BIGINT, nullable=False,
-           ForeignKey('user.user_id', deferrable=True)),
+    Column('tweet_id', BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
+           nullable=False),
+    Column('mentioned_user_id', BIGINT, ForeignKey('user.user_id',
+                                                   deferrable=True),
+           nullable=False),
 
     UniqueConstraint('tweet_id', 'mentioned_user_id', deferrable=True)
 )
