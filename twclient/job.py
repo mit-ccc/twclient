@@ -60,181 +60,27 @@ class InitializeJob(DatabaseJob):
 class ApiJob(DatabaseJob):
     def __init__(self, **kwargs):
         try:
-            auths = kwargs.pop('auths')
+            target = kwargs.pop('target')
         except KeyError:
-            raise ValueError("auths argument is required")
+            raise ValueError('Must provide target object')
+
+        try:
+            api = kwargs.pop('api')
+        except KeyError:
+            raise ValueError('Must provide api object')
 
         user_tag = kwargs.pop('user_tag', None)
         load_batch_size = kwargs.pop('load_batch_size', None)
-        abort_on_bad_targets = kwargs.pop('abort_on_bad_targets', False)
         transaction = kwargs.pop('transaction', False)
-
-        user_ids = kwargs.pop('user_ids', None)
-        screen_names = kwargs.pop('screen_names', None)
-        twitter_lists = kwargs.pop('twitter_lists', None)
-        select_tag = kwargs.pop('select_tag', None)
-
-        # exactly one operating mode at once
-        assert sum([
-            twitter_lists is not None,
-            screen_names is not None,
-            ut.coalesce(user_ids, select_tag) is not None
-        ]) == 1
 
         super(ApiJob, self).__init__(**kwargs)
 
-        if screen_names is not None:
-            screen_names = list(set(screen_names))
+        self.target = target
+        self.api = api
 
-        if twitter_lists is not None:
-            twitter_lists = list(set(twitter_lists))
-
-        if select_tag is not None:
-            if user_ids is not None:
-                user_ids += self.user_ids_for_tag(select_tag)
-            else:
-                user_ids = self.user_ids_for_tag(select_tag)
-
-        if user_ids is not None:
-            user_ids = list(set(user_ids))
-
-        if user_ids is not None:
-            self.targets = list(set(user_ids))
-            self.target_type = 'user_ids'
-        elif screen_names is not None:
-            self.targets = list(set(screen_names))
-            self.target_type = 'screen_names'
-        else: # twitter_lists is not None
-            self.targets = list(set(twitter_lists))
-            self.target_type = 'twitter_lists'
-
-        # Make partial loads more statistically useful
-        random.shuffle(self.targets)
-
-        self.auths = auths
         self.user_tag = user_tag
         self.load_batch_size = load_batch_size
-        self.abort_on_bad_targets = abort_on_bad_targets
         self.transaction = transaction
-
-        self.api = ap.AuthPoolAPI(auths=auths, wait_on_rate_limit=True)
-
-    def make_api_call(self, method, cursor=False, max_items=None, **kwargs):
-        msg = 'API call: {0} with params {1}, cursor {2}'
-        logger.debug(msg.format(method, kwargs, cursor))
-
-        try:
-            assert not (cursor and max_items is not None)
-        except AssertionError:
-            raise ValueError("max_items only available with cursor=True")
-
-        twargs = dict({'method': method}, **kwargs)
-
-        try:
-            if cursor and max_items is not None:
-                ret = tweepy.Cursor(**twargs).items(max_items)
-            elif cursor:
-                ret = tweepy.Cursor(**twargs).items()
-            else:
-                ret = method(**kwargs)
-
-            # yield from ret
-            j = 0
-            for obj in ret:
-                yield obj
-                j += 1
-
-            # NOTE users/lookup doesn't raise an error condition on bad users,
-            # it just doesn't return them, so we need to check the length of the
-            # input and the number of user objects returned
-            if method.__self__ is self.api and method == self.api.lookup_users:
-                assert 'screen_names' in twargs.keys() or \
-                       'user_ids' in twargs.keys()
-
-                if 'screen_names' in twargs.keys():
-                    kind = 'screen_names'
-                else:
-                    kind = 'user_ids'
-
-                # don't risk it being a generator
-                nmissing = len([x for x in twargs[kind]]) - j
-
-                if nmissing > 0:
-                    msg = "{0} bad/missing user(s) in users/lookup call"
-                    raise err.BadUserError(msg.format(nmissing))
-        except (tweepy.error.TweepError, err.TWClientError) as e:
-            if isinstance(e, err.CapacityError):
-                raise
-            elif isinstance(e, err.ProtectedUserError):
-                msg = 'Ignoring protected user in call to method {0} ' \
-                      'with arguments {1}; original exception message: {2}'
-                msg = msg.format(method, kwargs, e.message)
-                logger.warning(msg)
-            elif isinstance(e, err.BadUserError):
-                msg = 'Encountered bad user(s) in call to method {0} ' \
-                      'with arguments {1}; original exception message: {2}'
-                msg = msg.format(method, kwargs, e.message)
-
-                if self.abort_on_bad_targets:
-                    logger.exception(msg)
-
-                    raise
-                else:
-                    logger.warning(msg)
-            else:
-                message = e.message
-                api_code = e.api_code
-                if e.response is not None:
-                    http_code = e.response.status_code
-                else:
-                    http_code = None
-
-                msg = 'Error returned by Twitter API: API code {0}, HTTP ' \
-                      'status code {1}, message {2}'
-                msg = msg.format(api_code, http_code, message)
-
-                logger.debug(msg, exc_info=True)
-
-                raise
-
-    @staticmethod
-    def mentions_for_tweet(tweet):
-        mentions, users = [], []
-
-        if hasattr(tweet, 'entities'):
-            if 'user_mentions' in tweet.entities.keys():
-                for m in tweet.entities['user_mentions']:
-                    urow = {'user_id': m['id']}
-
-                    if 'screen_name' in m.keys():
-                        urow['screen_name'] = m['screen_name']
-
-                    if 'name' in m.keys():
-                        urow['name'] = m['name']
-
-                    users += [urow]
-
-                    mentions += [{
-                        'tweet_id': tweet.id,
-                        'mentioned_user_id': m['id']
-                    }]
-
-        return mentions, users
-
-    def mentions_for_tweets(self, tweets):
-        # process tweets
-        dat = [self.mentions_for_tweet(t) for t in tweets]
-
-        mentions = [x[0] for x in dat]
-        mentions = [x for y in mentions for x in y]
-        mentions = [dict(t) for t in {tuple(d.items()) for d in mentions}]
-
-        # extract users
-        users = [x[1] for x in dat]
-        users = [x for y in users for x in y]
-        users = [dict(t) for t in {tuple(d.items()) for d in users}]
-
-        return mentions, users
 
     def load_mentions(self, tweets):
         logger.debug('Loading mentions')
@@ -274,24 +120,6 @@ class ApiJob(DatabaseJob):
 
         if load_mentions:
             self.load_mentions(tweets)
-
-    def load_follow_fetch(self, user_id, direction):
-        msg = 'Loading follow_fetch row for user_id {0}, direction {1}'
-        logger.debug(msg.format(user_id, direction))
-
-        assert direction in ('followers', 'friends')
-
-        ffr = FollowFetchRow(
-            is_followers = (direction == 'followers'),
-            is_friends = (direction == 'friends'),
-            user_id = user_id
-        )
-
-        ff_id = self.db_load_data(Rowset(rows=[ffr], cls=FollowFetchRow),
-                                  how='insert', returning=['follow_fetch_id'],
-                                  conflict='raise')[0][0]
-
-        return ff_id
 
     # edges are assumed to be (source, target)
     def load_follow_edges(self, edges, follow_fetch_id):
@@ -342,145 +170,6 @@ class ApiJob(DatabaseJob):
 
             self.db_load_data(tag_rows, conflict='merge',
                               conflict_constraint=['user_id', 'tag'])
-
-    def user_objects_for(self, objs, kind):
-        logger.debug('Fetching user objects for {0}'.format(kind))
-
-        assert kind in ('user_ids', 'screen_names', 'twitter_lists')
-
-        if kind == 'twitter_lists':
-            for i, obj in enumerate(objs):
-                logger.info('Running list {1}: {2}'.format(i, obj))
-
-                owner_screen_name, slug = obj.split('/')
-
-                yield from self.make_api_call(
-                    method=self.api.list_members,
-                    cursor=True,
-                    slug=slug,
-                    owner_screen_name=owner_screen_name
-                )
-        else:
-            for i, grp in enumerate(ut.grouper(objs, 100)): # max 100 per call
-                logger.info('Running {0} batch {1}'.format(kind, i))
-
-                yield from self.make_api_call(
-                    method=self.api.lookup_users,
-                    **{kind: grp}
-                )
-
-    def user_objects_for_lists(self, twitter_lists):
-        yield from self.user_objects_for(twitter_lists, kind='twitter_lists')
-
-    def user_objects_for_ids(self, user_ids, new=False):
-        if not new:
-            objs = user_ids
-        else:
-            objs = (
-                user_id
-                for user_id in user_ids
-                if not self.user_id_exists(user_id)
-            )
-        yield from self.user_objects_for(objs=objs, kind='user_ids')
-
-    def user_objects_for_screen_names(self, screen_names, new=False):
-        if not new:
-            objs = screen_names
-        else:
-            objs = (
-                screen_name
-                for screen_name in screen_names
-                if self.user_id_for_screen_name(screen_name) is None
-            )
-
-        yield from self.user_objects_for(objs=objs, kind='screen_names')
-
-    def tweet_objects_for(self, objs, kind, since_ids=None, max_tweets=None,
-                          since_timestamp=None):
-        msg = 'Loading tweet objects with ' +\
-        'since_ids={0}, max_tweets={1}, since_timestamp={2}'
-        logger.debug(msg.format(since_ids, max_tweets, since_timestamp))
-
-        assert kind in ('user_ids', 'screen_names', 'twitter_lists')
-
-        for i, obj in enumerate(objs):
-            if since_ids is not None:
-                since_id = since_ids[i]
-            else:
-                since_id = None
-
-            twargs = {
-                'count': 200, # the max in one call
-                'tweet_mode': 'extended', # don't truncate tweet text
-                'include_rts': True,
-                'since_id': since_id
-            }
-
-            if kind == 'twitter_lists':
-                method = self.api.list_timeline
-
-                owner_screen_name, slug = twitter_list.split('/')
-                twargs = dict(twargs, **{
-                    'slug': slug,
-                    'owner_screen_name': owner_screen_name
-                })
-            else:
-                method = self.api.user_timeline
-
-                param = 'user_id' if kind == 'user_ids' else 'screen_name'
-                twargs = dict(twargs, **{param: obj})
-
-            tweets = self.make_api_call(method, cursor=True,
-                                        max_items=max_tweets, **twargs)
-
-            yield from (
-                tweet
-                for tweet in tweets
-                if (since_timestamp is None) or \
-                   (tweet.created_at.timestamp() >= since_timestamp)
-            )
-
-    def tweet_objects_for_lists(self, twitter_lists, **kwargs):
-        yield from self.tweet_objects_for(objs=twitter_lists,
-                                          kind='twitter_list', **kwargs)
-
-    def tweet_objects_for_ids(self, user_ids, **kwargs):
-        yield from self.tweet_objects_for(objs=user_ids,
-                                          kind='user_ids', **kwargs)
-
-    def tweet_objects_for_screen_names(self, screen_names, **kwargs):
-        yield from self.tweet_objects_for(objs=screen_names,
-                                          kind='screen_names', **kwargs)
-
-    def follow_objects_for(self, objs, kind, direction):
-        logger.debug('Loading {0}'.format(direction))
-
-        assert kind in ('user_ids', 'screen_names')
-        assert direction in ('followers', 'friends')
-
-        for obj in objs:
-            param = ('user_id' if kind == 'user_ids' else 'screen_name')
-
-            if direction == 'followers':
-                method = self.api.followers_ids
-            if direction == 'friends':
-                method = self.api.friends_ids
-
-            edges = self.make_api_call(method, cursor=True, **{param: obj})
-
-            for item in edges:
-                if direction == 'followers':
-                    yield [item, obj]
-                else: # direction == 'friends'
-                    yield [obj, item]
-
-    def follow_objects_for_ids(self, user_ids, **kwargs):
-        yield from self.follow_objects_for(objs=user_ids,
-                                           kind='user_ids', **kwargs)
-
-    def follow_objects_for_screen_names(self, screen_names, **kwargs):
-        yield from self.follow_objects_for(objs=screen_names,
-                                           kind='screen_names', **kwargs)
 
     # Given a set of targets, which may be screen names, user ids or
     # users in a Twitter list and which may not exist in the twitter.user

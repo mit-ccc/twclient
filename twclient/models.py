@@ -244,3 +244,45 @@ class TweetTag(Base):
 class Mention(Base):
     __table__ = tweet_mentions_user
 
+##
+## Utility functions
+##
+
+def mentions_from_tweet(tweet):
+    mentions, users = [], []
+
+    if hasattr(tweet, 'entities'):
+        if 'user_mentions' in tweet.entities.keys():
+            for m in tweet.entities['user_mentions']:
+                urow = {'user_id': m['id']}
+
+                if 'screen_name' in m.keys():
+                    urow['screen_name'] = m['screen_name']
+
+                if 'name' in m.keys():
+                    urow['name'] = m['name']
+
+                users += [urow]
+
+                mentions += [{
+                    'tweet_id': tweet.id,
+                    'mentioned_user_id': m['id']
+                }]
+
+    return mentions, users
+
+def mentions_for_tweets(self, tweets):
+    # process tweets
+    dat = [self.mentions_for_tweet(t) for t in tweets]
+
+    mentions = [x[0] for x in dat]
+    mentions = [x for y in mentions for x in y]
+    mentions = [dict(t) for t in {tuple(d.items()) for d in mentions}]
+
+    # extract users
+    users = [x[1] for x in dat]
+    users = [x for y in users for x in y]
+    users = [dict(t) for t in {tuple(d.items()) for d in users}]
+
+    return mentions, users
+
