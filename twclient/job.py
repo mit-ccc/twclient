@@ -1,5 +1,3 @@
-# FIXME option for copy/insert loading method
-
 import sys
 import random
 import logging

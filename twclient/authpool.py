@@ -160,6 +160,8 @@ class AuthPoolAPI(object):
                 if all([vars(x)[k] == v for x in methods]):
                     setattr(func, k, v)
 
+        # the descriptor protocol: func is an unbound function, but the __get__
+        # method returns func as a bound method of its argument
         setattr(self, name, func.__get__(self))
 
         return getattr(self, name)

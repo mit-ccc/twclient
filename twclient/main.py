@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
-##
-## The command-line interface script
-##
+"""
+The command-line interface script
+"""
+
+# FIXME should be able to specify Twitter data schema name
+# FIXME option for copy/insert loading method
 
 import os
 import logging
