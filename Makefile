@@ -1,18 +1,14 @@
-.PHONY: install clean clean-pyc clean-build
+.PHONY: install clean
 
 install:
 	python setup.py install
 
-clean: clean-pyc clean-build
-
-clean-pyc:
+clean:
 	find . -name '__pycache__' -exec rm -rf {} \+
-	find . -name '*.pyc' -exec rm --force {} \+
-	find . -name '*.pyo' -exec rm --force {} \+
-	find . -name '*~'    -exec rm --force {} \+
-
-clean-build:
-	rm --force --recursive build/
-	rm --force --recursive dist/
-	rm --force --recursive *.egg-info
+	find . -name '*.pyc' -exec rm -f {} \+
+	find . -name '*.pyo' -exec rm -f {} \+
+	find . -name '*~'    -exec rm -f {} \+
+	rm -rf build/
+	rm -rf dist/
+	rm -rf *.egg-info
 
