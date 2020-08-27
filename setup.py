@@ -22,8 +22,8 @@ setup(
     ],
 
     packages=['twclient'],
-    python_requires='>=3.7, <4',
-    install_requires=['pyyaml', 'tweepy', 'psycopg2'],
+    python_requires='>=3.7, <4', # FIXME revisit this?
+    install_requires=['pyyaml', 'tweepy', 'sqlalchemy'],
 
     long_description=long_description,
     long_description_content_type='text/markdown',
