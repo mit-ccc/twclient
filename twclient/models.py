@@ -50,10 +50,9 @@ class User(Base, TweepyMixin):
                          onupdate=func.now(), nullable=False)
 
     tags = relationship('Tag', secondary='user_tag', back_populates='users')
-
-    tweets = relationship('Tweet', back_populates='tweets')
+    tweets = relationship('Tweet', back_populates='user')
     mentions = relationship('Tweet', secondary='tweet_mentions_user',
-                                back_populates='mentions')
+                            back_populates='mentioned')
 
     @classmethod
     def from_tweepy(cls, obj):
@@ -115,10 +114,10 @@ class Tweet(Base, TweepyMixin):
     modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                          onupdate=func.now(), nullable=False)
 
-    tags = relationship('Tag', secondary='tweet_tag', back_populates='users')
+    tags = relationship('Tag', secondary='tweet_tag', back_populates='tweets')
     user = relationship('User', back_populates='tweets')
     mentioned = relationship('User', secondary='tweet_mentions_user',
-                                 back_populates='mentions')
+                             back_populates='mentions')
 
     @classmethod
     def from_tweepy(cls, obj):
@@ -222,7 +221,7 @@ user_tag = Table('user_tag', Base.metadata,
 )
 
 tweet_tag = Table('tweet_tag', Base.metadata,
-    Column('tweet_id', BIGINT, ForeignKey('user.user_id', deferrable=True),
+    Column('tweet_id', BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
            primary_key=True),
     Column('tag_id', BIGINT, ForeignKey('tag.tag_id', deferrable=True),
            primary_key=True)
