@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 
 import sqlalchemy.sql.functions as func
 
-from sqlalchemy.schema import Table, Column
+from sqlalchemy.schema import Table, Column, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import INT, BIGINT, VARCHAR, TEXT, TIMESTAMP, BOOLEAN
 from sqlalchemy.ext.declarative import declarative_base
@@ -44,10 +44,10 @@ class User(Base, TweepyMixin):
     location = Column(TEXT, nullable=True)
     url = Column(TEXT, nullable=True)
 
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now,
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                        nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now,
-                         onupdate=func.now, nullable=False)
+    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                         onupdate=func.now(), nullable=False)
 
     tags = relationship('Tag', secondary='user_tag', back_populates='users')
 
@@ -97,7 +97,7 @@ class Tweet(Base, TweepyMixin):
 
     api_response = Column(TEXT, nullable=False)
     content = Column(TEXT, nullable=False)
-    tweet_create_dt(TIMESTAMP(timezone=True), nullable=False)
+    tweet_create_dt = Column(TIMESTAMP(timezone=True), nullable=False)
 
     lang = Column(VARCHAR(8), nullable=True)
     source = Column(TEXT, nullable=True)
@@ -112,10 +112,10 @@ class Tweet(Base, TweepyMixin):
     quoted_status_id = Column(BIGINT, nullable=True)
     quoted_status_content = Column(TEXT, nullable=True)
 
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now,
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                        nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now,
-                         onupdate=func.now, nullable=False)
+    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                         onupdate=func.now(), nullable=False)
 
     tags = relationship('Tag', secondary='tweet_tag', back_populates='users')
     user = relationship('User', back_populates='tweets')
@@ -202,7 +202,7 @@ class Tag(Base):
 #
 #     is_followers = Column(BOOLEAN, nullable=False)
 #
-#     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now,
+#     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
 #                        nullable=False)
 #
 #     user = relationship('User', back_populates='follow_fetches')
@@ -221,7 +221,7 @@ class Tag(Base):
 #     target_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
 #                             nullable=False)
 #
-#     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now,
+#     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
 #                        nullable=False)
 #
 #     followers = relationship('User', foreign_keys=[],
@@ -239,30 +239,24 @@ class Tag(Base):
 
 user_tag = Table('user_tag', Base.metadata,
     Column('user_id', BIGINT, ForeignKey('user.user_id', deferrable=True),
-           nullable=False),
+           primary_key=True),
     Column('tag_id', BIGINT, ForeignKey('tag.tag_id', deferrable=True),
-           nullable=False),
-
-    UniqueConstraint('tweet_id', 'user_id', deferrable=True)
+           primary_key=True)
 )
 
 tweet_tag = Table('tweet_tag', Base.metadata,
     Column('tweet_id', BIGINT, ForeignKey('user.user_id', deferrable=True),
-           nullable=False),
+           primary_key=True),
     Column('tag_id', BIGINT, ForeignKey('tag.tag_id', deferrable=True),
-           nullable=False),
-
-    UniqueConstraint('tweet_id', 'tag_id', deferrable=True)
+           primary_key=True)
 )
 
 tweet_mentions_user = Table('tweet_mentions_user', Base.metadata,
     Column('tweet_id', BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
-           nullable=False),
+           primary_key=True),
     Column('mentioned_user_id', BIGINT, ForeignKey('user.user_id',
                                                    deferrable=True),
-           nullable=False),
-
-    UniqueConstraint('tweet_id', 'mentioned_user_id', deferrable=True)
+           primary_key=True)
 )
 
 class UserTag(Base):
