@@ -1,22 +1,17 @@
-import sys
 import random
 import logging
 
-from importlib.resources import open_text
 from abc import ABC, abstractmethod
 
-import tweepy
-import psycopg2
+from sqlalchemy import create_engine
+from sqlalchemy.orm import sessionmaker
 
-from psycopg2 import sql
+import tweepy
 
 import twclient.error as err
 import twclient.utils as ut
-
-from twclient.row import Rowset
-from twclient.row import UserRow, TweetRow, UserTagRow, TweetTagRow
-from twclient.row import FollowRow, FollowFetchRow, MentionRow
-from twclient.authpool import AuthPoolAPI
+import twclient.models as md
+import twclient.authpool as ap
 
 logger = logging.getLogger(__name__)
 
@@ -28,346 +23,39 @@ logger = logging.getLogger(__name__)
 
 class DatabaseJob(ABC):
     def __init__(self, **kwargs):
-        dsn = kwargs.pop('dsn', None)
-        socket = kwargs.pop('socket', None)
-        conn = kwargs.pop('conn', None)
-        schema = kwargs.pop('schema', 'twitter')
-
-        assert ut.coalesce(dsn, socket, conn) is not None
+        try:
+            engine = kwargs.pop('engine')
+        except KeyError:
+            raise ValueError("engine instance is required")
 
         super(DatabaseJob, self).__init__(**kwargs)
 
-        self.dsn = dsn
-        self.socket = socket
-        self.schema = schema
+        self.engine = engine
 
-        if conn is not None:
-            self.conn = conn
-            self._conn_owner = False
-        else:
-            self.conn = self._new_db_connection()
-            self._conn_owner = True
+        self.sessionfactory = sessionmaker()
+        self.sessionfactory.configure(bind=self.engine)
 
-    def _new_db_connection(self):
-        if self.dsn is not None:
-            conn_args = {'dsn': self.dsn}
-        else:
-            conn_args = {'host': self.socket}
-
-        return psycopg2.connect(**conn_args)
+        self.session = self.sessionfactory()
 
     @abstractmethod
     def run(self):
         raise NotImplementedError()
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, tb):
-        if self._conn_owner:
-            self.conn.close()
-
     # WARNING drops the schema and deletes all data!
-    def db_initialize(self):
-        schema = open_text('twclient.sql', 'schema.sql').read().strip()
+    def sync_schema(self):
+        logger.warning('Recreating schema')
 
-        with self.conn.cursor() as cur:
-            cur.execute(schema)
+        md.Base.metadata.drop_all(self.engine)
+        md.Base.metadata.create_all(self.engine)
 
     def commit(self):
         logger.debug('Committing')
 
-        self.conn.commit()
-
-    @staticmethod
-    def _copy_stmt(table, cols, sep=',', schema=None):
-        query = [sql.SQL('copy')]
-
-        if schema is not None:
-            query += [sql.Identifier(schema), sql.SQL('.')]
-
-        query += [
-            sql.Identifier(table),
-
-            sql.SQL('('),
-            sql.SQL(', ').join(sql.Identifier(n) for n in cols),
-            sql.SQL(')'),
-
-            sql.SQL('from stdin'),
-
-            sql.SQL('csv'),
-            sql.SQL('header'),
-            sql.SQL('delimiter'), sql.Literal(sep)
-        ]
-
-        return query
-
-    @staticmethod
-    def _insert_stmt(table, cols, payload, schema=None, returning=[],
-                     conflict='merge', conflict_constraint=['id']):
-        assert conflict in ('raise', 'merge', 'skip')
-
-        query = [sql.SQL('insert into')]
-
-        if schema is not None:
-            query += [sql.Identifier(schema), sql.SQL('.')]
-
-        query += [
-            sql.Identifier(table), sql.SQL('as tbl'),
-
-            sql.SQL('('),
-            sql.SQL(', ').join(sql.Identifier(n) for n in cols),
-            sql.SQL(')')
-        ]
-
-        query += payload
-
-        update_cols = list(set(cols) - set(conflict_constraint))
-
-        if conflict == 'skip' or len(update_cols) == 0:
-            query += [
-                sql.SQL('on conflict do nothing')
-            ]
-        elif conflict == 'merge':
-            query += [
-                sql.SQL('on conflict'),
-
-                sql.SQL('('),
-                sql.SQL(', ').join(sql.Identifier(n) for n in conflict_constraint),
-                sql.SQL(')'),
-
-                sql.SQL('do update set'),
-
-                sql.SQL(', ').join(
-                    sql.SQL(' ').join([
-                        sql.Identifier(n), sql.SQL('='),
-                        sql.SQL('coalesce'), sql.SQL('('),
-                        sql.Identifier('excluded'), sql.SQL('.'),
-                        sql.Identifier(n), sql.SQL(','),
-                        sql.Identifier('tbl'), sql.SQL('.'),
-                        sql.Identifier(n), sql.SQL(')')
-                    ]) for n in update_cols
-                )
-            ]
-        else:
-            pass # raise (on unique constraint violation) is the default
-
-        if len(returning) > 0:
-            query += [
-                sql.SQL('returning'),
-                sql.SQL(', ').join(sql.Identifier(n) for n in returning),
-            ]
-
-        return query
-
-    @staticmethod
-    def _create_tmp_tbl_stmt(table, cols, types=None):
-        if types is None:
-            types = ['text' for c in cols]
-
-        query = [
-            sql.SQL('create local temporary table'), sql.Identifier(table),
-            sql.SQL('('),
-
-            sql.SQL(', ').join(
-                sql.SQL(' ').join([
-                    sql.Identifier(n),
-                    sql.SQL(t)
-                ]) for n, t in zip(cols, types)
-            ),
-
-            sql.SQL(')'),
-        ]
-
-        return query
-
-    def db_load_data_copy(self, data, returning=[], conflict='raise',
-                          conflict_constraint=['id']):
-        logger.debug('Loading data via COPY')
-
-        if len(returning) > 0:
-            raise ValueError("can only use INSERT INTO ... RETURNING ... " +
-                             "from db_load_data_insert")
-
-        if data.table is None: # no rows to load
-            return None
-
-        ##
-        ## First, create a temporary table for the data
-        ##
-
-        # not necessarily thread-safe
-        tmptbl = data.table + '_load_tmp_' + next(ut.unique_names)
-
-        query = self._create_tmp_tbl_stmt(table=tmptbl, cols=data.columns,
-                                          types=data.column_types)
-        query = sql.Composed(query).join(' ').as_string(self.conn)
-
-        with self.conn.cursor() as cur:
-            cur.execute(query)
-
-        ##
-        ## Second, copy the data to the temp table
-        ##
-
-        query = self._copy_stmt(table=tmptbl, cols=data.columns)
-        query = sql.Composed(query).join(' ').as_string(self.conn)
-
-        with ut.write_to_tempfile(data=data.as_records(), fieldnames=data.columns) as f:
-            with self.conn.cursor() as cur:
-                cur.copy_expert(query, f)
-
-        ##
-        ## Third, run the insert into the permanent table
-        ##
-
-        payload = [
-            sql.SQL('select'),
-
-            sql.SQL(', ').join(sql.Identifier(n) for n in data.columns),
-
-            sql.SQL('from'), sql.Identifier(tmptbl)
-        ]
-
-        query = self._insert_stmt(
-            table=data.table, cols=data.columns, payload=payload,
-            schema=self.schema, returning=returning, conflict=conflict,
-            conflict_constraint=conflict_constraint
-        )
-        query = sql.Composed(query).join(' ').as_string(self.conn)
-
-        with self.conn.cursor() as cur:
-            cur.execute(query)
-
-    def db_load_data_insert(self, data, returning=[], conflict='raise',
-                            conflict_constraint=['id']):
-        logger.debug('Loading data via INSERT')
-
-        assert not (data.table is None and len(returning) > 0)
-
-        if data.table is None:
-            return []
-
-        payload = [
-            sql.SQL('values'),
-
-            sql.SQL('('),
-            sql.SQL(', ').join(sql.Placeholder(n) for n in data.columns),
-            sql.SQL(')')
-        ]
-
-        query = self._insert_stmt(
-            table=data.table, cols=data.columns, payload=payload,
-            schema=self.schema, returning=returning, conflict=conflict,
-            conflict_constraint=conflict_constraint
-        )
-        query = sql.Composed(query).join(' ').as_string(self.conn)
-
-        res = []
-        with self.conn.cursor() as cur:
-            if len(returning) > 0:
-                # executemany doesn't return values, so we need to
-                # do them one at a time
-                for row in data.as_records():
-                    cur.execute(query, row)
-                    res += cur.fetchall()
-            else:
-                cur.executemany(query, data.as_records())
-
-        return res
-
-    def db_load_data(self, data, how='copy', returning=[],
-                     conflict='raise', conflict_constraint=['id']):
-        assert how in ('copy', 'insert')
-        assert conflict in ('raise', 'merge', 'skip')
-        assert not (how == 'copy' and len(returning) > 0)
-
-        args = {
-            'data': data,
-            'returning': returning,
-            'conflict': conflict,
-            'conflict_constraint': conflict_constraint
-        }
-
-        if how == 'copy':
-            self.db_load_data_copy(**args) # always None
-            return [] # for consistency of return type with insert
-        else: # how == 'insert'
-            return self.db_load_data_insert(**args)
-
-    def db_get_data(self, query, parameters=None, flatten=False):
-        with self.conn.cursor() as cur:
-            cur.execute(query, parameters)
-
-            res = cur.fetchall()
-
-        if all([len(x) == 1 for x in res]) and flatten:
-            return [x[0] for x in res]
-        else:
-            return res
-
-    def user_ids_for_tag(self, tag):
-        ret = self.db_get_data("""
-        select
-            u.user_id
-        from twitter.user u
-            inner join twitter.user_tag ut using(user_id)
-        where
-            ut.tag = %s;
-        """, (tag,))
-
-        return [x[0] for x in ret]
-
-    def user_id_exists(self, user_id):
-        ret = self.db_get_data("""
-        select
-            count(*) > 0
-        from twitter.user u
-        where
-            u.user_id = %s;
-        """, (user_id,))
-
-        return ret[0][0]
-
-    def user_ids_exist(self, user_ids):
-        # NOTE could be more efficient...
-        return [self.user_id_exists(u) for u in user_ids]
-
-    def max_tweet_ids_for_user_ids(self, user_ids):
-        query = """
-        select
-            u.user_id,
-            max(t.tweet_id)
-        from (values {0}) u(user_id)
-            left join twitter.tweet t on t.user_id = u.user_id::bigint
-        group by 1;
-        """.format(','.join(['(%s)' for u in user_ids]))
-
-        tweet_ids = dict(self.db_get_data(query, user_ids))
-        ret = [tweet_ids[u] if u is not None else None for u in user_ids]
-
-        return ret
-
-    def user_id_for_screen_name(self, screen_name):
-        ret = self.db_get_data("""
-        select
-            u.user_id
-        from twitter.user u
-        where
-            lower(u.screen_name) = lower(%s)
-        order by u.modified_dt desc
-        limit 1;
-        """, (screen_name,))
-
-        return ret[0][0] if len(ret) > 0 else None
-
-    def user_ids_for_screen_names(self, screen_names):
-        # NOTE could be more efficient...
-        return [self.user_id_for_screen_name(s) for s in screen_names]
+        self.session.commit()
 
 class InitializeJob(DatabaseJob):
     def run(self):
-        self.db_initialize()
+        self.sync_schema()
 
 class ApiJob(DatabaseJob):
     def __init__(self, **kwargs):
@@ -429,7 +117,7 @@ class ApiJob(DatabaseJob):
         self.abort_on_bad_targets = abort_on_bad_targets
         self.transaction = transaction
 
-        self.api = AuthPoolAPI(auths=auths, wait_on_rate_limit=True)
+        self.api = ap.AuthPoolAPI(auths=auths, wait_on_rate_limit=True)
 
     def make_api_call(self, method, cursor=False, max_items=None, **kwargs):
         msg = 'API call: {0} with params {1}, cursor {2}'
@@ -483,7 +171,7 @@ class ApiJob(DatabaseJob):
                 msg = msg.format(method, kwargs, e.message)
                 logger.warning(msg)
             elif isinstance(e, err.BadUserError):
-                msg = 'Ignoring bad user(s) in call to method {0} ' \
+                msg = 'Encountered bad user(s) in call to method {0} ' \
                       'with arguments {1}; original exception message: {2}'
                 msg = msg.format(method, kwargs, e.message)
 
