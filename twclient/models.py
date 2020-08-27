@@ -51,8 +51,6 @@ class User(Base, TweepyMixin):
 
     tags = relationship('Tag', secondary='user_tag', back_populates='users')
 
-    # follow_fetches = relationship('FollowFetch', back_populates='user')
-
     tweets = relationship('Tweet', back_populates='tweets')
     mentions = relationship('Tweet', secondary='tweet_mentions_user',
                                 back_populates='mentions')
@@ -192,46 +190,25 @@ class Tag(Base):
     users = relationship('User', secondary='user_tag', back_populates='tags')
     tweets = relationship('Tweet', secondary='tweet_tag', back_populates='tags')
 
-# class FollowFetch(Base):
-#     __tablename__ = 'follow_fetch'
-#
-#     follow_fetch_id = Column(INT, primary_key=True, autoincrement=True)
-#
-#     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
-#                      nullable=False)
-#
-#     is_followers = Column(BOOLEAN, nullable=False)
-#
-#     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-#                        nullable=False)
-#
-#     user = relationship('User', back_populates='follow_fetches')
-#
-# class Follow(Base):
-#     __tablename__ = 'follow'
-#
-#     follow_id = Column(BIGINT, primary_key=True, autoincrement=True)
-#
-#     follow_fetch_id = Column(INT, ForeignKey('follow_fetch.follow_fetch_id',
-#                                              deferrable=True),
-#                              nullable=False)
-#
-#     source_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
-#                             nullable=False)
-#     target_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
-#                             nullable=False)
-#
-#     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-#                        nullable=False)
-#
-#     followers = relationship('User', foreign_keys=[],
-#                              back_populates='followers')
-#     friends = relationship('User', foreign_keys=[],
-#                            back_populates='friends')
-#
-#     __table_args__ = (
-#         UniqueConstraint('follow_fetch_id', 'source_user_id', 'target_user_id')
-#     )
+class Follow(Base):
+    __tablename__ = 'follow'
+
+    follow_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    source_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+                            nullable=False)
+    target_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+                            nullable=False)
+
+    valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                            nullable=False)
+    valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    # FIXME are these reversed?
+    followers = relationship('User', foreign_keys=[source_user_id],
+                             backref='followers')
+    friends = relationship('User', foreign_keys=[target_user_id],
+                           backref='friends')
 
 ##
 ## Link tables, whether or not considered as objects
