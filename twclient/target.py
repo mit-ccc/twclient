@@ -24,6 +24,23 @@ class Target(ABC):
     def user_objects(self, api=None):
         raise NotImplementedError()
 
+class ScreenNameTarget(Target):
+    def user_objects(self, api):
+
+class ListTarget(Target):
+    def user_objects(self, api):
+        yield from (
+            md.User.from_tweepy(u)
+            for lst in self.targets
+            for u in api.list_members(lst)
+        )
+
+class SelectTagTarget(Target):
+    def __init__(
+
+class UserIdTarget(Target):
+    def user_objects(self, api=None):
+
 class ApiAwareMixin(object):
     def __init__(self, **kwargs):
         try:
@@ -86,21 +103,4 @@ class ApiAwareMixin(object):
             )
 
         yield from self.user_objects_for(objs=objs, kind='screen_names')
-
-class ScreenNameTarget(Target):
-    def user_objects(self, api):
-
-class ListTarget(Target):
-    def user_objects(self, api):
-        yield from (
-            md.User.from_tweepy(u)
-            for lst in self.targets
-            for u in api.list_members(lst)
-        )
-
-class SelectTagTarget(Target):
-    def __init__(
-
-class UserIdTarget(Target):
-    def user_objects(self, api=None):
 

@@ -7,7 +7,7 @@ The command-line interface script
 # FIXME should be able to specify Twitter data schema name
 # FIXME option for copy/insert loading method
 
-import os
+import os, sys
 import logging
 import argparse as ap
 import collections as cl
@@ -17,6 +17,9 @@ import tweepy
 
 import twclient.utils as ut
 
+from sqlalchemy import create_engine
+
+from twclient.models import Base
 from twclient.job import InitializeJob, UserInfoJob, FollowJob, TweetsJob
 
 logger = logging.getLogger(__name__)
@@ -57,7 +60,7 @@ def main():
     adp = sp.add_parser('add-db', help='add DB profile and make default')
     adp.add_argument('-n', '--name', required=True,
                      help='name to use for DB profile')
-    adp.add_argument('-s', '--socket', help='local postgres unix socket')
+    adp.add_argument('-u', '--database-url', help='database connection url')
 
     aap = sp.add_parser('add-api', help='add Twitter API profile')
     aap.add_argument('-n', '--name', required=True, help='name of API profile')
@@ -148,7 +151,7 @@ def main():
     logging.basicConfig(format=fmt, level=lvl)
 
     ##
-    ## Interact with config file
+    ## Commands: interact with config file
     ##
 
     config_file = os.path.expanduser(args.config_file)
@@ -226,7 +229,7 @@ def main():
         else:
             config[args.name] = {
                 'type': 'database',
-                'socket': args.socket
+                'database_url': args.database_url
             }
 
         with open(config_file, 'wt') as f:
@@ -258,7 +261,6 @@ def main():
         return
     else:
         if args.database is not None:
-            # NOTE will become slightly more complicated with sqlalchemy
             if args.database in profiles and args.database not in db_profiles:
                 msg = 'Profile {0} is not a DB profile'
                 parser.error(msg.format(args.database))
@@ -272,7 +274,7 @@ def main():
         else:
             parser.error('No database profiles configured (use add-db)')
 
-        socket = config[db_to_use]['socket']
+        engine = create_engine(config[db_to_use]['database_url'])
 
         if args.apis is not None:
             profiles_to_use = args.apis
@@ -314,37 +316,39 @@ def main():
 
             auths += [auth]
 
+        if len(auths) == 0:
+            parser.error('No Twitter credentials provided (use add-api)')
+
     ##
-    ## Business logic
+    ## Commands: main business logic
     ##
+
+    if command == 'initialize':
+        if not vars(args).pop('yes'):
+            logger.warning("WARNING: This command will drop the Twitter data "
+                           "schema and delete all data! If you want to "
+                           "proceed, rerun with '-y'.")
+        else:
+            logger.warning('Recreating schema and dropping existing data')
+
+            md.Base.metadata.drop_all(engine)
+            md.Base.metadata.create_all(engine)
+
+        sys.exit(0)
 
     ## Massage the arguments a bit for passing on to job classes
     command = vars(args).pop('command')
-    vars(args)['socket'] = socket
+
     vars(args).pop('verbose')
     vars(args).pop('database')
     vars(args).pop('apis')
     vars(args).pop('config_file')
 
-    if command != 'initialize':
-        vars(args)['auths'] = auths
-
-        if len(auths) == 0:
-            parser.error('No Twitter credentials provided (use add-api)')
+    vars(args)['engine'] = engine
+    vars(args)['auths'] = auths
 
     ## Actually run jobs
-    if command == 'initialize':
-        yes = vars(args).pop('yes')
-
-        if not yes:
-            logger.warning("WARNING: This command will drop the Twitter data "
-                           "schema and delete all data! If you want to "
-                           "proceed, rerun with '-y'.")
-        else:
-            job = InitializeJob(**vars(args))
-
-            job.run()
-    elif command in ('friends', 'followers'):
+    if command in ('friends', 'followers'):
         FollowJob(direction=command, **vars(args)).run()
     elif command == 'user_info':
         UserInfoJob(**vars(args)).run()

@@ -3,7 +3,6 @@ import logging
 
 from abc import ABC, abstractmethod
 
-from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
 
 import tweepy
@@ -21,48 +20,17 @@ logger = logging.getLogger(__name__)
 ## the details of interacting with the database and Twitter API
 ##
 
-class DatabaseJob(ABC):
-    def __init__(self, **kwargs):
-        try:
-            engine = kwargs.pop('engine')
-        except KeyError:
-            raise ValueError("engine instance is required")
-
-        super(DatabaseJob, self).__init__(**kwargs)
-
-        self.engine = engine
-
-        self.sessionfactory = sessionmaker()
-        self.sessionfactory.configure(bind=self.engine)
-
-        self.session = self.sessionfactory()
-
-    @abstractmethod
-    def run(self):
-        raise NotImplementedError()
-
-    # WARNING drops the schema and deletes all data!
-    def sync_schema(self):
-        logger.warning('Recreating schema')
-
-        md.Base.metadata.drop_all(self.engine)
-        md.Base.metadata.create_all(self.engine)
-
-    def commit(self):
-        logger.debug('Committing')
-
-        self.session.commit()
-
-class InitializeJob(DatabaseJob):
-    def run(self):
-        self.sync_schema()
-
-class ApiJob(DatabaseJob):
+class Job(ABC):
     def __init__(self, **kwargs):
         try:
             target = kwargs.pop('target')
         except KeyError:
             raise ValueError('Must provide target object')
+
+        try:
+            engine = kwargs.pop('engine')
+        except KeyError:
+            raise ValueError("engine instance is required")
 
         try:
             api = kwargs.pop('api')
@@ -73,14 +41,28 @@ class ApiJob(DatabaseJob):
         load_batch_size = kwargs.pop('load_batch_size', None)
         transaction = kwargs.pop('transaction', False)
 
-        super(ApiJob, self).__init__(**kwargs)
+        super(Job, self).__init__(**kwargs)
 
         self.target = target
+        self.engine = engine
         self.api = api
 
         self.user_tag = user_tag
         self.load_batch_size = load_batch_size
         self.transaction = transaction
+
+        self.sessionfactory = sessionmaker()
+        self.sessionfactory.configure(bind=self.engine)
+        self.session = self.sessionfactory()
+
+    @abstractmethod
+    def run(self):
+        raise NotImplementedError()
+
+    def commit(self):
+        logger.debug('Committing')
+
+        self.session.commit()
 
     def load_mentions(self, tweets):
         logger.debug('Loading mentions')
@@ -211,7 +193,7 @@ class ApiJob(DatabaseJob):
             if commit:
                 self.commit()
 
-class UserInfoJob(ApiJob):
+class UserInfoJob(Job):
     def run(self):
         # NOTE self.targets isn't a generator, so we can safely take its len()
         msg = 'Loading info for {0} new or existing users'
@@ -224,7 +206,7 @@ class UserInfoJob(ApiJob):
         if self.transaction:
             self.commit()
 
-class FollowJob(ApiJob):
+class FollowJob(Job):
     def __init__(self, **kwargs):
         direction = kwargs.pop('direction', 'followers')
         full = kwargs.pop('full', False)
@@ -294,7 +276,7 @@ class FollowJob(ApiJob):
         if self.transaction:
             self.commit()
 
-class TweetsJob(ApiJob):
+class TweetsJob(Job):
     def __init__(self, **kwargs):
         since_timestamp = kwargs.pop('since_timestamp', None)
         max_tweets = kwargs.pop('max_tweets', None)
