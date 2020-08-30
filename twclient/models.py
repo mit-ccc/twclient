@@ -1,4 +1,5 @@
-# FIXME indexes
+# FIXME indexes from existing sql script
+# FIXME factor out SCD for user data?
 
 import json
 import logging
@@ -34,6 +35,9 @@ class User(Base, TweepyMixin):
     # it simplifies the load process to use it as a pk.
     user_id = Column(BIGINT, primary_key=True, autoincrement=False)
 
+    # api_response is nullable because not every user recorded
+    # here was obtained from its own API call: some are mentioned
+    # in tweets or returned as followers / friends
     api_response = Column(TEXT, nullable=True)
     screen_name = Column(VARCHAR(256), nullable=True)
     account_create_dt = Column(TIMESTAMP(timezone=True), nullable=True)
@@ -49,9 +53,10 @@ class User(Base, TweepyMixin):
     modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                          onupdate=func.now(), nullable=False)
 
+    lists_owned = relationship('List', back_populates='owning_user')
     tags = relationship('Tag', secondary='user_tag', back_populates='users')
     tweets = relationship('Tweet', back_populates='user')
-    mentions = relationship('Tweet', secondary='tweet_mentions_user',
+    mentions = relationship('Tweet', secondary='mention',
                             back_populates='mentioned')
 
     @classmethod
@@ -83,6 +88,76 @@ class User(Base, TweepyMixin):
                 args[t] = getattr(obj, s)
 
         return cls(**args)
+
+class List(Base, TweepyMixin):
+    __tablename__ = 'list'
+
+    list_id = Column(BIGINT, primary_key=True, autoincrement=False)
+    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+                     nullable=False)
+
+    api_response = Column(TEXT, nullable=False)
+    slug = Column(TEXT, nullable=False)
+
+    list_create_dt = Column(TIMESTAMP(timezone=True), nullable=True)
+    name = Column(TEXT, nullable=True)
+    full_name = Column(TEXT, nullable=True)
+    uri = Column(TEXT, nullable=True)
+    description = Column(TEXT, nullable=True)
+    mode = Column(TEXT, nullable=True)
+    member_count = Column(INT, nullable=True)
+    subscriber_count = Column(INT, nullable=True)
+
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                       nullable=False)
+    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                         onupdate=func.now(), nullable=False)
+
+    owning_user = relationship('User', back_populates='lists_owned')
+
+    @classmethod
+    def from_tweepy(cls, obj):
+        # Twitter sometimes includes NUL bytes, which might be handled correctly
+        # by sqlalchemy + backend or might not: handling them is risky. We'll
+        # just drop them to be safe.
+        api_response = json.dumps(obj._json)
+        api_response = api_response.replace('\00', '').replace(r'\u0000', '')
+
+        args = {
+            'list_id': obj.id,
+            'user_id': obj.user.id,
+            'slug': obj.slug,
+            'api_response': api_response, # NOTE is this public API?
+        }
+
+        extra_fields = {
+            'list_create_dt': 'created_at',
+            'name': 'name',
+            'full_name': 'full_name',
+            'uri': 'uri',
+            'description': 'description',
+            'mode': 'mode',
+            'member_count': 'member_count',
+            'subscriber_count': 'subscriber_count'
+        }
+
+        for t, s in extra_fields.items():
+            if hasattr(obj, s):
+                args[t] = getattr(obj, s)
+
+        return cls(**args)
+
+class UserList(Base):
+    __tablename__ = 'user_list'
+
+    user_list_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True))
+    list_id = Column('list_id', BIGINT, ForeignKey('list.list_id', deferrable=True))
+
+    valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                            nullable=False)
+    valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
 
 class Tweet(Base, TweepyMixin):
     __tablename__ = 'tweet'
@@ -116,7 +191,7 @@ class Tweet(Base, TweepyMixin):
 
     tags = relationship('Tag', secondary='tweet_tag', back_populates='tweets')
     user = relationship('User', back_populates='tweets')
-    mentioned = relationship('User', secondary='tweet_mentions_user',
+    mentioned = relationship('User', secondary='mention',
                              back_populates='mentions')
 
     @classmethod
@@ -184,7 +259,7 @@ class Tag(Base):
     __tablename__ = 'tag'
 
     tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
-    tag = Column(TEXT, nullable=False)
+    name = Column(TEXT, nullable=False)
 
     users = relationship('User', secondary='user_tag', back_populates='tags')
     tweets = relationship('Tweet', secondary='tweet_tag', back_populates='tags')
@@ -227,7 +302,7 @@ tweet_tag = Table('tweet_tag', Base.metadata,
            primary_key=True)
 )
 
-tweet_mentions_user = Table('tweet_mentions_user', Base.metadata,
+mention = Table('mention', Base.metadata,
     Column('tweet_id', BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
            primary_key=True),
     Column('mentioned_user_id', BIGINT, ForeignKey('user.user_id',
@@ -242,7 +317,7 @@ class TweetTag(Base):
     __table__ = tweet_tag
 
 class Mention(Base):
-    __table__ = tweet_mentions_user
+    __table__ = mention
 
 ##
 ## Utility functions
