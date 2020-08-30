@@ -119,14 +119,55 @@ class TwitterApi(object):
     ## Direct wraps of Twitter API methods
     ##
 
-    def list_members(self, lst, **kwargs):
-        logger.debug('Fetching members of list {0}'.format(obj))
+    def get_list(self, full_name=None, list_id=None, slug=None,
+                 owner_screen_name=None, owner_id=None, **kwargs):
+        try:
+            assert full_name is not None ^ list_id is not None ^ (
+                    slug is not None and (
+                        owner_screen_name is not None or
+                        owner_id is not None
+                    )
+            )
+        except AssertionError:
+            raise ValueError('Bad list specification to get_list')
+
+        if full_name is not None:
+            owner_screen_name = full_name.split('/')[0]
+            slug = full_name.split('/')[1]
+
+        twargs = dict({
+            'method': 'get_list',
+            'list_id': list_id,
+            'slug': slug,
+            'owner_screen_name': owner_screen_name,
+            'owner_id': owner_id
+        }, **kwargs)
+
+        yield self.make_api_call(**twargs)
+
+    def list_members(self, full_name=None, list_id=None, slug=None,
+                     owner_screen_name=None, owner_id=None, **kwargs):
+        try:
+            assert full_name is not None ^ list_id is not None ^ (
+                    slug is not None and (
+                        owner_screen_name is not None or
+                        owner_id is not None
+                    )
+            )
+        except AssertionError:
+            raise ValueError('Bad list specification to get_list')
+
+        if full_name is not None:
+            owner_screen_name = full_name.split('/')[0]
+            slug = full_name.split('/')[1]
 
         twargs = dict({
             'method': 'list_members',
             'cursor': True,
-            'owner_screen_name': obj.split('/')[0],
-            'slug': obj.split('/')[1]
+            'list_id': list_id,
+            'slug': slug,
+            'owner_screen_name': owner_screen_name,
+            'owner_id': owner_id
         }, **kwargs)
 
         yield from self.make_api_call(**twargs)
@@ -138,7 +179,7 @@ class TwitterApi(object):
         try:
             assert len(user_ids) > 0 or len(screen_names) > 0
         except AssertionError:
-            raise ValueError("No users provided to users_lookup")
+            raise ValueError('No users provided to lookup_users')
 
         if len(user_ids) > 0:
             for grp in ut.grouper(user_ids, 100): # max 100 per call

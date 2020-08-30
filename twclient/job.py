@@ -59,11 +59,6 @@ class Job(ABC):
     def run(self):
         raise NotImplementedError()
 
-    def commit(self):
-        logger.debug('Committing')
-
-        self.session.commit()
-
     def load_mentions(self, tweets):
         logger.debug('Loading mentions')
 
@@ -195,16 +190,23 @@ class Job(ABC):
 
 class UserInfoJob(Job):
     def run(self):
-        # NOTE self.targets isn't a generator, so we can safely take its len()
-        msg = 'Loading info for {0} new or existing users'
-        msg = msg.format(len(self.targets))
-        logger.info(msg)
+        users = self.target.to_user_objects(api=self.api, session=self.session,
+                                            rehydrate=True)
 
-        self.sync_users(targets=self.targets, target_type=self.target_type,
-                        new=False, full=True, commit=(not self.transaction))
+        for i, batch in enumerate(ut.grouper(users, self.load_batch_size)):
+            msg = 'Running user batch {0}, cumulative users {1}'
+            msg = msg.format(i + 1, n_items)
+            logger.debug(msg)
+
+            n_items += len(batch)
+
+            self.session.add_all(batch)
+
+            if not self.transaction:
+                self.session.commit()
 
         if self.transaction:
-            self.commit()
+            self.session.commit()
 
 class FollowJob(Job):
     def __init__(self, **kwargs):

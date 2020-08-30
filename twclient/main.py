@@ -111,14 +111,10 @@ def main():
     frp = sp.add_parser('friends',
                         help="Get users' friends (may load new users rows)")
     frp, frpgrp = common_arguments(frp)
-    frp.add_argument('-f', '--full', action='store_true',
-                     help='Load full user objects (slower)')
 
     flp = sp.add_parser('followers',
                         help="Get users' followers (may load new users rows)")
     flp, flpgrp = common_arguments(flp)
-    flp.add_argument('-f', '--full', action='store_true',
-                     help='Load full user objects (slower)')
 
     twp = sp.add_parser('tweets',
                         help="Get users' tweets (may load new users rows")
@@ -129,8 +125,6 @@ def main():
                      help='ignore tweets older than this Unix timestamp')
     twp.add_argument('-r', '--max-tweets',
                      help='max number of tweets to collect')
-    twp.add_argument('-f', '--full', action='store_true',
-                     help='Load full user objects (slower)')
     twp.add_argument('-t', '--tweet-tag',
                      help='Tag to apply to loaded tweets')
 
