@@ -4,10 +4,10 @@
 The command-line interface script
 """
 
-# FIXME should be able to specify Twitter data schema name
-# FIXME option for copy/insert loading method
+# FIXME loading with copy
+# FIXME need commands to add / delete / apply tags
 
-import os, sys
+import os
 import logging
 import argparse as ap
 import collections as cl
@@ -15,12 +15,14 @@ import configparser as cp
 
 import tweepy
 
+import twclient.models as md
 import twclient.utils as ut
+import twclient.target as tg
+import twclient.twitter_api as ta
 
 from sqlalchemy import create_engine
 
-from twclient.models import Base
-from twclient.job import InitializeJob, UserInfoJob, FollowJob, TweetsJob
+from twclient.job import UserInfoJob, FollowJob, TweetsJob
 
 logger = logging.getLogger(__name__)
 
@@ -56,7 +58,6 @@ def main():
     lap.add_argument('-f', '--full', action='store_true',
                      help='print all profile info')
 
-    # see https://docs.sqlalchemy.org/en/13/dialects/postgresql.html#empty-dsn-connections-environment-variable-connections
     adp = sp.add_parser('add-db', help='add DB profile and make default')
     adp.add_argument('-n', '--name', required=True,
                      help='name to use for DB profile')
@@ -79,6 +80,11 @@ def main():
 
     ## Other arguments
 
+    inp = sp.add_parser('initialize', help='Initialize the DB schema '
+                                           '(WARNING: deletes all data!)')
+    inp.add_argument('-y', '--yes', action='store_true',
+                     help='Must specify this option to initialize')
+
     def common_arguments(sp):
         sp.add_argument('-u', '--user-tag',
                         help='tag to apply to any loaded / updated users')
@@ -89,35 +95,29 @@ def main():
         sp.add_argument('-z', '--load-batch-size',
                         help='run loads to DB in batches of this size')
 
+        # FIXME does it need to be mutually exclusive?
         grp = sp.add_mutually_exclusive_group(required=True)
-        grp.add_argument('-g', '--select-tag',
-                         help='process only users with this tag')
+        grp.add_argument('-g', '--select-tag', nargs='+',
+                         help='process only users with these tags')
         grp.add_argument('-i', '--user-ids', nargs='+',
                         help='get info for the given list of twitter user IDs')
         grp.add_argument('-n', '--screen-names', nargs='+',
                         help='get info for given list of twitter screen names')
+        grp.add_argument('-l', '--twitter-lists', nargs='+',
+                         help='get info for all users in given Twitter lists')
 
         return sp, grp
 
-    inp = sp.add_parser('initialize', help='Initialize the DB schema '
-                                           '(WARNING: deletes all data!)')
-    inp.add_argument('-y', '--yes', help='Must specify this option to initialize')
-
     uip = sp.add_parser('user_info', help='Get user info / "hydrate" users')
     uip, uipgrp = common_arguments(uip)
-    uipgrp.add_argument('-l', '--twitter-lists', nargs='+',
-                        help='get info for all users in given Twitter lists')
 
-    frp = sp.add_parser('friends',
-                        help="Get users' friends (may load new users rows)")
+    frp = sp.add_parser('friends', help="Get user friends (may load new users)")
     frp, frpgrp = common_arguments(frp)
 
-    flp = sp.add_parser('followers',
-                        help="Get users' followers (may load new users rows)")
+    flp = sp.add_parser('followers', help="Get user followers (may load new users)")
     flp, flpgrp = common_arguments(flp)
 
-    twp = sp.add_parser('tweets',
-                        help="Get users' tweets (may load new users rows")
+    twp = sp.add_parser('tweets', help="Get user tweets (may load new users")
     twp, twpgrp = common_arguments(twp)
     twp.add_argument('-o', '--old-tweets', action='store_true',
                      help="Load tweets older than user's most recent in DB")
@@ -317,7 +317,7 @@ def main():
     ## Commands: main business logic
     ##
 
-    if command == 'initialize':
+    if args.command == 'initialize':
         if not vars(args).pop('yes'):
             logger.warning("WARNING: This command will drop the Twitter data "
                            "schema and delete all data! If you want to "
@@ -327,27 +327,40 @@ def main():
 
             md.Base.metadata.drop_all(engine)
             md.Base.metadata.create_all(engine)
+    else:
+        api = ta.TwitterApi(auths=auths, abort_on_bad_targets=args.abort_on_bad_targets)
 
-        sys.exit(0)
+        targets = []
+        if args.user_ids is not None:
+            targets += [tg.UserIdTarget(targets=args.user_ids)]
+        if args.screen_names is not None:
+            targets += [tg.ScreenNameTarget(targets=args.screen_names)]
+        if args.select_tag is not None:
+            targets += [tg.SelectTagTarget(targets=args.select_tag)]
+        if args.twitter_lists is not None:
+            targets += [tg.TwitterListTarget(targets=args.twitter_lists)]
 
-    ## Massage the arguments a bit for passing on to job classes
-    command = vars(args).pop('command')
+        ## Massage the arguments a bit for passing on to job classes
+        to_drop = ['abort_on_bad_targets', 'verbose', 'database', 'apis',
+                'config_file', 'select_tag', 'user_ids', 'screen_names',
+                'twitter_lists']
 
-    vars(args).pop('verbose')
-    vars(args).pop('database')
-    vars(args).pop('apis')
-    vars(args).pop('config_file')
+        for v in to_drop:
+            vars(args).pop(v)
 
-    vars(args)['engine'] = engine
-    vars(args)['auths'] = auths
+        command = vars(args).pop('command')
 
-    ## Actually run jobs
-    if command in ('friends', 'followers'):
-        FollowJob(direction=command, **vars(args)).run()
-    elif command == 'user_info':
-        UserInfoJob(**vars(args)).run()
-    else: # command == 'tweets'
-        TweetsJob(**vars(args)).run()
+        vars(args)['engine'] = engine
+        vars(args)['api'] = api
+        vars(args)['targets'] = targets
+
+        ## Actually run jobs
+        if command in ('friends', 'followers'):
+            FollowJob(direction=command, **vars(args)).run()
+        elif command == 'user_info':
+            UserInfoJob(**vars(args)).run()
+        else: # command == 'tweets'
+            TweetsJob(**vars(args)).run()
 
 if __name__ == '__main__':
     main()

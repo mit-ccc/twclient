@@ -39,11 +39,11 @@ class User(Base, TweepyMixin):
     # here was obtained from its own API call: some are mentioned
     # in tweets or returned as followers / friends
     api_response = Column(TEXT, nullable=True)
-    screen_name = Column(VARCHAR(256), nullable=True)
+    screen_name = Column(VARCHAR(256), nullable=True, unique=True)
     account_create_dt = Column(TIMESTAMP(timezone=True), nullable=True)
     protected = Column(BOOLEAN, nullable=True)
     verified = Column(BOOLEAN, nullable=True)
-    name = Column(TEXT, nullable=True)
+    display_name = Column(TEXT, nullable=True)
     description = Column(TEXT, nullable=True)
     location = Column(TEXT, nullable=True)
     url = Column(TEXT, nullable=True)
@@ -77,7 +77,7 @@ class User(Base, TweepyMixin):
         extra_fields = {
             'protected': 'protected',
             'verified': 'verified',
-            'name': 'name',
+            'display_name': 'name',
             'description': 'description',
             'location': 'location',
             'url': 'url'
@@ -259,7 +259,7 @@ class Tag(Base):
     __tablename__ = 'tag'
 
     tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
-    name = Column(TEXT, nullable=False)
+    name = Column(TEXT, nullable=False, unique=True)
 
     users = relationship('User', secondary='user_tag', back_populates='tags')
     tweets = relationship('Tweet', secondary='tweet_tag', back_populates='tags')
