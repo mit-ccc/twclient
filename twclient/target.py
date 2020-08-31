@@ -1,6 +1,3 @@
-# FIXME may need to think through new_only some more - is this a full replacement
-# for new in sync_users?
-
 import random
 
 import twclient.models as md
@@ -21,39 +18,57 @@ class Target(ABC):
         random.shuffle(targets) # make partial loads more statistically useful
         self.targets = targets
 
-    # rehydrate means require a refetch from the Twitter API even where we
-    # already did so >= 1 time before and have the data. new_only, which is a
-    # property of the set of targets rather than how to fetch them, means
-    # exclude any user we already have in the DB
     @abstractmethod
-    def to_user_objects(self, session, api, mode='fetch'):
+    def to_user_objects(self, context, mode='fetch'):
         raise NotImplementedError()
 
 class UserIdTarget(Target):
-    def to_user_objects(self, session, api, mode='fetch'):
+    def to_user_objects(self, context, mode='fetch'):
         if mode not in ('fetch', 'rehydrate', 'skip_missing'):
             raise ValueError('Bad mode for to_user_objects')
 
         if mode == 'rehydrate':
-            objs = api.lookup_users(user_ids=self.targets)
-            yield from (md.User.from_tweepy(obj) for obj in objs)
+            for obj in context.api.lookup_users(user_ids=self.targets):
+                yield context.session.merge(md.User.from_tweepy(obj))
         else:
-            presents = session.query(md.User).filter(md.User.user_id.in_(self.targets))
-            yield from presents
+            existing = context.session.query(md.User) \
+                            .filter(md.User.user_id.in_(self.targets))
+            new = list(set(self.targets) - set([u.user_id for u in existing]))
+
+            yield from existing
 
             if mode == 'fetch':
-                missings = list(set(self.targets) - set([x.user_id for x in presents]))
-                objs = api.lookup_users(user_ids=missings)
-                yield from (md.User.from_tweepy(obj) for obj in objs)
+                for obj in context.api.lookup_users(user_ids=new):
+                    yield context.session.merge(md.User.from_tweepy(obj))
+
+class ScreenNameTarget(Target):
+    def to_user_objects(self, context, mode='fetch'):
+        if mode not in ('fetch', 'rehydrate', 'skip_missing'):
+            raise ValueError('Bad mode for to_user_objects')
+
+        # NOTE screen_name is assumed to be unique in md.User
+        if mode == 'rehydrate':
+            for obj in context.api.lookup_users(screen_names=self.targets):
+                yield context.session.merge(md.User.from_tweepy(obj))
+        else:
+            existing = context.session.query(md.User) \
+                              .filter(md.User.screen_name.in_(self.targets))
+            new = list(set(self.targets) - set([u.screen_name for u in existing]))
+
+            yield from existing
+
+            if mode == 'fetch':
+                for obj in context.api.lookup_users(screen_names=new):
+                    yield context.session.merge(md.User.from_tweepy(obj))
 
 class SelectTagTarget(Target):
-    def to_user_objects(self, session, api, mode='fetch'):
+    def to_user_objects(self, context, mode='fetch'):
         # fetch doesn't make sense here: tag isn't a twitter entity
         if mode not in ('rehydrate', 'skip_missing'):
             raise ValueError('Bad mode for to_user_objects')
 
         filters = [md.Tag.name == tag for tag in self.targets]
-        tags = session.query(md.Tag).filter(or_(*filters))
+        tags = context.session.query(md.Tag).filter(or_(*filters)).all()
 
         if mode != 'skip_missing' and len(tags) < len(self.targets):
             raise ValueError("Not all provided tags exist")
@@ -62,37 +77,42 @@ class SelectTagTarget(Target):
 
         if mode == 'rehydrate':
             user_ids = [user.user_id for user in users]
-            objs = api.lookup_users(user_ids=user_ids)
-
-            yield from (md.User.from_tweepy(obj) for obj in objs)
+            for obj in context.api.lookup_users(user_ids=user_ids):
+                yield context.session.merge(md.User.from_tweepy(obj))
         else:
             yield from users
 
-class ScreenNameTarget(Target):
-    def to_user_objects(self, session, api, mode='fetch'):
+class TwitterListTarget(Target):
+    def to_user_objects(self, context, mode='fetch'):
         if mode not in ('fetch', 'rehydrate', 'skip_missing'):
             raise ValueError('Bad mode for to_user_objects')
+
+        owner_screen_names = [obj.split('/')[0] for obj in self.targets]
+        slugs = [obj.split('/')[1] for obj in self.targets]
 
         if mode == 'rehydrate':
-            objs = api.lookup_users(screen_names=self.targets)
-            yield from (md.User.from_tweepy(obj) for obj in objs)
+            ## First, refresh the owning users - we don't yield these
+            owning_users = [
+                context.session.merge(md.User.from_tweepy(obj))
+                for obj in context.api.lookup_users(screen_names=owner_screen_names)
+            ]
+
+            ## Second, refresh the list objects - we don't yield these either
+            for owner, slug in zip(owning_users, slugs):
+                lst = context.api.get_list(slug=slug, owner_id=owner.user_id)
+                context.session.merge(md.List.from_tweepy(lst))
+
+            ## Third, refresh the users in the list
+            objs = it.chain(*[
+                context.api.list_members(slug=slug, owner_id=owner.user_id)
+                for owner, slug in zip(owning_users, slugs)
+            ])
+
+            for obj in objs:
+                yield context.session.merge(md.User.from_tweepy(obj))
         else:
-            # NOTE screen_name is assumed to be unique in md.User
-            presents = session.query(md.User).filter(md.User.screen_name.in_(self.targets))
-            yield from presents
-
-            if mode == 'fetch':
-                missings = list(set(self.targets) - set([x.screen_name for x in presents]))
-                objs = api.lookup_users(screen_names=missings)
-                yield from (md.User.from_tweepy(obj) for obj in objs)
-
-class TwitterListTarget(Target):
-    def to_user_objects(self, session, api, mode='fetch'):
-        if mode not in ('fetch', 'rehydrate', 'skip_missing'):
-            raise ValueError('Bad mode for to_user_objects')
-
-        if rehydrate:
             pass
-        else:
-            pass
+            # exist_owners = context.session.query(md.User) \
+            #                       .filter(screen_name.in_(owner_screen_names))
+            # miss_owners = list(set(
 

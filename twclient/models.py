@@ -63,7 +63,8 @@ class User(Base, TweepyMixin):
         # Twitter sometimes includes NUL bytes, which might be handled correctly
         # by sqlalchemy + backend or might not: handling them is risky. We'll
         # just drop them to be safe.
-        api_response = json.dumps(obj).replace('\00', '').replace(r'\u0000', '')
+        api_response = json.dumps(obj) #, iterable_as_array=True)
+        api_response = api_response.replace('\00', '').replace(r'\u0000', '')
 
         args = {
             'user_id': obj['id'],
@@ -94,12 +95,12 @@ class List(Base, TweepyMixin):
     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
                      nullable=False)
 
-    api_response = Column(TEXT, nullable=False)
     slug = Column(TEXT, nullable=False)
+    api_response = Column(TEXT, nullable=False)
 
     list_create_dt = Column(TIMESTAMP(timezone=True), nullable=True)
-    name = Column(TEXT, nullable=True)
     full_name = Column(TEXT, nullable=True)
+    name = Column(TEXT, nullable=True)
     uri = Column(TEXT, nullable=True)
     description = Column(TEXT, nullable=True)
     mode = Column(TEXT, nullable=True)
@@ -118,13 +119,13 @@ class List(Base, TweepyMixin):
         # Twitter sometimes includes NUL bytes, which might be handled correctly
         # by sqlalchemy + backend or might not: handling them is risky. We'll
         # just drop them to be safe.
-        api_response = json.dumps(obj).replace('\00', '').replace(r'\u0000', '')
+        api_response = json.dumps(obj) #, iterable_as_array=True)
+        api_response = api_response.replace('\00', '').replace(r'\u0000', '')
 
         args = {
             'list_id': obj['id'],
             'user_id': obj['user']['id'],
             'slug': obj['slug'],
-            'full_name': obj['full_name'][1:],
             'api_response': api_response
         }
 
@@ -141,6 +142,10 @@ class List(Base, TweepyMixin):
         for t, s in extra_fields.items():
             if s in obj.keys():
                 args[t] = obj[s]
+
+        ## Other fields that take special handling
+        if 'full_name' in obj.keys():
+            args['full_name'] = obj['full_name'][1:]
 
         return cls(**args)
 
@@ -174,7 +179,7 @@ class Tweet(Base, TweepyMixin):
     retweet_count = Column(INT, nullable=True)
     favorite_count = Column(INT, nullable=True)
 
-    # the IDs here aren't FKs because we haven't
+    # NOTE the IDs here aren't FKs because we haven't
     # necessarily fetched the corresponding tweets
     retweeted_status_id = Column(BIGINT, nullable=True)
     in_reply_to_user_id = Column(BIGINT, nullable=True)
@@ -194,7 +199,8 @@ class Tweet(Base, TweepyMixin):
     @classmethod
     def from_tweepy(cls, obj):
         # remove NUL bytes as above
-        api_response = json.dumps(obj).replace('\00', '').replace(r'\u0000', '')
+        api_response = json.dumps(obj) #, iterable_as_array=True)
+        api_response = api_response.replace('\00', '').replace(r'\u0000', '')
 
         args = {
             'tweet_id': obj['id'],
@@ -208,14 +214,11 @@ class Tweet(Base, TweepyMixin):
         else:
             args['content'] = obj['text']
 
-        # commented out fields are handled specially below
         extra_fields = [
             'lang',
             'source',
             'truncated',
-            # 'retweeted_status_id',
             'quoted_status_id',
-            # 'quoted_status_content',
             'in_reply_to_user_id',
             'in_reply_to_status_id',
             'retweet_count',
@@ -226,6 +229,7 @@ class Tweet(Base, TweepyMixin):
             if t in obj.keys():
                 args[t] = (obj[t] if obj[t] != 'null' else None)
 
+        ## Other fields needing special handling
         if 'quoted_status' in obj.keys():
             if 'full_text' in obj['quoted_status'].keys():
                 args['quoted_status_content'] = obj['quoted_status']['full_text']
@@ -312,46 +316,27 @@ class TweetTag(Base):
 class Mention(Base):
     __table__ = mention
 
-##
-## Utility functions
-##
+    @classmethod # FIXME
+    def mentions_from_tweet(cls, obj):
+        mentions, users = [], []
 
-# FIXME should probably be method on mention class
-def mentions_from_tweet(tweet):
-    mentions, users = [], []
+        if hasattr(tweet, 'entities'):
+            if 'user_mentions' in tweet.entities.keys():
+                for m in tweet.entities['user_mentions']:
+                    urow = {'user_id': m['id']}
 
-    if hasattr(tweet, 'entities'):
-        if 'user_mentions' in tweet.entities.keys():
-            for m in tweet.entities['user_mentions']:
-                urow = {'user_id': m['id']}
+                    if 'screen_name' in m.keys():
+                        urow['screen_name'] = m['screen_name']
 
-                if 'screen_name' in m.keys():
-                    urow['screen_name'] = m['screen_name']
+                    if 'name' in m.keys():
+                        urow['name'] = m['name']
 
-                if 'name' in m.keys():
-                    urow['name'] = m['name']
+                    users += [urow]
 
-                users += [urow]
+                    mentions += [{
+                        'tweet_id': tweet.id,
+                        'mentioned_user_id': m['id']
+                    }]
 
-                mentions += [{
-                    'tweet_id': tweet.id,
-                    'mentioned_user_id': m['id']
-                }]
-
-    return mentions, users
-
-def mentions_for_tweets(self, tweets):
-    # process tweets
-    dat = [self.mentions_for_tweet(t) for t in tweets]
-
-    mentions = [x[0] for x in dat]
-    mentions = [x for y in mentions for x in y]
-    mentions = [dict(t) for t in {tuple(d.items()) for d in mentions}]
-
-    # extract users
-    users = [x[1] for x in dat]
-    users = [x for y in users for x in y]
-    users = [dict(t) for t in {tuple(d.items()) for d in users}]
-
-    return mentions, users
+        return mentions, users
 

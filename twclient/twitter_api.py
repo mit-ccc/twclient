@@ -56,6 +56,10 @@ class TwitterApi(object):
             else:
                 ret = func(**kwargs)
 
+            # FIXME assumes every API method returns a list of tweepy objects,
+            # which is not true in particular of get_list - tries to return the
+            # constituent parts of the single list object that method gives us
+
             # yield from ret
             j = 0
             for obj in ret:
@@ -122,7 +126,7 @@ class TwitterApi(object):
     def get_list(self, full_name=None, list_id=None, slug=None,
                  owner_screen_name=None, owner_id=None, **kwargs):
         try:
-            assert full_name is not None ^ list_id is not None ^ (
+            assert (full_name is not None) ^ (list_id is not None) ^ (
                     slug is not None and (
                         owner_screen_name is not None or
                         owner_id is not None

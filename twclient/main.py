@@ -90,35 +90,38 @@ def main():
                         help='tag to apply to any loaded / updated users')
         sp.add_argument('-b', '--abort-on-bad-targets', action='store_true',
                         help="abort if a requested user doesn't exist")
-        sp.add_argument('-e', '--transaction', action='store_true',
+        sp.add_argument('-e', '--onetxn', action='store_true',
                         help='load in one transaction')
-        sp.add_argument('-z', '--load-batch-size',
-                        help='run loads to DB in batches of this size')
 
-        # FIXME does it need to be mutually exclusive?
-        grp = sp.add_mutually_exclusive_group(required=True)
-        grp.add_argument('-g', '--select-tag', nargs='+',
-                         help='process only users with these tags')
-        grp.add_argument('-i', '--user-ids', nargs='+',
-                        help='get info for the given list of twitter user IDs')
-        grp.add_argument('-n', '--screen-names', nargs='+',
-                        help='get info for given list of twitter screen names')
-        grp.add_argument('-l', '--twitter-lists', nargs='+',
-                         help='get info for all users in given Twitter lists')
+        # selecting users to operate on
+        sp.add_argument('-g', '--select-tag', nargs='+',
+                        help='process loaded users with these tags')
+        sp.add_argument('-i', '--user-ids', nargs='+',
+                        help='process particular Twitter user IDs')
+        sp.add_argument('-n', '--screen-names', nargs='+',
+                        help='process particular Twitter screen names')
+        sp.add_argument('-l', '--twitter-lists', nargs='+',
+                        help='process all users in particular Twitter lists')
 
-        return sp, grp
+        return sp
 
-    uip = sp.add_parser('user_info', help='Get user info / "hydrate" users')
-    uip, uipgrp = common_arguments(uip)
+    uip = sp.add_parser('hydrate', help='Get user info / "hydrate" users')
+    uip = common_arguments(uip)
 
     frp = sp.add_parser('friends', help="Get user friends (may load new users)")
-    frp, frpgrp = common_arguments(frp)
+    frp = common_arguments(frp)
+    frp.add_argument('-z', '--load-batch-size',
+                     help='run loads to DB in batches of this size')
 
     flp = sp.add_parser('followers', help="Get user followers (may load new users)")
-    flp, flpgrp = common_arguments(flp)
+    flp = common_arguments(flp)
+    flp.add_argument('-z', '--load-batch-size',
+                     help='run loads to DB in batches of this size')
 
     twp = sp.add_parser('tweets', help="Get user tweets (may load new users")
-    twp, twpgrp = common_arguments(twp)
+    twp = common_arguments(twp)
+    twp.add_argument('-z', '--load-batch-size',
+                     help='run loads to DB in batches of this size')
     twp.add_argument('-o', '--old-tweets', action='store_true',
                      help="Load tweets older than user's most recent in DB")
     twp.add_argument('-c', '--since-timestamp',
@@ -341,14 +344,14 @@ def main():
             targets += [tg.TwitterListTarget(targets=args.twitter_lists)]
 
         ## Massage the arguments a bit for passing on to job classes
+        command = vars(args).pop('command')
+
         to_drop = ['abort_on_bad_targets', 'verbose', 'database', 'apis',
                 'config_file', 'select_tag', 'user_ids', 'screen_names',
                 'twitter_lists']
 
         for v in to_drop:
             vars(args).pop(v)
-
-        command = vars(args).pop('command')
 
         vars(args)['engine'] = engine
         vars(args)['api'] = api
@@ -357,7 +360,7 @@ def main():
         ## Actually run jobs
         if command in ('friends', 'followers'):
             FollowJob(direction=command, **vars(args)).run()
-        elif command == 'user_info':
+        elif command == 'hydrate':
             UserInfoJob(**vars(args)).run()
         else: # command == 'tweets'
             TweetsJob(**vars(args)).run()
