@@ -43,7 +43,9 @@ class AuthPoolAPI(object):
 
         self._authpool_current_api_index = 0
         self._authpool_apis = [
-            tweepy.API(auth, wait_on_rate_limit=False, **kwargs)
+            tweepy.API(auth, parser=tweepy.parsers.JSONParser(),
+                       wait_on_rate_limit=False, **kwargs)
+
             for auth in random.sample(auths, len(auths))
         ]
 

@@ -3,7 +3,6 @@
 
 import json
 import logging
-import datetime as dt
 
 from abc import ABC, abstractmethod
 
@@ -64,14 +63,13 @@ class User(Base, TweepyMixin):
         # Twitter sometimes includes NUL bytes, which might be handled correctly
         # by sqlalchemy + backend or might not: handling them is risky. We'll
         # just drop them to be safe.
-        api_response = json.dumps(obj._json)
-        api_response = api_response.replace('\00', '').replace(r'\u0000', '')
+        api_response = json.dumps(obj).replace('\00', '').replace(r'\u0000', '')
 
         args = {
-            'user_id': obj.id,
-            'screen_name': obj.screen_name,
-            'api_response': api_response, # NOTE is this public API?
-            'account_create_dt': obj.created_at.replace(tzinfo=dt.timezone.utc)
+            'user_id': obj['id'],
+            'screen_name': obj['screen_name'],
+            'account_create_dt': obj['created_at'],
+            'api_response': api_response
         }
 
         extra_fields = {
@@ -84,8 +82,8 @@ class User(Base, TweepyMixin):
         }
 
         for t, s in extra_fields.items():
-            if hasattr(obj, s):
-                args[t] = getattr(obj, s)
+            if s in obj.keys():
+                args[t] = obj[s]
 
         return cls(**args)
 
@@ -120,20 +118,19 @@ class List(Base, TweepyMixin):
         # Twitter sometimes includes NUL bytes, which might be handled correctly
         # by sqlalchemy + backend or might not: handling them is risky. We'll
         # just drop them to be safe.
-        api_response = json.dumps(obj._json)
-        api_response = api_response.replace('\00', '').replace(r'\u0000', '')
+        api_response = json.dumps(obj).replace('\00', '').replace(r'\u0000', '')
 
         args = {
-            'list_id': obj.id,
-            'user_id': obj.user.id,
-            'slug': obj.slug,
-            'api_response': api_response, # NOTE is this public API?
+            'list_id': obj['id'],
+            'user_id': obj['user']['id'],
+            'slug': obj['slug'],
+            'full_name': obj['full_name'][1:],
+            'api_response': api_response
         }
 
         extra_fields = {
             'list_create_dt': 'created_at',
             'name': 'name',
-            'full_name': 'full_name',
             'uri': 'uri',
             'description': 'description',
             'mode': 'mode',
@@ -142,8 +139,8 @@ class List(Base, TweepyMixin):
         }
 
         for t, s in extra_fields.items():
-            if hasattr(obj, s):
-                args[t] = getattr(obj, s)
+            if s in obj.keys():
+                args[t] = obj[s]
 
         return cls(**args)
 
@@ -197,20 +194,19 @@ class Tweet(Base, TweepyMixin):
     @classmethod
     def from_tweepy(cls, obj):
         # remove NUL bytes as above
-        api_response = json.dumps(obj._json)
-        api_response = api_response.replace('\00', '').replace(r'\u0000', '')
+        api_response = json.dumps(obj).replace('\00', '').replace(r'\u0000', '')
 
         args = {
-            'tweet_id': obj.id,
-            'user_id': obj.user.id,
-            'api_response': api_response, # NOTE is this public API?
-            'tweet_create_dt': obj.created_at.replace(tzinfo=dt.timezone.utc)
+            'tweet_id': obj['id'],
+            'user_id': obj['user']['id'],
+            'tweet_create_dt': obj['created_at'],
+            'api_response': api_response
         }
 
-        if hasattr(obj, 'full_text'):
-            args['content'] = obj.full_text
+        if 'full_text' in obj.keys():
+            args['content'] = obj['full_text']
         else:
-            args['content'] = obj.text
+            args['content'] = obj['text']
 
         # commented out fields are handled specially below
         extra_fields = [
@@ -227,31 +223,28 @@ class Tweet(Base, TweepyMixin):
         ]
 
         for t in extra_fields:
-            if hasattr(obj, t):
-                val = getattr(obj, t)
-                val = (val if val != 'null' else None)
+            if t in obj.keys():
+                args[t] = (obj[t] if obj[t] != 'null' else None)
 
-                args[t] = val
-
-        if hasattr(obj, 'quoted_status'):
-            if hasattr(obj.quoted_status, 'full_text'):
-                args['quoted_status_content'] = obj.quoted_status.full_text
+        if 'quoted_status' in obj.keys():
+            if 'full_text' in obj['quoted_status'].keys():
+                args['quoted_status_content'] = obj['quoted_status']['full_text']
             else:
-                args['quoted_status_content'] = obj.quoted_status.text
+                args['quoted_status_content'] = obj['quoted_status']['text']
 
         # Native retweets take some special handling
-        if hasattr(obj, 'retweeted_status'):
-            args['retweeted_status_id'] = obj.retweeted_status.id
+        if 'retweeted_status' in obj.keys():
+            args['retweeted_status_id'] = obj['retweeted_status']['id']
 
             # From the Twitter docs: "Note that while native retweets may have
             # their toplevel text property shortened, the original text will be
             # available under the retweeted_status object and the truncated
             # parameter will be set to the value of the original status (in most
             # cases, false)."
-            if hasattr(obj.retweeted_status, 'full_text'):
-                args['content'] = obj.retweeted_status.full_text
+            if 'full_text' in obj['retweeted_status'].keys():
+                args['content'] = obj['retweeted_status']['full_text']
             else:
-                args['content'] = obj.retweeted_status.text
+                args['content'] = obj['retweeted_status']['text']
 
         return cls(**args)
 
@@ -323,6 +316,7 @@ class Mention(Base):
 ## Utility functions
 ##
 
+# FIXME should probably be method on mention class
 def mentions_from_tweet(tweet):
     mentions, users = [], []
 
