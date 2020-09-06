@@ -98,9 +98,11 @@ class UserInfoJob(Job):
             # also merges user objects into self.session
             users = target.to_user_objects(context=self, mode='rehydrate')
 
-            if self.user_tag is not None:
-                for user in users:
+            for user in users:
+                if self.user_tag is not None:
                     user.tags.append(tag)
+
+                self.session.add(user)
 
         self.session.commit()
 
