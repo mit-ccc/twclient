@@ -108,7 +108,7 @@ class UserData(Base, _TweepyMixin):
         # Twitter sometimes includes NUL bytes, which might be handled correctly
         # by sqlalchemy + backend or might not: handling them is risky. We'll
         # just drop them to be safe.
-        api_response = json.dumps(obj) #, iterable_as_array=True)
+        api_response = json.dumps(obj)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '')
 
         args = {
@@ -185,10 +185,8 @@ class List(Base, _TweepyMixin):
 
     @classmethod
     def from_tweepy(cls, obj):
-        # Twitter sometimes includes NUL bytes, which might be handled correctly
-        # by sqlalchemy + backend or might not: handling them is risky. We'll
-        # just drop them to be safe.
-        api_response = json.dumps(obj) #, iterable_as_array=True)
+        # remove NUL bytes as above
+        api_response = json.dumps(obj)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '')
 
         args = {
@@ -264,7 +262,7 @@ class Tweet(Base, _TweepyMixin):
     @classmethod
     def from_tweepy(cls, obj):
         # remove NUL bytes as above
-        api_response = json.dumps(obj) #, iterable_as_array=True)
+        api_response = json.dumps(obj)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '')
 
         args = {
@@ -321,6 +319,11 @@ class Tag(Base):
     tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
     name = Column(TEXT, nullable=False, unique=True)
 
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                       nullable=False)
+    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                         onupdate=func.now(), nullable=False)
+
     users = relationship('User', secondary='user_tag', back_populates='tags')
     tweets = relationship('Tweet', secondary='tweet_tag', back_populates='tags')
 
@@ -346,13 +349,6 @@ class Follow(Base):
 ## Link tables, whether or not considered as objects
 ##
 
-user_tag = Table('user_tag', Base.metadata,
-    Column('user_id', BIGINT, ForeignKey('user.user_id', deferrable=True),
-           primary_key=True),
-    Column('tag_id', BIGINT, ForeignKey('tag.tag_id', deferrable=True),
-           primary_key=True)
-)
-
 tweet_tag = Table('tweet_tag', Base.metadata,
     Column('tweet_id', BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
            primary_key=True),
@@ -369,7 +365,17 @@ mention = Table('mention', Base.metadata,
 )
 
 class UserTag(Base):
-    __table__ = user_tag
+    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+                     primary_key=True),
+    tag_id = Column(BIGINT, ForeignKey('tag.tag_id', deferrable=True),
+                    primary_key=True)
+
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                       nullable=False)
+    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                         onupdate=func.now(), nullable=False)
+
+    # FIXME
 
 class TweetTag(Base):
     __table__ = tweet_tag
