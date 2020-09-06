@@ -1,11 +1,7 @@
-import os
+import re
 import csv
-import string
-import random
 import logging
 import tempfile
-
-import tweepy
 
 logger = logging.getLogger(__name__)
 
@@ -38,22 +34,8 @@ def grouper(it, n=None):
         if len(ret) > 0:
             yield ret
 
-def unique_name_gen(length=10, prefix=''):
-    used = set()
-
-    while True:
-        cand = ''.join([
-            random.choice(string.ascii_lowercase)
-            for i in range(length)
-        ])
-
-        if cand in used:
-            continue
-        else:
-            used.add(cand)
-            yield cand
-
-unique_names = unique_name_gen()
+def split_camel_case(s):
+    return re.sub('([A-Z]+)', r' \1', s).split()
 
 # data assumed to be a list of dicts
 def write_to_tempfile(data, fieldnames=None, mode='r+t',
