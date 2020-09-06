@@ -91,17 +91,17 @@ class Job(ABC):
 
 class UserInfoJob(Job):
     def run(self):
-        users = it.chain(*[
-            tg.to_user_objects(context=self, mode='rehydrate')
-            for tg in self.targets
-        ])
-
         if self.user_tag is not None:
             tag = self.get_or_create(md.Tag, name=self.user_tag)
-            for user in users:
-                user.tags.append(tag)
 
-        self.session.add_all(users)
+        for target in self.targets:
+            # also merges user objects into self.session
+            users = target.to_user_objects(context=self, mode='rehydrate')
+
+            if self.user_tag is not None:
+                for user in users:
+                    user.tags.append(tag)
+
         self.session.commit()
 
 class TweetsJob(Job):
