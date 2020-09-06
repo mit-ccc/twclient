@@ -104,7 +104,7 @@ class TwitterApi(object):
                 else:
                     logger.warning(msg)
             else:
-                message = e.message
+                reason = e.reason
                 api_code = e.api_code
                 if e.response is not None:
                     http_code = e.response.status_code
@@ -112,8 +112,8 @@ class TwitterApi(object):
                     http_code = None
 
                 msg = 'Error returned by Twitter API: API code {0}, HTTP ' \
-                      'status code {1}, message {2}'
-                msg = msg.format(api_code, http_code, message)
+                      'status code {1}, reason {2}'
+                msg = msg.format(api_code, http_code, reason)
 
                 logger.debug(msg, exc_info=True)
 
@@ -218,7 +218,7 @@ class TwitterApi(object):
 
         twargs = dict({
             'method': 'user_timeline',
-            'count': 200, # the max in one call
+            'count': 200, # per page, not total; the max in one call
             'tweet_mode': 'extended', # don't truncate tweet text
             'include_rts': True,
             'cursor': True,
@@ -258,19 +258,6 @@ class TwitterApi(object):
 ##
 ## Higher-level wrappers
 ##
-
-def hydrate(api, user_ids=[], screen_names=[], lists=[]):
-    try:
-        assert len(user_ids) > 0 or len(screen_names) > 0 or len(lists) > 0
-    except AssertionError:
-        raise ValueError("Must provide objects to hydrate")
-
-    if len(user_ids) > 0 or len(screen_names) > 0:
-        yield from api.lookup_users(user_ids=user_ids, screen_names=screen_names)
-
-    if len(lists) > 0:
-        for lst in lists:
-            yield from api.list_members(lst=lst)
 
 def tweets(api, objects, kind, since_ids=None, max_items=None,
            since_timestamp=None):
