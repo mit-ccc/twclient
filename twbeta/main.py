@@ -5,7 +5,10 @@ The command-line interface script
 """
 
 # FIXME loading with copy
-# FIXME need commands to add / delete / apply tags
+
+# FIXME need commands to add / delete / apply tags - should we even have the -u
+# and -t flags to apply tags to users and tweets? is it less confusing if
+# centralized in a subcommand?
 
 import os
 import logging

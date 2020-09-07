@@ -72,8 +72,7 @@ class User(Base):
     tags = relationship('Tag', secondary=lambda: UserTag.__table__,
                         back_populates='users')
     tweets = relationship('Tweet', back_populates='user')
-    mentions = relationship('Tweet', secondary=lambda: Mention.__table__,
-                            back_populates='mentioned')
+    mentions = relationship('Mention', back_populates='user')
 
     @classmethod
     def from_tweepy(cls, obj):
@@ -261,8 +260,7 @@ class Tweet(Base, _TweepyMixin):
     tags = relationship('Tag', secondary=lambda: TweetTag.__table__,
                         back_populates='tweets')
     user = relationship('User', foreign_keys=[user_id], back_populates='tweets')
-    mentioned = relationship('User', secondary=lambda: Mention.__table__,
-                             back_populates='mentions')
+    mentions = relationship('Mention', back_populates='tweet')
 
     retweet_of = relationship('Tweet', foreign_keys=[retweeted_status_id],
                               remote_side=[tweet_id])
@@ -307,7 +305,6 @@ class Tweet(Base, _TweepyMixin):
 
         ret.user = User.from_tweepy(obj.user)
         # ret.user.data.append(UserData.from_tweepy(obj.user)) # FIXME
-        # ret.user_id = obj.user.id
 
         if hasattr(obj, 'quoted_status'):
             ret.quote_of = Tweet.from_tweepy(obj.quoted_status)
@@ -315,14 +312,7 @@ class Tweet(Base, _TweepyMixin):
         if hasattr(obj, 'retweeted_status'):
             ret.retweet_of = Tweet.from_tweepy(obj.retweeted_status)
 
-        mentioned_users = []
-        if hasattr(obj, 'entities'):
-            if 'user_mentions' in obj.entities.keys():
-                for m in obj.entities['user_mentions']:
-                    mentioned_users += [m['id']]
-        mentioned_users = list(set(mentioned_users)) # FIXME
-
-        ret.mentioned = [User(user_id=mt) for mt in mentioned_users]
+        ret.mentions = Mention.list_from_tweepy(obj)
 
         return ret
 
@@ -380,16 +370,40 @@ class TweetTag(Base):
            primary_key=True)
 
 class Mention(Base):
-    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
-           primary_key=True)
-    mentioned_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
-           primary_key=True)
+    mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
 
-    # start_index = Column(INT, nullable=False)
-    # end_index = Column(INT, nullable=False)
+    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
+    mentioned_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True))
+
+    start_index = Column(INT, nullable=False)
+    end_index = Column(INT, nullable=False)
 
     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                        nullable=False)
     modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                          onupdate=func.now(), nullable=False)
+
+    tweet = relationship('Tweet', back_populates='mentions')
+    user = relationship('User', back_populates='mentions')
+
+    @classmethod
+    def list_from_tweepy(cls, obj):
+        lst = []
+
+        if hasattr(obj, 'entities'):
+            if 'user_mentions' in obj.entities.keys():
+                for mt in obj.entities['user_mentions']:
+                    kwargs = {
+                        'tweet_id': obj.id,
+                        'mentioned_user_id': mt['id'],
+                        'start_index': mt['indices'][0],
+                        'end_index': mt['indices'][1]
+                    }
+
+                    ret = cls(**kwargs)
+                    ret.user = User.from_tweepy(obj.user)
+
+                    lst += [ret]
+
+        return lst
 
