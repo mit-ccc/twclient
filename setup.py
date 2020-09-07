@@ -31,7 +31,7 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'twbeta=twclient.main:main', # FIXME
+            'twbeta=twbeta.main:main', # FIXME
         ]
     }
 )
