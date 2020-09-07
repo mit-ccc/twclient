@@ -1,4 +1,5 @@
 import random
+import itertools as it
 
 import twbeta.models as md
 
@@ -143,7 +144,7 @@ class TwitterListTarget(Target):
 
             ## Second, refresh the list objects - we don't yield these either
             for owner, slug in zip(owning_users, slugs):
-                lst = context.api.get_list(slug=slug, owner_id=owner.user_id)
+                lst = next(context.api.get_list(slug=slug, owner_id=owner.user_id))
                 context.session.merge(md.List.from_tweepy(lst))
 
             ## Third, refresh the users in the list

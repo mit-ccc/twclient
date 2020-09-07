@@ -35,7 +35,8 @@ class TwitterApi(object):
         self.pool = ap.AuthPoolAPI(auths=auths, wait_on_rate_limit=True)
         self.abort_on_bad_targets = abort_on_bad_targets
 
-    def make_api_call(self, method, cursor=False, max_items=None, **kwargs):
+    def make_api_call(self, method, cursor=False, max_items=None,
+                      method_returns_list=True, **kwargs):
         msg = 'API call: {0} with params {1}, cursor {2}'
         logger.debug(msg.format(method, kwargs, cursor))
 
@@ -56,15 +57,13 @@ class TwitterApi(object):
             else:
                 ret = func(**kwargs)
 
-            # FIXME assumes every API method returns a list of tweepy objects,
-            # which is not true in particular of get_list - tries to return the
-            # constituent parts of the single list object that method gives us
-
-            # yield from ret
             j = 0
-            for obj in ret:
-                yield obj
-                j += 1
+            if method_returns_list:
+                for obj in ret:
+                    yield obj
+                    j += 1
+            else:
+                yield ret
 
             # NOTE users/lookup doesn't raise an error condition on bad users,
             # it just doesn't return them, so we need to check the length of the
@@ -141,18 +140,19 @@ class TwitterApi(object):
 
         twargs = dict({
             'method': 'get_list',
+            'method_returns_list': False,
             'list_id': list_id,
             'slug': slug,
             'owner_screen_name': owner_screen_name,
             'owner_id': owner_id
         }, **kwargs)
 
-        yield self.make_api_call(**twargs)
+        yield from self.make_api_call(**twargs)
 
     def list_members(self, full_name=None, list_id=None, slug=None,
                      owner_screen_name=None, owner_id=None, **kwargs):
         try:
-            assert full_name is not None ^ list_id is not None ^ (
+            assert (full_name is not None) ^ (list_id is not None) ^ (
                     slug is not None and (
                         owner_screen_name is not None or
                         owner_id is not None
