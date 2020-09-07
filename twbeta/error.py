@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 # followers, or tweets come back as an HTTP 401 with message "Not authorized."
 # and no Twitter status code.
 
-# See Twitter docs: https://developer.twitter.com/en/docs/basics/response-codes
+# See Twitter docs: https://developer.twitter.com/en/support/twitter-api/error-troubleshooting
 
 class TWClientError(Exception):
     def __init__(self, message, response=None, api_code=None):

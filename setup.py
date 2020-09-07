@@ -8,34 +8,31 @@ with open(path.join(here, 'README.md'), encoding='utf-8') as f:
     long_description = f.read()
 
 setup(
-    name='twclient',
-    version='0.1.0',
+    name='twbeta', # FIXME and s/twbeta/twclient/ in code
+    version='0.1.0', # FIXME
     description='A high-level command-line client for the Twitter API',
     url='https://github.com/wwbrannon/twclient',
     author='William Brannon',
-    author_email='will.brannon@gmail.com',
+    author_email='wbrannon@mit.edu',
     classifiers=[
+        # FIXME
         'Development Status :: 4 - Beta',
         'Intended Audience :: Developers',
         'Programming Language :: Python :: 3.7',
         'Programming Language :: Python :: 3.8',
     ],
 
-    packages=['twclient'],
+    packages=['twbeta'], # FIXME
     python_requires='>=3.7, <4', # FIXME revisit this?
-    install_requires=['pyyaml', 'tweepy', 'sqlalchemy'],
+    install_requires=['tweepy', 'sqlalchemy'],
 
     long_description=long_description,
     long_description_content_type='text/markdown',
 
-    package_data={
-        'twclient': ['sql/schema.sql'],
-    },
-
     entry_points={
         'console_scripts': [
-            'twitter=twclient.main:main',
-        ],
+            'twbeta=twclient.main:main', # FIXME
+        ]
     }
 )
 

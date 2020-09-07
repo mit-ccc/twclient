@@ -15,14 +15,14 @@ import configparser as cp
 
 import tweepy
 
-import twclient.models as md
-import twclient.utils as ut
-import twclient.target as tg
-import twclient.twitter_api as ta
+import twbeta.models as md
+import twbeta.utils as ut
+import twbeta.target as tg
+import twbeta.twitter_api as ta
 
 from sqlalchemy import create_engine
 
-from twclient.job import UserInfoJob, FollowJob, TweetsJob
+from twbeta.job import UserInfoJob, FollowJob, TweetsJob
 
 logger = logging.getLogger(__name__)
 
@@ -37,8 +37,8 @@ def main():
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='verbosity level (repeat for more)')
 
-    parser.add_argument('-c', '--config-file', default='~/.twclientrc',
-                        help='path to config file (default ~/.twclientrc)')
+    parser.add_argument('-c', '--config-file', default='~/.twbetarc',
+                        help='path to config file (default ~/.twbetarc)')
     parser.add_argument('-d', '--database',
                         help='use this stored DB profile instead of default')
     parser.add_argument('-a', '--api', dest='apis', nargs='+',

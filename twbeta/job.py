@@ -4,14 +4,13 @@ import itertools as it
 
 from abc import ABC, abstractmethod
 
+import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 
-import tweepy
-
-import twclient.error as err
-import twclient.utils as ut
-import twclient.models as md
-import twclient.twitter_api as ta
+import twbeta.error as err
+import twbeta.utils as ut
+import twbeta.models as md
+import twbeta.twitter_api as ta
 
 logger = logging.getLogger(__name__)
 
@@ -68,23 +67,6 @@ class Job(ABC):
 
             return instance
 
-    def batchify(self, objects, func, **kwargs):
-        n_items = 0
-        for i, batch in enumerate(ut.grouper(objects, self.load_batch_size)):
-            msg = 'Running {0} batch {1}, cumulative objects {2}'
-            msg = msg.format(type(self), i + 1, n_items)
-            logger.debug(msg)
-
-            n_items += len(batch)
-
-            func(batch, **kwargs)
-
-            if not self.onetxn:
-                self.session.commit()
-
-        if self.onetxn:
-            self.session.commit()
-
     @abstractmethod
     def run(self):
         raise NotImplementedError()
@@ -112,72 +94,69 @@ class TweetsJob(Job):
         max_tweets = kwargs.pop('max_tweets', None)
         old_tweets = kwargs.pop('old_tweets', False)
         tweet_tag = kwargs.pop('tweet_tag', None)
-        full = kwargs.pop('full', False)
 
         super(TweetsJob, self).__init__(**kwargs)
-
-        # NOTE this could be implemented but has not been
-        if self.target_type == 'twitter_lists':
-            raise NotImplementedError()
 
         self.since_timestamp = since_timestamp
         self.max_tweets = max_tweets
         self.old_tweets = old_tweets
         self.tweet_tag = tweet_tag
-        self.full = full
 
     def run(self):
-        self.sync_users(targets=self.targets, target_type=self.target_type,
-                        new=True, full=self.full, commit=(not self.onetxn))
-
-        if self.target_type == 'user_ids':
-            user_ids = self.targets
-        if self.target_type == 'screen_names':
-            user_ids = self.user_ids_for_screen_names(self.targets)
-
-        if self.old_tweets:
-            logger.debug('Allowing old tweets')
-            since_ids = [None for x in user_ids]
-        else:
-            logger.debug('Skipping old tweets')
-            since_ids = self.max_tweet_ids_for_user_ids(user_ids)
+        if self.tweet_tag is not None:
+            tag = self.get_or_create(md.Tag, name=self.tweet_tag)
 
         n_items = 0
-        for i, (user_id, since_id, target) in enumerate(zip(user_ids, since_ids,
-                                                            self.targets)):
-            if user_id is None and self.target_type == 'screen_names':
-                msg = 'Skipping unknown screen name {0}'.format(target)
-                logger.warning(msg)
+        for target in self.targets:
+            users = target.to_user_objects(context=self, mode='fetch')
 
-                continue
+            for user in users:
+                if self.old_tweets:
+                    since_id = None
+                else:
+                    since_id = self.session.query(sa.func.max(md.Tweet.tweet_id)) \
+                                   .filter(md.Tweet.user_id==user.user_id).scalar()
+                    print(since_id)
 
-            msg = 'Processing user {0} ({1} / {2})'
-            logger.debug(msg.format(user_id, i + 1, len(user_ids)))
+                twargs = {
+                    'user_id': user.user_id,
+                    'since_id': since_id,
+                    'max_tweets': self.max_tweets,
+                    'since_timestamp': self.since_timestamp
+                }
 
-            tweets = self.tweet_objects_for_ids(**{
-                'user_ids': [user_id],
-                'since_ids': [since_id],
-                'max_tweets': self.max_tweets,
-                'since_timestamp': self.since_timestamp
-            })
+                tweets = self.api.user_timeline(**twargs)
+                tweets = ut.grouper(tweets, self.load_batch_size)
 
-            for j, batch in enumerate(ut.grouper(tweets, self.load_batch_size)):
-                msg = 'Running user {0} ({1} / {2}) batch {3}, ' \
-                      'cumulative tweets {4}'
-                msg = msg.format(user_id, i + 1, len(user_ids), j + 1, n_items)
-                logger.info(msg)
+                for i, batch in enumerate(tweets):
+                    msg = 'Running {0} batch {1}, cumulative objects {2}'
+                    msg = msg.format(type(self), i + 1, n_items)
+                    logger.debug(msg)
 
-                self.load_tweets(batch, load_mentions=True)
-                n_items += len(batch)
+                    for tweet in batch:
+                        tweet = md.Tweet.from_tweepy(tweet)
+                        tweet.user = user
 
-            # NOTE: it's safe to commit here even if make_api_call caught a
-            # BadUserError, because in that case it just won't return any rows
-            # and the loop above is a no-op
-            if not self.onetxn:
-                self.commit()
+                        if self.tweet_tag is not None:
+                            tweet.tags.append(tag)
+
+                        self.session.merge(tweet) # may be fetching old tweets
+
+                        for mt in md.Tweet.mentioned_users_from_tweepy(tweet):
+                            mention = md.Mention(
+                                tweet_id=tweet.tweet_id,
+                                mentioned_user_id=mt
+                            )
+
+                            self.session.merge(mention)
+
+                    if not self.onetxn:
+                        self.session.commit()
+
+                    n_items += len(batch)
 
         if self.onetxn:
-            self.commit()
+            self.session.commit()
 
 class FollowJob(Job):
     def __init__(self, **kwargs):

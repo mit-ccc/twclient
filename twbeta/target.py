@@ -1,6 +1,6 @@
 import random
 
-import twclient.models as md
+import twbeta.models as md
 
 from abc import ABC, abstractmethod
 from sqlalchemy import exists, or_, and_, func

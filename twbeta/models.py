@@ -13,7 +13,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.types import INT, BIGINT, VARCHAR, TEXT, TIMESTAMP, BOOLEAN
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
 
-import twclient.utils as ut
+import twbeta.utils as ut
 
 logger = logging.getLogger(__name__)
 
@@ -69,14 +69,15 @@ class User(Base):
 
     data = relationship('UserData', back_populates='user')
     lists_owned = relationship('List', back_populates='owning_user')
-    tags = relationship('Tag', secondary='user_tag', back_populates='users')
+    tags = relationship('Tag', secondary=lambda: UserTag.__table__,
+                        back_populates='users')
     tweets = relationship('Tweet', back_populates='user')
-    mentions = relationship('Tweet', secondary='mention',
+    mentions = relationship('Tweet', secondary=lambda: Mention.__table__,
                             back_populates='mentioned')
 
     @classmethod
     def from_tweepy(cls, obj):
-        return cls(user_id=obj['id'])
+        return cls(user_id=obj.id)
 
 class UserData(Base, _TweepyMixin):
     user_data_id = Column(BIGINT, primary_key=True, autoincrement=True)
@@ -108,13 +109,13 @@ class UserData(Base, _TweepyMixin):
         # Twitter sometimes includes NUL bytes, which might be handled correctly
         # by sqlalchemy + backend or might not: handling them is risky. We'll
         # just drop them to be safe.
-        api_response = json.dumps(obj)
+        api_response = json.dumps(obj._json) # NOTE not public API
         api_response = api_response.replace('\00', '').replace(r'\u0000', '')
 
         args = {
-            'user_id': obj['id'],
-            'screen_name': obj['screen_name'],
-            'account_create_dt': obj['created_at'],
+            'user_id': obj.id,
+            'screen_name': obj.screen_name,
+            'account_create_dt': obj.created_at,
             'api_response': api_response
         }
 
@@ -130,31 +131,31 @@ class UserData(Base, _TweepyMixin):
         }
 
         for t, s in extra_fields.items():
-            if s in obj.keys():
-                args[t] = obj[s]
+            if hasattr(obj, s):
+                args[t] = getattr(obj, s)
 
         ## Fallback logic for the url field
         try:
-            args['url'] = obj['entities']['url']['urls'][0]['expanded_url']
-        except (KeyError, IndexError):
+            args['url'] = obj.entities['url']['urls'][0]['expanded_url']
+        except Exception:
             pass
 
         try:
             if 'url' not in args.keys():
-                args['url'] = obj['entities']['url']['urls'][0]['display_url']
-        except (KeyError, IndexError):
+                args['url'] = obj.entities['url']['urls'][0]['display_url']
+        except Exception:
             pass
 
         try:
             if 'url' not in args.keys():
-                args['url'] = obj['entities']['url']['urls'][0]['url']
-        except (KeyError, IndexError):
+                args['url'] = obj.entities['url']['urls'][0]['url']
+        except Exception:
             pass
 
         try:
             if 'url' not in args.keys():
-                args['url'] = obj['url']
-        except (KeyError, IndexError):
+                args['url'] = obj.url
+        except Exception:
             pass
 
         return cls(**args)
@@ -186,13 +187,13 @@ class List(Base, _TweepyMixin):
     @classmethod
     def from_tweepy(cls, obj):
         # remove NUL bytes as above
-        api_response = json.dumps(obj)
+        api_response = json.dumps(obj._json)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '')
 
         args = {
-            'list_id': obj['id'],
-            'user_id': obj['user']['id'],
-            'slug': obj['slug'],
+            'list_id': obj.id,
+            'user_id': obj.user.id,
+            'slug': obj.slug,
             'api_response': api_response
         }
 
@@ -207,12 +208,12 @@ class List(Base, _TweepyMixin):
         }
 
         for t, s in extra_fields.items():
-            if s in obj.keys():
-                args[t] = obj[s]
+            if hasattr(obj, s):
+                args[t] = getattr(obj, s)
 
-        ## Other fields that take special handling
-        if 'full_name' in obj.keys():
-            args['full_name'] = obj['full_name'][1:]
+        # other fields that take special handling
+        if hasattr(obj, 'full_name'):
+            args['full_name'] = obj.full_name[1:]
 
         return cls(**args)
 
@@ -246,6 +247,7 @@ class Tweet(Base, _TweepyMixin):
     # necessarily fetched the corresponding tweets
     retweeted_status_id = Column(BIGINT, nullable=True)
     in_reply_to_user_id = Column(BIGINT, nullable=True)
+    in_reply_to_status_id = Column(BIGINT, nullable=True)
     quoted_status_id = Column(BIGINT, nullable=True)
     quoted_status_content = Column(TEXT, nullable=True)
 
@@ -254,28 +256,31 @@ class Tweet(Base, _TweepyMixin):
     modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                          onupdate=func.now(), nullable=False)
 
-    tags = relationship('Tag', secondary='tweet_tag', back_populates='tweets')
+    tags = relationship('Tag', secondary=lambda: TweetTag.__table__,
+                        back_populates='tweets')
     user = relationship('User', back_populates='tweets')
-    mentioned = relationship('User', secondary='mention',
+    mentioned = relationship('User', secondary=lambda: Mention.__table__,
                              back_populates='mentions')
 
     @classmethod
     def from_tweepy(cls, obj):
         # remove NUL bytes as above
-        api_response = json.dumps(obj)
+        api_response = json.dumps(obj._json)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '')
 
+        print(json.dumps(obj._json, indent=4))
+
         args = {
-            'tweet_id': obj['id'],
-            'user_id': obj['user']['id'],
-            'tweet_create_dt': obj['created_at'],
+            'tweet_id': obj.id,
+            'user_id': obj.user.id,
+            'tweet_create_dt': obj.created_at,
             'api_response': api_response
         }
 
-        if 'full_text' in obj.keys():
-            args['content'] = obj['full_text']
+        if hasattr(obj, 'full_text'):
+            args['content'] = obj.full_text
         else:
-            args['content'] = obj['text']
+            args['content'] = obj.text
 
         extra_fields = [
             'lang',
@@ -289,31 +294,46 @@ class Tweet(Base, _TweepyMixin):
         ]
 
         for t in extra_fields:
-            if t in obj.keys():
-                args[t] = (obj[t] if obj[t] != 'null' else None)
+            if hasattr(obj, t):
+                val = getattr(obj, t)
+                args[t] = (val if val != 'null' else None)
 
-        ## Other fields needing special handling
-        if 'quoted_status' in obj.keys():
-            if 'full_text' in obj['quoted_status'].keys():
-                args['quoted_status_content'] = obj['quoted_status']['full_text']
+        # other fields needing special handling
+        # FIXME should we update user_data with the user info that comes back?
+        # FIXME what about loading replies? do those come back with the response?
+        # FIXME should we load the quoted status too?
+        if hasattr(obj, 'quoted_status'):
+            if hasattr(obj.quoted_status, 'full_text'):
+                args['quoted_status_content'] = obj.quoted_status.full_text
             else:
-                args['quoted_status_content'] = obj['quoted_status']['text']
+                args['quoted_status_content'] = obj.quoted_status.text
 
         # Native retweets take some special handling
-        if 'retweeted_status' in obj.keys():
-            args['retweeted_status_id'] = obj['retweeted_status']['id']
+        if hasattr(obj, 'retweeted_status'):
+            args['retweeted_status_id'] = obj.retweeted_status.id
 
             # From the Twitter docs: "Note that while native retweets may have
             # their toplevel text property shortened, the original text will be
             # available under the retweeted_status object and the truncated
             # parameter will be set to the value of the original status (in most
             # cases, false)."
-            if 'full_text' in obj['retweeted_status'].keys():
-                args['content'] = obj['retweeted_status']['full_text']
+            if hasattr(obj, 'full_text'):
+                args['content'] = obj.retweeted_status.full_text
             else:
-                args['content'] = obj['retweeted_status']['text']
+                args['content'] = objretweeted_status.text
 
         return cls(**args)
+
+    @staticmethod
+    def mentioned_users_from_tweepy(obj):
+        users = []
+
+        if hasattr(obj, 'entities'):
+            if 'user_mentions' in objentities.keys():
+                for m in tweet.entities['user_mentions']:
+                    users += [m['id']]
+
+        return users
 
 class Tag(Base):
     tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
@@ -324,8 +344,10 @@ class Tag(Base):
     modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                          onupdate=func.now(), nullable=False)
 
-    users = relationship('User', secondary='user_tag', back_populates='tags')
-    tweets = relationship('Tweet', secondary='tweet_tag', back_populates='tags')
+    users = relationship('User', secondary=lambda: UserTag.__table__,
+                         back_populates='tags')
+    tweets = relationship('Tweet', secondary=lambda: TweetTag.__table__,
+                          back_populates='tags')
 
 class Follow(Base):
     follow_id = Column(BIGINT, primary_key=True, autoincrement=True)
@@ -349,24 +371,9 @@ class Follow(Base):
 ## Link tables, whether or not considered as objects
 ##
 
-tweet_tag = Table('tweet_tag', Base.metadata,
-    Column('tweet_id', BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
-           primary_key=True),
-    Column('tag_id', BIGINT, ForeignKey('tag.tag_id', deferrable=True),
-           primary_key=True)
-)
-
-mention = Table('mention', Base.metadata,
-    Column('tweet_id', BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
-           primary_key=True),
-    Column('mentioned_user_id', BIGINT, ForeignKey('user.user_id',
-                                                   deferrable=True),
-           primary_key=True)
-)
-
 class UserTag(Base):
     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
-                     primary_key=True),
+                     primary_key=True)
     tag_id = Column(BIGINT, ForeignKey('tag.tag_id', deferrable=True),
                     primary_key=True)
 
@@ -375,35 +382,20 @@ class UserTag(Base):
     modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                          onupdate=func.now(), nullable=False)
 
-    # FIXME
-
 class TweetTag(Base):
-    __table__ = tweet_tag
+    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
+           primary_key=True)
+    tag_id = Column(BIGINT, ForeignKey('tag.tag_id', deferrable=True),
+           primary_key=True)
 
 class Mention(Base):
-    __table__ = mention
+    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
+           primary_key=True)
+    mentioned_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+           primary_key=True)
 
-    @classmethod # FIXME
-    def mentions_from_tweet(cls, obj):
-        mentions, users = [], []
-
-        if hasattr(tweet, 'entities'):
-            if 'user_mentions' in tweet.entities.keys():
-                for m in tweet.entities['user_mentions']:
-                    urow = {'user_id': m['id']}
-
-                    if 'screen_name' in m.keys():
-                        urow['screen_name'] = m['screen_name']
-
-                    if 'name' in m.keys():
-                        urow['name'] = m['name']
-
-                    users += [urow]
-
-                    mentions += [{
-                        'tweet_id': tweet.id,
-                        'mentioned_user_id': m['id']
-                    }]
-
-        return mentions, users
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                       nullable=False)
+    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                         onupdate=func.now(), nullable=False)
 

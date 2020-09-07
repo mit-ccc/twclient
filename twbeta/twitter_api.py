@@ -2,9 +2,9 @@ import logging
 
 import tweepy
 
-import twclient.error as err
-import twclient.utils as ut
-import twclient.authpool as ap
+import twbeta.error as err
+import twbeta.utils as ut
+import twbeta.authpool as ap
 
 logger = logging.getLogger(__name__)
 
@@ -221,6 +221,7 @@ class TwitterApi(object):
             'count': 200, # per page, not total; the max in one call
             'tweet_mode': 'extended', # don't truncate tweet text
             'include_rts': True,
+            'exclude_replies': False,
             'cursor': True,
             user_type: user
         }, **kwargs)
