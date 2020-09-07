@@ -76,10 +76,13 @@ class ScreenNameTarget(Target):
                     order_by=md.UserData.user_data_id.desc(),
                     partition_by=func.lower(md.UserData.screen_name)
                 ).label('rnk')
-            ).filter(func.lower(md.UserData.screen_name).in_(targets)).subquery()
+            ).subquery()
 
-            existing = context.session.query(md.UserData, subquery).filter(subquery.c.rnk==1)
-            existing = [x[0] for x in existing.all()]
+            existing = context.session.query(md.UserData, subquery).filter(and_(
+                func.lower(md.UserData.screen_name).in_(targets),
+                subquery.c.rnk==1
+            )).all()
+            existing = [x[0] for x in existing]
 
             new = list(set(targets) - set([u.screen_name.lower() for u in existing]))
 

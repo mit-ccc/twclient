@@ -116,7 +116,6 @@ class TweetsJob(Job):
                 else:
                     since_id = self.session.query(sa.func.max(md.Tweet.tweet_id)) \
                                    .filter(md.Tweet.user_id==user.user_id).scalar()
-                    print(since_id)
 
                 twargs = {
                     'user_id': user.user_id,
@@ -133,22 +132,13 @@ class TweetsJob(Job):
                     msg = msg.format(type(self), i + 1, n_items)
                     logger.debug(msg)
 
-                    for tweet in batch:
-                        tweet = md.Tweet.from_tweepy(tweet)
-                        tweet.user = user
+                    for resp in batch:
+                        tweet = md.Tweet.from_tweepy(resp)
 
                         if self.tweet_tag is not None:
                             tweet.tags.append(tag)
 
-                        self.session.merge(tweet) # may be fetching old tweets
-
-                        for mt in md.Tweet.mentioned_users_from_tweepy(tweet):
-                            mention = md.Mention(
-                                tweet_id=tweet.tweet_id,
-                                mentioned_user_id=mt
-                            )
-
-                            self.session.merge(mention)
+                        self.session.merge(tweet)
 
                     if not self.onetxn:
                         self.session.commit()

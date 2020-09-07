@@ -233,23 +233,25 @@ class Tweet(Base, _TweepyMixin):
     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
                      nullable=False)
 
+    retweeted_status_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
+                                 nullable=True)
+    quoted_status_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
+                              nullable=True)
+
     api_response = Column(TEXT, nullable=False)
     content = Column(TEXT, nullable=False)
     tweet_create_dt = Column(TIMESTAMP(timezone=True), nullable=False)
+
+    # we don't get this back on the Twitter API response, can't assume the
+    # corresponding tweet row is present in this table
+    in_reply_to_status_id = Column(BIGINT, nullable=True)
+    in_reply_to_user_id = Column(BIGINT, nullable=True)
 
     lang = Column(VARCHAR(8), nullable=True)
     source = Column(TEXT, nullable=True)
     truncated = Column(BOOLEAN, nullable=True)
     retweet_count = Column(INT, nullable=True)
     favorite_count = Column(INT, nullable=True)
-
-    # NOTE the IDs here aren't FKs because we haven't
-    # necessarily fetched the corresponding tweets
-    retweeted_status_id = Column(BIGINT, nullable=True)
-    in_reply_to_user_id = Column(BIGINT, nullable=True)
-    in_reply_to_status_id = Column(BIGINT, nullable=True)
-    quoted_status_id = Column(BIGINT, nullable=True)
-    quoted_status_content = Column(TEXT, nullable=True)
 
     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                        nullable=False)
@@ -258,17 +260,20 @@ class Tweet(Base, _TweepyMixin):
 
     tags = relationship('Tag', secondary=lambda: TweetTag.__table__,
                         back_populates='tweets')
-    user = relationship('User', back_populates='tweets')
+    user = relationship('User', foreign_keys=[user_id], back_populates='tweets')
     mentioned = relationship('User', secondary=lambda: Mention.__table__,
                              back_populates='mentions')
+
+    retweet_of = relationship('Tweet', foreign_keys=[retweeted_status_id],
+                              remote_side=[tweet_id])
+    quote_of = relationship('Tweet', foreign_keys=[quoted_status_id],
+                            remote_side=[tweet_id])
 
     @classmethod
     def from_tweepy(cls, obj):
         # remove NUL bytes as above
         api_response = json.dumps(obj._json)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '')
-
-        print(json.dumps(obj._json, indent=4))
 
         args = {
             'tweet_id': obj.id,
@@ -283,12 +288,12 @@ class Tweet(Base, _TweepyMixin):
             args['content'] = obj.text
 
         extra_fields = [
+            'in_reply_to_status_id',
+            'in_reply_to_user_id',
+
             'lang',
             'source',
             'truncated',
-            'quoted_status_id',
-            'in_reply_to_user_id',
-            'in_reply_to_status_id',
             'retweet_count',
             'favorite_count'
         ]
@@ -298,42 +303,28 @@ class Tweet(Base, _TweepyMixin):
                 val = getattr(obj, t)
                 args[t] = (val if val != 'null' else None)
 
-        # other fields needing special handling
-        # FIXME should we update user_data with the user info that comes back?
-        # FIXME what about loading replies? do those come back with the response?
-        # FIXME should we load the quoted status too?
+        ret = cls(**args)
+
+        ret.user = User.from_tweepy(obj.user)
+        # ret.user.data.append(UserData.from_tweepy(obj.user)) # FIXME
+        # ret.user_id = obj.user.id
+
         if hasattr(obj, 'quoted_status'):
-            if hasattr(obj.quoted_status, 'full_text'):
-                args['quoted_status_content'] = obj.quoted_status.full_text
-            else:
-                args['quoted_status_content'] = obj.quoted_status.text
+            ret.quote_of = Tweet.from_tweepy(obj.quoted_status)
 
-        # Native retweets take some special handling
         if hasattr(obj, 'retweeted_status'):
-            args['retweeted_status_id'] = obj.retweeted_status.id
+            ret.retweet_of = Tweet.from_tweepy(obj.retweeted_status)
 
-            # From the Twitter docs: "Note that while native retweets may have
-            # their toplevel text property shortened, the original text will be
-            # available under the retweeted_status object and the truncated
-            # parameter will be set to the value of the original status (in most
-            # cases, false)."
-            if hasattr(obj, 'full_text'):
-                args['content'] = obj.retweeted_status.full_text
-            else:
-                args['content'] = objretweeted_status.text
-
-        return cls(**args)
-
-    @staticmethod
-    def mentioned_users_from_tweepy(obj):
-        users = []
-
+        mentioned_users = []
         if hasattr(obj, 'entities'):
-            if 'user_mentions' in objentities.keys():
-                for m in tweet.entities['user_mentions']:
-                    users += [m['id']]
+            if 'user_mentions' in obj.entities.keys():
+                for m in obj.entities['user_mentions']:
+                    mentioned_users += [m['id']]
+        mentioned_users = list(set(mentioned_users)) # FIXME
 
-        return users
+        ret.mentioned = [User(user_id=mt) for mt in mentioned_users]
+
+        return ret
 
 class Tag(Base):
     tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
@@ -393,6 +384,9 @@ class Mention(Base):
            primary_key=True)
     mentioned_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
            primary_key=True)
+
+    # start_index = Column(INT, nullable=False)
+    # end_index = Column(INT, nullable=False)
 
     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                        nullable=False)
