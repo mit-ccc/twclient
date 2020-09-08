@@ -47,12 +47,6 @@ class Base(object):
 
         return self._repr(**fields)
 
-class _TweepyMixin(object):
-    @classmethod
-    @abstractmethod
-    def from_tweepy(cls, obj):
-        raise NotImplementedError()
-
 ##
 ## Primary objects
 ##
@@ -69,6 +63,7 @@ class User(Base):
 
     data = relationship('UserData', back_populates='user')
     lists_owned = relationship('List', back_populates='owning_user')
+    list_memberships = relationship('UserList', back_populates='user')
     tags = relationship('Tag', secondary=lambda: UserTag.__table__,
                         back_populates='users')
     tweets = relationship('Tweet', back_populates='user')
@@ -78,7 +73,7 @@ class User(Base):
     def from_tweepy(cls, obj):
         return cls(user_id=obj.id)
 
-class UserData(Base, _TweepyMixin):
+class UserData(Base):
     user_data_id = Column(BIGINT, primary_key=True, autoincrement=True)
     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
                      nullable=False)
@@ -96,10 +91,9 @@ class UserData(Base, _TweepyMixin):
     followers_count = Column(BIGINT, nullable=True)
     listed_count = Column(BIGINT, nullable=True)
 
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
+    valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                            nullable=False)
+    valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
 
     user = relationship('User', back_populates='data')
 
@@ -159,7 +153,8 @@ class UserData(Base, _TweepyMixin):
 
         return cls(**args)
 
-class List(Base, _TweepyMixin):
+class List(Base):
+    # as in Tweet and User, list_id is Twitter's id rather than a surrogate key
     list_id = Column(BIGINT, primary_key=True, autoincrement=False)
     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
                      nullable=False)
@@ -182,6 +177,7 @@ class List(Base, _TweepyMixin):
                          onupdate=func.now(), nullable=False)
 
     owning_user = relationship('User', back_populates='lists_owned')
+    list_memberships = relationship('UserList', back_populates='lst')
 
     @classmethod
     def from_tweepy(cls, obj):
@@ -216,17 +212,7 @@ class List(Base, _TweepyMixin):
 
         return cls(**args)
 
-class UserList(Base):
-    user_list_id = Column(BIGINT, primary_key=True, autoincrement=True)
-
-    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True))
-    list_id = Column('list_id', BIGINT, ForeignKey('list.list_id', deferrable=True))
-
-    valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                            nullable=False)
-    valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
-
-class Tweet(Base, _TweepyMixin):
+class Tweet(Base):
     # as in User, this is the Twitter id rather than a surrogate key
     tweet_id = Column(BIGINT, primary_key=True, autoincrement=False)
     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
@@ -351,6 +337,19 @@ class Follow(Base):
 ##
 ## Link tables, whether or not considered as objects
 ##
+
+class UserList(Base):
+    user_list_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True))
+    list_id = Column(BIGINT, ForeignKey('list.list_id', deferrable=True))
+
+    valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                            nullable=False)
+    valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    lst = relationship('List', back_populates='list_memberships')
+    user = relationship('User', back_populates='list_memberships')
 
 class UserTag(Base):
     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),

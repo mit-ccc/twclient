@@ -8,7 +8,7 @@ The command-line interface script
 
 # FIXME need commands to add / delete / apply tags - should we even have the -u
 # and -t flags to apply tags to users and tweets? is it less confusing if
-# centralized in a subcommand?
+# centralized in a subcommand? does tagging even currently work right?
 
 import os
 import logging

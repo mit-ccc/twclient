@@ -144,8 +144,10 @@ class TwitterListTarget(Target):
 
             ## Second, refresh the list objects - we don't yield these either
             for owner, slug in zip(owning_users, slugs):
-                lst = next(context.api.get_list(slug=slug, owner_id=owner.user_id))
-                context.session.merge(md.List.from_tweepy(lst))
+                lst = context.api.get_list(slug=slug, owner_id=owner.user_id)
+                lst = next(lst)
+                lst = md.List.from_tweepy(lst)
+                context.session.merge(lst)
 
             ## Third, refresh the users in the list
             ## FIXME need to record user to list assignments
@@ -155,7 +157,13 @@ class TwitterListTarget(Target):
             ])
 
             for obj in objs:
-                yield context.session.merge(md.User.from_tweepy(obj))
+                user = md.User.from_tweepy(obj)
+                user = context.session.merge(user)
+
+                dat = md.UserData.from_tweepy(obj)
+                user.data.append(dat)
+
+                yield user
         else:
             pass
             # exist_owners = context.session.query(md.User) \
