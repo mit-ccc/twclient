@@ -2,9 +2,9 @@ import logging
 
 import tweepy
 
-import twbeta.error as err
-import twbeta.utils as ut
-import twbeta.authpool as ap
+from . import error as err
+from . import utils as ut
+from . import authpool as ap
 
 logger = logging.getLogger(__name__)
 

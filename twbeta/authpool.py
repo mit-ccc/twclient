@@ -4,7 +4,7 @@ import logging
 
 import tweepy
 
-import twbeta.error as err
+from . import error as err
 
 logger = logging.getLogger(__name__)
 

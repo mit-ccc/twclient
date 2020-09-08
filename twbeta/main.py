@@ -17,15 +17,13 @@ import collections as cl
 import configparser as cp
 
 import tweepy
-
-import twbeta.models as md
-import twbeta.utils as ut
-import twbeta.target as tg
-import twbeta.twitter_api as ta
-
 from sqlalchemy import create_engine
 
-from twbeta.job import UserInfoJob, FollowJob, TweetsJob
+from . import job
+from . import models as md
+from . import utils as ut
+from . import target as tg
+from . import twitter_api as ta
 
 logger = logging.getLogger(__name__)
 
@@ -362,11 +360,11 @@ def main():
 
         ## Actually run jobs
         if command in ('friends', 'followers'):
-            FollowJob(direction=command, **vars(args)).run()
+            job.FollowJob(direction=command, **vars(args)).run()
         elif command == 'hydrate':
-            UserInfoJob(**vars(args)).run()
+            job.UserInfoJob(**vars(args)).run()
         else: # command == 'tweets'
-            TweetsJob(**vars(args)).run()
+            job.TweetsJob(**vars(args)).run()
 
 if __name__ == '__main__':
     main()

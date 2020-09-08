@@ -13,7 +13,7 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.types import INT, BIGINT, VARCHAR, TEXT, TIMESTAMP, BOOLEAN
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
 
-import twbeta.utils as ut
+from . import utils as ut
 
 logger = logging.getLogger(__name__)
 

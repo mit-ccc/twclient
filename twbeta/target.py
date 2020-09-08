@@ -1,7 +1,7 @@
 import random
 import itertools as it
 
-import twbeta.models as md
+from . import models as md
 
 from abc import ABC, abstractmethod
 from sqlalchemy import exists, or_, and_, func

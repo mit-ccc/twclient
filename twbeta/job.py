@@ -7,10 +7,10 @@ from abc import ABC, abstractmethod
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 
-import twbeta.error as err
-import twbeta.utils as ut
-import twbeta.models as md
-import twbeta.twitter_api as ta
+from . import error as err
+from . import utils as ut
+from . import models as md
+from . import twitter_api as ta
 
 logger = logging.getLogger(__name__)
 
