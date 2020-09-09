@@ -27,7 +27,7 @@ from . import twitter_api as ta
 
 logger = logging.getLogger(__name__)
 
-def main():
+def cli():
     ##
     ## Parse arguments
     ##
@@ -367,5 +367,5 @@ def main():
             job.TweetsJob(**vars(args)).run()
 
 if __name__ == '__main__':
-    main()
+    cli()
 

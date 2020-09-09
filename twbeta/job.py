@@ -84,7 +84,7 @@ class UserInfoJob(Job):
                 if self.user_tag is not None:
                     user.tags.append(tag)
 
-                self.session.add(user)
+                self.session.merge(user)
 
         self.session.commit()
 

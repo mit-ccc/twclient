@@ -1,3 +1,6 @@
+# FIXME need to get UserData objects recognized as new rows where appropriate
+# rather than having SA attempt updates
+
 import random
 import itertools as it
 
@@ -25,6 +28,9 @@ class Target(ABC):
         raise NotImplementedError()
 
 class UserIdTarget(Target):
+    def hydrate_user(self, obj):
+        pass # FIXME?
+
     def to_user_objects(self, context, mode='fetch'):
         if mode not in ('fetch', 'rehydrate', 'skip_missing'):
             raise ValueError('Bad mode for to_user_objects')
@@ -32,7 +38,6 @@ class UserIdTarget(Target):
         if mode == 'rehydrate':
             for obj in context.api.lookup_users(user_ids=self.targets):
                 user = md.User.from_tweepy(obj)
-                user = context.session.merge(user)
 
                 dat = md.UserData.from_tweepy(obj)
                 user.data.append(dat)
@@ -48,7 +53,6 @@ class UserIdTarget(Target):
             if mode == 'fetch' and len(new) > 0:
                 for obj in context.api.lookup_users(user_ids=new):
                     user = md.User.from_tweepy(obj)
-                    user = context.session.merge(user)
 
                     dat = md.UserData.from_tweepy(obj)
                     user.data.append(dat)
@@ -63,7 +67,6 @@ class ScreenNameTarget(Target):
         if mode == 'rehydrate':
             for obj in context.api.lookup_users(screen_names=self.targets):
                 user = md.User.from_tweepy(obj)
-                user = context.session.merge(user)
 
                 dat = md.UserData.from_tweepy(obj)
                 user.data.append(dat)
@@ -92,7 +95,6 @@ class ScreenNameTarget(Target):
             if mode == 'fetch' and len(new) > 0:
                 for obj in context.api.lookup_users(screen_names=new):
                     user = md.User.from_tweepy(obj)
-                    user = context.session.merge(user)
 
                     dat = md.UserData.from_tweepy(obj)
                     user.data.append(dat)
@@ -118,7 +120,6 @@ class SelectTagTarget(Target):
 
             for obj in context.api.lookup_users(user_ids=user_ids):
                 user = md.User.from_tweepy(obj)
-                user = context.session.merge(user)
 
                 dat = md.UserData.from_tweepy(obj)
                 user.data.append(dat)

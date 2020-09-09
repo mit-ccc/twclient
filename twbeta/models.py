@@ -55,6 +55,7 @@ class User(Base):
     # this is the Twitter user id, not a surrogate key.
     # it simplifies the load process to use it as a pk.
     user_id = Column(BIGINT, primary_key=True, autoincrement=False)
+    # FIXME need is_deleted and/or is_deactivated or similar?
 
     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                        nullable=False)
@@ -79,6 +80,7 @@ class UserData(Base):
                      nullable=False)
 
     api_response = Column(TEXT, nullable=False)
+
     screen_name = Column(VARCHAR(256), nullable=True)
     account_create_dt = Column(TIMESTAMP(timezone=True), nullable=True)
     protected = Column(BOOLEAN, nullable=True)
@@ -91,9 +93,9 @@ class UserData(Base):
     followers_count = Column(BIGINT, nullable=True)
     listed_count = Column(BIGINT, nullable=True)
 
-    valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                            nullable=False)
-    valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
+    # NOTE no modified_dt - we're not going to modify rows
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                       nullable=False)
 
     user = relationship('User', back_populates='data')
 
@@ -290,7 +292,14 @@ class Tweet(Base):
         ret = cls(**args)
 
         ret.user = User.from_tweepy(obj.user)
-        # ret.user.data.append(UserData.from_tweepy(obj.user)) # FIXME
+
+        # NOTE We've decided not to use this data. There's too much
+        # of it and it doesn't add enough value for the amount of space
+        # it takes up (relative to just the explicit fetches via UserInfoJob).
+        # Implementing SCD on this table would also be too much work, and 
+        # given that the followers/friends/listed counts change rapidly, would
+        # still take up too much space.
+        # ret.user.data.append(UserData.from_tweepy(obj.user))
 
         if hasattr(obj, 'quoted_status'):
             ret.quote_of = Tweet.from_tweepy(obj.quoted_status)

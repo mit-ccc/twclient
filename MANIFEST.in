@@ -1,0 +1,5 @@
+# README, changelog, etc
+include *.md
+
+include LICENSE
+
