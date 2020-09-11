@@ -45,6 +45,7 @@ def cli():
 
     ## Config file handling
 
+    # FIXME sub-sub-commands (twitter api list, etc)?
     ldp = sp.add_parser('list-db', help='list database profiles')
     ldp.add_argument('-f', '--full', action='store_true',
                      help='print all profile info')
@@ -57,6 +58,7 @@ def cli():
     adp.add_argument('-n', '--name', required=True,
                      help='name to use for DB profile')
     adp.add_argument('-u', '--database-url', help='database connection url')
+    # FIXME -f argument as a shortcut for sqlite url
 
     aap = sp.add_parser('add-api', help='add Twitter API profile')
     aap.add_argument('-n', '--name', required=True, help='name of API profile')
