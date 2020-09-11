@@ -236,3 +236,20 @@ class FollowJob(Job):
     #     cols = ['follow_fetch_id', 'source_user_id', 'target_user_id']
     #     self.db_load_data(rows, conflict='merge', conflict_constraint=cols)
 
+    # def follow_edges(api, direction, user_ids):
+    #     try:
+    #         assert direction in ('followers', 'friends')
+    #     except AssertionError:
+    #         raise ValueError('Bad direction for follow edge fetch')
+
+    #     method = getattr(api, direction + '_ids')
+
+    #     for obj in user_ids:
+    #         edges = method(user_id=obj)
+
+    #         for item in edges:
+    #             if direction == 'followers':
+    #                 yield {'source': item, 'target': obj}
+    #             else: # direction == 'friends'
+    #                 yield {'source': obj, 'target': item}
+

@@ -1,5 +1,3 @@
-# FIXME indexes from existing sql script
-
 import json
 import logging
 
@@ -336,12 +334,6 @@ class Follow(Base):
     valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                             nullable=False)
     valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
-
-    # FIXME are these reversed?
-    followers = relationship('User', foreign_keys=[source_user_id],
-                             backref='followers')
-    friends = relationship('User', foreign_keys=[target_user_id],
-                           backref='friends')
 
 ##
 ## Link tables, whether or not considered as objects

@@ -58,31 +58,31 @@ class TwitterApi(object):
                 ret = func(**kwargs)
 
             if not method_returns_list:
-                return ret
+                yield ret
+            else:
+                j = 0
+                for obj in ret:
+                    yield obj
+                    j += 1
 
-            j = 0
-            for obj in ret:
-                yield obj
-                j += 1
+                # NOTE users/lookup doesn't raise an error condition on bad
+                # users, it just doesn't return them, so we need to check the
+                # length of the input and the number of user objects returned
+                if method == 'lookup_users':
+                    assert 'screen_names' in twargs.keys() or \
+                        'user_ids' in twargs.keys()
 
-            # NOTE users/lookup doesn't raise an error condition on bad users,
-            # it just doesn't return them, so we need to check the length of the
-            # input and the number of user objects returned
-            if method == 'lookup_users':
-                assert 'screen_names' in twargs.keys() or \
-                       'user_ids' in twargs.keys()
+                    if 'screen_names' in twargs.keys():
+                        kind = 'screen_names'
+                    else:
+                        kind = 'user_ids'
 
-                if 'screen_names' in twargs.keys():
-                    kind = 'screen_names'
-                else:
-                    kind = 'user_ids'
+                    # don't risk it being a generator
+                    nmissing = len([x for x in twargs[kind]]) - j
 
-                # don't risk it being a generator
-                nmissing = len([x for x in twargs[kind]]) - j
-
-                if nmissing > 0:
-                    msg = "{0} bad/missing user(s) in users/lookup call"
-                    raise err.BadUserError(msg.format(nmissing))
+                    if nmissing > 0:
+                        msg = "{0} bad/missing user(s) in users/lookup call"
+                        raise err.BadUserError(msg.format(nmissing))
         except (tweepy.error.TweepError, err.TWClientError) as e:
             if isinstance(e, err.CapacityError):
                 raise
@@ -147,7 +147,7 @@ class TwitterApi(object):
             'owner_id': owner_id
         }, **kwargs)
 
-        return self.make_api_call(**twargs)
+        return next(self.make_api_call(**twargs))
 
     def list_members(self, full_name=None, list_id=None, slug=None,
                      owner_screen_name=None, owner_id=None, **kwargs):
@@ -255,56 +255,4 @@ class TwitterApi(object):
         }, **kwargs)
 
         yield from self.make_api_call(**twargs)
-
-##
-## Higher-level wrappers
-##
-
-def tweets(api, objects, kind, since_ids=None, max_items=None,
-           since_timestamp=None):
-    try:
-        assert kind in ('user_ids', 'screen_names', 'lists')
-    except AssertionError:
-        raise ValueError("Bad kind of object for tweet fetch")
-
-    for i, obj in enumerate(objects):
-        if since_ids is not None:
-            since_id = since_ids[i]
-        else:
-            since_id = None
-
-        twargs = {
-            'since_id': since_id,
-            'max_items': max_items
-        }
-
-        if kind == 'lists':
-            tweets = api.list_timeline(lst=obj, **twargs)
-        else:
-            twargs[ kind[:-1] ] = obj
-            tweets = api.user_timeline(**twargs)
-
-        yield from (
-            tweet
-            for tweet in tweets
-            if (since_timestamp is None) or  \
-                (tweet.created_at.timestamp() >= since_timestamp)
-        )
-
-def follow_edges(api, direction, user_ids):
-    try:
-        assert direction in ('followers', 'friends')
-    except AssertionError:
-        raise ValueError('Bad direction for follow edge fetch')
-
-    method = getattr(api, direction + '_ids')
-
-    for obj in user_ids:
-        edges = method(user_id=obj)
-
-        for item in edges:
-            if direction == 'followers':
-                yield {'source': item, 'target': obj}
-            else: # direction == 'friends'
-                yield {'source': obj, 'target': item}
 

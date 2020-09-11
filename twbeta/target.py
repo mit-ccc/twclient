@@ -86,7 +86,7 @@ class UserIdTarget(Target):
             new = list(set(self.targets) - set([u.user_id for u in existing]))
 
             self._users.extend(existing)
-            if mode == 'fetch':
+            if mode == 'fetch' and len(new) > 0:
                 self._users.extend(self.hydrate(user_ids=new))
 
 class ScreenNameTarget(Target):
@@ -107,7 +107,7 @@ class ScreenNameTarget(Target):
 
             self._users.extend(existing)
 
-            if mode == 'fetch':
+            if mode == 'fetch' and len(new) > 0:
                 self._users.extend(self.hydrate(screen_names=new))
 
 class SelectTagTarget(Target):
@@ -181,12 +181,13 @@ class TwitterListTarget(Target):
                             user_id=u.user_id
                         ))
         else:
-            owners = [
-                self.user_for_screen_name(sn)
-                for sn in owner_screen_names
-            ]
+            for sn, slug in zip(owner_screen_names, slugs):
+                owner = self.user_for_screen_name(sn)
 
-            flts = []
-            lists = self.context.session.query(md.List).filter(or_(*flts)).all()
+                if owner is None:
+
+
+                flts = []
+                lists = self.context.session.query(md.List).filter(or_(*flts)).all()
 
 
