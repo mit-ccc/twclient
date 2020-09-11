@@ -140,26 +140,12 @@ class TweetsJob(Job):
 class FollowJob(Job):
     def __init__(self, **kwargs):
         direction = kwargs.pop('direction', 'followers')
-        full = kwargs.pop('full', False)
-
-        assert full is not None
-        assert direction in ('followers', 'friends')
 
         super(FollowJob, self).__init__(**kwargs)
 
-        assert self.target_type != 'twitter_lists'
-
+        assert direction in ('followers', 'friends')
         self.direction = direction
-        self.full = full
 
-    # What we're doing here:
-    # 1) load user to twitter.user if not already there
-    # 2) load the follow_fetch row, get its id, ff_id
-    # 3) loop over pages of graph neighbors:
-        # 3a) get the users from twitter
-        # 3b) if requested, hydrate the users via users/lookup
-        # 3c) load the users to twitter.user, merging if present
-        # 3d) load the follow rows to twitter.follow, using ff_id
     def run(self):
         self.sync_users(targets=self.targets, target_type=self.target_type,
                         new=True, full=self.full, commit=(not self.onetxn))
@@ -207,41 +193,21 @@ class FollowJob(Job):
         if self.onetxn:
             self.commit()
 
-    # # edges are assumed to be (source, target)
-    # def load_follow_edges(self, edges, follow_fetch_id):
-    #     logger.debug('Loading follow edges')
+    @staticmethod
+    def follow_edges(api, direction, user_ids):
+        try:
+            assert direction in ('followers', 'friends')
+        except AssertionError:
+            raise ValueError('Bad direction for follow edge fetch')
 
-    #     edges = [e for e in edges]
+        method = getattr(api, direction + '_ids')
 
-    #     user_ids = list(set([x for y in edges for x in y]))
-    #     self.sync_users(targets=user_ids, target_type='user_ids',
-    #                     full=self.full, new=True, commit=False)
+        for obj in user_ids:
+            edges = method(user_id=obj)
 
-    #     rows = Rowset(rows=(
-    #         FollowRow(
-    #             follow_fetch_id=follow_fetch_id,
-    #             source_user_id=source,
-    #             target_user_id=target
-    #         ) for source, target in edges
-    #     ), cls=FollowRow)
-
-    #     cols = ['follow_fetch_id', 'source_user_id', 'target_user_id']
-    #     self.db_load_data(rows, conflict='merge', conflict_constraint=cols)
-
-    # def follow_edges(api, direction, user_ids):
-    #     try:
-    #         assert direction in ('followers', 'friends')
-    #     except AssertionError:
-    #         raise ValueError('Bad direction for follow edge fetch')
-
-    #     method = getattr(api, direction + '_ids')
-
-    #     for obj in user_ids:
-    #         edges = method(user_id=obj)
-
-    #         for item in edges:
-    #             if direction == 'followers':
-    #                 yield {'source': item, 'target': obj}
-    #             else: # direction == 'friends'
-    #                 yield {'source': obj, 'target': item}
+            for item in edges:
+                if direction == 'followers':
+                    yield {'source': item, 'target': obj}
+                else: # direction == 'friends'
+                    yield {'source': obj, 'target': item}
 
