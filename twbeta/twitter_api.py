@@ -57,13 +57,13 @@ class TwitterApi(object):
             else:
                 ret = func(**kwargs)
 
+            if not method_returns_list:
+                return ret
+
             j = 0
-            if method_returns_list:
-                for obj in ret:
-                    yield obj
-                    j += 1
-            else:
-                yield ret
+            for obj in ret:
+                yield obj
+                j += 1
 
             # NOTE users/lookup doesn't raise an error condition on bad users,
             # it just doesn't return them, so we need to check the length of the
@@ -147,7 +147,7 @@ class TwitterApi(object):
             'owner_id': owner_id
         }, **kwargs)
 
-        yield from self.make_api_call(**twargs)
+        return self.make_api_call(**twargs)
 
     def list_members(self, full_name=None, list_id=None, slug=None,
                      owner_screen_name=None, owner_id=None, **kwargs):

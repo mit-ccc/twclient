@@ -77,14 +77,11 @@ class UserInfoJob(Job):
             tag = self.get_or_create(md.Tag, name=self.user_tag)
 
         for target in self.targets:
-            # also merges user objects into self.session
-            users = target.to_user_objects(context=self, mode='rehydrate')
+            target.resolve(context=self, mode='rehydrate')
 
-            for user in users:
+            for user in target.users:
                 if self.user_tag is not None:
                     user.tags.append(tag)
-
-                self.session.merge(user)
 
         self.session.commit()
 
@@ -108,9 +105,9 @@ class TweetsJob(Job):
 
         n_items = 0
         for target in self.targets:
-            users = target.to_user_objects(context=self, mode='fetch')
+            target.resolve(context=self, mode='fetch')
 
-            for user in users:
+            for user in target.users:
                 if self.old_tweets:
                     since_id = None
                 else:
@@ -218,45 +215,6 @@ class FollowJob(Job):
         if self.onetxn:
             self.commit()
 
-    # def load_mentions(self, tweets):
-    #     logger.debug('Loading mentions')
-
-    #     mentions, mentioned_users = self.mentions_for_tweets(tweets)
-    #     mentioned_ids = list(set([x['user_id'] for x in mentioned_users]))
-
-    #     self.sync_users(targets=mentioned_ids, target_type='user_ids',
-    #                     full=self.full, new=True, commit=False)
-
-    #     self.db_load_data(
-    #         data=Rowset.from_records(MentionRow, mentions),
-    #         conflict='merge',
-    #         conflict_constraint=['tweet_id', 'mentioned_user_id']
-    #     )
-
-    # def load_tweets(self, tweets, load_mentions=True):
-    #     logger.debug('Loading tweets')
-
-    #     tweets = [t for t in tweets] # no generators, need >1 reference
-
-    #     rows = [TweetRow.from_tweepy(u) for u in tweets]
-    #     tweet_ids = [t.as_record()['tweet_id'] for t in rows]
-    #     twrows = Rowset(rows=rows, cls=TweetRow)
-
-    #     self.db_load_data(twrows, conflict='merge',
-    #                       conflict_constraint=['tweet_id'])
-
-    #     if self.tweet_tag is not None:
-    #         ttrows = Rowset(rows=(
-    #             TweetTagRow(tweet_id=t, tag=self.tweet_tag)
-    #             for t in tweet_ids
-    #         ), cls=TweetTagRow)
-
-    #         self.db_load_data(ttrows, conflict='merge',
-    #                           conflict_constraint=['user_id', 'tag'])
-
-    #     if load_mentions:
-    #         self.load_mentions(tweets)
-
     # # edges are assumed to be (source, target)
     # def load_follow_edges(self, edges, follow_fetch_id):
     #     logger.debug('Loading follow edges')
@@ -277,73 +235,4 @@ class FollowJob(Job):
 
     #     cols = ['follow_fetch_id', 'source_user_id', 'target_user_id']
     #     self.db_load_data(rows, conflict='merge', conflict_constraint=cols)
-
-    # ## Most API methods will encounter and need to handle new user
-    # ## objects, not just the jobs that only load user info
-    # def load_users(self, targets, kind):
-    #     logger.debug('Loading {0} users'.format(kind))
-
-    #     assert kind in ('users', 'user_ids')
-
-    #     if kind == 'users':
-    #         rows = [UserRow.from_tweepy(u) for u in targets]
-    #     else:
-    #         rows = [UserRow(user_id=u) for u in targets]
-
-    #     user_ids = [u.as_record()['user_id'] for u in rows]
-
-    #     urows = Rowset(rows=rows, cls=UserRow)
-    #     self.db_load_data(urows, conflict='merge',
-    #                       conflict_constraint=['user_id'])
-
-    #     if self.user_tag is not None:
-    #         logger.debug('Loading user tags: {0}'.format(self.user_tag))
-
-    #         tag_rows = Rowset(rows=(
-    #             UserTagRow(tag=self.user_tag, user_id=u)
-    #             for u in user_ids
-    #         ), cls=UserTagRow)
-
-    #         self.db_load_data(tag_rows, conflict='merge',
-    #                           conflict_constraint=['user_id', 'tag'])
-
-    # # Given a set of targets, which may be screen names, user ids or
-    # # users in a Twitter list and which may not exist in the twitter.user
-    # # table yet, we want to a) resolve them all to user ids
-    # # and b) ensure they all exist in the twitter.user table.
-    # def sync_users(self, targets, target_type, new=True, full=False,
-    #                commit=False):
-    #     msg = 'Syncing {0} users, new={1}, full={2}, commit={3}'
-    #     logger.debug(msg.format(target_type, new, full, commit))
-
-    #     # full doesn't matter in the first two cases: we have to fetch
-    #     # every user from the twitter API anyway because all we have
-    #     # is a screen name
-    #     if target_type == 'twitter_lists':
-    #         # "new" is ignored here: we have to fetch them all from the
-    #         # list members endpoint anyway to even learn who they are
-    #         kind = 'users'
-    #         users = self.user_objects_for_lists(self.targets)
-    #     elif target_type == 'screen_names':
-    #         kind = 'users'
-    #         users = self.user_objects_for_screen_names(targets, new=new)
-    #     elif full:
-    #         kind = 'users'
-    #         users = self.user_objects_for_ids(targets, new=new)
-    #     else:
-    #         kind = 'user_ids'
-    #         users = targets
-
-    #     n_items = 0
-    #     for i, batch in enumerate(ut.grouper(users, self.load_batch_size)):
-    #         msg = 'Running user batch {0}, cumulative users {1}'
-    #         msg = msg.format(i + 1, n_items)
-    #         logger.debug(msg)
-
-    #         self.load_users(targets=batch, kind=kind)
-
-    #         n_items += len(batch)
-
-    #         if commit:
-    #             self.commit()
 

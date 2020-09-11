@@ -55,7 +55,7 @@ class User(Base):
     # this is the Twitter user id, not a surrogate key.
     # it simplifies the load process to use it as a pk.
     user_id = Column(BIGINT, primary_key=True, autoincrement=False)
-    # FIXME need is_deleted and/or is_deactivated or similar?
+    # FIXME need is_deleted? is_suspended on UserData?
 
     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                        nullable=False)
