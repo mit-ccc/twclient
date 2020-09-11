@@ -1,7 +1,5 @@
 import re
-import csv
 import logging
-import tempfile
 
 logger = logging.getLogger(__name__)
 
@@ -36,26 +34,4 @@ def grouper(it, n=None):
 
 def split_camel_case(s):
     return re.sub('([A-Z]+)', r' \1', s).split()
-
-# data assumed to be a list of dicts
-def write_to_tempfile(data, fieldnames=None, mode='r+t',
-                      noneval=None, **kwargs):
-    if fieldnames is None:
-        fieldnames = sorted(list(data[0].keys()))
-
-    # don't use with!
-    outfile = tempfile.NamedTemporaryFile(mode=mode, delete=False)
-    outwriter = csv.DictWriter(outfile, fieldnames=fieldnames, **kwargs)
-    outwriter.writeheader()
-
-    if noneval is not None:
-        data = [{k : coalesce(v, noneval) for k, v in row} for row in data]
-
-    outwriter.writerows(data)
-
-    # Make sure the data on disk visible to e.g. a subprocess is right
-    outfile.flush()
-    outfile.seek(0, 0)
-
-    return outfile
 
