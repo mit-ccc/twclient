@@ -176,6 +176,10 @@ class List(Base):
     modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                          onupdate=func.now(), nullable=False)
 
+    __table_args__ = (
+        UniqueConstraint('user_id', 'slug', deferrable=True),
+    )
+
     owning_user = relationship('User', back_populates='lists_owned')
     list_memberships = relationship('UserList', back_populates='lst')
 
