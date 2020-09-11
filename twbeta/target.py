@@ -25,6 +25,10 @@ class Target(ABC):
         # make partial loads more statistically useful
         random.shuffle(self.targets)
 
+    @abstractmethod
+    def resolve(self, context, mode='fetch'):
+        raise NotImplementedError()
+
     @property
     def resolved(self):
         return all([
@@ -46,7 +50,17 @@ class Target(ABC):
 
         return self._context
 
-    def tweepy_to_user(self, obj):
+    def _mark_resolved(self, context):
+        self._users = []
+        self._context = context
+
+    def _add_users(self, users):
+        if not self.resolved:
+            raise AttributeError('Must call resolve() first')
+
+        self._users.extend(users)
+
+    def _tweepy_to_user(self, obj):
         user = md.User.from_tweepy(obj)
         self.context.session.merge(user)
 
@@ -55,68 +69,67 @@ class Target(ABC):
 
         return user
 
-    def hydrate(self, **kwargs):
-        for obj in self.context.api.lookup_users(**kwargs):
-            yield self.tweepy_to_user(obj)
+    def _hydrate(self, **kwargs):
+        users = [
+            self._tweepy_to_user(obj)
+            for obj in self.context.api.lookup_users(**kwargs)
+        ]
 
-    def user_for_screen_name(self, screen_name):
+        self._add_users(users)
+
+        return users
+
+    def _user_for_screen_name(self, screen_name):
         return self.context.session.query(md.UserData).filter(
             func.lower(md.UserData.screen_name) == screen_name.lower()
         ).order_by(
             md.UserData.user_data_id.desc()
         ).first().user
 
-    @abstractmethod
-    def resolve(self, context, mode='fetch'):
-        raise NotImplementedError()
-
 class UserIdTarget(Target):
     def resolve(self, context, mode='fetch'):
         if mode not in ('fetch', 'rehydrate', 'skip_missing'):
             raise ValueError('Bad mode for resolve')
 
-        self._users = []
-        self._context = context
+        self._mark_resolved(context)
 
         if mode == 'rehydrate':
-            self._users.extend(self.hydrate(user_ids=self.targets))
+            self._hydrate(user_ids=self.targets)
         else:
             existing = self.context.session.query(md.User) \
                            .filter(md.User.user_id.in_(self.targets))
             new = list(set(self.targets) - set([u.user_id for u in existing]))
 
-            self._users.extend(existing)
+            self._add_users(existing)
             if mode == 'fetch' and len(new) > 0:
-                self._users.extend(self.hydrate(user_ids=new))
+                self._hydrate(user_ids=new)
 
 class ScreenNameTarget(Target):
     def resolve(self, context, mode='fetch'):
         if mode not in ('fetch', 'rehydrate', 'skip_missing'):
             raise ValueError('Bad mode for resolve')
 
-        self._users = []
-        self._context = context
+        self._mark_resolved(context)
 
         if mode == 'rehydrate':
-            self._users.extend(self.hydrate(screen_names=self.targets))
+            self._hydrate(screen_names=self.targets)
         else:
-            users = [self.user_for_screen_name(s) for s in self.targets]
+            users = [self._user_for_screen_name(s) for s in self.targets]
 
             existing = [u for u in users if u is not None]
             new = [sn for u, sn in zip(users, self.targets) if u is None]
 
-            self._users.extend(existing)
+            self._add_users(existing)
 
             if mode == 'fetch' and len(new) > 0:
-                self._users.extend(self.hydrate(screen_names=new))
+                self._hydrate(screen_names=new)
 
 class SelectTagTarget(Target):
     def resolve(self, context, mode='fetch'):
         if mode not in ('existing', 'rehydrate', 'skip_missing'):
             raise ValueError('Bad mode for resolve')
 
-        self._users = []
-        self._context = context
+        self._mark_resolved(context)
 
         filters = [md.Tag.name == tag for tag in self.targets]
         tags = self.context.session.query(md.Tag).filter(or_(*filters)).all()
@@ -126,68 +139,86 @@ class SelectTagTarget(Target):
 
         users = [user for tag in tags for user in tag.users]
         if mode == 'rehydrate':
-            users = self.hydrate(user_ids=[user.user_id for user in users])
-
-        self._users.extend(users)
+            self._hydrate(user_ids=[user.user_id for user in users])
+        else:
+            self._add_users(users)
 
 class TwitterListTarget(Target):
+    def _hydrate_lists(self, lists):
+        owner_screen_names = [obj.split('/')[0] for obj in lists]
+        slugs = [obj.split('/')[1] for obj in lists]
+
+        ## Hydrate the list owners
+        owners = self._hydrate(screen_names=owner_screen_names)
+
+        for owner, slug in zip(owners, slugs):
+            ## Fetch the list and its existing memberships
+            lst = self.context.session.merge(md.List.from_tweepy(
+                self.context.api.get_list(
+                    slug=slug,
+                    owner_id=owner.user_id
+                )
+            ))
+
+            ## Fetch the list members from Twitter
+            users = [
+                self._tweepy_to_user(obj)
+
+                for obj in self.context.api.list_members(
+                    slug=slug,
+                    owner_id=owner.user_id
+                )
+            ]
+
+            self._add_users(users)
+
+            ## Record user memberships in list
+            # FIXME review, efficiency?
+            current_uids = [u.user_id for u in users]
+            prev_uids = [m.user_id for m in lst.list_memberships] # FIXME this is wrong, doesn't handle the SCD, same problem as below
+
+            for m in lst.list_memberships:
+                if m.user_id not in current_uids:
+                    m.valid_end_dt = func.now()
+
+            for u in users:
+                if u.user_id not in prev_uids:
+                    self.context.session.add(md.UserList(
+                        list_id=lst.list_id,
+                        user_id=u.user_id
+                    ))
+
     def resolve(self, context, mode='fetch'):
         if mode not in ('fetch', 'rehydrate', 'skip_missing'):
             raise ValueError('Bad mode for resolve')
 
-        self._users = []
-        self._context = context
-
-        owner_screen_names = [obj.split('/')[0] for obj in self.targets]
-        slugs = [obj.split('/')[1] for obj in self.targets]
+        self._mark_resolved(context)
 
         if mode == 'rehydrate':
-            ## Hydrate the list owners
-            owners = self.hydrate(screen_names=owner_screen_names)
-
-            for owner, slug in zip(owners, slugs):
-                ## Fetch the list and its existing memberships
-                lst = self.context.session.merge(md.List.from_tweepy(
-                    self.context.api.get_list(
-                        slug=slug,
-                        owner_id=owner.user_id
-                    )
-                ))
-
-                ## Fetch the list members from Twitter
-                users = [
-                    self.tweepy_to_user(obj)
-
-                    for obj in self.context.api.list_members(
-                        slug=slug,
-                        owner_id=owner.user_id
-                    )
-                ]
-
-                self._users.extend(users)
-
-                ## Record user memberships in list
-                current_uids = [u.user_id for u in users]
-                prev_uids = [m.user_id for m in lst.list_memberships]
-
-                for m in lst.list_memberships:
-                    if m.user_id not in current_uids:
-                        m.valid_end_dt = func.now()
-
-                for u in users:
-                    if u.user_id not in prev_uids:
-                        self.context.session.add(md.UserList(
-                            list_id=lst.list_id,
-                            user_id=u.user_id
-                        ))
+            self._hydrate_lists(self.targets)
         else:
-            for sn, slug in zip(owner_screen_names, slugs):
-                owner = self.user_for_screen_name(sn)
+            owner_screen_names = [obj.split('/')[0] for obj in self.targets]
+            slugs = [obj.split('/')[1] for obj in self.targets]
 
-                if owner is None:
+            new = []
+            for tg, sn, slug in zip(self.targets, owner_screen_names, slugs):
+                owner = self._user_for_screen_name(sn)
 
+                if owner is None: # list hasn't been ingested
+                    if mode == 'fetch':
+                        new += [tg]
 
-                flts = []
-                lists = self.context.session.query(md.List).filter(or_(*flts)).all()
+                    continue
 
+                lst = self.context.session.query(md.List).filter(and_(
+                    md.List.user_id == owner.user_id,
+                    md.List.slug == slug
+                )).one()
+
+                users = # FIXME need different relationships on the model?
+
+                self._add_users(users)
+
+            if mode == 'fetch' and len(new) > 0:
+                self._hydrate_lists(new)
 
