@@ -90,19 +90,14 @@ class TweetsJob(Job):
         since_timestamp = kwargs.pop('since_timestamp', None)
         max_tweets = kwargs.pop('max_tweets', None)
         old_tweets = kwargs.pop('old_tweets', False)
-        tweet_tag = kwargs.pop('tweet_tag', None)
 
         super(TweetsJob, self).__init__(**kwargs)
 
         self.since_timestamp = since_timestamp
         self.max_tweets = max_tweets
         self.old_tweets = old_tweets
-        self.tweet_tag = tweet_tag
 
     def run(self):
-        if self.tweet_tag is not None:
-            tag = self.get_or_create(md.Tag, name=self.tweet_tag)
-
         n_items = 0
         for target in self.targets:
             target.resolve(context=self, mode='fetch')
@@ -131,9 +126,6 @@ class TweetsJob(Job):
 
                     for resp in batch:
                         tweet = md.Tweet.from_tweepy(resp)
-
-                        if self.tweet_tag is not None:
-                            tweet.tags.append(tag)
 
                         self.session.merge(tweet)
 

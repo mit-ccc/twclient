@@ -247,8 +247,6 @@ class Tweet(Base):
     modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                          onupdate=func.now(), nullable=False)
 
-    tags = relationship('Tag', secondary=lambda: TweetTag.__table__,
-                        back_populates='tweets')
     user = relationship('User', foreign_keys=[user_id], back_populates='tweets')
     mentions = relationship('Mention', back_populates='tweet')
 
@@ -324,8 +322,6 @@ class Tag(Base):
 
     users = relationship('User', secondary=lambda: UserTag.__table__,
                          back_populates='tags')
-    tweets = relationship('Tweet', secondary=lambda: TweetTag.__table__,
-                          back_populates='tags')
 
 class Follow(Base):
     follow_id = Column(BIGINT, primary_key=True, autoincrement=True)
@@ -366,12 +362,6 @@ class UserTag(Base):
                        nullable=False)
     modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                          onupdate=func.now(), nullable=False)
-
-class TweetTag(Base):
-    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
-           primary_key=True)
-    tag_id = Column(BIGINT, ForeignKey('tag.tag_id', deferrable=True),
-           primary_key=True)
 
 class Mention(Base):
     mention_id = Column(BIGINT, primary_key=True, autoincrement=True)

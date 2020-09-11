@@ -123,8 +123,6 @@ def cli():
                      help='ignore tweets older than this Unix timestamp')
     twp.add_argument('-r', '--max-tweets',
                      help='max number of tweets to collect')
-    twp.add_argument('-t', '--tweet-tag',
-                     help='Tag to apply to loaded tweets')
 
     args = parser.parse_args()
 
