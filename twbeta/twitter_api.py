@@ -82,7 +82,7 @@ class TwitterApi(object):
 
                     if nmissing > 0:
                         msg = "{0} bad/missing user(s) in users/lookup call"
-                        raise err.BadUserError(msg.format(nmissing))
+                        raise err.NotFoundError(msg.format(nmissing))
         except (tweepy.error.TweepError, err.TWClientError) as e:
             if isinstance(e, err.CapacityError):
                 raise
@@ -91,8 +91,8 @@ class TwitterApi(object):
                       'with arguments {1}; original exception message: {2}'
                 msg = msg.format(method, kwargs, e.message)
                 logger.warning(msg)
-            elif isinstance(e, err.BadUserError):
-                msg = 'Encountered bad user(s) in call to method {0} ' \
+            elif isinstance(e, err.NotFoundError):
+                msg = 'Requested object(s) not found in call to method {0} ' \
                       'with arguments {1}; original exception message: {2}'
                 msg = msg.format(method, kwargs, e.message)
 

@@ -31,7 +31,7 @@ class TWClientError(Exception):
     def tweepy_is_instance(ex):
         raise NotImplementedError()
 
-class BadUserError(TWClientError):
+class NotFoundError(TWClientError):
     @staticmethod
     def tweepy_is_instance(ex):
         return ex.api_code in (17, 34, 50, 63) or \
@@ -51,8 +51,8 @@ class CapacityError(TWClientError):
 def dispatch(ex):
     if isinstance(ex, TWClientError):
         return ex
-    elif BadUserError.tweepy_is_instance(ex):
-        return BadUserError.from_tweepy(ex)
+    elif NotFoundError.tweepy_is_instance(ex):
+        return NotFoundError.from_tweepy(ex)
     elif ProtectedUserError.tweepy_is_instance(ex):
         return ProtectedUserError.from_tweepy(ex)
     elif CapacityError.tweepy_is_instance(ex):
