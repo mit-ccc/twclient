@@ -98,116 +98,93 @@ class TweetsJob(Job):
         self.old_tweets = old_tweets
 
     def run(self):
-        n_items = 0
         for target in self.targets:
-            target.resolve(context=self, mode='fetch')
+            target.resolve(context=self, mode='fetch') # FIXME should this be fetch? here and elsewhere
 
-            for user in target.users:
-                if self.old_tweets:
-                    since_id = None
-                else:
-                    since_id = self.session.query(sa.func.max(md.Tweet.tweet_id)) \
-                                   .filter(md.Tweet.user_id==user.user_id).scalar()
+        users = it.chain(*[t.users for t in self.targets])
 
-                twargs = {
-                    'user_id': user.user_id,
-                    'since_id': since_id,
-                    'max_tweets': self.max_tweets,
-                    'since_timestamp': self.since_timestamp
-                }
+        n_items = 0
+        for i, user in enumerate(users):
+            msg = 'Processing user_id {0} ({1} / {2}), cumulative tweets {3}'
+            logger.info(msg.format(user.user_id, i + 1, len(users), n_items))
 
-                tweets = self.api.user_timeline(**twargs)
-                tweets = ut.grouper(tweets, self.load_batch_size)
+            if self.old_tweets:
+                since_id = None
+            else:
+                since_id = self.session.query(sa.func.max(md.Tweet.tweet_id)) \
+                                .filter(md.Tweet.user_id==user.user_id).scalar()
 
-                for i, batch in enumerate(tweets):
-                    msg = 'Running {0} batch {1}, cumulative objects {2}'
-                    msg = msg.format(type(self), i + 1, n_items)
-                    logger.debug(msg)
+            twargs = {
+                'user_id': user.user_id,
+                'since_id': since_id,
+                'max_tweets': self.max_tweets,
+                'since_timestamp': self.since_timestamp
+            }
 
-                    for resp in batch:
-                        tweet = md.Tweet.from_tweepy(resp)
+            tweets = self.api.user_timeline(**twargs)
+            tweets = ut.grouper(tweets, self.load_batch_size)
 
-                        self.session.merge(tweet)
+            for j, batch in enumerate(tweets):
+                msg = 'Running {0} batch {1}, cumulative tweets {2}'
+                msg = msg.format(type(self), j + 1, n_items)
+                logger.debug(msg)
 
-                    if not self.onetxn:
-                        self.session.commit()
+                for resp in batch:
+                    tweet = md.Tweet.from_tweepy(resp)
 
-                    n_items += len(batch)
+                    self.session.merge(tweet)
+
+                if not self.onetxn:
+                    self.session.commit()
+
+                n_items += len(batch)
 
         if self.onetxn:
             self.session.commit()
 
 class FollowJob(Job):
     def __init__(self, **kwargs):
-        direction = kwargs.pop('direction', 'followers')
+        try:
+            direction = kwargs.pop('direction')
+
+            assert direction in ('followers', 'friends')
+        except KeyError:
+            raise ValueError('Must provide direction argument')
+        except AssertionError:
+            raise ValueError('Direction must be "followers" or "friends"')
 
         super(FollowJob, self).__init__(**kwargs)
 
-        assert direction in ('followers', 'friends')
         self.direction = direction
 
     def run(self):
-        self.sync_users(targets=self.targets, target_type=self.target_type,
-                        new=True, full=self.full, commit=(not self.onetxn))
+        api_method = getattr(self.api, self.direction + '_ids')
 
-        if self.target_type == 'user_ids':
-            user_ids = self.targets
-        if self.target_type == 'screen_names':
-            user_ids = self.user_ids_for_screen_names(self.targets)
+        for target in self.targets:
+            target.resolve(context=self, mode='fetch')
 
-        # there may be very very many users returned, so let's process
-        # them incrementally rather than building one giant list
+        users = it.chain(*[t.users for t in self.targets])
+
         n_items = 0
-        for i, (user_id, target) in enumerate(zip(user_ids, self.targets)):
-            if user_id is None and self.target_type == 'screen_names':
-                msg = 'Skipping unknown screen name {0}'.format(target)
-                logger.warning(msg)
+        for i, user in enumerate(users):
+            msg = 'Processing user_id {0} ({1} / {2}), cumulative edges {3}'
+            logger.info(msg.format(user.user_id, i + 1, len(users), n_items))
 
-                continue
+            ids = api_method(user_id=user.user_id)
+            ids = ut.grouper(ids, self.load_batch_size)
 
-            msg = 'Processing user {0} ({1} / {2})'
-            logger.debug(msg.format(user_id, i + 1, len(user_ids)))
+            for j, batch in enumerate(ids):
+                msg = 'Running {0} batch {1}, cumulative edges {2}'
+                msg = msg.format(type(self), j + 1, n_items)
+                logger.debug(msg)
 
-            ff_id = self.load_follow_fetch(user_id=user_id,
-                                           direction=self.direction)
+                pass # FIXME
 
-            edges = self.follow_objects_for(objs=[user_id], kind='user_ids',
-                                            direction=self.direction)
-            edges = ut.grouper(edges, self.load_batch_size)
+                if not self.onetxn:
+                    self.session.commit()
 
-            for j, batch in enumerate(edges):
-                msg = 'Running user {0} ({1}/{2}) batch {3}, ' \
-                      'cumulative edges {4}'
-                msg = msg.format(user_id, i + 1, len(user_ids), j + 1, n_items)
-                logger.info(msg)
-
-                self.load_follow_edges(edges=batch, follow_fetch_id=ff_id)
                 n_items += len(batch)
 
-            # NOTE: it's safe to commit here even if make_api_call caught a
-            # BadUserError, because in that case it just won't return any rows
-            # and the loop above is a no-op
-            if not self.onetxn:
-                self.commit()
-
         if self.onetxn:
-            self.commit()
-
-    @staticmethod
-    def follow_edges(api, direction, user_ids):
-        try:
-            assert direction in ('followers', 'friends')
-        except AssertionError:
-            raise ValueError('Bad direction for follow edge fetch')
-
-        method = getattr(api, direction + '_ids')
-
-        for obj in user_ids:
-            edges = method(user_id=obj)
-
-            for item in edges:
-                if direction == 'followers':
-                    yield {'source': item, 'target': obj}
-                else: # direction == 'friends'
-                    yield {'source': obj, 'target': item}
+            self.session.commit()
 
