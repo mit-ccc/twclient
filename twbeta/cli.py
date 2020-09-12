@@ -4,6 +4,8 @@
 The command-line interface script
 """
 
+# FIXME sub-sub-commands (twitter api list, etc)?
+
 import os
 import logging
 import argparse as ap
@@ -45,20 +47,24 @@ def cli():
 
     ## Config file handling
 
-    # FIXME sub-sub-commands (twitter api list, etc)?
+    # Database commands
     ldp = sp.add_parser('list-db', help='list database profiles')
     ldp.add_argument('-f', '--full', action='store_true',
-                     help='print all profile info')
-
-    lap = sp.add_parser('list-api', help='list Twitter API profiles')
-    lap.add_argument('-f', '--full', action='store_true',
                      help='print all profile info')
 
     adp = sp.add_parser('add-db', help='add DB profile and make default')
     adp.add_argument('-n', '--name', required=True,
                      help='name to use for DB profile')
     adp.add_argument('-u', '--database-url', help='database connection url')
-    # FIXME -f argument as a shortcut for sqlite url
+    adp.add_argument('-f', '--file', help='sqlite database file path')
+
+    rdp = sp.add_parser('rm-db', help='remove DB profile')
+    rdp.add_argument('name', help='name of DB profile to remove')
+
+    # API commands
+    lap = sp.add_parser('list-api', help='list Twitter API profiles')
+    lap.add_argument('-f', '--full', action='store_true',
+                     help='print all profile info')
 
     aap = sp.add_parser('add-api', help='add Twitter API profile')
     aap.add_argument('-n', '--name', required=True, help='name of API profile')
@@ -68,9 +74,6 @@ def cli():
                      help='consumer secret')
     aap.add_argument('-t', '--token', help='OAuth token')
     aap.add_argument('-s', '--token-secret', help='OAuth token secret')
-
-    rdp = sp.add_parser('rm-db', help='remove DB profile')
-    rdp.add_argument('name', help='name of DB profile to remove')
 
     rap = sp.add_parser('rm-api', help='remove Twitter API profile')
     rap.add_argument('name', help='name of API profile to remove')
@@ -189,8 +192,7 @@ def cli():
             msg = 'DB profile {0} not found'
             parser.error(msg.format(args.name))
         elif args.name in api_profiles:
-            msg = 'Profile {0} is an API profile'
-            parser.error(msg.format(args.name))
+            parser.error('Profile {0} is an API profile'.format(args.name))
         else:
             config.pop(args.name)
 
@@ -203,8 +205,7 @@ def cli():
             msg = 'API profile {0} not found'
             parser.error(msg.format(args.name))
         elif args.name in db_profiles:
-            msg = 'Profile {0} is a DB profile'
-            parser.error(msg.format(args.name))
+            parser.error('Profile {0} is a DB profile'.format(args.name))
         else:
             config.pop(args.name)
 
@@ -216,13 +217,17 @@ def cli():
         if args.name == 'DEFAULT':
             parser.error('Profile name may not be "DEFAULT"')
         elif args.name in profiles:
-            msg = 'Profile {0} already exists'
-            parser.error(msg.format(args.name))
+            parser.error('Profile {0} already exists'.format(args.name))
+
+        if args.file:
+            url = 'sqlite:///' + args.file
         else:
-            config[args.name] = {
-                'type': 'database',
-                'database_url': args.database_url
-            }
+            url = args.database_url
+
+        config[args.name] = {
+            'type': 'database',
+            'database_url': url
+        }
 
         with open(config_file, 'wt') as f:
             config.write(f)
