@@ -177,7 +177,7 @@ class TwitterListTarget(Target):
             prev_uids = [
                 m.user_id
                 for m in lst.list_memberships
-                if m.valid_end_dt.is_(None) # SCD type 2's currently valid rows
+                if m.valid_end_dt is None # SCD type 2's currently valid rows
             ]
 
             # mark rows no longer in Twitter API's list as invalid
@@ -225,7 +225,7 @@ class TwitterListTarget(Target):
                     md.User.user_id.in_([
                         m.user_id
                         for m in lst.list_memberships
-                        if m.valid_end_dt.is_(None) # as above
+                        if m.valid_end_dt is None # as above
                     ])
                 )
 
