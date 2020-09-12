@@ -106,7 +106,7 @@ class UserIdTarget(Target):
                 elif mode == 'raise_missing':
                     raise RuntimeError('Not all requested users are loaded')
                 else: # mode == 'skip_missing'
-                    pass
+                    logger.warning('Not all requested users are loaded')
 
             self._add_users(existing)
 
@@ -131,7 +131,7 @@ class ScreenNameTarget(Target):
                 elif mode == 'raise_missing':
                     raise RuntimeError('Not all requested users are loaded')
                 else: # mode == 'skip_missing'
-                    pass
+                    logger.warning('Not all requested users are loaded')
 
             self._add_users(existing)
 
@@ -149,7 +149,7 @@ class SelectTagTarget(Target):
             if mode == 'raise_missing':
                 raise ValueError("Not all requested tags exist")
             else: # mode == 'skip_missing'
-                pass
+                logger.warning('Not all requested tags exist')
 
         users = [user for tag in tags for user in tag.users]
         if mode == 'rehydrate':
@@ -168,6 +168,7 @@ class TwitterListTarget(Target):
         for owner, slug in zip(owners, slugs):
             ## Fetch the list and its existing memberships
             lst = self.context.session.merge(md.List.from_tweepy(
+                # FIXME what happens if the list dne?
                 self.context.api.get_list(
                     slug=slug,
                     owner_id=owner.user_id
