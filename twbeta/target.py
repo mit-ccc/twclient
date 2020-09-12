@@ -173,14 +173,19 @@ class TwitterListTarget(Target):
             self._add_users(users)
 
             ## Record user memberships in list
-            # FIXME review, efficiency?
-            current_uids = [u.user_id for u in users]
-            prev_uids = [m.user_id for m in lst.list_memberships] # FIXME this is wrong, doesn't handle the SCD, same problem as below
+            new_uids = [u.user_id for u in users]
+            prev_uids = [
+                m.user_id
+                for m in lst.list_memberships
+                if m.valid_end_dt.is_(None) # SCD type 2's currently valid rows
+            ]
 
+            # mark rows no longer in Twitter API's list as invalid
             for m in lst.list_memberships:
-                if m.user_id not in current_uids:
+                if m.user_id not in new_uids:
                     m.valid_end_dt = func.now()
 
+            # add rows for users newly present in Twitter API's list
             for u in users:
                 if u.user_id not in prev_uids:
                     self.context.session.add(md.UserList(
@@ -215,7 +220,14 @@ class TwitterListTarget(Target):
                     md.List.slug == slug
                 )).one()
 
-                users = # FIXME need different relationships on the model?
+                # every user currently recorded as a list member
+                users = self.context.session.query(md.User).filter(
+                    md.User.user_id.in_([
+                        m.user_id
+                        for m in lst.list_memberships
+                        if m.valid_end_dt.is_(None) # as above
+                    ])
+                )
 
                 self._add_users(users)
 

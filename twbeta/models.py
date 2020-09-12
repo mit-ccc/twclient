@@ -164,7 +164,7 @@ class List(Base):
 
     list_create_dt = Column(TIMESTAMP(timezone=True), nullable=True)
     full_name = Column(TEXT, nullable=True)
-    name = Column(TEXT, nullable=True)
+    display_name = Column(TEXT, nullable=True)
     uri = Column(TEXT, nullable=True)
     description = Column(TEXT, nullable=True)
     mode = Column(TEXT, nullable=True)
@@ -198,7 +198,7 @@ class List(Base):
 
         extra_fields = {
             'list_create_dt': 'created_at',
-            'name': 'name',
+            'display_name': 'name',
             'uri': 'uri',
             'description': 'description',
             'mode': 'mode',
