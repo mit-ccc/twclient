@@ -23,31 +23,13 @@ logger = logging.getLogger(__name__)
 class Job(ABC):
     def __init__(self, **kwargs):
         try:
-            targets = kwargs.pop('targets')
-        except KeyError:
-            raise ValueError('Must provide list of targets')
-
-        try:
             engine = kwargs.pop('engine')
         except KeyError:
             raise ValueError("engine instance is required")
 
-        try:
-            api = kwargs.pop('api')
-        except KeyError:
-            raise ValueError('Must provide api object')
-
-        user_tag = kwargs.pop('user_tag', None)
-        load_batch_size = kwargs.pop('load_batch_size', 5000)
-
         super(Job, self).__init__(**kwargs)
 
-        self.targets = targets
         self.engine = engine
-        self.api = api
-
-        self.user_tag = user_tag
-        self.load_batch_size = load_batch_size
 
         self.sessionfactory = sessionmaker()
         self.sessionfactory.configure(bind=self.engine)
@@ -69,21 +51,72 @@ class Job(ABC):
     def run(self):
         raise NotImplementedError()
 
-class UserInfoJob(Job):
+class TagJob(Job):
+    def __init(self, **kwargs):
+        try:
+            tag = kwargs.pop('tag')
+        except KeyError:
+            raise ValueError('Must provide tag argument')
+
+        super(TagJob, self).__init__(**kwargs)
+
+        self.tag = tag
+
+class ApiJob(Job):
+    def __init__(self, **kwargs):
+        try:
+            targets = kwargs.pop('targets')
+        except KeyError:
+            raise ValueError('Must provide list of targets')
+
+        try:
+            api = kwargs.pop('api')
+        except KeyError:
+            raise ValueError('Must provide api object')
+
+        load_batch_size = kwargs.pop('load_batch_size', 5000)
+
+        super(ApiJob, self).__init__(**kwargs)
+
+        self.targets = targets
+        self.api = api
+
+        self.load_batch_size = load_batch_size
+
+class CreateTagJob(TagJob):
     def run(self):
-        if self.user_tag is not None:
-            tag = self.get_or_create(md.Tag, name=self.user_tag)
-
-        for target in self.targets:
-            target.resolve(context=self, mode='rehydrate')
-
-            for user in target.users:
-                if self.user_tag is not None:
-                    user.tags.append(tag)
+        self.get_or_create(md.Tag, name=self.tag)
 
         self.session.commit()
 
-class TweetsJob(Job):
+class DeleteTagJob(TagJob):
+    def run(self):
+        self.session.query(md.Tag).filter_by(name=self.tag).delete()
+
+        self.session.commit()
+
+class ApplyTagJob(TagJob, ApiJob):
+    def run(self):
+        for target in self.targets:
+            target.resolve(context=self, mode='raise_missing')
+
+        users = [u for u in it.chain(*[t.users for t in self.targets])]
+
+        tag = self.session.query(md.Tag).filter_by(name=self.tag).one()
+
+        for user in users:
+            user.tags.append(tag)
+
+        self.session.commit()
+
+class UserInfoJob(ApiJob):
+    def run(self):
+        for target in self.targets:
+            target.resolve(context=self, mode='rehydrate')
+
+        self.session.commit()
+
+class TweetsJob(ApiJob):
     def __init__(self, **kwargs):
         since_timestamp = kwargs.pop('since_timestamp', None)
         max_tweets = kwargs.pop('max_tweets', None)
@@ -97,7 +130,7 @@ class TweetsJob(Job):
 
     def run(self):
         for target in self.targets:
-            target.resolve(context=self, mode='fetch') # FIXME should this be fetch? here and elsewhere
+            target.resolve(context=self, mode='raise_missing')
 
         users = [u for u in it.chain(*[t.users for t in self.targets])]
 
@@ -136,7 +169,7 @@ class TweetsJob(Job):
 
             self.session.commit()
 
-class FollowGraphJob(ABC, Job):
+class FollowGraphJob(ABC, ApiJob):
     @property
     @abstractmethod
     def direction(self):
@@ -152,7 +185,7 @@ class FollowGraphJob(ABC, Job):
 
     def run(self):
         for target in self.targets:
-            target.resolve(context=self, mode='fetch')
+            target.resolve(context=self, mode='raise_missing')
 
         users = [u for u in it.chain(*[t.users for t in self.targets])]
 
