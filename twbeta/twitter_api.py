@@ -147,7 +147,12 @@ class TwitterApi(object):
             'owner_id': owner_id
         }, **kwargs)
 
-        return next(self.make_api_call(**twargs))
+        try:
+            ret = next(self.make_api_call(**twargs))
+        except StopIteration:
+            ret = None
+
+        return ret
 
     def list_members(self, full_name=None, list_id=None, slug=None,
                      owner_screen_name=None, owner_id=None, **kwargs):

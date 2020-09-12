@@ -90,8 +90,6 @@ def cli():
                         help='tag to apply to any loaded / updated users')
         sp.add_argument('-b', '--abort-on-bad-targets', action='store_true',
                         help="abort if a requested user doesn't exist")
-        sp.add_argument('-e', '--onetxn', action='store_true',
-                        help='load in one transaction')
 
         # selecting users to operate on
         sp.add_argument('-g', '--select-tag', nargs='+',
@@ -110,18 +108,12 @@ def cli():
 
     frp = sp.add_parser('friends', help="Get user friends (may load new users)")
     frp = common_arguments(frp)
-    frp.add_argument('-z', '--load-batch-size',
-                     help='run loads to DB in batches of this size')
 
     flp = sp.add_parser('followers', help="Get user followers (may load new users)")
     flp = common_arguments(flp)
-    flp.add_argument('-z', '--load-batch-size',
-                     help='run loads to DB in batches of this size')
 
     twp = sp.add_parser('tweets', help="Get user tweets (may load new users")
     twp = common_arguments(twp)
-    twp.add_argument('-z', '--load-batch-size',
-                     help='run loads to DB in batches of this size')
     twp.add_argument('-o', '--old-tweets', action='store_true',
                      help="Load tweets older than user's most recent in DB")
     twp.add_argument('-c', '--since-timestamp',
@@ -347,8 +339,9 @@ def cli():
         command = vars(args).pop('command')
 
         to_drop = ['abort_on_bad_targets', 'verbose', 'database', 'apis',
-                'config_file', 'select_tag', 'user_ids', 'screen_names',
-                'twitter_lists']
+                   'config_file',
+
+                   'select_tag', 'user_ids', 'screen_names', 'twitter_lists']
 
         for v in to_drop:
             vars(args).pop(v)
@@ -358,12 +351,14 @@ def cli():
         vars(args)['targets'] = targets
 
         ## Actually run jobs
-        if command in ('friends', 'followers'):
-            job.FollowJob(direction=command, **vars(args)).run()
-        elif command == 'hydrate':
-            job.UserInfoJob(**vars(args)).run()
-        else: # command == 'tweets'
-            job.TweetsJob(**vars(args)).run()
+        cls = {
+            'hydrate': job.UserInfoJob,
+            'friends': job.FriendsJob,
+            'followers': job.FollowersJob,
+            'tweets': job.TweetsJob
+        }[command]
+
+        cls(**vars(args)).run()
 
 if __name__ == '__main__':
     cli()

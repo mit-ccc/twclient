@@ -335,6 +335,10 @@ class Follow(Base):
                             nullable=False)
     valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
 
+# A temp-ish table for SCD operations on Follow
+class StgFollow(Base):
+    user_id = Column(BIGINT, primary_key=True, autoincrement=False)
+
 ##
 ## Link tables, whether or not considered as objects
 ##

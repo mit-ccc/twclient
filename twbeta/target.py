@@ -1,3 +1,4 @@
+# FIXME should modes tie into / replace the abort_on_bad_targets setting?
 import random
 import itertools as it
 
@@ -209,6 +210,7 @@ class TwitterListTarget(Target):
                     ))
 
     def resolve(self, context, mode='fetch'):
+        # FIXME make modes work right
         if mode not in ('fetch', 'rehydrate', 'skip_missing', 'raise_missing'):
             raise ValueError('Bad mode for resolve')
 

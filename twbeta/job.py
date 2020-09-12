@@ -38,8 +38,7 @@ class Job(ABC):
             raise ValueError('Must provide api object')
 
         user_tag = kwargs.pop('user_tag', None)
-        load_batch_size = kwargs.pop('load_batch_size', None)
-        onetxn = kwargs.pop('onetxn', False)
+        load_batch_size = kwargs.pop('load_batch_size', 5000)
 
         super(Job, self).__init__(**kwargs)
 
@@ -49,7 +48,6 @@ class Job(ABC):
 
         self.user_tag = user_tag
         self.load_batch_size = load_batch_size
-        self.onetxn = onetxn
 
         self.sessionfactory = sessionmaker()
         self.sessionfactory.configure(bind=self.engine)
@@ -101,7 +99,7 @@ class TweetsJob(Job):
         for target in self.targets:
             target.resolve(context=self, mode='fetch') # FIXME should this be fetch? here and elsewhere
 
-        users = it.chain(*[t.users for t in self.targets])
+        users = [u for u in it.chain(*[t.users for t in self.targets])]
 
         n_items = 0
         for i, user in enumerate(users):
@@ -134,57 +132,62 @@ class TweetsJob(Job):
 
                     self.session.merge(tweet)
 
-                if not self.onetxn:
-                    self.session.commit()
-
                 n_items += len(batch)
 
-        if self.onetxn:
             self.session.commit()
 
-class FollowJob(Job):
-    def __init__(self, **kwargs):
-        try:
-            direction = kwargs.pop('direction')
+class FollowGraphJob(ABC, Job):
+    @property
+    @abstractmethod
+    def direction(self):
+        raise NotImplementedError()
 
-            assert direction in ('followers', 'friends')
-        except KeyError:
-            raise ValueError('Must provide direction argument')
-        except AssertionError:
-            raise ValueError('Direction must be "followers" or "friends"')
+    @property
+    def api_method_name(self):
+        return self.direction + '_ids'
 
-        super(FollowJob, self).__init__(**kwargs)
-
-        self.direction = direction
+    @property
+    def api_method(self):
+        return getattr(self.api, self.api_method_name)
 
     def run(self):
-        api_method = getattr(self.api, self.direction + '_ids')
-
         for target in self.targets:
             target.resolve(context=self, mode='fetch')
 
-        users = it.chain(*[t.users for t in self.targets])
+        users = [u for u in it.chain(*[t.users for t in self.targets])]
 
         n_items = 0
         for i, user in enumerate(users):
             msg = 'Processing user_id {0} ({1} / {2}), cumulative edges {3}'
             logger.info(msg.format(user.user_id, i + 1, len(users), n_items))
 
-            ids = api_method(user_id=user.user_id)
+            ids = self.api_method(user_id=user.user_id)
             ids = ut.grouper(ids, self.load_batch_size)
+
+            # clear the stg table - this is much faster than '.delete()'
+            # but has the downside of not being transactional on many DBs
+            md.StgFollow.__table__.drop(self.session.get_bind())
+            md.StgFollow.__table__.create(self.session.get_bind())
 
             for j, batch in enumerate(ids):
                 msg = 'Running {0} batch {1}, cumulative edges {2}'
                 msg = msg.format(type(self), j + 1, n_items)
                 logger.debug(msg)
 
-                pass # FIXME
-
-                if not self.onetxn:
-                    self.session.commit()
+                self.session.bulk_save_objects([
+                    md.StgFollow(user_id=t)
+                    for t in batch
+                ])
 
                 n_items += len(batch)
 
-        if self.onetxn:
+            # FIXME
+
             self.session.commit()
+
+class FollowersJob(FollowGraphJob):
+    direction = 'followers'
+
+class FriendsJob(FollowGraphJob):
+    direction = 'friends'
 
