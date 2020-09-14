@@ -62,6 +62,42 @@ class TagJob(Job):
 
         self.tag = tag
 
+class CreateTagJob(TagJob):
+    def run(self):
+        self.get_or_create(md.Tag, name=self.tag)
+
+        self.session.commit()
+
+class DeleteTagJob(TagJob):
+    def run(self):
+        self.session.query(md.Tag).filter_by(name=self.tag).delete()
+
+        self.session.commit()
+
+class ApplyTagJob(TagJob):
+    def __init__(**kwargs):
+        try:
+            targets = kwargs.pop('targets')
+        except KeyError:
+            raise ValueError('Must provide list of targets')
+
+        super(ApplyTagJob, self).__init__(**kwargs)
+
+        self.targets = targets
+
+    def run(self):
+        for target in self.targets:
+            target.resolve(context=self, mode='raise_missing')
+
+        users = [u for u in it.chain(*[t.users for t in self.targets])]
+
+        tag = self.session.query(md.Tag).filter_by(name=self.tag).one()
+
+        for user in users:
+            user.tags.append(tag)
+
+        self.session.commit()
+
 class ApiJob(Job):
     def __init__(self, **kwargs):
         try:
@@ -82,32 +118,6 @@ class ApiJob(Job):
         self.api = api
 
         self.load_batch_size = load_batch_size
-
-class CreateTagJob(TagJob):
-    def run(self):
-        self.get_or_create(md.Tag, name=self.tag)
-
-        self.session.commit()
-
-class DeleteTagJob(TagJob):
-    def run(self):
-        self.session.query(md.Tag).filter_by(name=self.tag).delete()
-
-        self.session.commit()
-
-class ApplyTagJob(TagJob, ApiJob):
-    def run(self):
-        for target in self.targets:
-            target.resolve(context=self, mode='raise_missing')
-
-        users = [u for u in it.chain(*[t.users for t in self.targets])]
-
-        tag = self.session.query(md.Tag).filter_by(name=self.tag).one()
-
-        for user in users:
-            user.tags.append(tag)
-
-        self.session.commit()
 
 class UserInfoJob(ApiJob):
     def run(self):
@@ -169,7 +179,7 @@ class TweetsJob(ApiJob):
 
             self.session.commit()
 
-class FollowGraphJob(ABC, ApiJob):
+class FollowGraphJob(ApiJob):
     @property
     @abstractmethod
     def direction(self):
