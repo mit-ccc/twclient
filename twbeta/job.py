@@ -5,6 +5,7 @@ import itertools as it
 from abc import ABC, abstractmethod
 
 import sqlalchemy as sa
+from sqlalchemy import select, func, exists, or_, and_ # FIXME
 from sqlalchemy.orm import sessionmaker
 
 from . import error as err
@@ -194,6 +195,16 @@ class FollowGraphJob(ApiJob):
         raise NotImplementedError()
 
     @property
+    @abstractmethod
+    def api_data_column(self):
+        raise NotImplementedError()
+
+    @property
+    def target_user_column(self):
+        cols = {'source_user_id', 'target_user_id'}
+        return list(cols - {self.api_data_column})[0]
+
+    @property
     def api_method_name(self):
         return self.direction + '_ids'
 
@@ -203,6 +214,15 @@ class FollowGraphJob(ApiJob):
 
     def run(self):
         for target in self.targets:
+            # Note that here (unlike in TweetsJob), you can get gnarly primary
+            # key integrity errors on the user table if this isn't mode='raise':
+            # merging in an md.User object for a given user and then running an
+            # insert against the user table may try to insert the same row again
+            # at commit if one of the User objects is for a row already loaded
+            # by the insert. (That is, if fetching users A and B, user B hadn't
+            # already been loaded and were hydrated here, and A follows B.) In
+            # this case, if this were not to be mode='raise' in the future, the
+            # easy thing to do is call self.session.flush() afterward.
             target.resolve(context=self, mode='raise')
 
         users = [u for u in it.chain(*[t.users for t in self.targets])]
@@ -225,24 +245,77 @@ class FollowGraphJob(ApiJob):
                 msg = msg.format(type(self), j + 1, n_items)
                 logger.debug(msg)
 
-                self.session.bulk_save_objects([
-                    md.StgFollow(user_id=t)
+                self.session.bulk_insert_mappings(md.StgFollow,
+                [
+                    {
+                        self.api_data_column: t,
+                        self.target_user_column: user.user_id
+                    }
+
                     for t in batch
                 ])
 
                 n_items += len(batch)
 
-            # FIXME insert rows in StgFollow but not in Follow with valid_end_dt
-            # of null
+            # First, load the users
+            flt = self.session.query(md.User).filter(
+                md.User.user_id == getattr(md.StgFollow, self.api_data_column)
+            ).correlate(md.StgFollow)
 
-            # FIXME update Follow rows not found in StgFollow - set valid_end_dt
-            # to null
+            # We don't need to worry about inserting the same user_id value
+            # that's already in the user.user_id object (and causing a primary
+            # key integrity error on the user table) because that user_id is
+            # already in the self.target_user_column column; it would only also
+            # appear in the self.api_data_column column if you could follow
+            # yourself on Twitter, which you can't.
+            ins = md.User.__table__.insert().from_select(
+                ['user_id'],
+                self.session.query(
+                    getattr(md.StgFollow, self.api_data_column)
+                ).filter(~flt.exists())
+            )
+
+            self.session.execute(ins)
+
+            # Next, insert rows in StgFollow lacking a row in Follow with
+            # valid_end_dt of null
+            flt = self.session.query(md.Follow).filter(and_(
+                md.Follow.valid_end_dt == None,
+                md.Follow.source_user_id == md.StgFollow.source_user_id,
+                md.Follow.target_user_id == md.StgFollow.target_user_id
+            )).correlate(md.StgFollow)
+
+            ins = md.Follow.__table__.insert().from_select(
+                ['source_user_id', 'target_user_id'],
+                self.session.query(
+                    md.StgFollow.source_user_id,
+                    md.StgFollow.target_user_id
+                ).filter(~flt.exists())
+            )
+
+            self.session.execute(ins)
+
+            # Lastly, update current Follow rows not found in StgFollow to set
+            # their valid_end_dt column to now()
+            flt = self.session.query(md.StgFollow).filter(and_(
+                md.StgFollow.source_user_id == md.Follow.source_user_id,
+                md.StgFollow.target_user_id == md.Follow.target_user_id
+            )).correlate(md.Follow)
+
+            upd = md.Follow.__table__.update().where(and_(
+                md.Follow.valid_end_dt == None,
+                ~flt.exists()
+            )).values(valid_end_dt=func.now())
+
+            self.session.execute(upd)
 
             self.session.commit()
 
 class FollowersJob(FollowGraphJob):
     direction = 'followers'
+    api_data_column = 'source_user_id'
 
 class FriendsJob(FollowGraphJob):
     direction = 'friends'
+    api_data_column = 'target_user_id'
 

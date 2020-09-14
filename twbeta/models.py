@@ -336,7 +336,8 @@ class Follow(Base):
 
 # A temp-ish table for SCD operations on Follow
 class StgFollow(Base):
-    user_id = Column(BIGINT, primary_key=True, autoincrement=False)
+    source_user_id = Column(BIGINT, primary_key=True, autoincrement=False)
+    target_user_id = Column(BIGINT, primary_key=True, autoincrement=False)
 
 ##
 ## Link tables, whether or not considered as objects
