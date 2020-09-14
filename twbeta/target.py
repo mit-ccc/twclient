@@ -89,7 +89,7 @@ class Target(ABC):
 
 class UserIdTarget(Target):
     def resolve(self, context, mode='fetch'):
-        if mode not in ('fetch', 'rehydrate', 'skip_missing', 'raise_missing'):
+        if mode not in ('fetch', 'rehydrate', 'skip', 'raise'):
             raise ValueError('Bad mode for resolve')
 
         self._mark_resolved(context)
@@ -104,16 +104,16 @@ class UserIdTarget(Target):
             if len(new) > 0:
                 if mode == 'fetch':
                     self._hydrate(user_ids=new)
-                elif mode == 'raise_missing':
+                elif mode == 'raise':
                     raise RuntimeError('Not all requested users are loaded')
-                else: # mode == 'skip_missing'
+                else: # mode == 'skip'
                     logger.warning('Not all requested users are loaded')
 
             self._add_users(existing)
 
 class ScreenNameTarget(Target):
     def resolve(self, context, mode='fetch'):
-        if mode not in ('fetch', 'rehydrate', 'skip_missing', 'raise_missing'):
+        if mode not in ('fetch', 'rehydrate', 'skip', 'raise'):
             raise ValueError('Bad mode for resolve')
 
         self._mark_resolved(context)
@@ -129,16 +129,16 @@ class ScreenNameTarget(Target):
             if len(new) > 0:
                 if mode == 'fetch':
                     self._hydrate(screen_names=new)
-                elif mode == 'raise_missing':
+                elif mode == 'raise':
                     raise RuntimeError('Not all requested users are loaded')
-                else: # mode == 'skip_missing'
+                else: # mode == 'skip'
                     logger.warning('Not all requested users are loaded')
 
             self._add_users(existing)
 
 class SelectTagTarget(Target):
     def resolve(self, context, mode='existing'):
-        if mode not in ('rehydrate', 'skip_missing', 'raise_missing'):
+        if mode not in ('rehydrate', 'skip', 'raise'):
             raise ValueError('Bad mode for resolve')
 
         self._mark_resolved(context)
@@ -147,9 +147,9 @@ class SelectTagTarget(Target):
         tags = self.context.session.query(md.Tag).filter(or_(*filters)).all()
 
         if len(tags) < len(self.targets):
-            if mode == 'raise_missing':
+            if mode == 'raise':
                 raise ValueError("Not all requested tags exist")
-            else: # mode == 'skip_missing'
+            else: # mode == 'skip'
                 logger.warning('Not all requested tags exist')
 
         users = [user for tag in tags for user in tag.users]
@@ -211,7 +211,7 @@ class TwitterListTarget(Target):
 
     def resolve(self, context, mode='fetch'):
         # FIXME make modes work right
-        if mode not in ('fetch', 'rehydrate', 'skip_missing', 'raise_missing'):
+        if mode not in ('fetch', 'rehydrate', 'skip', 'raise'):
             raise ValueError('Bad mode for resolve')
 
         self._mark_resolved(context)
@@ -229,10 +229,10 @@ class TwitterListTarget(Target):
                 if owner is None: # list hasn't been ingested
                     if mode == 'fetch':
                         new += [tg]
-                    elif mode == 'raise_missing':
+                    elif mode == 'raise':
                         msg = 'List owner {0} is not loaded'.format(sn)
                         raise RuntimeError(msg)
-                    else: # mode == 'skip_missing'
+                    else: # mode == 'skip'
                         continue
 
                 lst = self.context.session.query(md.List).filter(and_(

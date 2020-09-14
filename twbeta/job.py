@@ -73,6 +73,10 @@ class DeleteTagJob(TagJob):
         tag = self.session.query(md.Tag).filter_by(name=self.tag).one_or_none()
 
         if tag:
+            # DELETE is slow on many databases, but we're assuming none of these
+            # lists are especially large - a few thousand rows, tops. follow
+            # graph jobs have at least potentially really large data and need to
+            # rely on TRUNCATE TABLE (see below).
             self.session.query(md.UserTag).filter_by(tag_id=tag.tag_id).delete()
             self.session.delete(tag)
 
@@ -91,7 +95,7 @@ class ApplyTagJob(TagJob):
 
     def run(self):
         for target in self.targets:
-            target.resolve(context=self, mode='raise_missing')
+            target.resolve(context=self, mode='raise')
 
         users = [u for u in it.chain(*[t.users for t in self.targets])]
 
@@ -144,7 +148,7 @@ class TweetsJob(ApiJob):
 
     def run(self):
         for target in self.targets:
-            target.resolve(context=self, mode='raise_missing')
+            target.resolve(context=self, mode='raise')
 
         users = [u for u in it.chain(*[t.users for t in self.targets])]
 
@@ -199,7 +203,7 @@ class FollowGraphJob(ApiJob):
 
     def run(self):
         for target in self.targets:
-            target.resolve(context=self, mode='raise_missing')
+            target.resolve(context=self, mode='raise')
 
         users = [u for u in it.chain(*[t.users for t in self.targets])]
 
@@ -228,7 +232,11 @@ class FollowGraphJob(ApiJob):
 
                 n_items += len(batch)
 
-            # FIXME
+            # FIXME insert rows in StgFollow but not in Follow with valid_end_dt
+            # of null
+
+            # FIXME update Follow rows not found in StgFollow - set valid_end_dt
+            # to null
 
             self.session.commit()
 
