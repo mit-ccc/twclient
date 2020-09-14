@@ -286,13 +286,13 @@ def cli_tag(args, parser, config, engine):
     assert args.command == 'tag'
 
     if args.subcommand == 'create':
-        job.CreateTagJob(tag=args.name).run()
+        job.CreateTagJob(tag=args.name, engine=engine).run()
     elif args.subcommand == 'delete':
-        job.DeleteTagJob(tag=args.name).run()
+        job.DeleteTagJob(tag=args.name, engine=engine).run()
     elif args.subcommand == 'apply':
         targets = get_selected_targets(args, parser, config)
 
-        job.ApplyTagJob(tag=args.name, targets=targets).run()
+        job.ApplyTagJob(tag=args.name, targets=targets, engine=engine).run()
     else:
         parser.error('Bad subcommand to cli_tag')
 

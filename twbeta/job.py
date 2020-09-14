@@ -52,7 +52,7 @@ class Job(ABC):
         raise NotImplementedError()
 
 class TagJob(Job):
-    def __init(self, **kwargs):
+    def __init__(self, **kwargs):
         try:
             tag = kwargs.pop('tag')
         except KeyError:
@@ -70,12 +70,16 @@ class CreateTagJob(TagJob):
 
 class DeleteTagJob(TagJob):
     def run(self):
-        self.session.query(md.Tag).filter_by(name=self.tag).delete()
+        tag = self.session.query(md.Tag).filter_by(name=self.tag).one_or_none()
 
-        self.session.commit()
+        if tag:
+            self.session.query(md.UserTag).filter_by(tag_id=tag.tag_id).delete()
+            self.session.delete(tag)
+
+            self.session.commit()
 
 class ApplyTagJob(TagJob):
-    def __init__(**kwargs):
+    def __init__(self, **kwargs):
         try:
             targets = kwargs.pop('targets')
         except KeyError:
