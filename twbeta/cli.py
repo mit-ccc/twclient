@@ -297,7 +297,7 @@ def cli_tag(args, parser, config, engine):
         parser.error('Bad subcommand to cli_tag')
 
 def cli_initialize(args, parser, engine):
-    if not args['yes']:
+    if not args.yes:
         logger.warning("WARNING: This command will drop the Twitter data "
                         "schema and delete all data! If you want to "
                         "proceed, rerun with '-y'.")
@@ -398,7 +398,7 @@ def cli():
 
     ## Other arguments
 
-    inp = config.add_parser('initialize', help='Initialize the DB schema '
+    inp = sp.add_parser('initialize', help='Initialize the DB schema '
                                            '(WARNING: deletes all data!)')
     inp.add_argument('-d', '--database',
                      help='use this stored DB profile instead of default')
