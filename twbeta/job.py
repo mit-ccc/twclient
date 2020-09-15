@@ -5,7 +5,6 @@ import itertools as it
 from abc import ABC, abstractmethod
 
 import sqlalchemy as sa
-from sqlalchemy import select, func, exists, or_, and_ # FIXME
 from sqlalchemy.orm import sessionmaker
 
 from . import error as err
@@ -280,7 +279,7 @@ class FollowGraphJob(ApiJob):
             # FIXME
             # Next, insert rows in StgFollow lacking a row in Follow with
             # valid_end_dt of null
-            flt = self.session.query(md.Follow).filter(and_(
+            flt = self.session.query(md.Follow).filter(sa.and_(
                 md.Follow.valid_end_dt == None,
                 md.Follow.source_user_id == md.StgFollow.source_user_id,
                 md.Follow.target_user_id == md.StgFollow.target_user_id
@@ -298,15 +297,15 @@ class FollowGraphJob(ApiJob):
 
             # Lastly, update current Follow rows not found in StgFollow to set
             # their valid_end_dt column to now()
-            flt = self.session.query(md.StgFollow).filter(and_(
+            flt = self.session.query(md.StgFollow).filter(sa.and_(
                 md.StgFollow.source_user_id == md.Follow.source_user_id,
                 md.StgFollow.target_user_id == md.Follow.target_user_id
             )).correlate(md.Follow)
 
-            upd = md.Follow.__table__.update().where(and_(
+            upd = md.Follow.__table__.update().where(sa.and_(
                 md.Follow.valid_end_dt == None,
                 ~flt.exists()
-            )).values(valid_end_dt=func.now())
+            )).values(valid_end_dt=sa.func.now())
 
             self.session.execute(upd)
 
