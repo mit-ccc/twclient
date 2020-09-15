@@ -1,5 +1,5 @@
-# README, changelog, etc
-include *.md
+include README.md
+include CHANGES.md
 
 include LICENSE
 
