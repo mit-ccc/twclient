@@ -14,7 +14,7 @@ with open(os.path.join(HERE, 'README.md'), encoding='utf-8', mode='rt') as f:
 # https://packaging.python.org/guides/distributing-packages-using-setuptools/
 setup(
     name='twbeta', # FIXME and s/twbeta/twclient/ here and in code
-    version=twbeta.__version__, # FIXME update this
+    version=twbeta.__version__,
     url='https://github.com/wwbrannon/twclient',
     # license='', # FIXME
     author='William Brannon',
