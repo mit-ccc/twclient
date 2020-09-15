@@ -35,8 +35,7 @@ class TwitterApi(object):
         self.pool = ap.AuthPoolAPI(auths=auths, wait_on_rate_limit=True)
         self.abort_on_bad_targets = abort_on_bad_targets
 
-    def make_api_call(self, method, cursor=False, max_items=None,
-                      method_returns_list=True, **kwargs):
+    def make_api_call(self, method, cursor=False, max_items=None, **kwargs):
         msg = 'API call: {0} with params {1}, cursor {2}'
         logger.debug(msg.format(method, kwargs, cursor))
 
@@ -57,32 +56,37 @@ class TwitterApi(object):
             else:
                 ret = func(**kwargs)
 
-            if not method_returns_list:
+            if method == 'get_list':
                 yield ret
-            else:
-                j = 0
-                for obj in ret:
-                    yield obj
-                    j += 1
-
+            elif method == 'lookup_users':
                 # NOTE users/lookup doesn't raise an error condition on bad
-                # users, it just doesn't return them, so we need to check the
-                # length of the input and the number of user objects returned
-                if method == 'lookup_users':
-                    assert 'screen_names' in twargs.keys() or \
-                        'user_ids' in twargs.keys()
+                # users, it just doesn't return them, so we need to check
+                # the length of the input and the number of user objects
+                # returned
 
-                    if 'screen_names' in twargs.keys():
-                        kind = 'screen_names'
+                ret = [u for u in ret]
+
+                if 'screen_names' in twargs.keys():
+                    requested = [u.lower() for u in twargs['screen_names']]
+                    received = [u.screen_name.lower() for u in ret]
+                else:
+                    requested = twargs['user_ids']
+                    received = [u.user_id for u in ret]
+
+                missings = list(set(requested) - set(received))
+                if len(missings) > 0:
+                    msg = 'User(s) {0} nonexistent / suspended / bad in call ' \
+                          'to users/lookup'
+                    msg = msg.format(missings)
+
+                    if self.abort_on_bad_targets:
+                        raise err.NotFoundError(message=msg)
                     else:
-                        kind = 'user_ids'
+                        logger.warning(msg)
 
-                    # don't risk it being a generator
-                    nmissing = len([x for x in twargs[kind]]) - j
-
-                    if nmissing > 0:
-                        msg = "{0} bad/missing user(s) in users/lookup call"
-                        raise err.NotFoundError(message=msg.format(nmissing))
+                yield from ret
+            else:
+                yield from ret
         except (tweepy.error.TweepError, err.TWClientError) as e:
             if isinstance(e, err.CapacityError):
                 raise
@@ -92,9 +96,9 @@ class TwitterApi(object):
                 msg = msg.format(method, kwargs, e.message)
                 logger.warning(msg)
             elif isinstance(e, err.NotFoundError):
-                msg = 'Requested object(s) not found in call to method {0} ' \
-                      'with arguments {1}; original exception message: {2}'
-                msg = msg.format(method, kwargs, e.message)
+                msg = 'Requested object(s) not found in call to method {0}; ' \
+                      'original exception message: {1}'
+                msg = msg.format(method, e.message)
 
                 if self.abort_on_bad_targets:
                     raise
@@ -138,7 +142,6 @@ class TwitterApi(object):
 
         twargs = dict({
             'method': 'get_list',
-            'method_returns_list': False,
             'list_id': list_id,
             'slug': slug,
             'owner_screen_name': owner_screen_name,
