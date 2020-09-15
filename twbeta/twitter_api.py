@@ -97,8 +97,6 @@ class TwitterApi(object):
                 msg = msg.format(method, kwargs, e.message)
 
                 if self.abort_on_bad_targets:
-                    logger.exception(msg)
-
                     raise
                 else:
                     logger.warning(msg)
@@ -164,7 +162,7 @@ class TwitterApi(object):
                     )
             )
         except AssertionError:
-            raise ValueError('Bad list specification to get_list')
+            raise ValueError('Bad list specification to list_members')
 
         if full_name is not None:
             owner_screen_name = full_name.split('/')[0]
