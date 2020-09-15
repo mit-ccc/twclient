@@ -322,6 +322,7 @@ class Tag(Base):
     users = relationship('User', secondary=lambda: UserTag.__table__,
                          back_populates='tags')
 
+# FIXME need to index this table for the FollowGraphJob load process
 class Follow(Base):
     follow_id = Column(BIGINT, primary_key=True, autoincrement=True)
 

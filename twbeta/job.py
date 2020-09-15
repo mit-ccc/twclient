@@ -239,6 +239,7 @@ class FollowGraphJob(ApiJob):
             md.StgFollow.__table__.drop(self.session.get_bind())
             md.StgFollow.__table__.create(self.session.get_bind())
 
+            # FIXME twitter sometimes returns the same ID more than once
             for j, batch in enumerate(ids):
                 msg = 'Running {0} batch {1}, cumulative edges {2}'
                 msg = msg.format(type(self), j + 1, n_items)
