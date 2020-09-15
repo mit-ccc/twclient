@@ -276,7 +276,6 @@ class FollowGraphJob(ApiJob):
 
             self.session.execute(ins)
 
-            # FIXME
             # Next, insert rows in StgFollow lacking a row in Follow with
             # valid_end_dt of null
             flt = self.session.query(md.Follow).filter(sa.and_(
@@ -304,6 +303,8 @@ class FollowGraphJob(ApiJob):
 
             upd = md.Follow.__table__.update().where(sa.and_(
                 md.Follow.valid_end_dt == None,
+                getattr(md.Follow, self.target_user_column) == user.user_id,
+
                 ~flt.exists()
             )).values(valid_end_dt=sa.func.now())
 
