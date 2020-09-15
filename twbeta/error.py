@@ -29,11 +29,25 @@ class TWClientError(Exception):
         self.message = message
         self.exit_status = exit_status
 
+    _repr_attrs = ['message', 'exit_status']
+
+    def __repr__(self):
+        cls = type(self).__name__
+
+        arg_string = ', '.join([
+            a + ' = ' + getattr(self, a)
+            for a in self._repr_attrs
+        ])
+
+        return cls + '(' + arg_string + ')'
+
 ##
 ## Exceptions and functions related to the Twitter API
 ##
 
 class TwitterAPIError(TWClientError):
+    _repr_attrs = ['message', 'exit_status', 'response', 'api_code']
+
     def __init__(self, **kwargs):
         response = kwargs.pop('response', None)
         api_code = kwargs.pop('api_code', None)
