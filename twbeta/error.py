@@ -46,7 +46,8 @@ class TWClientError(Exception):
 ##
 
 class TwitterAPIError(TWClientError):
-    _repr_attrs = ['message', 'exit_status', 'response', 'api_code']
+    _repr_attrs = ['message', 'exit_status', 'response', 'api_code',
+                   'http_code']
 
     def __init__(self, **kwargs):
         response = kwargs.pop('response', None)
@@ -56,6 +57,13 @@ class TwitterAPIError(TWClientError):
 
         self.response = response
         self.api_code = api_code
+
+    @property
+    def http_code(self):
+        if e.response is not None:
+            return e.response.status_code
+        else:
+            return None
 
     @classmethod
     def from_tweepy(cls, ex):
