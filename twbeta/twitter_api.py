@@ -110,7 +110,8 @@ class TwitterApi(object):
     # users, it just doesn't return them, so we need to check
     # the length of the input and the number of user objects
     # returned. Note also though that it *does* raise an error if
-    # only bad / nonexistent users are provided. FIXME
+    # only bad / nonexistent users are provided, which is why we
+    # also catch err.NotFoundError in self.lookup_users.
     def _check_bad_users(self, received, requested, kind):
         try:
             assert kind in ('screen_names', 'user_ids')
