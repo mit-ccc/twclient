@@ -7,6 +7,8 @@ from . import models as md
 from abc import ABC, abstractmethod
 from sqlalchemy import exists, or_, and_, func
 
+from . import error as err
+
 class Target(ABC):
     def __init__(self, **kwargs):
         try:
@@ -81,11 +83,18 @@ class Target(ABC):
         return users
 
     def _user_for_screen_name(self, screen_name):
-        return self.context.session.query(md.UserData).filter(
+        ret = self.context.session.query(md.UserData).filter(
             func.lower(md.UserData.screen_name) == screen_name.lower()
         ).order_by(
             md.UserData.user_data_id.desc()
-        ).first().user
+        ).first()
+
+        if ret:
+            return ret.user
+        else:
+            msg = 'Screen name {0} not found locally or does not exist; ' \
+                  'use hydrate?'
+            raise err.BadTargetError(message=msg.format(screen_name))
 
 class UserIdTarget(Target):
     def resolve(self, context, mode='fetch'):
@@ -105,7 +114,8 @@ class UserIdTarget(Target):
                 if mode == 'fetch':
                     self._hydrate(user_ids=new)
                 elif mode == 'raise':
-                    raise RuntimeError('Not all requested users are loaded')
+                    msg = 'Not all requested users are loaded'
+                    raise err.BadTargetError(message=msg)
                 else: # mode == 'skip'
                     logger.warning('Not all requested users are loaded')
 
@@ -130,7 +140,8 @@ class ScreenNameTarget(Target):
                 if mode == 'fetch':
                     self._hydrate(screen_names=new)
                 elif mode == 'raise':
-                    raise RuntimeError('Not all requested users are loaded')
+                    msg = 'Not all requested users are loaded'
+                    raise err.BadTargetError(message=msg)
                 else: # mode == 'skip'
                     logger.warning('Not all requested users are loaded')
 
@@ -148,7 +159,8 @@ class SelectTagTarget(Target):
 
         if len(tags) < len(self.targets):
             if mode == 'raise':
-                raise ValueError("Not all requested tags exist")
+                msg = 'Not all requested tags exist'
+                raise err.BadTargetError(message=msg)
             else: # mode == 'skip'
                 logger.warning('Not all requested tags exist')
 
@@ -230,8 +242,8 @@ class TwitterListTarget(Target):
                     if mode == 'fetch':
                         new += [tg]
                     elif mode == 'raise':
-                        msg = 'List owner {0} is not loaded'.format(sn)
-                        raise RuntimeError(msg)
+                        msg = 'List owner {0} is not loaded or does not exist'
+                        raise err.BadTargetError(message=msg.format(sn))
                     else: # mode == 'skip'
                         continue
 

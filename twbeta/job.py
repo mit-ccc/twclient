@@ -277,6 +277,7 @@ class FollowGraphJob(ApiJob):
 
             self.session.execute(ins)
 
+            # FIXME
             # Next, insert rows in StgFollow lacking a row in Follow with
             # valid_end_dt of null
             flt = self.session.query(md.Follow).filter(and_(

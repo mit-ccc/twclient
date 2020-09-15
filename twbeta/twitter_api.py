@@ -82,7 +82,7 @@ class TwitterApi(object):
 
                     if nmissing > 0:
                         msg = "{0} bad/missing user(s) in users/lookup call"
-                        raise err.NotFoundError(msg.format(nmissing))
+                        raise err.NotFoundError(message=msg.format(nmissing))
         except (tweepy.error.TweepError, err.TWClientError) as e:
             if isinstance(e, err.CapacityError):
                 raise

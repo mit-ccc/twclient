@@ -4,7 +4,7 @@
 The command-line interface script
 """
 
-import os
+import os, sys
 import logging
 import argparse as ap
 import collections as cl
@@ -14,6 +14,7 @@ import tweepy
 from sqlalchemy import create_engine
 
 from . import job
+from . import error as err
 from . import models as md
 from . import target as tg
 from . import twitter_api as ta
@@ -475,7 +476,15 @@ def cli():
     config = parse_config_file(args, parser)
 
     if args.command == 'config':
-        return cli_config(args, parser, config)
+        try:
+            return cli_config(args, parser, config)
+        except err.TWClientError as e:
+            if logging.getLogger().getEffectiveLevel() == logging.WARNING:
+                logger.error(e.message)
+            else:
+                logger.exception(e.message)
+
+            sys.exit(e.exit_status)
 
     ##
     ## Commands: database-only
@@ -484,10 +493,25 @@ def cli():
     engine = get_selected_db_profile(args, parser, config)
 
     if args.command == 'tag':
-        return cli_tag(args, parser, config, engine)
+        try:
+            return cli_tag(args, parser, config, engine)
+        except err.TWClientError as e:
+            if logging.getLogger().getEffectiveLevel() == logging.WARNING:
+                logger.error(e.message)
+            else:
+                logger.exception(e.message)
+            sys.exit(e.exit_status)
 
     if args.command == 'initialize':
-        return cli_initialize(args, parser, engine)
+        try:
+            return cli_initialize(args, parser, engine)
+        except err.TWClientError as e:
+            if logging.getLogger().getEffectiveLevel() == logging.WARNING:
+                logger.error(e.message)
+            else:
+                logger.exception(e.message)
+
+            sys.exit(e.exit_status)
 
     ##
     ## Commands: fetch Twitter data
@@ -519,7 +543,15 @@ def cli():
         'tweets': job.TweetsJob
     }[command]
 
-    cls(**vars(args)).run()
+    try:
+        return cls(**vars(args)).run()
+    except err.TWClientError as e:
+        if logging.getLogger().getEffectiveLevel() == logging.WARNING:
+            logger.error(e.message)
+        else:
+            logger.exception(e.message)
+
+        sys.exit(e.exit_status)
 
 if __name__ == '__main__':
     cli()

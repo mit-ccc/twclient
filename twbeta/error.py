@@ -15,34 +15,58 @@ logger = logging.getLogger(__name__)
 
 # See Twitter docs: https://developer.twitter.com/en/support/twitter-api/error-troubleshooting
 
+##
+## Base class for exceptions
+##
+
 class TWClientError(Exception):
-    def __init__(self, message, response=None, api_code=None):
+    def __init__(self, **kwargs):
+        try:
+            message = kwargs.pop('message')
+        except KeyError:
+            raise ValueError('Must provide message argument')
+
+        exit_status = kwargs.pop('exit_status', 1)
+
+        super(TWClientError, self).__init__(**kwargs)
+
         self.message = message
+        self.exit_status = exit_status
+
+##
+## Exceptions and functions related to the Twitter API
+##
+
+class TwitterAPIError(TWClientError):
+    def __init__(self, **kwargs):
+        response = kwargs.pop('response', None)
+        api_code = kwargs.pop('api_code', None)
+
+        super(TwitterAPIError, self).__init__(**kwargs)
+
         self.response = response
         self.api_code = api_code
 
-        super(TWClientError, self).__init__(message)
-
     @classmethod
     def from_tweepy(cls, ex):
-        return cls(ex.reason, ex.response, ex.api_code)
+        return cls(message=ex.reason, response=ex.response, api_code=ex.api_code)
 
     @staticmethod
     def tweepy_is_instance(ex):
         raise NotImplementedError()
 
-class NotFoundError(TWClientError):
+class NotFoundError(TwitterAPIError):
     @staticmethod
     def tweepy_is_instance(ex):
         return ex.api_code in (17, 34, 50, 63) or \
             (ex.api_code is None and ex.response.status_code == 404)
 
-class ProtectedUserError(TWClientError):
+class ProtectedUserError(TwitterAPIError):
     @staticmethod
     def tweepy_is_instance(ex):
         return ex.api_code is None and ex.response.status_code == 401
 
-class CapacityError(TWClientError):
+class CapacityError(TwitterAPIError):
     @staticmethod
     def tweepy_is_instance(ex):
         return ex.api_code in (130, 131) or \
@@ -59,4 +83,11 @@ def dispatch(ex):
         return CapacityError.from_tweepy(ex)
     else:
         return ex
+
+##
+## Other error conditions
+##
+
+class BadTargetError(TWClientError):
+    pass
 
