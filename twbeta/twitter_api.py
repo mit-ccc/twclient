@@ -40,6 +40,7 @@ class TwitterApi(object):
         logger.debug(msg.format(method, kwargs, cursor))
 
         func = getattr(self.pool, method)
+        return_type = getattr(func, 'twclient_return_type')
 
         try:
             assert not (cursor and max_items is not None)
@@ -56,54 +57,35 @@ class TwitterApi(object):
             else:
                 ret = func(**kwargs)
 
-            if method == 'get_list':
+            if return_type == 'single':
                 yield ret
-            elif method == 'lookup_users':
-                # NOTE users/lookup doesn't raise an error condition on bad
-                # users, it just doesn't return them, so we need to check
-                # the length of the input and the number of user objects
-                # returned
-
-                ret = [u for u in ret]
-
-                if 'screen_names' in twargs.keys():
-                    requested = [u.lower() for u in twargs['screen_names']]
-                    received = [u.screen_name.lower() for u in ret]
-                else:
-                    requested = twargs['user_ids']
-                    received = [u.user_id for u in ret]
-
-                missings = list(set(requested) - set(received))
-                if len(missings) > 0:
-                    msg = 'User(s) {0} nonexistent / suspended / bad in call ' \
-                          'to users/lookup'
-                    msg = msg.format(missings)
-
-                    if self.abort_on_bad_targets:
-                        raise err.NotFoundError(message=msg)
-                    else:
-                        logger.warning(msg)
-
+            elif return_type == 'list':
                 yield from ret
-            else:
-                yield from ret
+            else: # return_type == 'unknown'
+                msg = 'Return type of method {0} unspecified'.format(name)
+                raise RuntimeError(msg)
         except (tweepy.error.TweepError, err.TWClientError) as e:
             if isinstance(e, err.CapacityError):
                 raise
             elif isinstance(e, err.ProtectedUserError):
                 msg = 'Ignoring protected user in call to method {0} ' \
-                      'with arguments {1}; original exception message: {2}'
-                msg = msg.format(method, kwargs, e.message)
+                      'with arguments {1}'
+                msg = msg.format(method, kwargs)
                 logger.warning(msg)
+
+                msg = 'Original exception message: {0}'.format(e.message)
+                msg = logger.debug(msg)
             elif isinstance(e, err.NotFoundError):
-                msg = 'Requested object(s) not found in call to method {0}; ' \
-                      'original exception message: {1}'
-                msg = msg.format(method, e.message)
+                msg = 'Requested object(s) not found in call to method {0}'
+                msg = msg.format(method)
 
                 if self.abort_on_bad_targets:
                     raise
                 else:
                     logger.warning(msg)
+
+                msg = 'Original exception message: {0}'.format(e.message)
+                logger.debug(msg)
             else:
                 reason = e.reason
                 api_code = e.api_code
@@ -123,6 +105,69 @@ class TwitterApi(object):
     ##
     ## Direct wraps of Twitter API methods
     ##
+
+    # NOTE users/lookup doesn't raise an error condition on bad
+    # users, it just doesn't return them, so we need to check
+    # the length of the input and the number of user objects
+    # returned. Note also though that it *does* raise an error if
+    # only bad / nonexistent users are provided. FIXME
+    def _check_bad_users(self, received, requested, kind):
+        try:
+            assert kind in ('screen_names', 'user_ids')
+        except AssertionError:
+            raise ValueError('Bad kind value to _check_bad_users')
+
+        if kind == 'user_ids':
+            received = [u.user_id for u in received]
+        else:
+            requested = [u.lower() for u in requested]
+            received = [u.screen_name.lower() for u in received]
+
+        missings = list(set(requested) - set(received))
+        if len(missings) > 0:
+            msg = 'User(s) {0} nonexistent / suspended / bad in call ' \
+                    'to users/lookup'
+            msg = msg.format(missings)
+
+            if self.abort_on_bad_targets:
+                raise err.BadTargetError(message=msg)
+            else:
+                logger.warning(msg)
+
+    def lookup_users(self, user_ids=[], screen_names=[], **kwargs):
+        msg = 'Hydrating user_ids {0} and screen_names {1}'
+        logger.debug(msg.format(user_ids, screen_names))
+
+        try:
+            assert len(user_ids) > 0 or len(screen_names) > 0
+        except AssertionError:
+            raise ValueError('No users provided to lookup_users')
+
+        if len(user_ids) > 0:
+            for grp in ut.grouper(user_ids, 100): # max 100 per call
+                twargs = dict({'method': 'lookup_users', 'user_ids': grp}, **kwargs)
+
+                try:
+                    ret = [u for u in self.make_api_call(**twargs)]
+                except err.NotFoundError:
+                    ret = []
+
+                self._check_bad_users(ret, grp, kind='user_ids')
+
+                yield from ret
+
+        if len(screen_names) > 0:
+            for grp in ut.grouper(screen_names, 100): # max 100 per call
+                twargs = dict({'method': 'lookup_users', 'screen_names': grp}, **kwargs)
+
+                try:
+                    ret = [u for u in self.make_api_call(**twargs)]
+                except err.NotFoundError:
+                    ret = []
+
+                self._check_bad_users(ret, grp, kind='screen_names')
+
+                yield from ret
 
     def get_list(self, full_name=None, list_id=None, slug=None,
                  owner_screen_name=None, owner_id=None, **kwargs):
@@ -181,25 +226,6 @@ class TwitterApi(object):
         }, **kwargs)
 
         yield from self.make_api_call(**twargs)
-
-    def lookup_users(self, user_ids=[], screen_names=[], **kwargs):
-        msg = 'Hydrating user_ids {0} and screen_names {1}'
-        logger.debug(msg.format(user_ids, screen_names))
-
-        try:
-            assert len(user_ids) > 0 or len(screen_names) > 0
-        except AssertionError:
-            raise ValueError('No users provided to lookup_users')
-
-        if len(user_ids) > 0:
-            for grp in ut.grouper(user_ids, 100): # max 100 per call
-                twargs = dict({'method': 'lookup_users', 'user_ids': grp}, **kwargs)
-                yield from self.make_api_call(**twargs)
-
-        if len(screen_names) > 0:
-            for grp in ut.grouper(screen_names, 100): # max 100 per call
-                twargs = dict({'method': 'lookup_users', 'screen_names': grp}, **kwargs)
-                yield from self.make_api_call(**twargs)
 
     def list_timeline(self, lst, **kwargs):
         logger.debug('Fetching timeline of list {0}'.format(lst))

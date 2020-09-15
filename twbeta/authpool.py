@@ -17,6 +17,16 @@ logger = logging.getLogger(__name__)
 # User code can treat it as a drop-in replacement for tweepy.API.
 
 class AuthPoolAPI(object):
+    _authpool_return_types = {
+        'get_list': 'single',
+        'list_members': 'list',
+        'lookup_users': 'list',
+        'list_members': 'list',
+        'user_timeline': 'list',
+        'followers_ids': 'list',
+        'friends_ids': 'list'
+    }
+
     def __init__(self, **kwargs):
         try:
             auths = kwargs.pop('auths')
@@ -160,6 +170,9 @@ class AuthPoolAPI(object):
             if all([k in vars(x).keys() for x in methods]):
                 if all([vars(x)[k] == v for x in methods]):
                     setattr(func, k, v)
+
+        setattr(func, 'twclient_return_type',
+                self._authpool_return_types.get(name, 'unknown'))
 
         # the descriptor protocol: func is an unbound function, but the __get__
         # method returns func as a bound method of its argument
