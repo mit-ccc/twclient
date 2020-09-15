@@ -35,7 +35,7 @@ class TWClientError(Exception):
         cls = type(self).__name__
 
         arg_string = ', '.join([
-            a + ' = ' + getattr(self, a)
+            a + ' = ' + repr(getattr(self, a))
             for a in self._repr_attrs
         ])
 
