@@ -21,11 +21,7 @@ logger = logging.getLogger(__name__)
 
 class TWClientError(Exception):
     def __init__(self, **kwargs):
-        try:
-            message = kwargs.pop('message')
-        except KeyError:
-            raise ValueError('Must provide message argument')
-
+        message = kwargs.pop('message', '')
         exit_status = kwargs.pop('exit_status', 1)
 
         super(TWClientError, self).__init__(**kwargs)
