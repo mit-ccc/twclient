@@ -1,3 +1,7 @@
+# FIXME should modes on Target.resolve tie into / replace the abort_on_bad_targets setting?
+# FIXME move exception handling stuff out to leaf classes from make_api_call
+# FIXME update logging stuff, esp use __repr__ method on exceptions
+
 import logging
 
 import tweepy
@@ -65,16 +69,14 @@ class TwitterApi(object):
                 msg = 'Return type of method {0} unspecified'.format(name)
                 raise RuntimeError(msg)
         except (tweepy.error.TweepError, err.TWClientError) as e:
-            if isinstance(e, err.CapacityError):
-                raise
-            elif isinstance(e, err.ProtectedUserError):
+            msg = 'Exception in call to Twitter API: {0}'.format(repr(e))
+            logger.debug(msg, exc_info=True)
+
+            if isinstance(e, err.ProtectedUserError):
                 msg = 'Ignoring protected user in call to method {0} ' \
                       'with arguments {1}'
                 msg = msg.format(method, kwargs)
                 logger.info(msg)
-
-                msg = 'Original exception message: {0}'.format(e.message)
-                msg = logger.debug(msg)
             elif isinstance(e, err.NotFoundError):
                 msg = 'Requested object(s) not found in call to method {0}'
                 msg = msg.format(method)
@@ -83,23 +85,7 @@ class TwitterApi(object):
                     raise
                 else:
                     logger.debug(msg)
-
-                msg = 'Original exception message: {0}'.format(e.message)
-                logger.debug(msg)
             else:
-                reason = e.reason
-                api_code = e.api_code
-                if e.response is not None:
-                    http_code = e.response.status_code
-                else:
-                    http_code = None
-
-                msg = 'Error returned by Twitter API: API code {0}, HTTP ' \
-                      'status code {1}, reason {2}'
-                msg = msg.format(api_code, http_code, reason)
-
-                logger.exception(msg)
-
                 raise
 
     ##

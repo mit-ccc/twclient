@@ -1,4 +1,3 @@
-# FIXME should modes tie into / replace the abort_on_bad_targets setting?
 import random
 import logging
 import itertools as it
