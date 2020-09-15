@@ -71,7 +71,7 @@ class TwitterApi(object):
                 msg = 'Ignoring protected user in call to method {0} ' \
                       'with arguments {1}'
                 msg = msg.format(method, kwargs)
-                logger.warning(msg)
+                logger.info(msg)
 
                 msg = 'Original exception message: {0}'.format(e.message)
                 msg = logger.debug(msg)
@@ -82,7 +82,7 @@ class TwitterApi(object):
                 if self.abort_on_bad_targets:
                     raise
                 else:
-                    logger.warning(msg)
+                    logger.debug(msg)
 
                 msg = 'Original exception message: {0}'.format(e.message)
                 logger.debug(msg)
@@ -98,7 +98,7 @@ class TwitterApi(object):
                       'status code {1}, reason {2}'
                 msg = msg.format(api_code, http_code, reason)
 
-                logger.debug(msg, exc_info=True)
+                logger.exception(msg)
 
                 raise
 
