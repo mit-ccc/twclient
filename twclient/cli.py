@@ -406,7 +406,7 @@ def make_parser():
     sp = parser.add_subparsers(dest='command')
     sp.required = True
 
-    config_subparser = sp.add_parser('config', help='manage configuration')
+    config_subparser = sp.add_parser('config', help='Manage configuration')
     config = config_subparser.add_subparsers(dest='subcommand')
 
     ## Config file handling
@@ -447,7 +447,7 @@ def make_parser():
 
     ## User tagging
 
-    tag_subparser = sp.add_parser('tag', help='manage user tags')
+    tag_subparser = sp.add_parser('tag', help='Manage user tags')
     tag = tag_subparser.add_subparsers(dest='subcommand')
 
     tcp = tag.add_parser('create', help='create a user tag')

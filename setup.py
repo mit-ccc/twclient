@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# FIXME do something about the sql files in docs
+
 import os
 
 from setuptools import setup, find_packages

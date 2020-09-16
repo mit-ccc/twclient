@@ -35,6 +35,8 @@ class Job(ABC):
         self.sessionfactory.configure(bind=self.engine)
         self.session = self.sessionfactory()
 
+        # FIXME need to check the DB schema version
+
     def get_or_create(self, model, **kwargs):
         instance = self.session.query(model).filter_by(**kwargs).one_or_none()
 
@@ -76,7 +78,7 @@ class DeleteTagJob(TagJob):
             # DELETE is slow on many databases, but we're assuming none of these
             # lists are especially large - a few thousand rows, tops. follow
             # graph jobs have at least potentially really large data and need to
-            # rely on TRUNCATE TABLE (see below).
+            # rely on DROP TABLE / CREATE TABLE (see below).
             self.session.query(md.UserTag).filter_by(tag_id=tag.tag_id).delete()
             self.session.delete(tag)
 
@@ -242,7 +244,15 @@ class FollowGraphJob(ApiJob):
             md.StgFollow.__table__.drop(self.session.get_bind())
             md.StgFollow.__table__.create(self.session.get_bind())
 
-            # FIXME twitter sometimes returns the same ID more than once
+            # FIXME twitter sometimes returns the same ID more than once.
+            # the sensible thing to do here to preserve speed is keep this bulk
+            # loading approach, but catch the duplicate key error and, when
+            # handling it, re-attempt inserts of the same rows one-by-one,
+            # discarding any that raise the duplicate key error. it's a rare
+            # problem to get duplicate keys from the API (eventual consistency?)
+            # so no need to worry too hard about optimizing it. if you can get
+            # the rows that caused the error out of the exception object and
+            # just ignore them, even better.
             for j, batch in enumerate(ids):
                 msg = 'Running {0} batch {1}, cumulative edges {2}'
                 msg = msg.format(type(self), j + 1, n_items)

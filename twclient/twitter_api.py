@@ -78,13 +78,8 @@ class TwitterApi(object):
                 msg = msg.format(method, kwargs)
                 logger.info(msg)
             elif isinstance(e, err.NotFoundError):
-                msg = 'Requested object(s) not found in call to method {0}'
-                msg = msg.format(method)
-
                 if self.abort_on_bad_targets:
                     raise
-                else:
-                    logger.debug(msg)
             else:
                 raise
 
