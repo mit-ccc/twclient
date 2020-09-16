@@ -7,6 +7,7 @@ from abc import ABC, abstractmethod
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 
+from . import __version__
 from . import error as err
 from . import utils as ut
 from . import models as md
@@ -35,7 +36,22 @@ class Job(ABC):
         self.sessionfactory.configure(bind=self.engine)
         self.session = self.sessionfactory()
 
-        # FIXME need to check the DB schema version
+        schema_version = self.session.query(md.SchemaVersion).all()
+
+        if len(schema_version) != 1:
+            msg = 'Bad or missing schema version tag in database'
+            raise err.BadSchemaError(message=msg)
+
+        db_version = schema_version[0].version
+
+        if db_version > __version__:
+            msg = 'Package version {0} cannot use future schema version {1}'
+            raise err.BadSchemaError(message=msg.format(__version__, db_version)
+
+        if db_version < __version__:
+            msg= 'Package version {0} cannot migrate old schema version {1}; ' \
+                 'consider downgrading the package version'
+            raise err.BadSchemaError(message=msg.format(__version__, db_version)
 
     def get_or_create(self, model, **kwargs):
         instance = self.session.query(model).filter_by(**kwargs).one_or_none()
@@ -52,6 +68,14 @@ class Job(ABC):
     @abstractmethod
     def run(self):
         raise NotImplementedError()
+
+class InitializeJob(Job):
+    def run(self):
+        md.Base.metadata.drop_all(self.engine)
+        md.Base.metadata.create_all(self.engine)
+
+        self.session.add(md.SchemaVersion(version=__version__))
+        self.session.commit()
 
 class TagJob(Job):
     def __init__(self, **kwargs):

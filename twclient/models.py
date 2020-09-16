@@ -1,4 +1,5 @@
-# FIXME need to store the creating package version somewhere in the DB schema
+# FIXME tweet hashtag entity
+# FIXME tweet URL entity
 
 import json
 import logging
@@ -46,6 +47,16 @@ class Base(object):
         fields = {n : getattr(self, n) for n in fieldnames}
 
         return self._repr(**fields)
+
+##
+## Store the creating package version in the DB to enable migrations
+##
+
+class SchemaVersion(Base):
+    version = Column(TEXT, primary_key=True, nullable=FALSE)
+
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                       nullable=False)
 
 ##
 ## Primary objects
@@ -153,6 +164,18 @@ class UserData(Base):
             pass
 
         return cls(**args)
+
+class Tag(Base):
+    tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
+    name = Column(TEXT, nullable=False, unique=True)
+
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                       nullable=False)
+    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                         onupdate=func.now(), nullable=False)
+
+    users = relationship('User', secondary=lambda: UserTag.__table__,
+                         back_populates='tags')
 
 class List(Base):
     # as in Tweet and User, list_id is Twitter's id rather than a surrogate key
@@ -311,18 +334,6 @@ class Tweet(Base):
         ret.mentions = Mention.list_from_tweepy(obj)
 
         return ret
-
-class Tag(Base):
-    tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
-    name = Column(TEXT, nullable=False, unique=True)
-
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
-
-    users = relationship('User', secondary=lambda: UserTag.__table__,
-                         back_populates='tags')
 
 # FIXME need to index this table for the FollowGraphJob load process
 class Follow(Base):

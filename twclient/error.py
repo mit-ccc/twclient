@@ -109,3 +109,6 @@ def dispatch(ex):
 class BadTargetError(TWClientError):
     pass
 
+class BadSchemaError(TWClientError):
+    pass
+
