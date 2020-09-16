@@ -99,7 +99,10 @@ class ApplyTagJob(TagJob):
 
         users = [u for u in it.chain(*[t.users for t in self.targets])]
 
-        tag = self.session.query(md.Tag).filter_by(name=self.tag).one()
+        tag = self.session.query(md.Tag).filter_by(name=self.tag).one_or_none()
+        if not tag:
+            msg = 'Tag {0} does not exist'.format(self.tag)
+            raise err.BadTargetError(message=msg)
 
         for user in users:
             user.tags.append(tag)
