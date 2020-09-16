@@ -1,6 +1,5 @@
 # FIXME should modes on Target.resolve tie into / replace the abort_on_bad_targets setting?
 # FIXME move exception handling stuff out to leaf classes from make_api_call
-# FIXME update logging stuff, esp use __repr__ method on exceptions
 
 import logging
 
@@ -210,7 +209,8 @@ class TwitterApi(object):
         yield from self.make_api_call(**twargs)
 
     def list_timeline(self, lst, **kwargs):
-        logger.debug('Fetching timeline of list {0}'.format(lst))
+        msg = 'Fetching timeline of list {0}'
+        logger.debug(msg.format(lst))
 
         twargs = dict({
             'method': 'list_members',
