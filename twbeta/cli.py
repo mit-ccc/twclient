@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# FIXME update logging stuff, esp use __repr__ method on exceptions
+
 """
 The command-line interface script
 """

@@ -1,3 +1,6 @@
+# FIXME need to store the creating package version somewhere in the DB schema
+# for eventual migrations to be possible
+
 import json
 import logging
 
