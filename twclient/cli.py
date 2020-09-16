@@ -387,8 +387,8 @@ def make_parser():
 
     parser.add_argument('-v', '--verbose', action='count', default=0,
                         help='verbosity level (repeat for more)')
-    parser.add_argument('-c', '--config-file', default='~/.twbetarc',
-                        help='path to config file (default ~/.twbetarc)')
+    parser.add_argument('-c', '--config-file', default='~/.twclientrc',
+                        help='path to config file (default ~/.twclientrc)')
 
     def add_target_arguments(p):
         # selecting users to operate on

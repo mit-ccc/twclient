@@ -4,7 +4,7 @@ import os
 
 from setuptools import setup, find_packages
 
-import twbeta # for version
+import twclient # for version
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 README = os.path.join(HERE, 'README.md')
@@ -20,8 +20,8 @@ long_description = readme_text + '\n\n' + changes_text
 
 # https://packaging.python.org/guides/distributing-packages-using-setuptools/
 setup(
-    name='twbeta', # FIXME and s/twbeta/twclient/ here and in code
-    version=twbeta.__version__,
+    name='twclient',
+    version=twclient.__version__,
     author='William Brannon',
     author_email='wbrannon@mit.edu',
     url='https://github.com/wwbrannon/twclient',
@@ -47,14 +47,14 @@ setup(
 
     entry_points={
         'console_scripts': [
-            'twbeta=twbeta.cli:cli',
+            'twitter=twclient.cli:cli',
         ]
     },
 
     platforms=['any'],
     keywords=['twitter', 'tweepy', 'data science', 'analytics'],
     classifiers=[
-        'Development Status :: 5 - Production/Stable',
+        'Development Status :: 4 - Beta',
 
         # 'License :: OSI Approved :: MIT License', # FIXME
 
