@@ -293,7 +293,7 @@ class InitializeCommand(DatabaseFrontend):
 
 class FetchCommand(DatabaseFrontend, TargetFrontend, TwitterFrontend):
     def __init__(self, **kwargs):
-        load_batch_size = kwargs.get('load_batch_size', 5000)
+        load_batch_size = kwargs.get('load_batch_size', 10000)
 
         # tweet-specific arguments
         since_timestamp = kwargs.get('since_timestamp', None)

@@ -147,7 +147,7 @@ class ApiJob(Job):
         except KeyError:
             raise ValueError('Must provide api object')
 
-        load_batch_size = kwargs.pop('load_batch_size', 5000)
+        load_batch_size = kwargs.pop('load_batch_size', 10000)
 
         super(ApiJob, self).__init__(**kwargs)
 
@@ -240,9 +240,23 @@ class FollowGraphJob(ApiJob):
     def api_method(self):
         return getattr(self.api, self.api_method_name)
 
+    def insert_one_by_one(self, model, rows):
+        nrows = 0
+
+        for row in rows:
+            try:
+                model.__table__.insert().values(**row)
+                nrows += 1
+            except sa.exc.IntegrityError:
+                msg = 'Ignoring duplicate follow-graph edge {0} from Twitter'
+                logger.debug(msg.format(row))
+
+        return nrows
+
+    # FIXME refactor and think through commit semantics
     def run(self):
         for target in self.targets:
-            # Note that here (unlike in TweetsJob), you can get gnarly primary
+            # NOTE that here (unlike in TweetsJob), you can get gnarly primary
             # key integrity errors on the user table if this isn't mode='raise':
             # merging in an md.User object for a given user and then running an
             # insert against the user table may try to insert the same row again
@@ -268,31 +282,32 @@ class FollowGraphJob(ApiJob):
             md.StgFollow.__table__.drop(self.session.get_bind())
             md.StgFollow.__table__.create(self.session.get_bind())
 
-            # FIXME twitter sometimes returns the same ID more than once.
-            # the sensible thing to do here to preserve speed is keep this bulk
-            # loading approach, but catch the duplicate key error and, when
-            # handling it, re-attempt inserts of the same rows one-by-one,
-            # discarding any that raise the duplicate key error. it's a rare
-            # problem to get duplicate keys from the API (eventual consistency?)
-            # so no need to worry too hard about optimizing it. if you can get
-            # the rows that caused the error out of the exception object and
-            # just ignore them, even better.
+            # NOTE Twitter sometimes returns the same ID more than once.
+            # This happens rarely (probably b/c of eventual consistency), so we
+            # don't need to worry too hard about performance in handling it.
+            # Thus: use bulk inserts, but catch the duplicate key error and,
+            # when handling it, re-attempt inserts of the same rows one by one,
+            # discarding any that raise the duplicate key error.
             for j, batch in enumerate(ids):
                 msg = 'Running {0} batch {1}, cumulative edges {2}'
                 msg = msg.format(type(self), j + 1, n_items)
                 logger.debug(msg)
 
-                self.session.bulk_insert_mappings(md.StgFollow,
-                [
-                    {
-                        self.api_data_column: t,
-                        self.target_user_column: user.user_id
-                    }
-
+                rows = [
+                    {self.api_data_column: t, self.target_user_column: user.user_id}
                     for t in batch
-                ])
+                ]
 
-                n_items += len(batch)
+                try:
+                    self.session.bulk_insert_mappings(md.StgFollow, rows)
+                except sa.exc.IntegrityError:
+                    n_items += self.insert_one_by_one(md.StgFollow, rows)
+                else:
+                    n_items += len(batch)
+
+                # this slows things down, but without it, we'd lose every
+                # row loaded before one of these duplicate key problems
+                self.session.commit()
 
             # First, load the users
             flt = self.session.query(md.User).filter(
