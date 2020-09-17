@@ -66,10 +66,10 @@ class Target(ABC):
         self._users.extend(users)
 
     def _tweepy_to_user(self, obj):
-        user = md.User.from_tweepy(obj)
+        user = md.User.from_tweepy(obj, self.context.session)
         self.context.session.merge(user)
 
-        data = md.UserData.from_tweepy(obj)
+        data = md.UserData.from_tweepy(obj, self.context.session)
         self.context.session.add(data)
 
         return user
@@ -95,7 +95,7 @@ class Target(ABC):
             return ret.user
         else:
             msg = 'Screen name {0} not found locally or does not exist; ' \
-                  'use hydrate?'
+                  'use `fetch users`?'
             raise err.BadTargetError(message=msg.format(screen_name))
 
 class UserIdTarget(Target):
@@ -184,10 +184,8 @@ class TwitterListTarget(Target):
             ## Fetch the list and its existing memberships
             lst = self.context.session.merge(md.List.from_tweepy(
                 # FIXME what happens if the list dne?
-                self.context.api.get_list(
-                    slug=slug,
-                    owner_id=owner.user_id
-                )
+                self.context.api.get_list(slug=slug, owner_id=owner.user_id),
+                self.context.session
             ))
 
             ## Fetch the list members from Twitter

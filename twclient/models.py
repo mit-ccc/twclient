@@ -1,8 +1,9 @@
-# FIXME tweet hashtag entity
-# FIXME tweet URL entity - replace handling of user urls with fk to this?
-# FIXME tweet symbol entity
+# FIXME need to index tables, esp for the FollowGraphJob load process
+
+# FIXME tweet URL entity
 # FIXME tweet media entity
 
+# FIXME replace handling of user urls with fk to url entity?
 # FIXME not everything needs to be a BIGINT?
 
 import json
@@ -13,7 +14,7 @@ from abc import ABC, abstractmethod
 import sqlalchemy as sa
 import sqlalchemy.sql.functions as func
 
-from sqlalchemy.schema import Table, Column, ForeignKey, UniqueConstraint
+from sqlalchemy.schema import Table, Column, Index, ForeignKey, UniqueConstraint
 from sqlalchemy.orm import relationship
 from sqlalchemy.types import INT, BIGINT, VARCHAR, TEXT, TIMESTAMP, BOOLEAN
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
@@ -21,6 +22,53 @@ from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from . import utils as ut
 
 logger = logging.getLogger(__name__)
+
+##
+## Base classes and infra
+##
+
+# This is from one of the standard sqlalchemy recipes:
+#     https://github.com/sqlalchemy/sqlalchemy/wiki/UniqueObject
+class UniqueMixin(object):
+    @staticmethod
+    def _unique(session, cls, hashfunc, queryfunc, constructor, args, kwargs):
+        cache = getattr(session, '_unique_cache', None)
+        if cache is None:
+            session._unique_cache = cache = {}
+
+        key = (cls, hashfunc(*args, **kwargs))
+        if key in cache:
+            return cache[key]
+        else:
+            with session.no_autoflush:
+                q = session.query(cls)
+                q = queryfunc(q, *args, **kwargs)
+                obj = q.first()
+                if not obj:
+                    obj = constructor(*args, **kwargs)
+                    session.add(obj)
+            cache[key] = obj
+            return obj
+
+    @classmethod
+    def unique_hash(cls, *args, **kwargs):
+        raise NotImplementedError()
+
+    @classmethod
+    def unique_filter(cls, query, *args, **kwargs):
+        raise NotImplementedError()
+
+    @classmethod
+    def as_unique(cls, session, *args, **kwargs):
+        return cls._unique(session, cls, cls.unique_hash, cls.unique_filter,
+                           cls, args, kwargs)
+
+# FIXME put these at the end in tables
+class TimestampsMixin(object):
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                       nullable=False)
+    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                         onupdate=func.now(), nullable=False)
 
 @as_declarative()
 class Base(object):
@@ -52,29 +100,18 @@ class Base(object):
 
         return self._repr(**fields)
 
-##
-## Store the creating package version in the DB to enable migrations
-##
-
-class SchemaVersion(Base):
+# Store the creating package version in the DB to enable migrations
+class SchemaVersion(TimestampsMixin, Base):
     version = Column(TEXT, primary_key=True, nullable=False)
 
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-
 ##
-## Primary objects
+## Users, user tags and Twitter lists
 ##
 
-class User(Base):
+class User(TimestampsMixin, Base):
     # this is the Twitter user id, not a surrogate key.
     # it simplifies the load process to use it as a pk.
     user_id = Column(BIGINT, primary_key=True, autoincrement=False)
-
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
 
     data = relationship('UserData', back_populates='user')
     lists_owned = relationship('List', back_populates='owning_user')
@@ -85,10 +122,10 @@ class User(Base):
     mentions = relationship('UserMention', back_populates='user')
 
     @classmethod
-    def from_tweepy(cls, obj):
+    def from_tweepy(cls, obj, session=None):
         return cls(user_id=obj.id)
 
-class UserData(Base):
+class UserData(TimestampsMixin, Base):
     user_data_id = Column(BIGINT, primary_key=True, autoincrement=True)
     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
                      nullable=False)
@@ -107,14 +144,10 @@ class UserData(Base):
     followers_count = Column(BIGINT, nullable=True)
     listed_count = Column(BIGINT, nullable=True)
 
-    # NOTE no modified_dt - we're not going to modify rows
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-
     user = relationship('User', back_populates='data')
 
     @classmethod
-    def from_tweepy(cls, obj):
+    def from_tweepy(cls, obj, session=None):
         # Twitter sometimes includes NUL bytes, which might be handled correctly
         # by sqlalchemy + backend or might not: handling them is risky. We'll
         # just drop them to be safe.
@@ -169,19 +202,14 @@ class UserData(Base):
 
         return cls(**args)
 
-class Tag(Base):
+class Tag(TimestampsMixin, Base):
     tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
     name = Column(TEXT, nullable=False, unique=True)
-
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
 
     users = relationship('User', secondary=lambda: UserTag.__table__,
                          back_populates='tags')
 
-class List(Base):
+class List(TimestampsMixin, Base):
     # as in Tweet and User, list_id is Twitter's id rather than a surrogate key
     list_id = Column(BIGINT, primary_key=True, autoincrement=False)
     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
@@ -199,11 +227,6 @@ class List(Base):
     member_count = Column(INT, nullable=True)
     subscriber_count = Column(INT, nullable=True)
 
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
-
     __table_args__ = (
         UniqueConstraint('user_id', 'slug', deferrable=True),
     )
@@ -212,7 +235,7 @@ class List(Base):
     list_memberships = relationship('UserList', back_populates='lst')
 
     @classmethod
-    def from_tweepy(cls, obj):
+    def from_tweepy(cls, obj, session=None):
         # remove NUL bytes as above
         api_response = json.dumps(obj._json)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '')
@@ -244,7 +267,53 @@ class List(Base):
 
         return cls(**args)
 
-class Tweet(Base):
+class UserList(Base):
+    user_list_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True))
+    list_id = Column(BIGINT, ForeignKey('list.list_id', deferrable=True))
+
+    valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                            nullable=False)
+    valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    lst = relationship('List', back_populates='list_memberships')
+    user = relationship('User', back_populates='list_memberships')
+
+class UserTag(TimestampsMixin, Base):
+    user_tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+                     primary_key=True)
+    tag_id = Column(BIGINT, ForeignKey('tag.tag_id', deferrable=True),
+                    primary_key=True)
+
+##
+## Follow graph
+##
+
+class Follow(Base):
+    follow_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    source_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+                            nullable=False)
+    target_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+                            nullable=False)
+
+    valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                            nullable=False)
+    valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
+
+# A temp-ish table for SCD operations on Follow
+class StgFollow(Base):
+    source_user_id = Column(BIGINT, primary_key=True, autoincrement=False)
+    target_user_id = Column(BIGINT, primary_key=True, autoincrement=False)
+
+##
+## Tweets and tweet entities
+##
+
+class Tweet(TimestampsMixin, Base):
     # as in User, this is the Twitter id rather than a surrogate key
     tweet_id = Column(BIGINT, primary_key=True, autoincrement=False)
     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
@@ -270,21 +339,20 @@ class Tweet(Base):
     retweet_count = Column(INT, nullable=True)
     favorite_count = Column(INT, nullable=True)
 
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
-
     user = relationship('User', foreign_keys=[user_id], back_populates='tweets')
-    mentions = relationship('UserMention', back_populates='tweet')
 
     retweet_of = relationship('Tweet', foreign_keys=[retweeted_status_id],
                               remote_side=[tweet_id])
     quote_of = relationship('Tweet', foreign_keys=[quoted_status_id],
                             remote_side=[tweet_id])
 
+    user_mentions = relationship('UserMention', back_populates='tweet')
+    hashtag_mentions = relationship('HashtagMention', back_populates='tweet')
+    url_mentions = relationship('UrlMention', back_populates='tweet')
+    symbol_mentions = relationship('SymbolMention', back_populates='tweet')
+
     @classmethod
-    def from_tweepy(cls, obj):
+    def from_tweepy(cls, obj, session=None):
         # remove NUL bytes as above
         api_response = json.dumps(obj._json)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '')
@@ -319,132 +387,78 @@ class Tweet(Base):
 
         ret = cls(**args)
 
-        ret.user = User.from_tweepy(obj.user)
+        ret.user = User.from_tweepy(obj.user, session)
 
         # NOTE We've decided not to use this data. There's too much
         # of it and it doesn't add enough value for the amount of space
         # it takes up (relative to just the explicit fetches via UserInfoJob).
-        # Implementing SCD on this table would also be too much work, and 
+        # Implementing SCD on this table would also be too much work, and
         # given that the followers/friends/listed counts change rapidly, would
         # still take up too much space.
-        # ret.user.data.append(UserData.from_tweepy(obj.user))
+        # ret.user.data.append(UserData.from_tweepy(obj.user, session))
 
         if hasattr(obj, 'quoted_status'):
-            ret.quote_of = Tweet.from_tweepy(obj.quoted_status)
+            ret.quote_of = Tweet.from_tweepy(obj.quoted_status, session)
 
         if hasattr(obj, 'retweeted_status'):
-            ret.retweet_of = Tweet.from_tweepy(obj.retweeted_status)
+            ret.retweet_of = Tweet.from_tweepy(obj.retweeted_status, session)
 
-        ret.mentions = UserMention.list_from_tweepy(obj)
+        ret.user_mentions = UserMention.list_from_tweepy(obj, session)
+        ret.hashtag_mentions = HashtagMention.list_from_tweepy(obj, session)
+        ret.symbol_mentions = SymbolMention.list_from_tweepy(obj, session)
+        # ret.url_mentions = UrlMention.list_from_tweepy(obj, session)
 
         return ret
 
-class Hashtag(Base):
+class Hashtag(TimestampsMixin, UniqueMixin, Base):
     hashtag_id = Column(BIGINT, primary_key=True, autoincrement=True)
 
-    name = Column(TEXT, nullable=False, unique=True)
+    name = Column(TEXT, nullable=False, index=True, unique=True)
 
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
+    mentions = relationship('HashtagMention', back_populates='hashtag',
+                            cascade_backrefs=False)
 
-class Url(Base):
+    @classmethod
+    def unique_hash(cls, name):
+        return name
+
+    @classmethod
+    def unique_filter(cls, query, name):
+        return query.filter(cls.name == name)
+
+class Symbol(TimestampsMixin, UniqueMixin, Base):
+    symbol_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    name = Column(TEXT, nullable=False, index=True, unique=True)
+
+    mentions = relationship('SymbolMention', back_populates='symbol',
+                            cascade_backrefs=False)
+
+    @classmethod
+    def unique_hash(cls, name):
+        return name
+
+    @classmethod
+    def unique_filter(cls, query, name):
+        return query.filter(cls.name == name)
+
+class Url(TimestampsMixin, UniqueMixin, Base):
     url_id = Column(BIGINT, primary_key=True, autoincrement=True)
 
-    url = Column(TEXT, nullable=False, unique=True)
+    url = Column(TEXT, nullable=False, index=True, unique=True)
 
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
-
-# FIXME need to index this table for the FollowGraphJob load process
-class Follow(Base):
-    follow_id = Column(BIGINT, primary_key=True, autoincrement=True)
-
-    source_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
-                            nullable=False)
-    target_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
-                            nullable=False)
-
-    valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                            nullable=False)
-    valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
-
-# A temp-ish table for SCD operations on Follow
-class StgFollow(Base):
-    source_user_id = Column(BIGINT, primary_key=True, autoincrement=False)
-    target_user_id = Column(BIGINT, primary_key=True, autoincrement=False)
-
-##
-## Link tables, whether or not considered as objects
-##
-
-class UserList(Base):
-    user_list_id = Column(BIGINT, primary_key=True, autoincrement=True)
-
-    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True))
-    list_id = Column(BIGINT, ForeignKey('list.list_id', deferrable=True))
-
-    valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                            nullable=False)
-    valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
-
-    lst = relationship('List', back_populates='list_memberships')
-    user = relationship('User', back_populates='list_memberships')
-
-class UserTag(Base):
-    user_tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
-
-    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
-                     primary_key=True)
-    tag_id = Column(BIGINT, ForeignKey('tag.tag_id', deferrable=True),
-                    primary_key=True)
-
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
-
-class HashtagMention(Base):
-    hashtag_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
-
-    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
-    hashtag_id = Column(BIGINT, ForeignKey('hashtag.hashtag_id', deferrable=True))
-
-    start_index = Column(INT, nullable=False)
-    end_index = Column(INT, nullable=False)
-
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
+    mentions = relationship('UrlMention', back_populates='url',
+                            cascade_backrefs=False)
 
     @classmethod
-    def list_from_tweepy(cls, obj):
-        pass
-
-class UrlMention(Base):
-    url_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
-
-    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
-    url_id = Column(BIGINT, ForeignKey('url.url_id', deferrable=True))
-
-    short_url = Column(TEXT, nullable=True)
-    start_index = Column(INT, nullable=False)
-    end_index = Column(INT, nullable=False)
-
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
+    def unique_hash(cls, url):
+        return url
 
     @classmethod
-    def list_from_tweepy(cls, obj):
-        pass
+    def unique_filter(cls, query, url):
+        return query.filter(cls.url == url)
 
-class UserMention(Base):
+class UserMention(TimestampsMixin, Base):
     user_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
 
     tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
@@ -453,16 +467,11 @@ class UserMention(Base):
     start_index = Column(INT, nullable=False)
     end_index = Column(INT, nullable=False)
 
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
-
-    tweet = relationship('Tweet', back_populates='mentions')
+    tweet = relationship('Tweet', back_populates='user_mentions')
     user = relationship('User', back_populates='mentions')
 
     @classmethod
-    def list_from_tweepy(cls, obj):
+    def list_from_tweepy(cls, obj, session=None):
         lst = []
 
         if hasattr(obj, 'entities'):
@@ -476,9 +485,90 @@ class UserMention(Base):
                     }
 
                     ret = cls(**kwargs)
-                    ret.user = User.from_tweepy(obj.user)
+                    ret.user = User.from_tweepy(obj.user, session)
 
                     lst += [ret]
 
         return lst
+
+class HashtagMention(TimestampsMixin, Base):
+    hashtag_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
+    hashtag_id = Column(BIGINT, ForeignKey('hashtag.hashtag_id', deferrable=True))
+
+    start_index = Column(INT, nullable=False)
+    end_index = Column(INT, nullable=False)
+
+    tweet = relationship('Tweet', back_populates='hashtag_mentions')
+    hashtag = relationship('Hashtag', back_populates='mentions')
+
+    @classmethod
+    def list_from_tweepy(cls, obj, session=None):
+        lst = []
+
+        if hasattr(obj, 'entities'):
+            if 'hashtags' in obj.entities.keys():
+                for mt in obj.entities['hashtags']:
+                    kwargs = {
+                        'tweet_id': obj.id,
+                        'start_index': mt['indices'][0],
+                        'end_index': mt['indices'][1]
+                    }
+
+                    ret = cls(**kwargs)
+                    ret.hashtag = Hashtag.as_unique(session, name=mt['text'])
+
+                    lst += [ret]
+
+        return lst
+
+class SymbolMention(TimestampsMixin, Base):
+    symbol_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
+    symbol_id = Column(BIGINT, ForeignKey('symbol.symbol_id', deferrable=True))
+
+    start_index = Column(INT, nullable=False)
+    end_index = Column(INT, nullable=False)
+
+    tweet = relationship('Tweet', back_populates='symbol_mentions')
+    symbol = relationship('Symbol', back_populates='mentions')
+
+    @classmethod
+    def list_from_tweepy(cls, obj, session=None):
+        lst = []
+
+        if hasattr(obj, 'entities'):
+            if 'symbols' in obj.entities.keys():
+                for mt in obj.entities['symbols']:
+                    kwargs = {
+                        'tweet_id': obj.id,
+                        'start_index': mt['indices'][0],
+                        'end_index': mt['indices'][1]
+                    }
+
+                    ret = cls(**kwargs)
+                    ret.symbol = Symbol.as_unique(session, name=mt['text'])
+
+                    lst += [ret]
+
+        return lst
+
+class UrlMention(TimestampsMixin, Base):
+    url_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
+    url_id = Column(BIGINT, ForeignKey('url.url_id', deferrable=True))
+
+    short_url = Column(TEXT, nullable=True)
+    start_index = Column(INT, nullable=False)
+    end_index = Column(INT, nullable=False)
+
+    tweet = relationship('Tweet', back_populates='url_mentions')
+    url = relationship('Url', back_populates='mentions')
+
+    @classmethod
+    def list_from_tweepy(cls, obj, session=None):
+        pass
 

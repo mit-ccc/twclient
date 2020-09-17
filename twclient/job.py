@@ -1,5 +1,6 @@
 import random
 import logging
+import warnings
 import itertools as it
 
 from abc import ABC, abstractmethod
@@ -217,9 +218,14 @@ class TweetsJob(ApiJob):
                 logger.debug(msg)
 
                 for resp in batch:
-                    tweet = md.Tweet.from_tweepy(resp)
+                    tweet = md.Tweet.from_tweepy(resp, self.session)
 
-                    self.session.merge(tweet)
+                    # The merge emits warnings about having disabled the
+                    # save-update cascade on Hashtag, Url, Symbol and Media,
+                    # which is intentional and not appropriate to show users.
+                    with warnings.catch_warnings():
+                        warnings.simplefilter('ignore', category=sa.exc.SAWarning)
+                        self.session.merge(tweet)
 
                 n_items += len(batch)
 
