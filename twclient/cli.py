@@ -1,9 +1,5 @@
 #!/usr/bin/env python3
 
-# FIXME update logging stuff, esp use __repr__ method on exceptions, when should
-# we print / call self.error() instead of use logger? or change format?
-# basically need consistent output format
-
 """
 The command-line interface script
 """
@@ -58,6 +54,8 @@ class Frontend(ABC):
         self.validate_config()
 
     def error(self, msg):
+        # NOTE using this for some errors and logger.____ for others isn't a bug
+        # or problem per se, but it does lead to inconsistent output formatting
         self.parser.error(msg)
 
     ##
@@ -161,7 +159,9 @@ class Frontend(ABC):
             return func()
         except err.TWClientError as e:
             # Don't catch other exceptions: if things we didn't raise reach the
-            # toplevel, it's a bug
+            # toplevel, it's a bug (or, okay, a network issue, Twitter API
+            # meltdown, whatever, but nothing to be gained in that case by
+            # hiding the whole scary traceback)
             if logging.getLogger().getEffectiveLevel() == logging.WARNING:
                 logger.error(e.message)
             else:
