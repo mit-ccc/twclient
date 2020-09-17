@@ -686,6 +686,8 @@ def log_setup(verbosity):
     fmt = '%(asctime)s : %(module)s : %(levelname)s : %(message)s'
     logging.basicConfig(format=fmt, level=lvl)
 
+    logging.captureWarnings(True)
+
 def cli():
     parser = make_parser()
     args = parser.parse_args()
