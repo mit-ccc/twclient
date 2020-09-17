@@ -1,5 +1,9 @@
 # FIXME tweet hashtag entity
-# FIXME tweet URL entity
+# FIXME tweet URL entity - replace handling of user urls with fk to this?
+# FIXME tweet symbol entity
+# FIXME tweet media entity
+
+# FIXME not everything needs to be a BIGINT?
 
 import json
 import logging
@@ -78,7 +82,7 @@ class User(Base):
     tags = relationship('Tag', secondary=lambda: UserTag.__table__,
                         back_populates='users')
     tweets = relationship('Tweet', back_populates='user')
-    mentions = relationship('Mention', back_populates='user')
+    mentions = relationship('UserMention', back_populates='user')
 
     @classmethod
     def from_tweepy(cls, obj):
@@ -272,7 +276,7 @@ class Tweet(Base):
                          onupdate=func.now(), nullable=False)
 
     user = relationship('User', foreign_keys=[user_id], back_populates='tweets')
-    mentions = relationship('Mention', back_populates='tweet')
+    mentions = relationship('UserMention', back_populates='tweet')
 
     retweet_of = relationship('Tweet', foreign_keys=[retweeted_status_id],
                               remote_side=[tweet_id])
@@ -331,9 +335,29 @@ class Tweet(Base):
         if hasattr(obj, 'retweeted_status'):
             ret.retweet_of = Tweet.from_tweepy(obj.retweeted_status)
 
-        ret.mentions = Mention.list_from_tweepy(obj)
+        ret.mentions = UserMention.list_from_tweepy(obj)
 
         return ret
+
+class Hashtag(Base):
+    hashtag_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    name = Column(TEXT, nullable=False, unique=True)
+
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                       nullable=False)
+    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                         onupdate=func.now(), nullable=False)
+
+class Url(Base):
+    url_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    url = Column(TEXT, nullable=False, unique=True)
+
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                       nullable=False)
+    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                         onupdate=func.now(), nullable=False)
 
 # FIXME need to index this table for the FollowGraphJob load process
 class Follow(Base):
@@ -371,6 +395,8 @@ class UserList(Base):
     user = relationship('User', back_populates='list_memberships')
 
 class UserTag(Base):
+    user_tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
                      primary_key=True)
     tag_id = Column(BIGINT, ForeignKey('tag.tag_id', deferrable=True),
@@ -381,8 +407,45 @@ class UserTag(Base):
     modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                          onupdate=func.now(), nullable=False)
 
-class Mention(Base):
-    mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
+class HashtagMention(Base):
+    hashtag_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
+    hashtag_id = Column(BIGINT, ForeignKey('hashtag.hashtag_id', deferrable=True))
+
+    start_index = Column(INT, nullable=False)
+    end_index = Column(INT, nullable=False)
+
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                       nullable=False)
+    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                         onupdate=func.now(), nullable=False)
+
+    @classmethod
+    def list_from_tweepy(cls, obj):
+        pass
+
+class UrlMention(Base):
+    url_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
+
+    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
+    url_id = Column(BIGINT, ForeignKey('url.url_id', deferrable=True))
+
+    short_url = Column(TEXT, nullable=True)
+    start_index = Column(INT, nullable=False)
+    end_index = Column(INT, nullable=False)
+
+    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                       nullable=False)
+    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                         onupdate=func.now(), nullable=False)
+
+    @classmethod
+    def list_from_tweepy(cls, obj):
+        pass
+
+class UserMention(Base):
+    user_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
 
     tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
     mentioned_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True))
