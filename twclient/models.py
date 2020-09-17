@@ -53,7 +53,7 @@ class Base(object):
 ##
 
 class SchemaVersion(Base):
-    version = Column(TEXT, primary_key=True, nullable=FALSE)
+    version = Column(TEXT, primary_key=True, nullable=False)
 
     insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                        nullable=False)

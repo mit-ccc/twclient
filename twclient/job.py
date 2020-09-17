@@ -36,6 +36,7 @@ class Job(ABC):
         self.sessionfactory.configure(bind=self.engine)
         self.session = self.sessionfactory()
 
+    def ensure_schema_version(self):
         schema_version = self.session.query(md.SchemaVersion).all()
 
         if len(schema_version) != 1:
@@ -46,12 +47,14 @@ class Job(ABC):
 
         if db_version > __version__:
             msg = 'Package version {0} cannot use future schema version {1}'
-            raise err.BadSchemaError(message=msg.format(__version__, db_version)
+            msg = msg.format(__version__, db_version)
+            raise err.BadSchemaError(message=msg)
 
         if db_version < __version__:
             msg= 'Package version {0} cannot migrate old schema version {1}; ' \
                  'consider downgrading the package version'
-            raise err.BadSchemaError(message=msg.format(__version__, db_version)
+            msg = msg.format(__version__, db_version)
+            raise err.BadSchemaError(message=msg)
 
     def get_or_create(self, model, **kwargs):
         instance = self.session.query(model).filter_by(**kwargs).one_or_none()
@@ -85,6 +88,8 @@ class TagJob(Job):
             raise ValueError('Must provide tag argument')
 
         super(TagJob, self).__init__(**kwargs)
+
+        self.ensure_schema_version()
 
         self.tag = tag
 
@@ -150,6 +155,8 @@ class ApiJob(Job):
         load_batch_size = kwargs.pop('load_batch_size', 10000)
 
         super(ApiJob, self).__init__(**kwargs)
+
+        self.ensure_schema_version()
 
         self.targets = targets
         self.api = api

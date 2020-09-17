@@ -55,6 +55,8 @@ class Frontend(ABC):
         self.config_file = os.path.abspath(os.path.expanduser(config_file))
         self.config = self.read_config()
 
+        self.validate_config()
+
     def error(self, msg):
         self.parser.error(msg)
 
@@ -65,8 +67,6 @@ class Frontend(ABC):
     def read_config(self):
         config = cp.ConfigParser(dict_type=cl.OrderedDict)
         config.read(self.config_file)
-
-        self.validate_config()
 
         return config
 
@@ -155,7 +155,7 @@ class Frontend(ABC):
     ##
 
     def do_cli(self, name):
-        func = self.subcommand_to_method[name]
+        func = getattr(self, self.subcommand_to_method[name])
 
         try:
             return func()
@@ -204,8 +204,8 @@ class DatabaseFrontend(Frontend):
 
 class TwitterFrontend(Frontend):
     def __init__(self, **kwargs):
-        apis = kwargs.get('apis', None)
-        abort_on_bad_targets = kwargs.get('abort_on_bad_targets', None)
+        apis = kwargs.pop('apis', None)
+        abort_on_bad_targets = kwargs.pop('abort_on_bad_targets', None)
 
         super(TwitterFrontend, self).__init__(**kwargs)
 
@@ -266,6 +266,10 @@ class TargetFrontend(Frontend):
     targets_required = True
 
 class InitializeCommand(DatabaseFrontend):
+    subcommand_to_method = {
+        'initialize': 'cli_initialize'
+    }
+
     def __init__(self, **kwargs):
         yes = kwargs.pop('yes', False)
 
@@ -273,7 +277,7 @@ class InitializeCommand(DatabaseFrontend):
         # make it work with the same machinery as the others
         kwargs['subcommand'] = 'initialize'
 
-        super(InitializeFrontend, self).__init__(**kwargs)
+        super(InitializeCommand, self).__init__(**kwargs)
 
         self.yes = yes
 
@@ -287,25 +291,28 @@ class InitializeCommand(DatabaseFrontend):
 
             job.InitializeJob(engine=self.engine).run()
 
+class FetchCommand(DatabaseFrontend, TargetFrontend, TwitterFrontend):
     subcommand_to_method = {
-        'initialize': cli_initialize
+        'hydrate': 'cli_hydrate',
+        'friends': 'cli_friends',
+        'followers': 'cli_followers',
+        'tweets': 'cli_tweets'
     }
 
-class FetchCommand(DatabaseFrontend, TargetFrontend, TwitterFrontend):
     def __init__(self, **kwargs):
-        load_batch_size = kwargs.get('load_batch_size', 10000)
+        load_batch_size = kwargs.pop('load_batch_size', 10000)
 
         # tweet-specific arguments
-        since_timestamp = kwargs.get('since_timestamp', None)
-        max_tweets = kwargs.get('max_tweets', None)
-        old_tweets = kwargs.get('old_tweets', None)
+        since_timestamp = kwargs.pop('since_timestamp', None)
+        max_tweets = kwargs.pop('max_tweets', None)
+        old_tweets = kwargs.pop('old_tweets', None)
 
-        if subcommand != 'tweets':
+        super(FetchCommand, self).__init__(**kwargs)
+
+        if self.subcommand != 'tweets':
             if since_timestamp or max_tweets or old_tweets:
                 raise ValueError('since_timestamp, max_tweets and old_tweets '
                                 'are only valid with subcommand = "tweets"')
-
-        super(FetchCommand, self).__init__(**kwargs)
 
         self.load_batch_size = load_batch_size
         self.since_timestamp = since_timestamp
@@ -340,14 +347,13 @@ class FetchCommand(DatabaseFrontend, TargetFrontend, TwitterFrontend):
     def cli_tweets(self):
         job.TweetsJob(**self.job_args).run()
 
+class TagCommand(DatabaseFrontend, TargetFrontend):
     subcommand_to_method = {
-        'hydrate': cli_hydrate,
-        'friends': cli_friends,
-        'followers': cli_followers,
-        'tweets': cli_tweets
+        'create': 'cli_create',
+        'delete': 'cli_delete',
+        'apply': 'cli_apply'
     }
 
-class TagCommand(DatabaseFrontend, TargetFrontend):
     def __init__(self, **kwargs):
         try:
             name = kwargs.pop('name')
@@ -372,13 +378,17 @@ class TagCommand(DatabaseFrontend, TargetFrontend):
         job.ApplyTagJob(tag=self.name, targets=self.targets,
                         engine=self.engine).run()
 
+class ConfigCommand(Frontend):
     subcommand_to_method = {
-        'create': cli_create,
-        'delete': cli_delete,
-        'apply': cli_apply
+        'list-db': 'cli_list_db',
+        'list-api': 'cli_list_api',
+        'rm-db': 'cli_rm_db',
+        'rm-api': 'cli_rm_api',
+        'set-db-default': 'cli_set_db_default',
+        'add-db': 'cli_add_db',
+        'add-api': 'cli_add_api'
     }
 
-class ConfigCommand(Frontend):
     def __init__(self, **kwargs):
         full = kwargs.pop('full', None)
         name = kwargs.pop('name', None)
@@ -405,7 +415,7 @@ class ConfigCommand(Frontend):
         if subcommand == 'add-db':
             try:
                 assert (fle is None) ^ (database_url is None)
-            except AssertionError
+            except AssertionError:
                 msg = 'Must provide exactly one of file and database_url'
                 raise ValueError(msg)
 
@@ -516,16 +526,6 @@ class ConfigCommand(Frontend):
                 self.config[self.name]['token_secret'] = self.token_secret
 
         self.write_config()
-
-    subcommand_to_method = {
-        'list-db': cli_list_db,
-        'list-api': cli_list_api,
-        'rm-db': cli_rm_db,
-        'rm-api': cli_rm_api,
-        'set-db-default': cli_set_db_default
-        'add-db': cli_add_db,
-        'add-api': cli_add_api
-    }
 
 def make_parser():
     desc = 'Fetch Twitter data and store in a DB schema'
@@ -690,16 +690,16 @@ def cli():
     parser = make_parser()
     args = parser.parse_args()
 
-    cmd = args.pop('command')
-    verbosity = args.pop('verbose')
+    cmd = vars(args).pop('command')
+    verbosity = vars(args).pop('verbose')
 
     log_setup(verbosity)
 
     cls = {
-        'config': ConfigFrontend,
-        'tag': TagFrontend,
-        'initialize': InitializeFrontend,
-        'fetch': FetchFrontend
+        'config': ConfigCommand,
+        'tag': TagCommand,
+        'initialize': InitializeCommand,
+        'fetch': FetchCommand
     }[cmd]
 
     cls(parser=parser, **vars(args)).run()
