@@ -293,7 +293,7 @@ class InitializeCommand(DatabaseFrontend):
 
 class FetchCommand(DatabaseFrontend, TargetFrontend, TwitterFrontend):
     subcommand_to_method = {
-        'hydrate': 'cli_hydrate',
+        'users': 'cli_users',
         'friends': 'cli_friends',
         'followers': 'cli_followers',
         'tweets': 'cli_tweets'
@@ -335,7 +335,7 @@ class FetchCommand(DatabaseFrontend, TargetFrontend, TwitterFrontend):
 
         return args
 
-    def cli_hydrate(self):
+    def cli_users(self):
         job.UserInfoJob(**self.job_args).run()
 
     def cli_friends(self):
@@ -626,7 +626,7 @@ def make_parser():
     fetch_subparser = sp.add_parser('fetch', help='Fetch Twitter data')
     fetch = fetch_subparser.add_subparsers(dest='subcommand')
 
-    uip = fetch.add_parser('hydrate', help='Get user info / "hydrate" users')
+    uip = fetch.add_parser('users', help='Get user info / "hydrate" users')
     uip = add_target_arguments(uip)
     uip.add_argument('-d', '--database',
                     help='use this stored DB profile instead of default')
