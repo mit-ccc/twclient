@@ -177,7 +177,16 @@ class TwitterApi(object):
         try:
             ret = next(self.make_api_call(**twargs))
         except StopIteration:
-            ret = None
+            idparms = ', '.join([
+                k + ': ' + str(v)
+                for k, v in twargs.items()
+                if v is not None and k in ['list_id', 'owner_id',
+                                           'owner_screen_name', 'slug']
+
+            ])
+
+            msg = 'List identified by {0} not found'.format(idparms)
+            raise err.NotFoundError(message=msg)
 
         return ret
 
