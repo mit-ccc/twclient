@@ -6,6 +6,7 @@
 # FIXME tweet media entity
 
 import json
+import hashlib
 import logging
 
 from abc import ABC, abstractmethod
@@ -32,37 +33,50 @@ logger = logging.getLogger(__name__)
 #     https://github.com/sqlalchemy/sqlalchemy/wiki/UniqueObject
 class UniqueMixin(object):
     @staticmethod
-    def _unique(session, cls, hashfunc, queryfunc, constructor, args, kwargs):
+    def _unique(session, cls, hashfunc, queryfunc, constructor, kwargs):
         cache = getattr(session, '_unique_cache', None)
         if cache is None:
             session._unique_cache = cache = {}
 
-        key = (cls, hashfunc(*args, **kwargs))
+        key = (cls, hashfunc(**kwargs))
         if key in cache:
             return cache[key]
         else:
             with session.no_autoflush:
                 q = session.query(cls)
-                q = queryfunc(q, *args, **kwargs)
+                q = queryfunc(q, **kwargs)
                 obj = q.first()
                 if not obj:
-                    obj = constructor(*args, **kwargs)
+                    obj = constructor(**kwargs)
                     session.add(obj)
             cache[key] = obj
             return obj
 
     @classmethod
-    def unique_hash(cls, *args, **kwargs):
-        raise NotImplementedError()
+    def unique_hash(cls, **kwargs):
+        keys = sorted(kwargs.keys())
+        s = ', '.join([str(k) + ': ' + str(kwargs[k]) for k in keys])
+        s = s.encode('utf-8')
+
+        return hashlib.sha1(s).hexdigest()
 
     @classmethod
-    def unique_filter(cls, query, *args, **kwargs):
-        raise NotImplementedError()
+    def unique_filter(cls, query, url):
+        return query.filter(cls.url == url)
 
     @classmethod
-    def as_unique(cls, session, *args, **kwargs):
+    def unique_filter(cls, query, **kwargs):
+        flts = [
+            getattr(cls, key) == kwargs[key]
+            for key in kwargs.keys()
+        ]
+
+        return query.filter(*flts)
+
+    @classmethod
+    def as_unique(cls, session, **kwargs):
         return cls._unique(session, cls, cls.unique_hash, cls.unique_filter,
-                           cls, args, kwargs)
+                           cls, kwargs)
 
 # The @declared_attr is a bit of a hack - it puts the columns at the end in
 # tables, which declaring them as class attributes doesn't
@@ -438,14 +452,6 @@ class Hashtag(TimestampsMixin, UniqueMixin, Base):
     mentions = relationship('HashtagMention', back_populates='hashtag',
                             cascade_backrefs=False)
 
-    @classmethod
-    def unique_hash(cls, name):
-        return name
-
-    @classmethod
-    def unique_filter(cls, query, name):
-        return query.filter(cls.name == name)
-
 class Symbol(TimestampsMixin, UniqueMixin, Base):
     symbol_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
@@ -453,14 +459,6 @@ class Symbol(TimestampsMixin, UniqueMixin, Base):
 
     mentions = relationship('SymbolMention', back_populates='symbol',
                             cascade_backrefs=False)
-
-    @classmethod
-    def unique_hash(cls, name):
-        return name
-
-    @classmethod
-    def unique_filter(cls, query, name):
-        return query.filter(cls.name == name)
 
 class Url(TimestampsMixin, UniqueMixin, Base):
     url_id = Column(BigInteger, primary_key=True, autoincrement=True)
@@ -472,27 +470,21 @@ class Url(TimestampsMixin, UniqueMixin, Base):
     user_data = relationship('UserData', back_populates='url',
                              cascade_backrefs=False)
 
-    @classmethod
-    def unique_hash(cls, url):
-        return url
-
-    @classmethod
-    def unique_filter(cls, query, url):
-        return query.filter(cls.url == url)
-
 class UserMention(TimestampsMixin, Base):
     user_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
-                      nullable=False)
+                      nullable=True)
     mentioned_user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
                                nullable=False)
 
     start_index = Column(Integer, nullable=False)
     end_index = Column(Integer, nullable=False)
 
-    tweet = relationship('Tweet', back_populates='user_mentions')
     user = relationship('User', back_populates='mentions')
+    tweet = relationship('Tweet', back_populates='user_mentions')
+
+    __table_args__ = (UniqueConstraint('tweet_id', 'start_index', 'end_index'),)
 
     @classmethod
     def list_from_tweepy(cls, obj, session=None):
@@ -515,7 +507,7 @@ class UserMention(TimestampsMixin, Base):
 
         return lst
 
-class HashtagMention(TimestampsMixin, Base):
+class HashtagMention(TimestampsMixin, UniqueMixin, Base):
     hashtag_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
@@ -526,8 +518,11 @@ class HashtagMention(TimestampsMixin, Base):
     start_index = Column(Integer, nullable=False)
     end_index = Column(Integer, nullable=False)
 
-    tweet = relationship('Tweet', back_populates='hashtag_mentions')
     hashtag = relationship('Hashtag', back_populates='mentions')
+    tweet = relationship('Tweet', back_populates='hashtag_mentions',
+                         cascade_backrefs=False)
+
+    __table_args__ = (UniqueConstraint('tweet_id', 'start_index', 'end_index'),)
 
     @classmethod
     def list_from_tweepy(cls, obj, session=None):
@@ -542,26 +537,35 @@ class HashtagMention(TimestampsMixin, Base):
                         'end_index': mt['indices'][1]
                     }
 
-                    ret = cls(**kwargs)
+                    if session is not None:
+                        ret = cls.as_unique(session, **kwargs)
+                    else:
+                        kwargs['tweet_id'] = obj.id
+                        ret = cls(**kwargs)
+
                     ret.hashtag = Hashtag.as_unique(session, name=mt['text'])
 
                     lst += [ret]
 
+        print([repr(o) for o in lst])
         return lst
 
 class SymbolMention(TimestampsMixin, Base):
     symbol_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
-                      nullable=False)
+                      nullable=True)
     symbol_id = Column(BigInteger, ForeignKey('symbol.symbol_id', deferrable=True),
                        nullable=False)
 
     start_index = Column(Integer, nullable=False)
     end_index = Column(Integer, nullable=False)
 
-    tweet = relationship('Tweet', back_populates='symbol_mentions')
     symbol = relationship('Symbol', back_populates='mentions')
+    tweet = relationship('Tweet', back_populates='symbol_mentions')
+#                         cascade_backrefs=False)
+
+    __table_args__ = (UniqueConstraint('tweet_id', 'start_index', 'end_index'),)
 
     @classmethod
     def list_from_tweepy(cls, obj, session=None):
@@ -571,12 +575,17 @@ class SymbolMention(TimestampsMixin, Base):
             if 'symbols' in obj.entities.keys():
                 for mt in obj.entities['symbols']:
                     kwargs = {
-                        'tweet_id': obj.id,
                         'start_index': mt['indices'][0],
                         'end_index': mt['indices'][1]
                     }
 
                     ret = cls(**kwargs)
+                    # if session is not None:
+                    #     ret = cls.as_unique(session, **kwargs)
+                    # else:
+                    #     kwargs['tweet_id'] = obj.id
+                    #     ret = cls(**kwargs)
+
                     ret.symbol = Symbol.as_unique(session, name=mt['text'])
 
                     lst += [ret]
@@ -587,7 +596,7 @@ class UrlMention(TimestampsMixin, Base):
     url_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
-                      nullable=False)
+                      nullable=True)
     url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True),
                     nullable=False)
 
@@ -606,8 +615,11 @@ class UrlMention(TimestampsMixin, Base):
     title = Column(UnicodeText, nullable=True)
     description = Column(UnicodeText, nullable=True)
 
-    tweet = relationship('Tweet', back_populates='url_mentions')
     url = relationship('Url', back_populates='mentions')
+    tweet = relationship('Tweet', back_populates='url_mentions')
+#                         cascade_backrefs=False)
+
+    __table_args__ = (UniqueConstraint('tweet_id', 'start_index', 'end_index'),)
 
     @classmethod
     def list_from_tweepy(cls, obj, session=None):
@@ -618,7 +630,6 @@ class UrlMention(TimestampsMixin, Base):
                 for mt in obj.entities['urls']:
                     kwargs = {
                         'tweet_id': obj.id,
-
                         'twitter_short_url': mt['url'],
                         'start_index': mt['indices'][0],
                         'end_index': mt['indices'][1]
@@ -636,6 +647,12 @@ class UrlMention(TimestampsMixin, Base):
                         url = mt['expanded_url']
 
                     ret = cls(**kwargs)
+                    # if session is not None:
+                    #     ret = cls.as_unique(session, **kwargs)
+                    # else:
+                    #     kwargs['tweet_id'] = obj.id
+                    #     ret = cls(**kwargs)
+
                     ret.url = Url.as_unique(session, url=url)
 
                     lst += [ret]
