@@ -13,10 +13,12 @@ from abc import ABC, abstractmethod
 import sqlalchemy as sa
 import sqlalchemy.sql.functions as func
 
-from sqlalchemy.schema import Table, Column, Index, ForeignKey, UniqueConstraint
+from sqlalchemy.types import Boolean, Integer, BigInteger, String, UnicodeText
+from sqlalchemy.types import TIMESTAMP # recommended over DateTime for timezones
+
 from sqlalchemy.orm import relationship
-from sqlalchemy.types import INT, BIGINT, VARCHAR, TEXT, TIMESTAMP, BOOLEAN
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
+from sqlalchemy.schema import Table, Column, Index, ForeignKey, UniqueConstraint
 
 from . import utils as ut
 
@@ -107,7 +109,7 @@ class Base(object):
 
 # Store the creating package version in the DB to enable migrations
 class SchemaVersion(TimestampsMixin, Base):
-    version = Column(TEXT, primary_key=True, nullable=False)
+    version = Column(String(64), primary_key=True, nullable=False)
 
 ##
 ## Users, user tags and Twitter lists
@@ -116,7 +118,7 @@ class SchemaVersion(TimestampsMixin, Base):
 class User(TimestampsMixin, Base):
     # this is the Twitter user id, not a surrogate key.
     # it simplifies the load process to use it as a pk.
-    user_id = Column(BIGINT, primary_key=True, autoincrement=False)
+    user_id = Column(BigInteger, primary_key=True, autoincrement=False)
 
     data = relationship('UserData', back_populates='user')
     lists_owned = relationship('List', back_populates='owning_user')
@@ -131,23 +133,23 @@ class User(TimestampsMixin, Base):
         return cls(user_id=obj.id)
 
 class UserData(TimestampsMixin, Base):
-    user_data_id = Column(BIGINT, primary_key=True, autoincrement=True)
-    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+    user_data_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
                      nullable=False)
 
-    api_response = Column(TEXT, nullable=False)
+    api_response = Column(UnicodeText, nullable=False)
 
-    screen_name = Column(VARCHAR(256), nullable=True)
-    account_create_dt = Column(TIMESTAMP(timezone=True), nullable=True)
-    protected = Column(BOOLEAN, nullable=True)
-    verified = Column(BOOLEAN, nullable=True)
-    display_name = Column(TEXT, nullable=True)
-    description = Column(TEXT, nullable=True)
-    location = Column(TEXT, nullable=True)
-    url = Column(TEXT, nullable=True)
-    friends_count = Column(BIGINT, nullable=True)
-    followers_count = Column(BIGINT, nullable=True)
-    listed_count = Column(INT, nullable=True)
+    screen_name = Column(String(256), nullable=True)
+    create_dt = Column(TIMESTAMP(timezone=True), nullable=True)
+    protected = Column(Boolean, nullable=True)
+    verified = Column(Boolean, nullable=True)
+    display_name = Column(UnicodeText, nullable=True)
+    description = Column(UnicodeText, nullable=True)
+    location = Column(UnicodeText, nullable=True)
+    url = Column(UnicodeText, nullable=True)
+    friends_count = Column(BigInteger, nullable=True)
+    followers_count = Column(BigInteger, nullable=True)
+    listed_count = Column(Integer, nullable=True)
 
     user = relationship('User', back_populates='data')
 
@@ -162,7 +164,7 @@ class UserData(TimestampsMixin, Base):
         args = {
             'user_id': obj.id,
             'screen_name': obj.screen_name,
-            'account_create_dt': obj.created_at,
+            'create_dt': obj.created_at,
             'api_response': api_response
         }
 
@@ -208,29 +210,29 @@ class UserData(TimestampsMixin, Base):
         return cls(**args)
 
 class Tag(TimestampsMixin, Base):
-    tag_id = Column(INT, primary_key=True, autoincrement=True)
-    name = Column(TEXT, nullable=False, unique=True)
+    tag_id = Column(Integer, primary_key=True, autoincrement=True)
+    name = Column(UnicodeText, nullable=False, unique=True)
 
     users = relationship('User', secondary=lambda: UserTag.__table__,
                          back_populates='tags')
 
 class List(TimestampsMixin, Base):
     # as in Tweet and User, list_id is Twitter's id rather than a surrogate key
-    list_id = Column(BIGINT, primary_key=True, autoincrement=False)
-    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+    list_id = Column(BigInteger, primary_key=True, autoincrement=False)
+    user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
                      nullable=False)
 
-    slug = Column(TEXT, nullable=False)
-    api_response = Column(TEXT, nullable=False)
+    slug = Column(UnicodeText, nullable=False)
+    api_response = Column(UnicodeText, nullable=False)
 
-    list_create_dt = Column(TIMESTAMP(timezone=True), nullable=True)
-    full_name = Column(TEXT, nullable=True)
-    display_name = Column(TEXT, nullable=True)
-    uri = Column(TEXT, nullable=True)
-    description = Column(TEXT, nullable=True)
-    mode = Column(TEXT, nullable=True)
-    member_count = Column(INT, nullable=True)
-    subscriber_count = Column(INT, nullable=True)
+    create_dt = Column(TIMESTAMP(timezone=True), nullable=True)
+    full_name = Column(UnicodeText, nullable=True)
+    display_name = Column(UnicodeText, nullable=True)
+    uri = Column(UnicodeText, nullable=True)
+    description = Column(UnicodeText, nullable=True)
+    mode = Column(UnicodeText, nullable=True)
+    member_count = Column(Integer, nullable=True)
+    subscriber_count = Column(Integer, nullable=True)
 
     __table_args__ = (
         UniqueConstraint('user_id', 'slug', deferrable=True),
@@ -253,7 +255,7 @@ class List(TimestampsMixin, Base):
         }
 
         extra_fields = {
-            'list_create_dt': 'created_at',
+            'create_dt': 'created_at',
             'display_name': 'name',
             'uri': 'uri',
             'description': 'description',
@@ -273,10 +275,10 @@ class List(TimestampsMixin, Base):
         return cls(**args)
 
 class UserList(Base):
-    user_list_id = Column(BIGINT, primary_key=True, autoincrement=True)
+    user_list_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True))
-    list_id = Column(BIGINT, ForeignKey('list.list_id', deferrable=True))
+    user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True))
+    list_id = Column(BigInteger, ForeignKey('list.list_id', deferrable=True))
 
     valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                             nullable=False)
@@ -286,11 +288,11 @@ class UserList(Base):
     user = relationship('User', back_populates='list_memberships')
 
 class UserTag(TimestampsMixin, Base):
-    user_tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
+    user_tag_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+    user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
                      primary_key=True)
-    tag_id = Column(INT, ForeignKey('tag.tag_id', deferrable=True),
+    tag_id = Column(Integer, ForeignKey('tag.tag_id', deferrable=True),
                     primary_key=True)
 
 ##
@@ -298,11 +300,11 @@ class UserTag(TimestampsMixin, Base):
 ##
 
 class Follow(Base):
-    follow_id = Column(BIGINT, primary_key=True, autoincrement=True)
+    follow_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    source_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+    source_user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
                             nullable=False)
-    target_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+    target_user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
                             nullable=False)
 
     valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
@@ -311,8 +313,8 @@ class Follow(Base):
 
 # A temp-ish table for SCD operations on Follow
 class StgFollow(Base):
-    source_user_id = Column(BIGINT, primary_key=True, autoincrement=False)
-    target_user_id = Column(BIGINT, primary_key=True, autoincrement=False)
+    source_user_id = Column(BigInteger, primary_key=True, autoincrement=False)
+    target_user_id = Column(BigInteger, primary_key=True, autoincrement=False)
 
 ##
 ## Tweets and tweet entities
@@ -320,29 +322,29 @@ class StgFollow(Base):
 
 class Tweet(TimestampsMixin, Base):
     # as in User, this is the Twitter id rather than a surrogate key
-    tweet_id = Column(BIGINT, primary_key=True, autoincrement=False)
-    user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
+    tweet_id = Column(BigInteger, primary_key=True, autoincrement=False)
+    user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
                      nullable=False)
 
-    retweeted_status_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
+    retweeted_status_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
                                  nullable=True)
-    quoted_status_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True),
+    quoted_status_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
                               nullable=True)
 
-    api_response = Column(TEXT, nullable=False)
-    content = Column(TEXT, nullable=False)
-    tweet_create_dt = Column(TIMESTAMP(timezone=True), nullable=False)
+    api_response = Column(UnicodeText, nullable=False)
+    content = Column(UnicodeText, nullable=False)
+    create_dt = Column(TIMESTAMP(timezone=True), nullable=False)
 
     # we don't get this back on the Twitter API response, can't assume the
     # corresponding tweet row is present in this table
-    in_reply_to_status_id = Column(BIGINT, nullable=True)
-    in_reply_to_user_id = Column(BIGINT, nullable=True)
+    in_reply_to_status_id = Column(BigInteger, nullable=True)
+    in_reply_to_user_id = Column(BigInteger, nullable=True)
 
-    lang = Column(VARCHAR(8), nullable=True)
-    source = Column(TEXT, nullable=True)
-    truncated = Column(BOOLEAN, nullable=True)
-    retweet_count = Column(INT, nullable=True)
-    favorite_count = Column(INT, nullable=True)
+    lang = Column(String(8), nullable=True)
+    source = Column(UnicodeText, nullable=True)
+    truncated = Column(Boolean, nullable=True)
+    retweet_count = Column(Integer, nullable=True)
+    favorite_count = Column(Integer, nullable=True)
 
     user = relationship('User', foreign_keys=[user_id], back_populates='tweets')
 
@@ -365,7 +367,7 @@ class Tweet(TimestampsMixin, Base):
         args = {
             'tweet_id': obj.id,
             'user_id': obj.user.id,
-            'tweet_create_dt': obj.created_at,
+            'create_dt': obj.created_at,
             'api_response': api_response
         }
 
@@ -416,9 +418,9 @@ class Tweet(TimestampsMixin, Base):
         return ret
 
 class Hashtag(TimestampsMixin, UniqueMixin, Base):
-    hashtag_id = Column(BIGINT, primary_key=True, autoincrement=True)
+    hashtag_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    name = Column(TEXT, nullable=False, index=True, unique=True)
+    name = Column(UnicodeText, nullable=False, index=True, unique=True)
 
     mentions = relationship('HashtagMention', back_populates='hashtag',
                             cascade_backrefs=False)
@@ -432,9 +434,9 @@ class Hashtag(TimestampsMixin, UniqueMixin, Base):
         return query.filter(cls.name == name)
 
 class Symbol(TimestampsMixin, UniqueMixin, Base):
-    symbol_id = Column(BIGINT, primary_key=True, autoincrement=True)
+    symbol_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    name = Column(TEXT, nullable=False, index=True, unique=True)
+    name = Column(UnicodeText, nullable=False, index=True, unique=True)
 
     mentions = relationship('SymbolMention', back_populates='symbol',
                             cascade_backrefs=False)
@@ -448,9 +450,9 @@ class Symbol(TimestampsMixin, UniqueMixin, Base):
         return query.filter(cls.name == name)
 
 class Url(TimestampsMixin, UniqueMixin, Base):
-    url_id = Column(BIGINT, primary_key=True, autoincrement=True)
+    url_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    url = Column(TEXT, nullable=False, index=True, unique=True)
+    url = Column(UnicodeText, nullable=False, index=True, unique=True)
 
     mentions = relationship('UrlMention', back_populates='url',
                             cascade_backrefs=False)
@@ -464,13 +466,13 @@ class Url(TimestampsMixin, UniqueMixin, Base):
         return query.filter(cls.url == url)
 
 class UserMention(TimestampsMixin, Base):
-    user_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
+    user_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
-    mentioned_user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True))
+    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True))
+    mentioned_user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True))
 
-    start_index = Column(INT, nullable=False)
-    end_index = Column(INT, nullable=False)
+    start_index = Column(Integer, nullable=False)
+    end_index = Column(Integer, nullable=False)
 
     tweet = relationship('Tweet', back_populates='user_mentions')
     user = relationship('User', back_populates='mentions')
@@ -497,13 +499,13 @@ class UserMention(TimestampsMixin, Base):
         return lst
 
 class HashtagMention(TimestampsMixin, Base):
-    hashtag_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
+    hashtag_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
-    hashtag_id = Column(BIGINT, ForeignKey('hashtag.hashtag_id', deferrable=True))
+    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True))
+    hashtag_id = Column(BigInteger, ForeignKey('hashtag.hashtag_id', deferrable=True))
 
-    start_index = Column(INT, nullable=False)
-    end_index = Column(INT, nullable=False)
+    start_index = Column(Integer, nullable=False)
+    end_index = Column(Integer, nullable=False)
 
     tweet = relationship('Tweet', back_populates='hashtag_mentions')
     hashtag = relationship('Hashtag', back_populates='mentions')
@@ -529,13 +531,13 @@ class HashtagMention(TimestampsMixin, Base):
         return lst
 
 class SymbolMention(TimestampsMixin, Base):
-    symbol_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
+    symbol_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
-    symbol_id = Column(BIGINT, ForeignKey('symbol.symbol_id', deferrable=True))
+    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True))
+    symbol_id = Column(BigInteger, ForeignKey('symbol.symbol_id', deferrable=True))
 
-    start_index = Column(INT, nullable=False)
-    end_index = Column(INT, nullable=False)
+    start_index = Column(Integer, nullable=False)
+    end_index = Column(Integer, nullable=False)
 
     tweet = relationship('Tweet', back_populates='symbol_mentions')
     symbol = relationship('Symbol', back_populates='mentions')
@@ -561,14 +563,14 @@ class SymbolMention(TimestampsMixin, Base):
         return lst
 
 class UrlMention(TimestampsMixin, Base):
-    url_mention_id = Column(BIGINT, primary_key=True, autoincrement=True)
+    url_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    tweet_id = Column(BIGINT, ForeignKey('tweet.tweet_id', deferrable=True))
-    url_id = Column(BIGINT, ForeignKey('url.url_id', deferrable=True))
+    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True))
+    url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True))
 
-    short_url = Column(TEXT, nullable=True)
-    start_index = Column(INT, nullable=False)
-    end_index = Column(INT, nullable=False)
+    short_url = Column(UnicodeText, nullable=True)
+    start_index = Column(Integer, nullable=False)
+    end_index = Column(Integer, nullable=False)
 
     tweet = relationship('Tweet', back_populates='url_mentions')
     url = relationship('Url', back_populates='mentions')
