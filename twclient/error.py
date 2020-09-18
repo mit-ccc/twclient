@@ -60,8 +60,8 @@ class TwitterAPIError(TWClientError):
 
     @property
     def http_code(self):
-        if e.response is not None:
-            return e.response.status_code
+        if self.response is not None:
+            return self.response.status_code
         else:
             return None
 
