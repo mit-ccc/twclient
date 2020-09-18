@@ -1,5 +1,8 @@
-# FIXME replace handling of user urls with fk to url entity?
-# FIXME need to index tables, esp for the FollowGraphJob load process
+# FIXME weird update bug in UrlMention
+# FIXME need to index tables:
+#     o) for the FollowGraphJob load process
+#     o) index FKs
+
 # FIXME tweet media entity
 
 import json
@@ -133,6 +136,8 @@ class UserData(TimestampsMixin, Base):
     user_data_id = Column(BigInteger, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
                      nullable=False)
+    url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True),
+                    nullable=True)
 
     api_response = Column(UnicodeText, nullable=False)
 
@@ -143,12 +148,12 @@ class UserData(TimestampsMixin, Base):
     display_name = Column(UnicodeText, nullable=True)
     description = Column(UnicodeText, nullable=True)
     location = Column(UnicodeText, nullable=True)
-    url = Column(UnicodeText, nullable=True)
     friends_count = Column(BigInteger, nullable=True)
     followers_count = Column(BigInteger, nullable=True)
     listed_count = Column(Integer, nullable=True)
 
     user = relationship('User', back_populates='data')
+    url = relationship('Url', back_populates='user_data')
 
     @classmethod
     def from_tweepy(cls, obj, session=None):
@@ -180,31 +185,38 @@ class UserData(TimestampsMixin, Base):
             if hasattr(obj, s):
                 args[t] = getattr(obj, s)
 
-        ## Fallback logic for the url field
+        ret = cls(**args)
+
+        ## Populate the url field
+        url = None
+
         try:
-            args['url'] = obj.entities['url']['urls'][0]['expanded_url']
+            url = obj.entities['url']['urls'][0]['expanded_url']
         except Exception:
             pass
 
         try:
-            if 'url' not in args.keys():
-                args['url'] = obj.entities['url']['urls'][0]['display_url']
+            if url is None:
+                url = obj.entities['url']['urls'][0]['display_url']
         except Exception:
             pass
 
         try:
-            if 'url' not in args.keys():
-                args['url'] = obj.entities['url']['urls'][0]['url']
+            if url is None:
+                url = obj.entities['url']['urls'][0]['url']
         except Exception:
             pass
 
         try:
-            if 'url' not in args.keys():
-                args['url'] = obj.url
+            if url is None:
+                url = obj.url
         except Exception:
             pass
 
-        return cls(**args)
+        if url is not None:
+            ret.url = Url.as_unique(session, url=url)
+
+        return ret
 
 class Tag(TimestampsMixin, Base):
     tag_id = Column(Integer, primary_key=True, autoincrement=True)
@@ -274,8 +286,10 @@ class List(TimestampsMixin, Base):
 class UserList(Base):
     user_list_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True))
-    list_id = Column(BigInteger, ForeignKey('list.list_id', deferrable=True))
+    user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
+                     nullable=False)
+    list_id = Column(BigInteger, ForeignKey('list.list_id', deferrable=True),
+                     nullable=False)
 
     valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                             nullable=False)
@@ -288,9 +302,11 @@ class UserTag(TimestampsMixin, Base):
     user_tag_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
-                     primary_key=True)
+                     nullable=False)
     tag_id = Column(Integer, ForeignKey('tag.tag_id', deferrable=True),
-                    primary_key=True)
+                    nullable=False)
+
+    __table_args__ = (UniqueConstraint('user_id', 'tag_id'),)
 
 ##
 ## Follow graph
@@ -453,6 +469,8 @@ class Url(TimestampsMixin, UniqueMixin, Base):
 
     mentions = relationship('UrlMention', back_populates='url',
                             cascade_backrefs=False)
+    user_data = relationship('UserData', back_populates='url',
+                             cascade_backrefs=False)
 
     @classmethod
     def unique_hash(cls, url):
@@ -465,8 +483,10 @@ class Url(TimestampsMixin, UniqueMixin, Base):
 class UserMention(TimestampsMixin, Base):
     user_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True))
-    mentioned_user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True))
+    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
+                      nullable=False)
+    mentioned_user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
+                               nullable=False)
 
     start_index = Column(Integer, nullable=False)
     end_index = Column(Integer, nullable=False)
@@ -498,8 +518,10 @@ class UserMention(TimestampsMixin, Base):
 class HashtagMention(TimestampsMixin, Base):
     hashtag_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True))
-    hashtag_id = Column(BigInteger, ForeignKey('hashtag.hashtag_id', deferrable=True))
+    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
+                      nullable=False)
+    hashtag_id = Column(BigInteger, ForeignKey('hashtag.hashtag_id', deferrable=True),
+                        nullable=False)
 
     start_index = Column(Integer, nullable=False)
     end_index = Column(Integer, nullable=False)
@@ -530,8 +552,10 @@ class HashtagMention(TimestampsMixin, Base):
 class SymbolMention(TimestampsMixin, Base):
     symbol_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True))
-    symbol_id = Column(BigInteger, ForeignKey('symbol.symbol_id', deferrable=True))
+    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
+                      nullable=False)
+    symbol_id = Column(BigInteger, ForeignKey('symbol.symbol_id', deferrable=True),
+                       nullable=False)
 
     start_index = Column(Integer, nullable=False)
     end_index = Column(Integer, nullable=False)
@@ -562,8 +586,10 @@ class SymbolMention(TimestampsMixin, Base):
 class UrlMention(TimestampsMixin, Base):
     url_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True))
-    url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True))
+    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
+                      nullable=False)
+    url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True),
+                    nullable=False)
 
     start_index = Column(Integer, nullable=False)
     end_index = Column(Integer, nullable=False)
