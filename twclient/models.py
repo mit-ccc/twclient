@@ -1,8 +1,5 @@
-# FIXME tweet URL entity
 # FIXME replace handling of user urls with fk to url entity?
-
 # FIXME need to index tables, esp for the FollowGraphJob load process
-
 # FIXME tweet media entity
 
 import json
@@ -413,7 +410,7 @@ class Tweet(TimestampsMixin, Base):
         ret.user_mentions = UserMention.list_from_tweepy(obj, session)
         ret.hashtag_mentions = HashtagMention.list_from_tweepy(obj, session)
         ret.symbol_mentions = SymbolMention.list_from_tweepy(obj, session)
-        # ret.url_mentions = UrlMention.list_from_tweepy(obj, session)
+        ret.url_mentions = UrlMention.list_from_tweepy(obj, session)
 
         return ret
 
@@ -568,14 +565,54 @@ class UrlMention(TimestampsMixin, Base):
     tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True))
     url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True))
 
-    short_url = Column(UnicodeText, nullable=True)
     start_index = Column(Integer, nullable=False)
     end_index = Column(Integer, nullable=False)
+
+    # These are properties of the specific URL mention, not the page at the
+    # other end
+    twitter_short_url = Column(UnicodeText, nullable=True)
+    expanded_short_url = Column(UnicodeText, nullable=True)
+
+    # It's less obvious, but these are also properties of the URL mention, not
+    # the URL itself, because they have a time dimension. (The page behind the
+    # URL can change over time.)
+    status = Column(Integer, nullable=True)
+    title = Column(UnicodeText, nullable=True)
+    description = Column(UnicodeText, nullable=True)
 
     tweet = relationship('Tweet', back_populates='url_mentions')
     url = relationship('Url', back_populates='mentions')
 
     @classmethod
     def list_from_tweepy(cls, obj, session=None):
-        pass
+        lst = []
+
+        if hasattr(obj, 'entities'):
+            if 'urls' in obj.entities.keys():
+                for mt in obj.entities['urls']:
+                    kwargs = {
+                        'tweet_id': obj.id,
+
+                        'twitter_short_url': mt['url'],
+                        'start_index': mt['indices'][0],
+                        'end_index': mt['indices'][1]
+                    }
+
+                    if 'unwound' in mt.keys():
+                        kwargs['status'] = mt['unwound']['status']
+                        kwargs['title'] = mt['unwound']['title']
+                        kwargs['description'] = mt['unwound']['description']
+
+                        kwargs['expanded_short_url'] = mt['expanded_url']
+                        url = mt['unwound']['url']
+                    else:
+                        kwargs['expanded_short_url'] = None
+                        url = mt['expanded_url']
+
+                    ret = cls(**kwargs)
+                    ret.url = Url.as_unique(session, url=url)
+
+                    lst += [ret]
+
+        return lst
 
