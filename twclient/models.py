@@ -1,10 +1,9 @@
+# FIXME tweet URL entity
+# FIXME replace handling of user urls with fk to url entity?
+
 # FIXME need to index tables, esp for the FollowGraphJob load process
 
-# FIXME tweet URL entity
 # FIXME tweet media entity
-
-# FIXME replace handling of user urls with fk to url entity?
-# FIXME not everything needs to be a BIGINT?
 
 import json
 import logging
@@ -148,7 +147,7 @@ class UserData(TimestampsMixin, Base):
     url = Column(TEXT, nullable=True)
     friends_count = Column(BIGINT, nullable=True)
     followers_count = Column(BIGINT, nullable=True)
-    listed_count = Column(BIGINT, nullable=True)
+    listed_count = Column(INT, nullable=True)
 
     user = relationship('User', back_populates='data')
 
@@ -209,7 +208,7 @@ class UserData(TimestampsMixin, Base):
         return cls(**args)
 
 class Tag(TimestampsMixin, Base):
-    tag_id = Column(BIGINT, primary_key=True, autoincrement=True)
+    tag_id = Column(INT, primary_key=True, autoincrement=True)
     name = Column(TEXT, nullable=False, unique=True)
 
     users = relationship('User', secondary=lambda: UserTag.__table__,
@@ -291,7 +290,7 @@ class UserTag(TimestampsMixin, Base):
 
     user_id = Column(BIGINT, ForeignKey('user.user_id', deferrable=True),
                      primary_key=True)
-    tag_id = Column(BIGINT, ForeignKey('tag.tag_id', deferrable=True),
+    tag_id = Column(INT, ForeignKey('tag.tag_id', deferrable=True),
                     primary_key=True)
 
 ##
@@ -354,8 +353,8 @@ class Tweet(TimestampsMixin, Base):
 
     user_mentions = relationship('UserMention', back_populates='tweet')
     hashtag_mentions = relationship('HashtagMention', back_populates='tweet')
-    url_mentions = relationship('UrlMention', back_populates='tweet')
     symbol_mentions = relationship('SymbolMention', back_populates='tweet')
+    url_mentions = relationship('UrlMention', back_populates='tweet')
 
     @classmethod
     def from_tweepy(cls, obj, session=None):
