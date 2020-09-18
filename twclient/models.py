@@ -1,4 +1,3 @@
-# FIXME weird update bug in UrlMention
 # FIXME need to index tables:
 #     o) for the FollowGraphJob load process
 #     o) index FKs
@@ -471,15 +470,13 @@ class Url(TimestampsMixin, UniqueMixin, Base):
                              cascade_backrefs=False)
 
 class UserMention(TimestampsMixin, Base):
-    user_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
-
     tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
-                      nullable=True)
+                      primary_key=True, autoincrement=False)
+    start_index = Column(Integer, primary_key=True, autoincrement=False)
+    end_index = Column(Integer, primary_key=True, autoincrement=False)
+
     mentioned_user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
                                nullable=False)
-
-    start_index = Column(Integer, nullable=False)
-    end_index = Column(Integer, nullable=False)
 
     user = relationship('User', back_populates='mentions')
     tweet = relationship('Tweet', back_populates='user_mentions')
@@ -495,7 +492,6 @@ class UserMention(TimestampsMixin, Base):
                 for mt in obj.entities['user_mentions']:
                     kwargs = {
                         'tweet_id': obj.id,
-                        'mentioned_user_id': mt['id'],
                         'start_index': mt['indices'][0],
                         'end_index': mt['indices'][1]
                     }
@@ -507,16 +503,14 @@ class UserMention(TimestampsMixin, Base):
 
         return lst
 
-class HashtagMention(TimestampsMixin, UniqueMixin, Base):
-    hashtag_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
-
+class HashtagMention(TimestampsMixin, Base):
     tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
-                      nullable=False)
+                      primary_key=True, autoincrement=False)
+    start_index = Column(Integer, primary_key=True, autoincrement=False)
+    end_index = Column(Integer, primary_key=True, autoincrement=False)
+
     hashtag_id = Column(BigInteger, ForeignKey('hashtag.hashtag_id', deferrable=True),
                         nullable=False)
-
-    start_index = Column(Integer, nullable=False)
-    end_index = Column(Integer, nullable=False)
 
     hashtag = relationship('Hashtag', back_populates='mentions')
     tweet = relationship('Tweet', back_populates='hashtag_mentions',
@@ -537,33 +531,25 @@ class HashtagMention(TimestampsMixin, UniqueMixin, Base):
                         'end_index': mt['indices'][1]
                     }
 
-                    if session is not None:
-                        ret = cls.as_unique(session, **kwargs)
-                    else:
-                        kwargs['tweet_id'] = obj.id
-                        ret = cls(**kwargs)
-
+                    ret = cls(**kwargs)
                     ret.hashtag = Hashtag.as_unique(session, name=mt['text'])
 
                     lst += [ret]
 
-        print([repr(o) for o in lst])
         return lst
 
 class SymbolMention(TimestampsMixin, Base):
-    symbol_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
-
     tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
-                      nullable=True)
+                      primary_key=True, autoincrement=False)
+    start_index = Column(Integer, primary_key=True, autoincrement=False)
+    end_index = Column(Integer, primary_key=True, autoincrement=False)
+
     symbol_id = Column(BigInteger, ForeignKey('symbol.symbol_id', deferrable=True),
                        nullable=False)
 
-    start_index = Column(Integer, nullable=False)
-    end_index = Column(Integer, nullable=False)
-
     symbol = relationship('Symbol', back_populates='mentions')
-    tweet = relationship('Tweet', back_populates='symbol_mentions')
-#                         cascade_backrefs=False)
+    tweet = relationship('Tweet', back_populates='symbol_mentions',
+                         cascade_backrefs=False)
 
     __table_args__ = (UniqueConstraint('tweet_id', 'start_index', 'end_index'),)
 
@@ -580,12 +566,6 @@ class SymbolMention(TimestampsMixin, Base):
                     }
 
                     ret = cls(**kwargs)
-                    # if session is not None:
-                    #     ret = cls.as_unique(session, **kwargs)
-                    # else:
-                    #     kwargs['tweet_id'] = obj.id
-                    #     ret = cls(**kwargs)
-
                     ret.symbol = Symbol.as_unique(session, name=mt['text'])
 
                     lst += [ret]
@@ -593,15 +573,13 @@ class SymbolMention(TimestampsMixin, Base):
         return lst
 
 class UrlMention(TimestampsMixin, Base):
-    url_mention_id = Column(BigInteger, primary_key=True, autoincrement=True)
-
     tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
-                      nullable=True)
+                      primary_key=True, autoincrement=False)
+    start_index = Column(Integer, primary_key=True, autoincrement=False)
+    end_index = Column(Integer, primary_key=True, autoincrement=False)
+
     url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True),
                     nullable=False)
-
-    start_index = Column(Integer, nullable=False)
-    end_index = Column(Integer, nullable=False)
 
     # These are properties of the specific URL mention, not the page at the
     # other end
@@ -616,8 +594,8 @@ class UrlMention(TimestampsMixin, Base):
     description = Column(UnicodeText, nullable=True)
 
     url = relationship('Url', back_populates='mentions')
-    tweet = relationship('Tweet', back_populates='url_mentions')
-#                         cascade_backrefs=False)
+    tweet = relationship('Tweet', back_populates='url_mentions',
+                         cascade_backrefs=False)
 
     __table_args__ = (UniqueConstraint('tweet_id', 'start_index', 'end_index'),)
 
@@ -647,12 +625,6 @@ class UrlMention(TimestampsMixin, Base):
                         url = mt['expanded_url']
 
                     ret = cls(**kwargs)
-                    # if session is not None:
-                    #     ret = cls.as_unique(session, **kwargs)
-                    # else:
-                    #     kwargs['tweet_id'] = obj.id
-                    #     ret = cls(**kwargs)
-
                     ret.url = Url.as_unique(session, url=url)
 
                     lst += [ret]
