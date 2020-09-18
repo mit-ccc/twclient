@@ -63,12 +63,18 @@ class UniqueMixin(object):
         return cls._unique(session, cls, cls.unique_hash, cls.unique_filter,
                            cls, args, kwargs)
 
-# FIXME put these at the end in tables
+# The @declared_attr is a bit of a hack - it puts the columns at the end in
+# tables, which declaring them as class attributes doesn't
 class TimestampsMixin(object):
-    insert_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                       nullable=False)
-    modified_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                         onupdate=func.now(), nullable=False)
+    @declared_attr
+    def insert_dt(cls):
+        return Column(TIMESTAMP(timezone=True), server_default=func.now(),
+               nullable=False)
+
+    @declared_attr
+    def modified_dt(cls):
+        return Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                      onupdate=func.now(), nullable=False)
 
 @as_declarative()
 class Base(object):
