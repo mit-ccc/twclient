@@ -1,7 +1,3 @@
-# FIXME need to index tables:
-#     o) for the FollowGraphJob load process
-#     o) index FKs
-
 # FIXME tweet media entity
 
 import json
@@ -120,7 +116,9 @@ class Base(object):
 
         return self._repr(**fields)
 
-# Store the creating package version in the DB to enable migrations
+# Store the creating package version in the DB to enable migrations (we don't
+# actually do any migrations or have any code to support them yet, but if this
+# isn't here to begin with it'll be a gigantic pain)
 class SchemaVersion(TimestampsMixin, Base):
     version = Column(String(64), primary_key=True, nullable=False)
 
@@ -148,9 +146,9 @@ class User(TimestampsMixin, Base):
 class UserData(TimestampsMixin, Base):
     user_data_id = Column(BigInteger, primary_key=True, autoincrement=True)
     user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
-                     nullable=False)
+                     nullable=False, index=True)
     url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True),
-                    nullable=True)
+                    nullable=True, index=True)
 
     api_response = Column(UnicodeText, nullable=False)
 
@@ -242,7 +240,7 @@ class List(TimestampsMixin, Base):
     # as in Tweet and User, list_id is Twitter's id rather than a surrogate key
     list_id = Column(BigInteger, primary_key=True, autoincrement=False)
     user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
-                     nullable=False)
+                     nullable=False) # no index needed given unique below
 
     slug = Column(UnicodeText, nullable=False)
     api_response = Column(UnicodeText, nullable=False)
@@ -256,9 +254,7 @@ class List(TimestampsMixin, Base):
     member_count = Column(Integer, nullable=True)
     subscriber_count = Column(Integer, nullable=True)
 
-    __table_args__ = (
-        UniqueConstraint('user_id', 'slug', deferrable=True),
-    )
+    __table_args__ = (UniqueConstraint('user_id', 'slug'),)
 
     owning_user = relationship('User', back_populates='lists_owned')
     list_memberships = relationship('UserList', back_populates='lst')
@@ -300,13 +296,18 @@ class UserList(Base):
     user_list_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
-                     nullable=False)
+                     nullable=False) # no index needed given unique below
     list_id = Column(BigInteger, ForeignKey('list.list_id', deferrable=True),
-                     nullable=False)
+                     nullable=False, index=True)
 
     valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
                             nullable=False)
     valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
+
+    __table_args__ = (
+        UniqueConstraint('user_id', 'list_id', 'valid_end_dt',
+                         'valid_start_dt'),
+    )
 
     lst = relationship('List', back_populates='list_memberships')
     user = relationship('User', back_populates='list_memberships')
@@ -315,9 +316,9 @@ class UserTag(TimestampsMixin, Base):
     user_tag_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
-                     nullable=False)
+                     nullable=False) # no index needed given unique below
     tag_id = Column(Integer, ForeignKey('tag.tag_id', deferrable=True),
-                    nullable=False)
+                    nullable=False, index=True)
 
     __table_args__ = (UniqueConstraint('user_id', 'tag_id'),)
 
@@ -337,6 +338,25 @@ class Follow(Base):
                             nullable=False)
     valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
 
+    __table_args__ = (
+        # NOTE more testing needed to ensure these indexes work as intended
+
+        # The unique index generated here participates in the INSERT and the
+        # subquery of the UPDATE that load new StgFollow data. When writing the
+        # sort of query that can use it (e.g., get a user's current followers),
+        # it has the extra benefit of being a covering index.
+        UniqueConstraint('source_user_id', 'target_user_id', 'valid_end_dt',
+                         'valid_start_dt'),
+
+        # These are intended to help answer the UPDATE statements issued in
+        # processing new data loaded to StgFollow.
+        Index('idx_follow_source_user_id_valid_end_dt', 'source_user_id',
+              'valid_end_dt'),
+        Index('idx_follow_target_user_id_valid_end_dt', 'target_user_id',
+              'valid_end_dt')
+    )
+
+
 # A temp-ish table for SCD operations on Follow
 class StgFollow(Base):
     source_user_id = Column(BigInteger, primary_key=True, autoincrement=False)
@@ -350,12 +370,12 @@ class Tweet(TimestampsMixin, Base):
     # as in User, this is the Twitter id rather than a surrogate key
     tweet_id = Column(BigInteger, primary_key=True, autoincrement=False)
     user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
-                     nullable=False)
+                     nullable=False, index=True)
 
     retweeted_status_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
-                                 nullable=True)
+                                 nullable=True, index=True)
     quoted_status_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
-                              nullable=True)
+                              nullable=True, index=True)
 
     api_response = Column(UnicodeText, nullable=False)
     content = Column(UnicodeText, nullable=False)
@@ -446,7 +466,7 @@ class Tweet(TimestampsMixin, Base):
 class Hashtag(TimestampsMixin, UniqueMixin, Base):
     hashtag_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    name = Column(UnicodeText, nullable=False, index=True, unique=True)
+    name = Column(UnicodeText, nullable=False, unique=True)
 
     mentions = relationship('HashtagMention', back_populates='hashtag',
                             cascade_backrefs=False)
@@ -454,7 +474,7 @@ class Hashtag(TimestampsMixin, UniqueMixin, Base):
 class Symbol(TimestampsMixin, UniqueMixin, Base):
     symbol_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    name = Column(UnicodeText, nullable=False, index=True, unique=True)
+    name = Column(UnicodeText, nullable=False, unique=True)
 
     mentions = relationship('SymbolMention', back_populates='symbol',
                             cascade_backrefs=False)
@@ -462,7 +482,7 @@ class Symbol(TimestampsMixin, UniqueMixin, Base):
 class Url(TimestampsMixin, UniqueMixin, Base):
     url_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    url = Column(UnicodeText, nullable=False, index=True, unique=True)
+    url = Column(UnicodeText, nullable=False, unique=True)
 
     mentions = relationship('UrlMention', back_populates='url',
                             cascade_backrefs=False)
@@ -476,7 +496,7 @@ class UserMention(TimestampsMixin, Base):
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
     mentioned_user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
-                               nullable=False)
+                               nullable=False, index=True)
 
     user = relationship('User', back_populates='mentions')
     tweet = relationship('Tweet', back_populates='user_mentions')
@@ -510,7 +530,7 @@ class HashtagMention(TimestampsMixin, Base):
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
     hashtag_id = Column(BigInteger, ForeignKey('hashtag.hashtag_id', deferrable=True),
-                        nullable=False)
+                        nullable=False, index=True)
 
     hashtag = relationship('Hashtag', back_populates='mentions')
     tweet = relationship('Tweet', back_populates='hashtag_mentions',
@@ -545,7 +565,7 @@ class SymbolMention(TimestampsMixin, Base):
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
     symbol_id = Column(BigInteger, ForeignKey('symbol.symbol_id', deferrable=True),
-                       nullable=False)
+                       nullable=False, index=True)
 
     symbol = relationship('Symbol', back_populates='mentions')
     tweet = relationship('Tweet', back_populates='symbol_mentions',
@@ -579,7 +599,7 @@ class UrlMention(TimestampsMixin, Base):
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
     url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True),
-                    nullable=False)
+                    nullable=False, index=True)
 
     # These are properties of the specific URL mention, not the page at the
     # other end
