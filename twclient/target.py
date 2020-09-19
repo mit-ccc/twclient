@@ -24,22 +24,27 @@ class Target(ABC):
 
         self.targets = list(set(targets))
 
-        if context is not None:
-            self._context = context
-
         # make partial loads more statistically useful
         random.shuffle(self.targets)
+
+        self._users = []
+        self._bad_targets = []
+        self._missing_targets = []
+        if context is not None:
+            self._context = context
 
     @abstractmethod
     def resolve(self, context, mode='fetch'):
         raise NotImplementedError()
 
     @property
+    @abstractmethod
+    def allowed_resolve_modes(self):
+        raise NotImplementedError()
+
+    @property
     def resolved(self):
-        return all([
-            hasattr(self, '_users'),
-            hasattr(self, '_context')
-        ])
+        return hasattr(self, '_context')
 
     @property
     def users(self):
@@ -49,14 +54,32 @@ class Target(ABC):
         return self._users
 
     @property
+    def bad_targets(self):
+        if not self.resolved:
+            raise AttributeError('Must call resolve() first')
+
+        return self._bad_targets
+
+    @property
+    def missing_targets(self):
+        if not self.resolved:
+            raise AttributeError('Must call resolve() first')
+
+        return self._missing_targets
+
+    @property
     def context(self):
         if not self.resolved:
             raise AttributeError('Must call resolve() first')
 
         return self._context
 
+    def _validate_context(self, context):
+        if context.resolve_mode not in self.allowed_resolve_modes:
+            raise ValueError('Bad operating mode for resolve()')
+
     def _mark_resolved(self, context):
-        self._users = []
+        self._validate_context(context)
         self._context = context
 
     def _add_users(self, users):
@@ -64,6 +87,24 @@ class Target(ABC):
             raise AttributeError('Must call resolve() first')
 
         self._users.extend(users)
+
+    def _add_bad_targets(self, targets):
+        if not self.resolved:
+            raise AttributeError('Must call resolve() first')
+
+        if not len(set(targets) - set(self.targets)) == 0:
+            raise ValueError('All bad targets must be in self.targets')
+
+        self._bad_targets.extend(targets)
+
+    def _add_missing_targets(self, targets):
+        if not self.resolved:
+            raise AttributeError('Must call resolve() first')
+
+        if not len(set(targets) - set(self.targets)) == 0:
+            raise ValueError('All missing targets must be in self.targets')
+
+        self._missing_targets.extend(targets)
 
     def _tweepy_to_user(self, obj):
         user = md.User.from_tweepy(obj, self.context.session)
@@ -74,63 +115,74 @@ class Target(ABC):
 
         return user
 
+    # splitting this out from _hydrate simplifies TwitterListTarget
+    def _hydrate_only(self, user_ids=[], screen_names=[], **kwargs):
+        try:
+            assert (len(user_ids) > 0) ^ (len(screen_names) > 0)
+        except AssertionError:
+            raise ValueError('Must provide user_ids xor screen_names')
+
+        kw = dict(kwargs, user_ids=user_ids, screen_names=screen_names)
+        objs = [u for u in self.context.api.lookup_users(**kw)]
+
+        users = [self._tweepy_to_user(u) for u in objs]
+
+        # NOTE tweepy's lookup_users doesn't raise an exception on bad users, it
+        # just doesn't return them, so we need to check the length of the input
+        # and the number of user objects returned.
+        if len(user_ids) > 0:
+            requested = user_ids
+            received = [u.user_id for u in objs]
+        else: # len(screen_names) > 0
+            requested = screen_names
+            received = [u.screen_name.lower() for u in objs]
+
+        bad_targets = list(set(requested) - set(received))
+
+        return users, bad_targets
+
     def _hydrate(self, **kwargs):
-        users = [
-            self._tweepy_to_user(obj)
-            for obj in self.context.api.lookup_users(**kwargs)
-        ]
+        users, bad_targets = self._hydrate_only(**kwargs)
 
         self._add_users(users)
-
-        return users
+        self._add_bad_targets(bad_targets)
 
     def _user_for_screen_name(self, screen_name):
-        ret = self.context.session.query(md.UserData).filter(
+        return self.context.session.query(md.UserData).filter(
             func.lower(md.UserData.screen_name) == screen_name.lower()
         ).order_by(
             md.UserData.user_data_id.desc()
         ).first()
 
-        if ret:
-            return ret.user
-        else:
-            msg = 'Screen name {0} not found locally or does not exist; ' \
-                  'use `fetch users`?'
-            raise err.BadTargetError(message=msg.format(screen_name))
-
 class UserIdTarget(Target):
-    def resolve(self, context, mode='fetch'):
-        if mode not in ('fetch', 'rehydrate', 'skip', 'raise'):
-            raise ValueError('Bad mode for resolve')
+    allowed_resolve_modes = ('fetch', 'hydrate', 'skip')
 
+    def resolve(self, context):
         self._mark_resolved(context)
 
-        if mode == 'rehydrate':
+        if context.resolve_mode == 'hydrate':
             self._hydrate(user_ids=self.targets)
         else:
             existing = self.context.session.query(md.User) \
                            .filter(md.User.user_id.in_(self.targets))
             new = list(set(self.targets) - set([u.user_id for u in existing]))
 
+            self._add_users(existing)
+            self._add_missing_targets(new)
+
             if len(new) > 0:
-                if mode == 'fetch':
+                if context.resolve_mode == 'fetch':
                     self._hydrate(user_ids=new)
-                elif mode == 'raise':
-                    msg = 'Not all requested users are loaded'
-                    raise err.BadTargetError(message=msg)
-                else: # mode == 'skip'
+                else: # context.resolve_mode == 'skip'
                     logger.warning('Not all requested users are loaded')
 
-            self._add_users(existing)
-
 class ScreenNameTarget(Target):
-    def resolve(self, context, mode='fetch'):
-        if mode not in ('fetch', 'rehydrate', 'skip', 'raise'):
-            raise ValueError('Bad mode for resolve')
+    allowed_resolve_modes = ('fetch', 'hydrate', 'skip')
 
+    def resolve(self, context):
         self._mark_resolved(context)
 
-        if mode == 'rehydrate':
+        if context.resolve_mode == 'hydrate':
             self._hydrate(screen_names=self.targets)
         else:
             users = [self._user_for_screen_name(s) for s in self.targets]
@@ -138,131 +190,148 @@ class ScreenNameTarget(Target):
             existing = [u for u in users if u is not None]
             new = [sn for u, sn in zip(users, self.targets) if u is None]
 
+            self._add_users(existing)
+            self._add_missing_targets(new)
+
             if len(new) > 0:
-                if mode == 'fetch':
+                if context.resolve_mode == 'fetch':
                     self._hydrate(screen_names=new)
-                elif mode == 'raise':
-                    msg = 'Not all requested users are loaded'
-                    raise err.BadTargetError(message=msg)
-                else: # mode == 'skip'
+                else: # context.resolve_mode == 'skip'
                     logger.warning('Not all requested users are loaded')
 
-            self._add_users(existing)
-
 class SelectTagTarget(Target):
-    def resolve(self, context, mode='existing'):
-        if mode not in ('rehydrate', 'skip', 'raise'):
-            raise ValueError('Bad mode for resolve')
+    allowed_resolve_modes = ('hydrate', 'skip')
 
+    def resolve(self, context):
         self._mark_resolved(context)
 
         filters = [md.Tag.name == tag for tag in self.targets]
         tags = self.context.session.query(md.Tag).filter(or_(*filters)).all()
+        new = list(set(self.targets) - set(tags))
 
-        if len(tags) < len(self.targets):
-            if mode == 'raise':
-                msg = 'Not all requested tags exist'
-                raise err.BadTargetError(message=msg)
-            else: # mode == 'skip'
-                logger.warning('Not all requested tags exist')
+        if len(new) > 0:
+            msg = 'Requested tag(s) {0} do not exist'
+            msg = msg.format(', '.join(new)
+            logger.warning(msg)
+
+        self._add_missing_targets(new)
 
         users = [user for tag in tags for user in tag.users]
-        if mode == 'rehydrate':
+        if context.resolve_mode == 'hydrate':
             self._hydrate(user_ids=[user.user_id for user in users])
-        else:
+        else: # context.resolve_mode == 'skip'
             self._add_users(users)
 
 class TwitterListTarget(Target):
-    def _hydrate_lists(self, lists):
-        owner_screen_names = [obj.split('/')[0] for obj in lists]
-        slugs = [obj.split('/')[1] for obj in lists]
+    allowed_resolve_modes = ('fetch', 'hydrate', 'skip')
 
+    @property
+    def owner_screen_names(self):
+        return [obj.split('/')[0] for obj in self.targets]
+
+    @property
+    def slugs(self):
+        return [obj.split('/')[1] for obj in self.targets]
+
+    def _update_memberships(self, lst, members):
+        ## Record user memberships in list
+        new_uids = [u.user_id for u in members]
+        prev_uids = [
+            m.user_id
+            for m in lst.list_memberships
+            if m.valid_end_dt is None # SCD type 2's currently valid rows
+        ]
+
+        # mark rows no longer in Twitter API's list as invalid
+        for m in lst.list_memberships:
+            if m.user_id not in new_uids:
+                m.valid_end_dt = func.now()
+
+        # add rows for users newly present in Twitter API's list
+        for u in members:
+            if u.user_id not in prev_uids:
+                self.context.session.add(md.UserList(
+                    list_id=lst.list_id,
+                    user_id=u.user_id
+                ))
+
+    def _hydrate(self, lists):
         ## Hydrate the list owners
-        owners = self._hydrate(screen_names=owner_screen_names)
+        # _hydrate_only doesn't raise NotFoundError on bad users because
+        # lookup_users doesn't do so - no need to catch it
+        owners, bad_owners = super(TwitterListTarget, self)._hydrate_only(
+            screen_names=self.owner_screen_names
+        )
 
-        for owner, slug in zip(owners, slugs):
-            ## Fetch the list and its existing memberships
-            lst = self.context.session.merge(md.List.from_tweepy(
-                # FIXME what happens if the list dne?
-                self.context.api.get_list(slug=slug, owner_id=owner.user_id),
-                self.context.session
-            ))
+        ## Get list info and list members
+        for tg, owner, slug in zip(self.targets, owners, self.slugs):
+            if owner in bad_owners:
+                self._add_bad_targets([tg])
+                continue
 
-            ## Fetch the list members from Twitter
-            users = [
-                self._tweepy_to_user(obj)
+            try:
+                kw = {'slug': slug, 'owner_id': owner.user_id}
 
-                for obj in self.context.api.list_members(
-                    slug=slug,
-                    owner_id=owner.user_id
-                )
-            ]
+                ## Fetch the list itself
+                lst = self.context.api.get_list(**kw)
+                lst = md.List.from_tweepy(lst, self.context.session)
+
+                ## Fetch the list members from Twitter
+                users = [u for u in self.context.api.list_members(**kw)]
+            except err.NotFoundError as e:
+                # the bad targets are logged in the calling Job class
+                self._add_bad_targets([tg])
+                continue
+            else:
+                lst = self.context.session.merge(lst)
+
+                users = [self._tweepy_to_user(u) for u in users]
+                self._add_users(users)
+
+                self._update_memberships(lst, users)
+
+    def resolve(self, context):
+        self._mark_resolved(context)
+
+        if context.resolve_mode == 'hydrate':
+            self._hydrate(self.targets)
+
+        new = []
+        for tg, sn, slug in zip(self.targets, self.owner_screen_names, self.slugs):
+            owner = self._user_for_screen_name(sn)
+
+            if owner is None: # list hasn't been ingested
+                self._add_missing_targets([tg])
+
+                if context.resolve_mode == 'fetch':
+                    new += [tg]
+                else: # context.resolve_mode == 'skip'
+                    continue
+
+            lst = self.context.session.query(md.List).filter(and_(
+                md.List.user_id == owner.user_id,
+                md.List.slug == slug
+            )).one_or_none()
+
+            if lst is None: # list hasn't been ingested
+                self._add_missing_targets([tg])
+
+                if context.resolve_mode == 'fetch':
+                    new += [tg]
+                else: # context.resolve_mode == 'skip'
+                    continue
+
+            # every user currently recorded as a list member
+            users = self.context.session.query(md.User).filter(
+                md.User.user_id.in_([
+                    m.user_id
+                    for m in lst.list_memberships
+                    if m.valid_end_dt is None # as above
+                ])
+            )
 
             self._add_users(users)
 
-            ## Record user memberships in list
-            new_uids = [u.user_id for u in users]
-            prev_uids = [
-                m.user_id
-                for m in lst.list_memberships
-                if m.valid_end_dt is None # SCD type 2's currently valid rows
-            ]
-
-            # mark rows no longer in Twitter API's list as invalid
-            for m in lst.list_memberships:
-                if m.user_id not in new_uids:
-                    m.valid_end_dt = func.now()
-
-            # add rows for users newly present in Twitter API's list
-            for u in users:
-                if u.user_id not in prev_uids:
-                    self.context.session.add(md.UserList(
-                        list_id=lst.list_id,
-                        user_id=u.user_id
-                    ))
-
-    def resolve(self, context, mode='fetch'):
-        # FIXME make modes work right
-        if mode not in ('fetch', 'rehydrate', 'skip', 'raise'):
-            raise ValueError('Bad mode for resolve')
-
-        self._mark_resolved(context)
-
-        if mode == 'rehydrate':
-            self._hydrate_lists(self.targets)
-        else:
-            owner_screen_names = [obj.split('/')[0] for obj in self.targets]
-            slugs = [obj.split('/')[1] for obj in self.targets]
-
-            new = []
-            for tg, sn, slug in zip(self.targets, owner_screen_names, slugs):
-                owner = self._user_for_screen_name(sn)
-
-                if owner is None: # list hasn't been ingested
-                    if mode == 'fetch':
-                        new += [tg]
-                    elif mode == 'raise':
-                        msg = 'List owner {0} is not loaded or does not exist'
-                        raise err.BadTargetError(message=msg.format(sn))
-                    else: # mode == 'skip'
-                        continue
-
-                lst = self.context.session.query(md.List).filter(and_(
-                    md.List.user_id == owner.user_id,
-                    md.List.slug == slug
-                )).one()
-
-                # every user currently recorded as a list member
-                users = self.context.session.query(md.User).filter(
-                    md.User.user_id.in_([
-                        m.user_id
-                        for m in lst.list_memberships
-                        if m.valid_end_dt is None # as above
-                    ])
-                )
-
-                self._add_users(users)
-
-            if mode == 'fetch' and len(new) > 0:
-                self._hydrate_lists(new)
+        if context.resolve_mode == 'fetch' and len(new) > 0:
+            self._hydrate(new)
 

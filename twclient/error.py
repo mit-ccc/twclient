@@ -106,9 +106,25 @@ def dispatch(ex):
 ## Other error conditions
 ##
 
-class BadTargetError(TWClientError):
+class SemanticError(TWClientError):
     pass
 
-class BadSchemaError(TWClientError):
+class BadTargetError(SemanticError):
+    def __init__(self, **kwargs):
+        targets = kwargs.pop('targets', [])
+
+        super(BadTargetError, self).__init__(**kwargs)
+
+        self.targets = targets
+
+class BadTagError(SemanticError):
+    def __init__(self, **kwargs):
+        tag = kwargs.pop('tag', None)
+
+        super(BadTargetError, self).__init__(**kwargs)
+
+        self.tag = tag
+
+class BadSchemaError(SemanticError):
     pass
 

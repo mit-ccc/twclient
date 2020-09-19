@@ -202,12 +202,12 @@ class DatabaseFrontend(Frontend):
         self.database_url = self.config[self.database]['database_url']
         self.engine = sa.create_engine(self.database_url)
 
-class TwitterFrontend(Frontend):
+class ApiFrontend(Frontend):
     def __init__(self, **kwargs):
         apis = kwargs.pop('apis', None)
-        abort_on_bad_targets = kwargs.pop('abort_on_bad_targets', None)
+        allow_api_errors = kwargs.pop('allow_api_errors', False)
 
-        super(TwitterFrontend, self).__init__(**kwargs)
+        super(ApiFrontend, self).__init__(**kwargs)
 
         if apis:
             profiles_to_use = apis
@@ -233,7 +233,8 @@ class TwitterFrontend(Frontend):
         if len(auths) == 0:
             self.error('No Twitter credentials provided (use `config add-api`)')
 
-        self.api = ta.TwitterApi(auths=auths, abort_on_bad_targets=abort_on_bad_targets)
+        self.allow_api_errors = allow_api_errors
+        self.api = ta.TwitterApi(auths=auths)
 
 class TargetFrontend(Frontend):
     def __init__(self, **kwargs):
@@ -241,6 +242,8 @@ class TargetFrontend(Frontend):
         screen_names = kwargs.pop('screen_names', None)
         select_tags = kwargs.pop('select_tags', None)
         twitter_lists = kwargs.pop('twitter_lists', None)
+
+        allow_missing_targets = kwargs.pop('allow_missing_targets', False)
 
         super(TargetFrontend, self).__init__(**kwargs)
 
@@ -262,6 +265,7 @@ class TargetFrontend(Frontend):
             self.error('No target users provided')
 
         self.targets = targets
+        self.allow_missing_targets = False
 
     targets_required = True
 
@@ -291,7 +295,7 @@ class InitializeCommand(DatabaseFrontend):
 
             job.InitializeJob(engine=self.engine).run()
 
-class FetchCommand(DatabaseFrontend, TargetFrontend, TwitterFrontend):
+class FetchCommand(DatabaseFrontend, TargetFrontend, ApiFrontend):
     subcommand_to_method = {
         'users': 'cli_users',
         'friends': 'cli_friends',
@@ -325,6 +329,8 @@ class FetchCommand(DatabaseFrontend, TargetFrontend, TwitterFrontend):
             'engine': self.engine,
             'api': self.api,
             'targets': self.targets,
+            'allow_missing_targets': self.allow_missing_targets,
+            'allow_api_errors': self.allow_api_errors,
             'load_batch_size': self.load_batch_size
         }
 
@@ -368,15 +374,27 @@ class TagCommand(DatabaseFrontend, TargetFrontend):
     def targets_required(self):
         return self.subcommand == 'apply'
 
+    @property
+    def job_args(self):
+        args = {
+            'tag': self.name,
+            'engine': self.engine,
+        }
+
+        if self.subcommand == 'apply':
+            args['targets'] = self.targets
+            args['allow_missing_targets'] = self.allow_missing_targets
+
+        return args
+
     def cli_create(self):
-        job.CreateTagJob(tag=self.name, engine=self.engine).run()
+        job.CreateTagJob(**self.job_args).run()
 
     def cli_delete(self):
-        job.DeleteTagJob(tag=self.name, engine=self.engine).run()
+        job.DeleteTagJob(**self.job_args).run()
 
     def cli_apply(self):
-        job.ApplyTagJob(tag=self.name, targets=self.targets,
-                        engine=self.engine).run()
+        job.ApplyTagJob(**self.job_args).run()
 
 class ConfigCommand(Frontend):
     subcommand_to_method = {
@@ -537,6 +555,10 @@ def make_parser():
                         help='path to config file (default ~/.twclientrc)')
 
     def add_target_arguments(p):
+        p.add_argument('-p', '--allow-missing-targets', action='store_true',
+                       help="continue even if a requested targets should be " \
+                            "present in the database but isn't")
+
         # selecting users to operate on
         p.add_argument('-g', '--select-tags', nargs='+',
                     help='process loaded users with these tags')
@@ -546,6 +568,19 @@ def make_parser():
                     help='process particular Twitter screen names')
         p.add_argument('-l', '--twitter-lists', nargs='+',
                     help='process all users in particular Twitter lists')
+
+        return p
+
+    def add_fetch_arguments(p):
+        p = add_target_arguments(p)
+
+        p.add_argument('-d', '--database',
+                       help='use this stored DB profile instead of default')
+        p.add_argument('-a', '--api', dest='apis', nargs='+',
+                       help='use only these stored API profiles instead of default')
+        p.add_argument('-b', '--allow-api-errors', action='store_true',
+                       help="continue even if an object to be fetched from " \
+                            "the Twitter API is protected or doesn't exist")
 
         return p
 
@@ -627,45 +662,16 @@ def make_parser():
     fetch = fetch_subparser.add_subparsers(dest='subcommand')
 
     uip = fetch.add_parser('users', help='Get user info / "hydrate" users')
-    uip = add_target_arguments(uip)
-    uip.add_argument('-d', '--database',
-                    help='use this stored DB profile instead of default')
-    uip.add_argument('-a', '--api', dest='apis', nargs='+',
-                    help='use only these stored API profiles instead ' \
-                        'of default')
-    uip.add_argument('-b', '--abort-on-bad-targets', action='store_true',
-                    help="abort if a requested user doesn't exist")
-
+    uip = add_fetch_arguments(uip)
 
     frp = fetch.add_parser('friends', help="Get user friends")
-    frp = add_target_arguments(frp)
-    frp.add_argument('-d', '--database',
-                    help='use this stored DB profile instead of default')
-    frp.add_argument('-a', '--api', dest='apis', nargs='+',
-                    help='use only these stored API profiles instead ' \
-                        'of default')
-    frp.add_argument('-b', '--abort-on-bad-targets', action='store_true',
-                    help="abort if a requested user doesn't exist")
+    frp = add_fetch_arguments(frp)
 
     flp = fetch.add_parser('followers', help="Get user followers")
-    flp = add_target_arguments(flp)
-    flp.add_argument('-d', '--database',
-                    help='use this stored DB profile instead of default')
-    flp.add_argument('-a', '--api', dest='apis', nargs='+',
-                    help='use only these stored API profiles instead ' \
-                        'of default')
-    flp.add_argument('-b', '--abort-on-bad-targets', action='store_true',
-                    help="abort if a requested user doesn't exist")
+    flp = add_fetch_arguments(flp)
 
     twp = fetch.add_parser('tweets', help="Get user tweets")
-    twp = add_target_arguments(twp)
-    twp.add_argument('-d', '--database',
-                    help='use this stored DB profile instead of default')
-    twp.add_argument('-a', '--api', dest='apis', nargs='+',
-                    help='use only these stored API profiles instead ' \
-                        'of default')
-    twp.add_argument('-b', '--abort-on-bad-targets', action='store_true',
-                    help="abort if a requested user doesn't exist")
+    twp = add_fetch_arguments(twp)
     twp.add_argument('-o', '--old-tweets', action='store_true',
                     help="Load tweets older than user's most recent in DB")
     twp.add_argument('-z', '--since-timestamp',

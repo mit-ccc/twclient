@@ -1,6 +1,3 @@
-# FIXME should modes on Target.resolve tie into / replace the abort_on_bad_targets setting?
-# FIXME move exception handling stuff out to leaf classes from make_api_call
-
 import logging
 
 import tweepy
@@ -67,53 +64,15 @@ class TwitterApi(object):
             else: # return_type == 'unknown'
                 msg = 'Return type of method {0} unspecified'.format(name)
                 raise RuntimeError(msg)
-        except (tweepy.error.TweepError, err.TWClientError) as e:
+        except Exception as e:
             msg = 'Exception in call to Twitter API: {0}'.format(repr(e))
             logger.debug(msg, exc_info=True)
 
-            if isinstance(e, err.ProtectedUserError):
-                msg = 'Ignoring protected user in call to method {0} ' \
-                      'with arguments {1}'
-                msg = msg.format(method, kwargs)
-                logger.info(msg)
-            elif isinstance(e, err.NotFoundError):
-                if self.abort_on_bad_targets:
-                    raise
-            else:
-                raise
+            raise
 
     ##
     ## Direct wraps of Twitter API methods
     ##
-
-    # NOTE users/lookup doesn't raise an error condition on bad
-    # users, it just doesn't return them, so we need to check
-    # the length of the input and the number of user objects
-    # returned. Note also though that it *does* raise an error if
-    # only bad / nonexistent users are provided, which is why we
-    # also catch err.NotFoundError in self.lookup_users.
-    def _check_bad_users(self, received, requested, kind):
-        try:
-            assert kind in ('screen_names', 'user_ids')
-        except AssertionError:
-            raise ValueError('Bad kind value to _check_bad_users')
-
-        if kind == 'user_ids':
-            received = [u.user_id for u in received]
-        else:
-            requested = [u.lower() for u in requested]
-            received = [u.screen_name.lower() for u in received]
-
-        missings = list(set(requested) - set(received))
-        if len(missings) > 0:
-            msg = 'User(s) {0} nonexistent / suspended / bad in call ' \
-                    'to users/lookup'
-            msg = msg.format(missings)
-
-            if self.abort_on_bad_targets:
-                raise err.BadTargetError(message=msg)
-            else:
-                logger.warning(msg)
 
     def lookup_users(self, user_ids=[], screen_names=[], **kwargs):
         msg = 'Hydrating user_ids {0} and screen_names {1}'
@@ -131,22 +90,26 @@ class TwitterApi(object):
                 try:
                     ret = [u for u in self.make_api_call(**twargs)]
                 except err.NotFoundError:
+                    # Whatever the underlying Twitter endpoint's behavior is,
+                    # tweepy's lookup_users normally doesn't raise errors if you
+                    # pass it bad users. It just doesn't return them. It *does*
+                    # raise an error if you pass it *only* bad users, but it's
+                    # simpler for clients of this method to not have to handle
+                    # two kinds of exception conditions. So let's return no
+                    # users if all users were bad.
                     ret = []
-
-                self._check_bad_users(ret, grp, kind='user_ids')
 
                 yield from ret
 
-        if len(screen_names) > 0:
+        if len(screen_names) > 0: # NOTE not elif: we want to handle both
             for grp in ut.grouper(screen_names, 100): # max 100 per call
                 twargs = dict({'method': 'lookup_users', 'screen_names': grp}, **kwargs)
 
                 try:
                     ret = [u for u in self.make_api_call(**twargs)]
                 except err.NotFoundError:
+                    # Same funky tweepy behavior as in the except clause above
                     ret = []
-
-                self._check_bad_users(ret, grp, kind='screen_names')
 
                 yield from ret
 
@@ -174,21 +137,7 @@ class TwitterApi(object):
             'owner_id': owner_id
         }, **kwargs)
 
-        try:
-            ret = next(self.make_api_call(**twargs))
-        except StopIteration:
-            idparms = ', '.join([
-                k + ': ' + str(v)
-                for k, v in twargs.items()
-                if v is not None and k in ['list_id', 'owner_id',
-                                           'owner_screen_name', 'slug']
-
-            ])
-
-            msg = 'List identified by {0} not found'.format(idparms)
-            raise err.NotFoundError(message=msg)
-
-        return ret
+        return next(self.make_api_call(**twargs))
 
     def list_members(self, full_name=None, list_id=None, slug=None,
                      owner_screen_name=None, owner_id=None, **kwargs):

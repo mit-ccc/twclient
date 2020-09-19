@@ -37,7 +37,12 @@ class Job(ABC):
         self.sessionfactory.configure(bind=self.engine)
         self.session = self.sessionfactory()
 
+        self._schema_verified = False
+
     def ensure_schema_version(self):
+        if self._schema_verified:
+            return
+
         schema_version = self.session.query(md.SchemaVersion).all()
 
         if len(schema_version) != 1:
@@ -57,6 +62,8 @@ class Job(ABC):
             msg = msg.format(__version__, db_version)
             raise err.BadSchemaError(message=msg)
 
+        self._schema_verified = True
+
     def get_or_create(self, model, **kwargs):
         instance = self.session.query(model).filter_by(**kwargs).one_or_none()
 
@@ -73,14 +80,6 @@ class Job(ABC):
     def run(self):
         raise NotImplementedError()
 
-class InitializeJob(Job):
-    def run(self):
-        md.Base.metadata.drop_all(self.engine)
-        md.Base.metadata.create_all(self.engine)
-
-        self.session.add(md.SchemaVersion(version=__version__))
-        self.session.commit()
-
 class TagJob(Job):
     def __init__(self, **kwargs):
         try:
@@ -90,9 +89,97 @@ class TagJob(Job):
 
         super(TagJob, self).__init__(**kwargs)
 
+        self.tag = tag
+
         self.ensure_schema_version()
 
-        self.tag = tag
+class TargetJob(Job):
+    def __init__(self, **kwargs):
+        try:
+            targets = kwargs.pop('targets')
+        except KeyError:
+            raise ValueError('Must provide list of targets')
+
+        allow_missing_targets = kwargs.pop('allow_missing_targets', False)
+
+        super(TargetJob, self).__init__(**kwargs)
+
+        self.targets = targets
+        self.allow_missing_targets = allow_missing_targets
+
+        self.ensure_schema_version()
+
+    @property
+    @abstractmethod
+    def resolve_mode(self):
+        raise NotImplementedError()
+
+    @property
+    def resolved(self):
+        return all([t.resolved for t in self.targets])
+
+    def _combine_sub_attrs(self, attr):
+        if not self.resolved:
+            raise AttributeError('Must call resolve_targets() first')
+
+        objs = it.chain(*[getattr(t, attr) for t in self.targets])
+        return [u for u in objs]
+
+    @property
+    def users(self):
+        return self._combine_sub_attrs('users')
+
+    @property
+    def bad_targets(self):
+        return self._combine_sub_attrs('bad_targets')
+
+    @property
+    def missing_targets(self):
+        return self._combine_sub_attrs('missing_targets')
+
+    def resolve_targets(self):
+        for target in self.targets:
+            target.resolve(context=self)
+
+        self.verify_targets()
+
+    def verify_targets(self):
+        if len(self.missing_targets) > 0:
+            msg = 'Target(s) not in database: {0}'
+            msg = msg.format(', '.join(self.missing_targets))
+
+            if not self.allow_missing_targets:
+                raise err.BadTargetError(message=msg, targets=self.missing_targets)
+            else:
+                logger.warning(msg)
+
+class ApiJob(TargetJob):
+    def __init__(self, **kwargs):
+        try:
+            api = kwargs.pop('api')
+        except KeyError:
+            raise ValueError('Must provide api object')
+
+        allow_api_errors = kwargs.pop('allow_api_errors', False)
+        load_batch_size = kwargs.pop('load_batch_size', 10000)
+
+        super(ApiJob, self).__init__(**kwargs)
+
+        self.api = api
+        self.load_batch_size = load_batch_size
+        self.allow_api_errors = allow_api_errors
+
+    def verify_targets(self):
+        super(ApiJob, self).verify_targets()
+
+        if len(self.bad_targets) > 0:
+            msg = 'Twitter API says target(s) nonexistent/suspended/bad: {0}'
+            msg = msg.format(', '.join(self.bad_targets))
+
+            if not self.allow_api_errors:
+                raise err.BadTargetError(message=msg, targets=self.bad_targets)
+            else:
+                logger.warning(msg)
 
 class CreateTagJob(TagJob):
     def run(self):
@@ -114,69 +201,44 @@ class DeleteTagJob(TagJob):
 
             self.session.commit()
 
-class ApplyTagJob(TagJob):
-    def __init__(self, **kwargs):
-        try:
-            targets = kwargs.pop('targets')
-        except KeyError:
-            raise ValueError('Must provide list of targets')
-
-        super(ApplyTagJob, self).__init__(**kwargs)
-
-        self.targets = targets
+class ApplyTagJob(TagJob, TargetJob):
+    resolve_mode = 'skip'
 
     def run(self):
-        for target in self.targets:
-            target.resolve(context=self, mode='raise')
+        self.resolve_targets()
 
-        users = [u for u in it.chain(*[t.users for t in self.targets])]
+        tag = self.session.query(md.Tag)
+                          .filter_by(name=self.tag)
+                          .one_or_none()
 
-        tag = self.session.query(md.Tag).filter_by(name=self.tag).one_or_none()
         if not tag:
             msg = 'Tag {0} does not exist'.format(self.tag)
-            raise err.BadTargetError(message=msg)
+            raise err.BadTagError(message=msg, tag=tag)
 
-        for user in users:
+        for user in self.users:
             user.tags.append(tag)
 
         self.session.commit()
 
-class ApiJob(Job):
-    def __init__(self, **kwargs):
-        try:
-            targets = kwargs.pop('targets')
-        except KeyError:
-            raise ValueError('Must provide list of targets')
+class InitializeJob(Job):
+    def run(self):
+        md.Base.metadata.drop_all(self.engine)
+        md.Base.metadata.create_all(self.engine)
 
-        try:
-            api = kwargs.pop('api')
-        except KeyError:
-            raise ValueError('Must provide api object')
-
-        load_batch_size = kwargs.pop('load_batch_size', 10000)
-
-        super(ApiJob, self).__init__(**kwargs)
-
-        self.ensure_schema_version()
-
-        self.targets = targets
-        self.api = api
-
-        self.load_batch_size = load_batch_size
-
-    def resolve_users(self, mode='raise'):
-        for target in self.targets:
-            target.resolve(context=self, mode=mode)
-
-        return [u for u in it.chain(*[t.users for t in self.targets])]
+        self.session.add(md.SchemaVersion(version=__version__))
+        self.session.commit()
 
 class UserInfoJob(ApiJob):
+    resolve_mode = 'hydrate'
+
     def run(self):
-        self.resolve_users(mode='rehydrate')
+        self.resolve_targets()
 
         self.session.commit()
 
 class TweetsJob(ApiJob):
+    resolve_mode = 'skip'
+
     def __init__(self, **kwargs):
         since_timestamp = kwargs.pop('since_timestamp', None)
         max_tweets = kwargs.pop('max_tweets', None)
@@ -188,50 +250,90 @@ class TweetsJob(ApiJob):
         self.max_tweets = max_tweets
         self.old_tweets = old_tweets
 
-    def run(self):
-        users = self.resolve_users(mode='raise')
+    def load_tweets_for(self, user):
+        if self.old_tweets:
+            since_id = None
+        else:
+            since_id = self.session.query(sa.func.max(md.Tweet.tweet_id)) \
+                            .filter(md.Tweet.user_id==user.user_id).scalar()
+
+        twargs = {
+            'user_id': user.user_id,
+            'since_id': since_id,
+            'max_tweets': self.max_tweets,
+            'since_timestamp': self.since_timestamp
+        }
+
+        tweets = self.api.user_timeline(**twargs)
+        tweets = ut.grouper(tweets, self.load_batch_size)
 
         n_items = 0
-        for i, user in enumerate(users):
-            msg = 'Processing user_id {0} ({1} / {2}), cumulative tweets {3}'
-            logger.info(msg.format(user.user_id, i + 1, len(users), n_items))
+        for i, batch in enumerate(tweets):
+            msg = 'Running {0} batch {1}, within-user cumulative tweets {2}'
+            msg = msg.format(type(self), i + 1, n_items)
+            logger.debug(msg)
 
-            if self.old_tweets:
-                since_id = None
+            for resp in batch:
+                tweet = md.Tweet.from_tweepy(resp, self.session)
+
+                # The merge emits warnings about having disabled the
+                # save-update cascade on Hashtag, Url, Symbol and Media,
+                # which is intentional and not appropriate to show users.
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', category=sa.exc.SAWarning)
+                    self.session.merge(tweet)
+
+            n_items += len(batch)
+
+        return n_items
+
+    def run(self):
+        self.resolve_targets()
+
+        n_items = 0
+        for i, user in enumerate(self.users):
+            msg = 'Processing user_id {0} ({1} / {2}), ' \
+                  'across-user cumulative tweets {3}'
+            msg = msg.format(user.user_id, i + 1, len(self.users), n_items)
+            logger.info(msg)
+
+            try:
+                n_items += self.load_tweets_for(user)
+            except err.ProtectedUserError as e:
+                msg = 'Ignoring protected user with user_id {0} in {1}'
+                msg = msg.format(user.user_id, self.__class__.__name__)
+
+                if not self.allow_api_errors:
+                    self.session.rollback()
+                    raise err.BadTargetError(message=msg, targets=[user.user_id])
+                else:
+                    logger.warning(msg)
+            except err.NotFoundError as e:
+                msg = 'Ignoring nonexistent user with user_id {0} in {1}'
+                msg = msg.format(user.user_id, self.__class__.__name__)
+
+                if not self.allow_api_errors:
+                    self.session.rollback()
+                    raise err.BadTargetError(message=msg, targets=[user.user_id])
+                else:
+                    logger.warning(msg)
             else:
-                since_id = self.session.query(sa.func.max(md.Tweet.tweet_id)) \
-                                .filter(md.Tweet.user_id==user.user_id).scalar()
-
-            twargs = {
-                'user_id': user.user_id,
-                'since_id': since_id,
-                'max_tweets': self.max_tweets,
-                'since_timestamp': self.since_timestamp
-            }
-
-            tweets = self.api.user_timeline(**twargs)
-            tweets = ut.grouper(tweets, self.load_batch_size)
-
-            for j, batch in enumerate(tweets):
-                msg = 'Running {0} batch {1}, cumulative tweets {2}'
-                msg = msg.format(type(self), j + 1, n_items)
-                logger.debug(msg)
-
-                for resp in batch:
-                    tweet = md.Tweet.from_tweepy(resp, self.session)
-
-                    # The merge emits warnings about having disabled the
-                    # save-update cascade on Hashtag, Url, Symbol and Media,
-                    # which is intentional and not appropriate to show users.
-                    with warnings.catch_warnings():
-                        warnings.simplefilter('ignore', category=sa.exc.SAWarning)
-                        self.session.merge(tweet)
-
-                n_items += len(batch)
-
-            self.session.commit()
+                self.session.commit()
 
 class FollowGraphJob(ApiJob):
+    # NOTE that here (unlike in TweetsJob), you can get gnarly primary key
+    # integrity errors on the user table if resolve_mode != 'skip': merging in
+    # an md.User object (but not flushing) and then running an insert against
+    # the user table may try to insert the same row again at commit if one of
+    # the User objects is for a row already loaded by the insert. (That is, if
+    # fetching users A and B, user B hadn't already been loaded and were
+    # hydrated here, and A follows B.) In this case, if this were not to be
+    # mode == 'skip' in the future, the easy thing to do is call
+    # self.session.flush() afterward. Note also that this only applies if the
+    # load_edges_for steps don't implicitly commit, which they do on most DBs.
+    # (See the comments in that method.)
+    resolve_mode = 'skip'
+
     def __init__(self, **kwargs):
         robust = kwargs.pop('robust', True)
 
@@ -268,13 +370,15 @@ class FollowGraphJob(ApiJob):
 
         # NOTE tl;dr the commit semantics here are complicated and depend on the
         # database, but the details shouldn't matter. Depending on the DB,
-        # clearing the stg table may or may not make a commit; depending on the
-        # setting of self.robust, self.insert_stg_batch may or may not do so as
-        # well. BUT both of these affect only data in the stg table; if an error
-        # leaves it in an inconsistent state, we don't care. Whether there are 0
-        # or more than 0 commits up to the end of the for loop below, there
-        # aren't any during the call to process_stg_data_for, which is the only
-        # part of this that modifies main data tables. So that call happens
+        # clearing the stg table may or may not commit; depending on the setting
+        # of self.robust, self.insert_stg_batch may or may not do so as well.
+        # BUT both of these affect only data in the stg table; if an error
+        # leaves it in an inconsistent state, we don't care. (If the
+        # resolve_mode for this job were 'fetch', we'd also have to consider
+        # whether and when any new users' rows were committed.) Whether there
+        # are 0 or more than 0 commits up to the end of the for loop below,
+        # there aren't any during the call to process_stg_data_for, which is the
+        # only part of this that modifies main data tables. So that call happens
         # atomically, which is what we care about.
 
         self.clear_stg_table()
@@ -401,28 +505,38 @@ class FollowGraphJob(ApiJob):
 
         self.session.execute(upd)
 
-    # NOTE that here (unlike in TweetsJob), you can get gnarly primary
-    # key integrity errors on the user table if resolve_users has mode
-    # != 'raise': merging in an md.User object for a given user and then
-    # running an insert against the user table may try to insert the same
-    # row again at commit if one of the User objects is for a row already
-    # loaded by the insert. (That is, if fetching users A and B, user B
-    # hadn't already been loaded and were hydrated here, and A follows B.)
-    # In this case, if this were not to be mode='raise' in the future, the
-    # easy thing to do is call self.session.flush() afterward.
     def run(self):
-        users = self.resolve_users(mode='raise')
+        self.resolve_targets()
 
         n_items = 0
-        for i, user in enumerate(users):
+        for i, user in enumerate(self.users):
             msg = 'Processing user_id {0} ({1} / {2}), ' \
                   'across-user cumulative edges {3}'
-            msg = msg.format(user.user_id, i + 1, len(users), n_items)
+            msg = msg.format(user.user_id, i + 1, len(self.users), n_items)
             logger.info(msg)
 
-            n_items += self.load_edges_for(user)
+            try:
+                n_items += self.load_edges_for(user)
+            except err.ProtectedUserError as e:
+                msg = 'Ignoring protected user with user_id {0} in {1}'
+                msg = msg.format(user.user_id, self.__class__.__name__)
 
-            self.session.commit()
+                if not self.allow_api_errors:
+                    self.session.rollback()
+                    raise err.BadTargetError(message=msg, targets=[user.user_id])
+                else:
+                    logger.warning(msg)
+            except err.NotFoundError as e:
+                msg = 'Ignoring nonexistent user with user_id {0} in {1}'
+                msg = msg.format(user.user_id, self.__class__.__name__)
+
+                if not self.allow_api_errors:
+                    self.session.rollback()
+                    raise err.BadTargetError(message=msg, targets=[user.user_id])
+                else:
+                    logger.warning(msg)
+            else:
+                self.session.commit()
 
 class FollowersJob(FollowGraphJob):
     direction = 'followers'
