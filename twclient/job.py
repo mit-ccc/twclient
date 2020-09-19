@@ -311,11 +311,11 @@ class FollowGraphJob(ApiJob):
             else:
                 raise
         else:
-            n_items = len(batch)
+            n_items = len(rows)
 
         # NOTE committing slows things down, but without it, we'd lose every
         # row loaded before one of these duplicate key problems
-        if robust:
+        if self.robust:
             self.session.commit()
 
         return n_items
