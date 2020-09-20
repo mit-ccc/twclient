@@ -211,7 +211,7 @@ class SelectTagTarget(Target):
 
         if len(new) > 0:
             msg = 'Requested tag(s) {0} do not exist'
-            msg = msg.format(', '.join(new)
+            msg = msg.format(', '.join(new))
             logger.warning(msg)
 
         self._add_missing_targets(new)

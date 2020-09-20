@@ -265,7 +265,7 @@ class TargetFrontend(Frontend):
             self.error('No target users provided')
 
         self.targets = targets
-        self.allow_missing_targets = False
+        self.allow_missing_targets = allow_missing_targets
 
     targets_required = True
 
@@ -556,7 +556,7 @@ def make_parser():
 
     def add_target_arguments(p):
         p.add_argument('-p', '--allow-missing-targets', action='store_true',
-                       help="continue even if a requested targets should be " \
+                       help="continue even if a requested target should be " \
                             "present in the database but isn't")
 
         # selecting users to operate on

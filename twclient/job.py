@@ -141,9 +141,9 @@ class TargetJob(Job):
         for target in self.targets:
             target.resolve(context=self)
 
-        self.verify_targets()
+        self.validate_targets()
 
-    def verify_targets(self):
+    def validate_targets(self):
         if len(self.missing_targets) > 0:
             msg = 'Target(s) not in database: {0}'
             msg = msg.format(', '.join(self.missing_targets))
@@ -169,8 +169,8 @@ class ApiJob(TargetJob):
         self.load_batch_size = load_batch_size
         self.allow_api_errors = allow_api_errors
 
-    def verify_targets(self):
-        super(ApiJob, self).verify_targets()
+    def validate_targets(self):
+        super(ApiJob, self).validate_targets()
 
         if len(self.bad_targets) > 0:
             msg = 'Twitter API says target(s) nonexistent/suspended/bad: {0}'
@@ -207,9 +207,7 @@ class ApplyTagJob(TagJob, TargetJob):
     def run(self):
         self.resolve_targets()
 
-        tag = self.session.query(md.Tag)
-                          .filter_by(name=self.tag)
-                          .one_or_none()
+        tag = self.session.query(md.Tag).filter_by(name=self.tag).one_or_none()
 
         if not tag:
             msg = 'Tag {0} does not exist'.format(self.tag)
