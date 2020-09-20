@@ -298,39 +298,33 @@ class TwitterListTarget(Target):
 
         new = []
         for tg, sn, slug in zip(self.targets, self.owner_screen_names, self.slugs):
-            owner = self._user_for_screen_name(sn)
+            try:
+                owner = self._user_for_screen_name(sn)
+                assert owner is not None
 
-            if owner is None: # list hasn't been ingested
+                lst = self.context.session.query(md.List).filter(and_(
+                    md.List.user_id == owner.user_id,
+                    md.List.slug == slug
+                )).one_or_none()
+                assert lst is not None
+            except AssertionError: # list hasn't been ingested
                 self._add_missing_targets([tg])
 
                 if context.resolve_mode == 'fetch':
                     new += [tg]
                 else: # context.resolve_mode == 'skip'
                     continue
+            else:
+                # every user currently recorded as a list member
+                users = self.context.session.query(md.User).filter(
+                    md.User.user_id.in_([
+                        m.user_id
+                        for m in lst.list_memberships
+                        if m.valid_end_dt is None # as above
+                    ])
+                )
 
-            lst = self.context.session.query(md.List).filter(and_(
-                md.List.user_id == owner.user_id,
-                md.List.slug == slug
-            )).one_or_none()
-
-            if lst is None: # list hasn't been ingested
-                self._add_missing_targets([tg])
-
-                if context.resolve_mode == 'fetch':
-                    new += [tg]
-                else: # context.resolve_mode == 'skip'
-                    continue
-
-            # every user currently recorded as a list member
-            users = self.context.session.query(md.User).filter(
-                md.User.user_id.in_([
-                    m.user_id
-                    for m in lst.list_memberships
-                    if m.valid_end_dt is None # as above
-                ])
-            )
-
-            self._add_users(users)
+                self._add_users(users)
 
         if context.resolve_mode == 'fetch' and len(new) > 0:
             self._hydrate(new)
