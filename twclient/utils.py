@@ -3,6 +3,16 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+def uniq(seq):
+    seen, ret = set(), []
+
+    for s in seq:
+        if not s in seen:
+            ret += [s]
+            seen.add(s)
+
+    return ret
+
 # Like SQL's coalesce() - returns the first argument that's not None
 def coalesce(*args):
     try:

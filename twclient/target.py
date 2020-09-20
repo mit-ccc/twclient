@@ -19,19 +19,30 @@ class Target(ABC):
             raise ValueError('Must specify targets')
 
         context = kwargs.pop('context', None)
+        randomize = kwargs.pop('randomize', False)
 
         super(Target, self).__init__(**kwargs)
 
-        self.targets = list(set(targets))
-
-        # make partial loads more statistically useful
-        random.shuffle(self.targets)
+        self.randomize = randomize
+        self._context = context
 
         self._users = []
         self._bad_targets = []
         self._missing_targets = []
-        if context is not None:
-            self._context = context
+
+        deduped = ut.uniq(targets)
+        dupes = list(set(targets) - set(deduped))
+
+        if len(dupes) > 0:
+            msg = 'Deduping after following duplicate targets given: {0}'
+            msg = msg.format(', '.join(dupes))
+            logger.warning(msg)
+
+        self.targets = deduped
+
+        if self.randomize:
+            # make partial loads more statistically useful
+            random.shuffle(self.targets)
 
     @abstractmethod
     def resolve(self, context, mode='fetch'):
@@ -44,7 +55,7 @@ class Target(ABC):
 
     @property
     def resolved(self):
-        return hasattr(self, '_context')
+        return self._context is not None
 
     @property
     def users(self):

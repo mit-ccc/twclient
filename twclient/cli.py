@@ -243,6 +243,7 @@ class TargetFrontend(Frontend):
         select_tags = kwargs.pop('select_tags', None)
         twitter_lists = kwargs.pop('twitter_lists', None)
 
+        randomize = kwargs.pop('randomize', False)
         allow_missing_targets = kwargs.pop('allow_missing_targets', False)
 
         super(TargetFrontend, self).__init__(**kwargs)
@@ -265,6 +266,7 @@ class TargetFrontend(Frontend):
             self.error('No target users provided')
 
         self.targets = targets
+        self.randomize = randomize
         self.allow_missing_targets = allow_missing_targets
 
     targets_required = True
@@ -329,6 +331,7 @@ class FetchCommand(DatabaseFrontend, TargetFrontend, ApiFrontend):
             'engine': self.engine,
             'api': self.api,
             'targets': self.targets,
+            'randomize': self.randomize,
             'allow_missing_targets': self.allow_missing_targets,
             'allow_api_errors': self.allow_api_errors,
             'load_batch_size': self.load_batch_size
@@ -383,6 +386,7 @@ class TagCommand(DatabaseFrontend, TargetFrontend):
 
         if self.subcommand == 'apply':
             args['targets'] = self.targets
+            args['randomize'] = self.randomize
             args['allow_missing_targets'] = self.allow_missing_targets
 
         return args
@@ -555,6 +559,9 @@ def make_parser():
                         help='path to config file (default ~/.twclientrc)')
 
     def add_target_arguments(p):
+        p.add_argument('-w', '--randomize', action='store_true',
+                       help='randomize processing order of targets')
+
         # selecting users to operate on
         p.add_argument('-g', '--select-tags', nargs='+',
                     help='process loaded users with these tags')
