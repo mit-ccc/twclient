@@ -8,6 +8,7 @@ from abc import ABC, abstractmethod
 from sqlalchemy import exists, or_, and_, func
 
 from . import error as err
+from . import utils as ut
 
 logger = logging.getLogger(__name__)
 

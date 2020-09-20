@@ -251,16 +251,16 @@ class TargetFrontend(Frontend):
         targets = []
 
         if user_ids is not None:
-            targets += [tg.UserIdTarget(targets=user_ids)]
+            targets += [tg.UserIdTarget(targets=user_ids, randomize=randomize)]
 
         if screen_names is not None:
-            targets += [tg.ScreenNameTarget(targets=screen_names)]
+            targets += [tg.ScreenNameTarget(targets=screen_names, randomize=randomize)]
 
         if select_tags is not None:
-            targets += [tg.SelectTagTarget(targets=select_tags)]
+            targets += [tg.SelectTagTarget(targets=select_tags, randomize=randomize)]
 
         if twitter_lists is not None:
-            targets += [tg.TwitterListTarget(targets=twitter_lists)]
+            targets += [tg.TwitterListTarget(targets=twitter_lists, randomize=randomize)]
 
         if self.targets_required and len(targets) == 0:
             self.error('No target users provided')
@@ -331,7 +331,6 @@ class FetchCommand(DatabaseFrontend, TargetFrontend, ApiFrontend):
             'engine': self.engine,
             'api': self.api,
             'targets': self.targets,
-            'randomize': self.randomize,
             'allow_missing_targets': self.allow_missing_targets,
             'allow_api_errors': self.allow_api_errors,
             'load_batch_size': self.load_batch_size
@@ -386,7 +385,6 @@ class TagCommand(DatabaseFrontend, TargetFrontend):
 
         if self.subcommand == 'apply':
             args['targets'] = self.targets
-            args['randomize'] = self.randomize
             args['allow_missing_targets'] = self.allow_missing_targets
 
         return args
