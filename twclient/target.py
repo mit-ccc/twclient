@@ -134,7 +134,7 @@ class Target(ABC):
             requested = user_ids
             received = [u.user_id for u in objs]
         else: # len(screen_names) > 0
-            requested = screen_names
+            requested = [sn.lower() for sn in screen_names]
             received = [u.screen_name.lower() for u in objs]
 
         bad_targets = list(set(requested) - set(received))
