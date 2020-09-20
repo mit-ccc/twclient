@@ -1,5 +1,3 @@
-# FIXME tweet media entity
-
 import json
 import hashlib
 import logging
@@ -11,10 +9,12 @@ import sqlalchemy.sql.functions as func
 
 from sqlalchemy.types import Boolean, Integer, BigInteger, String, UnicodeText
 from sqlalchemy.types import TIMESTAMP # recommended over DateTime for timezones
+from sqlalchemy.types import Float, Enum
 
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
-from sqlalchemy.schema import Table, Column, Index, ForeignKey, UniqueConstraint
+from sqlalchemy.schema import Table, Column, Index, ForeignKey
+from sqlalchemy.schema import UniqueConstraint, CheckConstraint
 
 from . import utils as ut
 
@@ -403,6 +403,7 @@ class Tweet(TimestampsMixin, Base):
     hashtag_mentions = relationship('HashtagMention', back_populates='tweet')
     symbol_mentions = relationship('SymbolMention', back_populates='tweet')
     url_mentions = relationship('UrlMention', back_populates='tweet')
+    media_mentions = relationship('MediaMention', back_populates='tweet')
 
     @classmethod
     def from_tweepy(cls, obj, session=None):
@@ -460,6 +461,7 @@ class Tweet(TimestampsMixin, Base):
         ret.hashtag_mentions = HashtagMention.list_from_tweepy(obj, session)
         ret.symbol_mentions = SymbolMention.list_from_tweepy(obj, session)
         ret.url_mentions = UrlMention.list_from_tweepy(obj, session)
+        ret.media_mentions = MediaMention.list_from_tweepy(obj, session)
 
         return ret
 
@@ -488,6 +490,52 @@ class Url(TimestampsMixin, UniqueMixin, Base):
                             cascade_backrefs=False)
     user_data = relationship('UserData', back_populates='url',
                              cascade_backrefs=False)
+    media = relationship('Media', back_populates='url',
+                         cascade_backrefs=False)
+    media_variants = relationship('MediaVariant', back_populates='url',
+                                  cascade_backrefs=False)
+
+class MediaType(TimestampsMixin, UniqueMixin, Base):
+    media_type_id = Column(Integer, primary_key=True, autoincrement=True)
+
+    name = Column(UnicodeText, nullable=False, unique=True)
+
+    media = relationship('Media', back_populates='media_type',
+                         cascade_backrefs=False)
+
+class Media(TimestampsMixin, Base):
+    # Twitter gives these IDs, so unlike with the other entities we don't have
+    # to make one up
+    media_id = Column(BigInteger, primary_key=True, autoincrement=False)
+
+    media_type_id = Column(Integer, ForeignKey('media_type.media_type_id', deferrable=True),
+                           nullable=False)
+    media_url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True),
+                          nullable=False)
+
+    # video-specific attributes
+    aspect_ratio_width = Column(Integer, nullable=True)
+    aspect_ratio_height = Column(Integer, nullable=True)
+    duration = Column(Float, nullable=True)
+
+    media_type = relationship('MediaType', back_populates='media')
+    url = relationship('Url', back_populates='media')
+    variants = relationship('MediaVariant', back_populates='media')
+    mentions = relationship('MediaMention', back_populates='media',
+                            cascade_backrefs=False)
+
+class MediaVariant(TimestampsMixin, Base):
+    media_id = Column(BigInteger, ForeignKey('media.media_id', deferrable=True),
+                      primary_key=True, autoincrement=False)
+    url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True),
+                    primary_key=True, autoincrement=False)
+
+    bitrate = Column(Integer, nullable=True)
+    content_type = Column(UnicodeText, nullable=True)
+
+    url = relationship('Url', back_populates='media_variants')
+    media = relationship('Media', back_populates='variants',
+                         cascade_backrefs=False)
 
 class UserMention(TimestampsMixin, Base):
     tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
@@ -581,6 +629,7 @@ class SymbolMention(TimestampsMixin, Base):
             if 'symbols' in obj.entities.keys():
                 for mt in obj.entities['symbols']:
                     kwargs = {
+                        'tweet_id': obj.id,
                         'start_index': mt['indices'][0],
                         'end_index': mt['indices'][1]
                     }
@@ -604,6 +653,7 @@ class UrlMention(TimestampsMixin, Base):
     # These are properties of the specific URL mention, not the page at the
     # other end
     twitter_short_url = Column(UnicodeText, nullable=True)
+    twitter_display_url = Column(UnicodeText, nullable=True)
     expanded_short_url = Column(UnicodeText, nullable=True)
 
     # It's less obvious, but these are also properties of the URL mention, not
@@ -628,10 +678,15 @@ class UrlMention(TimestampsMixin, Base):
                 for mt in obj.entities['urls']:
                     kwargs = {
                         'tweet_id': obj.id,
-                        'twitter_short_url': mt['url'],
                         'start_index': mt['indices'][0],
                         'end_index': mt['indices'][1]
                     }
+
+                    if 'url' in mt.keys():
+                        kwargs['twitter_short_url'] = mt['url']
+
+                    if 'display_url' in mt.keys():
+                        kwargs['twitter_display_url'] = mt['display_url']
 
                     if 'unwound' in mt.keys():
                         kwargs['status'] = mt['unwound']['status']
@@ -641,11 +696,124 @@ class UrlMention(TimestampsMixin, Base):
                         kwargs['expanded_short_url'] = mt['expanded_url']
                         url = mt['unwound']['url']
                     else:
-                        kwargs['expanded_short_url'] = None
                         url = mt['expanded_url']
 
                     ret = cls(**kwargs)
                     ret.url = Url.as_unique(session, url=url)
+
+                    lst += [ret]
+
+        return lst
+
+class MediaMention(TimestampsMixin, Base):
+    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
+                      primary_key=True, autoincrement=False)
+    start_index = Column(Integer, primary_key=True, autoincrement=False)
+    end_index = Column(Integer, primary_key=True, autoincrement=False)
+
+    media_id = Column(BigInteger, ForeignKey('media.media_id', deferrable=True),
+                      nullable=False, index=True)
+
+    # (Probably) properties of the specific media mention, not the media itself
+    twitter_short_url = Column(UnicodeText, nullable=True)
+    twitter_display_url = Column(UnicodeText, nullable=True)
+    twitter_expanded_url = Column(UnicodeText, nullable=True)
+
+    media = relationship('Media', back_populates='mentions')
+    tweet = relationship('Tweet', back_populates='media_mentions',
+                         cascade_backrefs=False)
+
+    __table_args__ = (UniqueConstraint('tweet_id', 'start_index', 'end_index'),)
+
+    @classmethod
+    def list_from_tweepy(cls, obj, session=None):
+        lst = []
+
+        # the usual entities object provides incorrect information for media
+        # entities: https://developer.twitter.com/en/docs/twitter-api/v1/data-dictionary/overview/extended-entities-object
+        if hasattr(obj, 'extended_entities'):
+            if 'media' in obj.entities.keys():
+                for mt in obj.extended_entities['media']:
+                    ##
+                    ## The MediaMention object
+                    ##
+
+                    kwargs = {
+                        'tweet_id': obj.id,
+                        'start_index': mt['indices'][0],
+                        'end_index': mt['indices'][1]
+                    }
+
+                    if 'url' in mt.keys():
+                        kwargs['twitter_short_url'] = mt['url']
+
+                    if 'display_url' in mt.keys():
+                        kwargs['twitter_display_url'] = mt['display_url']
+
+                    if 'expanded_url' in mt.keys():
+                        kwargs['twitter_expanded_url'] = mt['expanded_url']
+
+                    ret = cls(**kwargs)
+
+                    ##
+                    ## The Media object
+                    ##
+
+                    kwargs = {
+                        'media_id': mt['id']
+                    }
+
+                    # Info that's only populated for videos
+                    if 'video_info' in mt.keys():
+                        if 'duration_millis' in mt['video_info'].keys():
+                            kwargs['duration'] = 0.001 * mt['video_info']['duration_millis']
+
+                        if 'aspect_ratio' in mt['video_info'].keys():
+                            kwargs['aspect_ratio_width'] = mt['video_info']['aspect_ratio'][0]
+                            kwargs['aspect_ratio_height'] = mt['video_info']['aspect_ratio'][1]
+
+                    ret.media = Media(**kwargs)
+
+                    # What kind of media?
+                    media_type = mt['type']
+                    if 'additional_media_info' in mt.keys():
+                        if 'embeddable' in mt['additional_media_info'].keys():
+                            if not mt['additional_media_info']['embeddable']:
+                                media_type = 'unembeddable_video'
+                    ret.media.media_type = MediaType.as_unique(session, name=media_type)
+
+                    # The primary url of the media
+                    if 'media_url_https' in mt.keys():
+                        media_url = mt['media_url_https']
+                    else:
+                        media_url = mt['media_url']
+                    ret.media.url = Url.as_unique(session, url=media_url)
+
+                    ##
+                    ## "Variants" aka video files (multiple encodings per Media)
+                    ##
+                    if 'video_info' in mt.keys():
+                        if 'variants' in mt['video_info'].keys():
+                            variants = []
+                            for v in mt['video_info']['variants']:
+                                kwargs = {
+                                    'media_id': mt['id']
+                                }
+
+                                if 'bitrate' in v.keys():
+                                    kwargs['bitrate'] = v['bitrate']
+
+                                if 'content_type' in v.keys():
+                                    kwargs['content_type'] = v['content_type']
+
+                                obj = MediaVariant(**kwargs)
+
+                                obj.media = ret.media
+                                obj.url = Url.as_unique(session, url=v['url'])
+
+                                variants += [obj]
+
+                            ret.media.variants = variants
 
                     lst += [ret]
 
