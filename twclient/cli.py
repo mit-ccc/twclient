@@ -555,10 +555,6 @@ def make_parser():
                         help='path to config file (default ~/.twclientrc)')
 
     def add_target_arguments(p):
-        p.add_argument('-p', '--allow-missing-targets', action='store_true',
-                       help="continue even if a requested target should be " \
-                            "present in the database but isn't")
-
         # selecting users to operate on
         p.add_argument('-g', '--select-tags', nargs='+',
                     help='process loaded users with these tags')
@@ -646,6 +642,9 @@ def make_parser():
     tap.add_argument('name', help='the name of the tag')
     tap.add_argument('-d', '--database',
                     help='use this stored DB profile instead of default')
+    tap.add_argument('-p', '--allow-missing-targets', action='store_true',
+                     help="continue even if a requested target should be " \
+                          "present in the database but isn't")
 
     ## (Re-)initializing the database schema
 
@@ -666,12 +665,21 @@ def make_parser():
 
     frp = fetch.add_parser('friends', help="Get user friends")
     frp = add_fetch_arguments(frp)
+    frp.add_argument('-p', '--allow-missing-targets', action='store_true',
+                     help="continue even if a requested target should be " \
+                          "present in the database but isn't")
 
     flp = fetch.add_parser('followers', help="Get user followers")
     flp = add_fetch_arguments(flp)
+    flp.add_argument('-p', '--allow-missing-targets', action='store_true',
+                     help="continue even if a requested target should be " \
+                          "present in the database but isn't")
 
     twp = fetch.add_parser('tweets', help="Get user tweets")
     twp = add_fetch_arguments(twp)
+    twp.add_argument('-p', '--allow-missing-targets', action='store_true',
+                     help="continue even if a requested target should be " \
+                          "present in the database but isn't")
     twp.add_argument('-o', '--old-tweets', action='store_true',
                     help="Load tweets older than user's most recent in DB")
     twp.add_argument('-z', '--since-timestamp',

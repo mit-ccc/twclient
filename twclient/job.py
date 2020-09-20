@@ -144,7 +144,7 @@ class TargetJob(Job):
         self.validate_targets()
 
     def validate_targets(self):
-        if len(self.missing_targets) > 0:
+        if self.resolve_mode == 'skip' and len(self.missing_targets) > 0:
             msg = 'Target(s) not in database: {0}'
             msg = msg.format(', '.join(self.missing_targets))
 
@@ -172,7 +172,7 @@ class ApiJob(TargetJob):
     def validate_targets(self):
         super(ApiJob, self).validate_targets()
 
-        if len(self.bad_targets) > 0:
+        if self.resolve_mode != 'skip' and len(self.bad_targets) > 0:
             msg = 'Twitter API says target(s) nonexistent/suspended/bad: {0}'
             msg = msg.format(', '.join(self.bad_targets))
 
