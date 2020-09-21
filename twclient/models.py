@@ -520,7 +520,8 @@ class Media(TimestampsMixin, Base):
 
     media_type = relationship('MediaType', back_populates='media')
     url = relationship('Url', back_populates='media')
-    variants = relationship('MediaVariant', back_populates='media')
+    variants = relationship('MediaVariant', back_populates='media',
+                            cascade='all, delete-orphan')
     mentions = relationship('MediaMention', back_populates='media',
                             cascade_backrefs=False)
 
@@ -807,8 +808,6 @@ class MediaMention(TimestampsMixin, Base):
                                     kwargs['content_type'] = v['content_type']
 
                                 obj = MediaVariant(**kwargs)
-
-                                obj.media = ret.media
                                 obj.url = Url.as_unique(session, url=v['url'])
 
                                 variants += [obj]
