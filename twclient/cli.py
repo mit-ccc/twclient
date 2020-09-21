@@ -162,10 +162,10 @@ class Frontend(ABC):
             # toplevel, it's a bug (or, okay, a network issue, Twitter API
             # meltdown, whatever, but nothing to be gained in that case by
             # hiding the whole scary traceback)
-            if logging.getLogger().getEffectiveLevel() == logging.WARNING:
-                logger.error(e.message)
-            else:
+            if logging.getLogger().getEffectiveLevel() == logging.DEBUG:
                 logger.exception(e.message)
+            else:
+                logger.error(e.message)
 
             sys.exit(e.exit_status)
 

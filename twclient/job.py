@@ -253,7 +253,7 @@ class TweetsJob(ApiJob):
             since_id = None
         else:
             since_id = self.session.query(sa.func.max(md.Tweet.tweet_id)) \
-                            .filter(md.Tweet.user_id==user.user_id).scalar()
+                           .filter(md.Tweet.user_id==user.user_id).scalar()
 
         twargs = {
             'user_id': user.user_id,
@@ -298,7 +298,7 @@ class TweetsJob(ApiJob):
             try:
                 n_items += self.load_tweets_for(user)
             except err.ProtectedUserError as e:
-                msg = 'Ignoring protected user with user_id {0} in {1}'
+                msg = 'Encountered protected user with user_id {0} in {1}'
                 msg = msg.format(user.user_id, self.__class__.__name__)
 
                 if not self.allow_api_errors:
@@ -307,7 +307,7 @@ class TweetsJob(ApiJob):
                 else:
                     logger.warning(msg)
             except err.NotFoundError as e:
-                msg = 'Ignoring nonexistent user with user_id {0} in {1}'
+                msg = 'Encountered nonexistent user with user_id {0} in {1}'
                 msg = msg.format(user.user_id, self.__class__.__name__)
 
                 if not self.allow_api_errors:
@@ -436,7 +436,7 @@ class FollowGraphJob(ApiJob):
                 md.StgFollow.__table__.insert().values(**row)
                 nrows += 1
             except sa.exc.IntegrityError:
-                msg = 'Ignoring integrity error (likely duplicate) on edge {0}'
+                msg = 'Encountered IntegrityError (likely dupe) on edge {0}'
                 logger.debug(msg.format(row))
 
         return nrows
@@ -516,7 +516,7 @@ class FollowGraphJob(ApiJob):
             try:
                 n_items += self.load_edges_for(user)
             except err.ProtectedUserError as e:
-                msg = 'Ignoring protected user with user_id {0} in {1}'
+                msg = 'Encountered protected user with user_id {0} in {1}'
                 msg = msg.format(user.user_id, self.__class__.__name__)
 
                 if not self.allow_api_errors:
@@ -525,7 +525,7 @@ class FollowGraphJob(ApiJob):
                 else:
                     logger.warning(msg)
             except err.NotFoundError as e:
-                msg = 'Ignoring nonexistent user with user_id {0} in {1}'
+                msg = 'Encountered nonexistent user with user_id {0} in {1}'
                 msg = msg.format(user.user_id, self.__class__.__name__)
 
                 if not self.allow_api_errors:
