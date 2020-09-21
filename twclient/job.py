@@ -408,8 +408,10 @@ class FollowGraphJob(ApiJob):
         try:
             self.session.bulk_insert_mappings(md.StgFollow, rows)
         except sa.exc.IntegrityError:
+            self.session.rollback()
+
             if self.robust:
-                n_items = self.insert_stg_batch_robust(md.StgFollow, rows)
+                n_items = self.insert_stg_batch_robust(rows)
             else:
                 raise
         else:
