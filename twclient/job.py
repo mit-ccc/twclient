@@ -333,11 +333,11 @@ class FollowGraphJob(ApiJob):
     resolve_mode = 'skip'
 
     def __init__(self, **kwargs):
-        robust = kwargs.pop('robust', True)
+        fast_load = kwargs.pop('fast_load', False)
 
         super(FollowGraphJob, self).__init__(**kwargs)
 
-        self.robust = robust
+        self.fast_load = fast_load
 
     @property
     @abstractmethod
@@ -369,7 +369,7 @@ class FollowGraphJob(ApiJob):
         # NOTE tl;dr the commit semantics here are complicated and depend on the
         # database, but the details shouldn't matter. Depending on the DB,
         # clearing the stg table may or may not commit; depending on the setting
-        # of self.robust, self.insert_stg_batch may or may not do so as well.
+        # of self.fast_load, self.insert_stg_batch may or may not do so as well.
         # BUT both of these affect only data in the stg table; if an error
         # leaves it in an inconsistent state, we don't care. (If the
         # resolve_mode for this job were 'fetch', we'd also have to consider
@@ -410,7 +410,7 @@ class FollowGraphJob(ApiJob):
         except sa.exc.IntegrityError:
             self.session.rollback()
 
-            if self.robust:
+            if not self.fast_load:
                 n_items = self.insert_stg_batch_robust(rows)
             else:
                 raise
@@ -419,7 +419,7 @@ class FollowGraphJob(ApiJob):
 
         # NOTE committing slows things down, but without it, we'd lose every
         # row loaded before one of these duplicate key problems
-        if self.robust:
+        if not self.fast_load:
             self.session.commit()
 
         return n_items

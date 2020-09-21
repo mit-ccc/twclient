@@ -308,6 +308,9 @@ class FetchCommand(DatabaseFrontend, TargetFrontend, ApiFrontend):
     def __init__(self, **kwargs):
         load_batch_size = kwargs.pop('load_batch_size', 10000)
 
+        # follow-specific arguments
+        fast_load = kwargs.pop('fast_load', False)
+
         # tweet-specific arguments
         since_timestamp = kwargs.pop('since_timestamp', None)
         max_tweets = kwargs.pop('max_tweets', None)
@@ -321,6 +324,7 @@ class FetchCommand(DatabaseFrontend, TargetFrontend, ApiFrontend):
                                 'are only valid with subcommand = "tweets"')
 
         self.load_batch_size = load_batch_size
+        self.fast_load = fast_load
         self.since_timestamp = since_timestamp
         self.max_tweets = max_tweets
         self.old_tweets = old_tweets
@@ -340,6 +344,9 @@ class FetchCommand(DatabaseFrontend, TargetFrontend, ApiFrontend):
             args['since_timestamp'] = self.since_timestamp
             args['max_tweets'] = self.max_tweets
             args['old_tweets'] = self.old_tweets
+
+        if self.subcommand in ('friends', 'followers'):
+            args['fast_load'] = self.fast_load
 
         return args
 
@@ -563,7 +570,7 @@ def make_parser():
         # selecting users to operate on
         p.add_argument('-g', '--select-tags', nargs='+',
                     help='process loaded users with these tags')
-        p.add_argument('-i', '--user-ids', nargs='+',
+        p.add_argument('-i', '--user-ids', nargs='+', type=int,
                     help='process particular Twitter user IDs')
         p.add_argument('-n', '--screen-names', nargs='+',
                     help='process particular Twitter screen names')
@@ -673,12 +680,16 @@ def make_parser():
     frp.add_argument('-p', '--allow-missing-targets', action='store_true',
                      help="continue even if a requested target should be " \
                           "present in the database but isn't")
+    frp.add_argument('-j', '--fast-load', action='store_true',
+                     help='load rows faster but less robustly to duplicates')
 
     flp = fetch.add_parser('followers', help="Get user followers")
     flp = add_fetch_arguments(flp)
     flp.add_argument('-p', '--allow-missing-targets', action='store_true',
                      help="continue even if a requested target should be " \
                           "present in the database but isn't")
+    flp.add_argument('-j', '--fast-load', action='store_true',
+                     help='load rows faster but less robustly to duplicates')
 
     twp = fetch.add_parser('tweets', help="Get user tweets")
     twp = add_fetch_arguments(twp)
