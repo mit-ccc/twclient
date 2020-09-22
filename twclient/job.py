@@ -1,22 +1,18 @@
-import sys
 import random
 import logging
+import warnings
+import itertools as it
 
-from importlib.resources import open_text
 from abc import ABC, abstractmethod
 
-import tweepy
-import psycopg2
+import sqlalchemy as sa
+from sqlalchemy.orm import sessionmaker
 
-from psycopg2 import sql
-
-import twclient.error as err
-import twclient.utils as ut
-
-from twclient.row import Rowset
-from twclient.row import UserRow, TweetRow, UserTagRow, TweetTagRow
-from twclient.row import FollowRow, FollowFetchRow, MentionRow
-from twclient.authpool import AuthPoolAPI
+from . import __version__
+from . import error as err
+from . import utils as ut
+from . import models as md
+from . import twitter_api as ta
 
 logger = logging.getLogger(__name__)
 
@@ -26,967 +22,527 @@ logger = logging.getLogger(__name__)
 ## the details of interacting with the database and Twitter API
 ##
 
-class DatabaseJob(ABC):
+class Job(ABC):
     def __init__(self, **kwargs):
-        dsn = kwargs.pop('dsn', None)
-        socket = kwargs.pop('socket', None)
-        conn = kwargs.pop('conn', None)
-        schema = kwargs.pop('schema', 'twitter')
+        try:
+            engine = kwargs.pop('engine')
+        except KeyError:
+            raise ValueError("engine instance is required")
 
-        assert ut.coalesce(dsn, socket, conn) is not None
+        super(Job, self).__init__(**kwargs)
 
-        super(DatabaseJob, self).__init__(**kwargs)
+        self.engine = engine
 
-        self.dsn = dsn
-        self.socket = socket
-        self.schema = schema
+        self.sessionfactory = sessionmaker()
+        self.sessionfactory.configure(bind=self.engine)
+        self.session = self.sessionfactory()
 
-        if conn is not None:
-            self.conn = conn
-            self._conn_owner = False
+        self._schema_verified = False
+
+    def ensure_schema_version(self):
+        if self._schema_verified:
+            return
+
+        schema_version = self.session.query(md.SchemaVersion).all()
+
+        if len(schema_version) != 1:
+            msg = 'Bad or missing schema version tag in database'
+            raise err.BadSchemaError(message=msg)
+
+        db_version = schema_version[0].version
+
+        if db_version > __version__:
+            msg = 'Package version {0} cannot use future schema version {1}'
+            msg = msg.format(__version__, db_version)
+            raise err.BadSchemaError(message=msg)
+
+        if db_version < __version__:
+            msg= 'Package version {0} cannot migrate old schema version {1}; ' \
+                 'consider downgrading the package version'
+            msg = msg.format(__version__, db_version)
+            raise err.BadSchemaError(message=msg)
+
+        self._schema_verified = True
+
+    def get_or_create(self, model, **kwargs):
+        instance = self.session.query(model).filter_by(**kwargs).one_or_none()
+
+        if instance:
+            return instance
         else:
-            self.conn = self._new_db_connection()
-            self._conn_owner = True
+            instance = model(**kwargs)
 
-    def _new_db_connection(self):
-        if self.dsn is not None:
-            conn_args = {'dsn': self.dsn}
-        else:
-            conn_args = {'host': self.socket}
+            self.session.add(instance)
 
-        return psycopg2.connect(**conn_args)
+            return instance
 
     @abstractmethod
     def run(self):
         raise NotImplementedError()
 
-    def __enter__(self):
-        return self
-
-    def __exit__(self, type, value, tb):
-        if self._conn_owner:
-            self.conn.close()
-
-    # WARNING drops the schema and deletes all data!
-    def db_initialize(self):
-        schema = open_text('twclient.sql', 'schema.sql').read().strip()
-
-        with self.conn.cursor() as cur:
-            cur.execute(schema)
-
-    def commit(self):
-        logger.debug('Committing')
-
-        self.conn.commit()
-
-    @staticmethod
-    def _copy_stmt(table, cols, sep=',', schema=None):
-        query = [sql.SQL('copy')]
-
-        if schema is not None:
-            query += [sql.Identifier(schema), sql.SQL('.')]
-
-        query += [
-            sql.Identifier(table),
-
-            sql.SQL('('),
-            sql.SQL(', ').join(sql.Identifier(n) for n in cols),
-            sql.SQL(')'),
-
-            sql.SQL('from stdin'),
-
-            sql.SQL('csv'),
-            sql.SQL('header'),
-            sql.SQL('delimiter'), sql.Literal(sep)
-        ]
-
-        return query
-
-    @staticmethod
-    def _insert_stmt(table, cols, payload, schema=None, returning=[],
-                     conflict='merge', conflict_constraint=['id']):
-        assert conflict in ('raise', 'merge', 'skip')
-
-        query = [sql.SQL('insert into')]
-
-        if schema is not None:
-            query += [sql.Identifier(schema), sql.SQL('.')]
-
-        query += [
-            sql.Identifier(table), sql.SQL('as tbl'),
-
-            sql.SQL('('),
-            sql.SQL(', ').join(sql.Identifier(n) for n in cols),
-            sql.SQL(')')
-        ]
-
-        query += payload
-
-        update_cols = list(set(cols) - set(conflict_constraint))
-
-        if conflict == 'skip' or len(update_cols) == 0:
-            query += [
-                sql.SQL('on conflict do nothing')
-            ]
-        elif conflict == 'merge':
-            query += [
-                sql.SQL('on conflict'),
-
-                sql.SQL('('),
-                sql.SQL(', ').join(sql.Identifier(n) for n in conflict_constraint),
-                sql.SQL(')'),
-
-                sql.SQL('do update set'),
-
-                sql.SQL(', ').join(
-                    sql.SQL(' ').join([
-                        sql.Identifier(n), sql.SQL('='),
-                        sql.SQL('coalesce'), sql.SQL('('),
-                        sql.Identifier('excluded'), sql.SQL('.'),
-                        sql.Identifier(n), sql.SQL(','),
-                        sql.Identifier('tbl'), sql.SQL('.'),
-                        sql.Identifier(n), sql.SQL(')')
-                    ]) for n in update_cols
-                )
-            ]
-        else:
-            pass # raise (on unique constraint violation) is the default
-
-        if len(returning) > 0:
-            query += [
-                sql.SQL('returning'),
-                sql.SQL(', ').join(sql.Identifier(n) for n in returning),
-            ]
-
-        return query
-
-    @staticmethod
-    def _create_tmp_tbl_stmt(table, cols, types=None):
-        if types is None:
-            types = ['text' for c in cols]
-
-        query = [
-            sql.SQL('create local temporary table'), sql.Identifier(table),
-            sql.SQL('('),
-
-            sql.SQL(', ').join(
-                sql.SQL(' ').join([
-                    sql.Identifier(n),
-                    sql.SQL(t)
-                ]) for n, t in zip(cols, types)
-            ),
-
-            sql.SQL(')'),
-        ]
-
-        return query
-
-    def db_load_data_copy(self, data, returning=[], conflict='raise',
-                          conflict_constraint=['id']):
-        logger.debug('Loading data via COPY')
-
-        if len(returning) > 0:
-            raise ValueError("can only use INSERT INTO ... RETURNING ... " +
-                             "from db_load_data_insert")
-
-        if data.table is None: # no rows to load
-            return None
-
-        ##
-        ## First, create a temporary table for the data
-        ##
-
-        # not necessarily thread-safe
-        tmptbl = data.table + '_load_tmp_' + next(ut.unique_names)
-
-        query = self._create_tmp_tbl_stmt(table=tmptbl, cols=data.columns,
-                                          types=data.column_types)
-        query = sql.Composed(query).join(' ').as_string(self.conn)
-
-        with self.conn.cursor() as cur:
-            cur.execute(query)
-
-        ##
-        ## Second, copy the data to the temp table
-        ##
-
-        query = self._copy_stmt(table=tmptbl, cols=data.columns)
-        query = sql.Composed(query).join(' ').as_string(self.conn)
-
-        with ut.write_to_tempfile(data=data.as_records(), fieldnames=data.columns) as f:
-            with self.conn.cursor() as cur:
-                cur.copy_expert(query, f)
-
-        ##
-        ## Third, run the insert into the permanent table
-        ##
-
-        payload = [
-            sql.SQL('select'),
-
-            sql.SQL(', ').join(sql.Identifier(n) for n in data.columns),
-
-            sql.SQL('from'), sql.Identifier(tmptbl)
-        ]
-
-        query = self._insert_stmt(
-            table=data.table, cols=data.columns, payload=payload,
-            schema=self.schema, returning=returning, conflict=conflict,
-            conflict_constraint=conflict_constraint
-        )
-        query = sql.Composed(query).join(' ').as_string(self.conn)
-
-        with self.conn.cursor() as cur:
-            cur.execute(query)
-
-    def db_load_data_insert(self, data, returning=[], conflict='raise',
-                            conflict_constraint=['id']):
-        logger.debug('Loading data via INSERT')
-
-        assert not (data.table is None and len(returning) > 0)
-
-        if data.table is None:
-            return []
-
-        payload = [
-            sql.SQL('values'),
-
-            sql.SQL('('),
-            sql.SQL(', ').join(sql.Placeholder(n) for n in data.columns),
-            sql.SQL(')')
-        ]
-
-        query = self._insert_stmt(
-            table=data.table, cols=data.columns, payload=payload,
-            schema=self.schema, returning=returning, conflict=conflict,
-            conflict_constraint=conflict_constraint
-        )
-        query = sql.Composed(query).join(' ').as_string(self.conn)
-
-        res = []
-        with self.conn.cursor() as cur:
-            if len(returning) > 0:
-                # executemany doesn't return values, so we need to
-                # do them one at a time
-                for row in data.as_records():
-                    cur.execute(query, row)
-                    res += cur.fetchall()
-            else:
-                cur.executemany(query, data.as_records())
-
-        return res
-
-    def db_load_data(self, data, how='copy', returning=[],
-                     conflict='raise', conflict_constraint=['id']):
-        assert how in ('copy', 'insert')
-        assert conflict in ('raise', 'merge', 'skip')
-        assert not (how == 'copy' and len(returning) > 0)
-
-        args = {
-            'data': data,
-            'returning': returning,
-            'conflict': conflict,
-            'conflict_constraint': conflict_constraint
-        }
-
-        if how == 'copy':
-            self.db_load_data_copy(**args) # always None
-            return [] # for consistency of return type with insert
-        else: # how == 'insert'
-            return self.db_load_data_insert(**args)
-
-    def db_get_data(self, query, parameters=None, flatten=False):
-        with self.conn.cursor() as cur:
-            cur.execute(query, parameters)
-
-            res = cur.fetchall()
-
-        if all([len(x) == 1 for x in res]) and flatten:
-            return [x[0] for x in res]
-        else:
-            return res
-
-    def user_ids_for_tag(self, tag):
-        ret = self.db_get_data("""
-        select
-            u.user_id
-        from twitter.user u
-            inner join twitter.user_tag ut using(user_id)
-        where
-            ut.tag = %s;
-        """, (tag,))
-
-        return [x[0] for x in ret]
-
-    def user_id_exists(self, user_id):
-        ret = self.db_get_data("""
-        select
-            count(*) > 0
-        from twitter.user u
-        where
-            u.user_id = %s;
-        """, (user_id,))
-
-        return ret[0][0]
-
-    def user_ids_exist(self, user_ids):
-        # NOTE could be more efficient...
-        return [self.user_id_exists(u) for u in user_ids]
-
-    def max_tweet_ids_for_user_ids(self, user_ids):
-        query = """
-        select
-            u.user_id,
-            max(t.tweet_id)
-        from (values {0}) u(user_id)
-            left join twitter.tweet t on t.user_id = u.user_id::bigint
-        group by 1;
-        """.format(','.join(['(%s)' for u in user_ids]))
-
-        tweet_ids = dict(self.db_get_data(query, user_ids))
-        ret = [tweet_ids[u] if u is not None else None for u in user_ids]
-
-        return ret
-
-    def user_id_for_screen_name(self, screen_name):
-        ret = self.db_get_data("""
-        select
-            u.user_id
-        from twitter.user u
-        where
-            lower(u.screen_name) = lower(%s)
-        order by u.modified_dt desc
-        limit 1;
-        """, (screen_name,))
-
-        return ret[0][0] if len(ret) > 0 else None
-
-    def user_ids_for_screen_names(self, screen_names):
-        # NOTE could be more efficient...
-        return [self.user_id_for_screen_name(s) for s in screen_names]
-
-class InitializeJob(DatabaseJob):
-    def run(self):
-        self.db_initialize()
-
-class ApiJob(DatabaseJob):
+class TagJob(Job):
     def __init__(self, **kwargs):
         try:
-            auths = kwargs.pop('auths')
+            tag = kwargs.pop('tag')
         except KeyError:
-            raise ValueError("auths argument is required")
+            raise ValueError('Must provide tag argument')
 
-        user_tag = kwargs.pop('user_tag', None)
-        load_batch_size = kwargs.pop('load_batch_size', None)
-        abort_on_bad_targets = kwargs.pop('abort_on_bad_targets', False)
-        transaction = kwargs.pop('transaction', False)
+        super(TagJob, self).__init__(**kwargs)
 
-        user_ids = kwargs.pop('user_ids', None)
-        screen_names = kwargs.pop('screen_names', None)
-        twitter_lists = kwargs.pop('twitter_lists', None)
-        select_tag = kwargs.pop('select_tag', None)
+        self.tag = tag
 
-        # exactly one operating mode at once
-        assert sum([
-            twitter_lists is not None,
-            screen_names is not None,
-            ut.coalesce(user_ids, select_tag) is not None
-        ]) == 1
+        self.ensure_schema_version()
+
+class TargetJob(Job):
+    def __init__(self, **kwargs):
+        try:
+            targets = kwargs.pop('targets')
+        except KeyError:
+            raise ValueError('Must provide list of targets')
+
+        allow_missing_targets = kwargs.pop('allow_missing_targets', False)
+
+        super(TargetJob, self).__init__(**kwargs)
+
+        self.targets = targets
+        self.allow_missing_targets = allow_missing_targets
+
+        self.ensure_schema_version()
+
+    @property
+    @abstractmethod
+    def resolve_mode(self):
+        raise NotImplementedError()
+
+    @property
+    def resolved(self):
+        return all([t.resolved for t in self.targets])
+
+    def _combine_sub_attrs(self, attr):
+        if not self.resolved:
+            raise AttributeError('Must call resolve_targets() first')
+
+        objs = it.chain(*[getattr(t, attr) for t in self.targets])
+        return [u for u in objs]
+
+    @property
+    def users(self):
+        return self._combine_sub_attrs('users')
+
+    @property
+    def bad_targets(self):
+        return self._combine_sub_attrs('bad_targets')
+
+    @property
+    def missing_targets(self):
+        return self._combine_sub_attrs('missing_targets')
+
+    def resolve_targets(self):
+        for target in self.targets:
+            target.resolve(context=self)
+
+        self.validate_targets()
+
+    def validate_targets(self):
+        if self.resolve_mode == 'skip' and len(self.missing_targets) > 0:
+            msg = 'Target(s) not in database: {0}'
+            msg = msg.format(', '.join(self.missing_targets))
+
+            if not self.allow_missing_targets:
+                raise err.BadTargetError(message=msg, targets=self.missing_targets)
+            else:
+                logger.warning(msg)
+
+class ApiJob(TargetJob):
+    def __init__(self, **kwargs):
+        try:
+            api = kwargs.pop('api')
+        except KeyError:
+            raise ValueError('Must provide api object')
+
+        allow_api_errors = kwargs.pop('allow_api_errors', False)
+        load_batch_size = kwargs.pop('load_batch_size', 10000)
 
         super(ApiJob, self).__init__(**kwargs)
 
-        if screen_names is not None:
-            screen_names = list(set(screen_names))
-
-        if twitter_lists is not None:
-            twitter_lists = list(set(twitter_lists))
-
-        if select_tag is not None:
-            if user_ids is not None:
-                user_ids += self.user_ids_for_tag(select_tag)
-            else:
-                user_ids = self.user_ids_for_tag(select_tag)
-
-        if user_ids is not None:
-            user_ids = list(set(user_ids))
-
-        if user_ids is not None:
-            self.targets = list(set(user_ids))
-            self.target_type = 'user_ids'
-        elif screen_names is not None:
-            self.targets = list(set(screen_names))
-            self.target_type = 'screen_names'
-        else: # twitter_lists is not None
-            self.targets = list(set(twitter_lists))
-            self.target_type = 'twitter_lists'
-
-        # Make partial loads more statistically useful
-        random.shuffle(self.targets)
-
-        self.auths = auths
-        self.user_tag = user_tag
+        self.api = api
         self.load_batch_size = load_batch_size
-        self.abort_on_bad_targets = abort_on_bad_targets
-        self.transaction = transaction
+        self.allow_api_errors = allow_api_errors
 
-        self.api = AuthPoolAPI(auths=auths, wait_on_rate_limit=True)
+    def validate_targets(self):
+        super(ApiJob, self).validate_targets()
 
-    def make_api_call(self, method, cursor=False, max_items=None, **kwargs):
-        msg = 'API call: {0} with params {1}, cursor {2}'
-        logger.debug(msg.format(method, kwargs, cursor))
+        if self.resolve_mode != 'skip' and len(self.bad_targets) > 0:
+            msg = 'Twitter API says target(s) nonexistent/suspended/bad: {0}'
+            msg = msg.format(', '.join(self.bad_targets))
 
-        try:
-            assert not (cursor and max_items is not None)
-        except AssertionError:
-            raise ValueError("max_items only available with cursor=True")
-
-        twargs = dict({'method': method}, **kwargs)
-
-        try:
-            if cursor and max_items is not None:
-                ret = tweepy.Cursor(**twargs).items(max_items)
-            elif cursor:
-                ret = tweepy.Cursor(**twargs).items()
+            if not self.allow_api_errors:
+                raise err.BadTargetError(message=msg, targets=self.bad_targets)
             else:
-                ret = method(**kwargs)
-
-            # yield from ret
-            j = 0
-            for obj in ret:
-                yield obj
-                j += 1
-
-            # NOTE users/lookup doesn't raise an error condition on bad users,
-            # it just doesn't return them, so we need to check the length of the
-            # input and the number of user objects returned
-            if method.__self__ is self.api and method == self.api.lookup_users:
-                assert 'screen_names' in twargs.keys() or \
-                       'user_ids' in twargs.keys()
-
-                if 'screen_names' in twargs.keys():
-                    kind = 'screen_names'
-                else:
-                    kind = 'user_ids'
-
-                # don't risk it being a generator
-                nmissing = len([x for x in twargs[kind]]) - j
-
-                if nmissing > 0:
-                    msg = "{0} bad/missing user(s) in users/lookup call"
-                    raise err.BadUserError(msg.format(nmissing))
-        except (tweepy.error.TweepError, err.TWClientError) as e:
-            if isinstance(e, err.CapacityError):
-                raise
-            elif isinstance(e, err.ProtectedUserError):
-                msg = 'Ignoring protected user in call to method {0} ' \
-                      'with arguments {1}; original exception message: {2}'
-                msg = msg.format(method, kwargs, e.message)
                 logger.warning(msg)
-            elif isinstance(e, err.BadUserError):
-                msg = 'Ignoring bad user(s) in call to method {0} ' \
-                      'with arguments {1}; original exception message: {2}'
-                msg = msg.format(method, kwargs, e.message)
 
-                if self.abort_on_bad_targets:
-                    logger.exception(msg)
+class CreateTagJob(TagJob):
+    def run(self):
+        self.get_or_create(md.Tag, name=self.tag)
 
-                    raise
-                else:
-                    logger.warning(msg)
-            else:
-                message = e.message
-                api_code = e.api_code
-                if e.response is not None:
-                    http_code = e.response.status_code
-                else:
-                    http_code = None
+        self.session.commit()
 
-                msg = 'Error returned by Twitter API: API code {0}, HTTP ' \
-                      'status code {1}, message {2}'
-                msg = msg.format(api_code, http_code, message)
+class DeleteTagJob(TagJob):
+    def run(self):
+        tag = self.session.query(md.Tag).filter_by(name=self.tag).one_or_none()
 
-                logger.debug(msg, exc_info=True)
+        if tag:
+            # DELETE is slow on many databases, but we're assuming none of these
+            # lists are especially large - a few thousand rows, tops. follow
+            # graph jobs have at least potentially really large data and need to
+            # rely on DROP TABLE / CREATE TABLE (see below).
+            self.session.query(md.UserTag).filter_by(tag_id=tag.tag_id).delete()
+            self.session.delete(tag)
 
-                raise
+            self.session.commit()
 
-    @staticmethod
-    def mentions_for_tweet(tweet):
-        mentions, users = [], []
+class ApplyTagJob(TagJob, TargetJob):
+    resolve_mode = 'skip'
 
-        if hasattr(tweet, 'entities'):
-            if 'user_mentions' in tweet.entities.keys():
-                for m in tweet.entities['user_mentions']:
-                    urow = {'user_id': m['id']}
+    def run(self):
+        self.resolve_targets()
 
-                    if 'screen_name' in m.keys():
-                        urow['screen_name'] = m['screen_name']
+        tag = self.session.query(md.Tag).filter_by(name=self.tag).one_or_none()
 
-                    if 'name' in m.keys():
-                        urow['name'] = m['name']
+        if not tag:
+            msg = 'Tag {0} does not exist'.format(self.tag)
+            raise err.BadTagError(message=msg, tag=tag)
 
-                    users += [urow]
+        for user in self.users:
+            user.tags.append(tag)
 
-                    mentions += [{
-                        'tweet_id': tweet.id,
-                        'mentioned_user_id': m['id']
-                    }]
+        self.session.commit()
 
-        return mentions, users
+class InitializeJob(Job):
+    def run(self):
+        md.Base.metadata.drop_all(self.engine)
+        md.Base.metadata.create_all(self.engine)
 
-    def mentions_for_tweets(self, tweets):
-        # process tweets
-        dat = [self.mentions_for_tweet(t) for t in tweets]
-
-        mentions = [x[0] for x in dat]
-        mentions = [x for y in mentions for x in y]
-        mentions = [dict(t) for t in {tuple(d.items()) for d in mentions}]
-
-        # extract users
-        users = [x[1] for x in dat]
-        users = [x for y in users for x in y]
-        users = [dict(t) for t in {tuple(d.items()) for d in users}]
-
-        return mentions, users
-
-    def load_mentions(self, tweets):
-        logger.debug('Loading mentions')
-
-        mentions, mentioned_users = self.mentions_for_tweets(tweets)
-        mentioned_ids = list(set([x['user_id'] for x in mentioned_users]))
-
-        self.sync_users(targets=mentioned_ids, target_type='user_ids',
-                        full=self.full, new=True, commit=False)
-
-        self.db_load_data(
-            data=Rowset.from_records(MentionRow, mentions),
-            conflict='merge',
-            conflict_constraint=['tweet_id', 'mentioned_user_id']
-        )
-
-    def load_tweets(self, tweets, load_mentions=True):
-        logger.debug('Loading tweets')
-
-        tweets = [t for t in tweets] # no generators, need >1 reference
-
-        rows = [TweetRow.from_tweepy(u) for u in tweets]
-        tweet_ids = [t.as_record()['tweet_id'] for t in rows]
-        twrows = Rowset(rows=rows, cls=TweetRow)
-
-        self.db_load_data(twrows, conflict='merge',
-                          conflict_constraint=['tweet_id'])
-
-        if self.tweet_tag is not None:
-            ttrows = Rowset(rows=(
-                TweetTagRow(tweet_id=t, tag=self.tweet_tag)
-                for t in tweet_ids
-            ), cls=TweetTagRow)
-
-            self.db_load_data(ttrows, conflict='merge',
-                              conflict_constraint=['user_id', 'tag'])
-
-        if load_mentions:
-            self.load_mentions(tweets)
-
-    def load_follow_fetch(self, user_id, direction):
-        msg = 'Loading follow_fetch row for user_id {0}, direction {1}'
-        logger.debug(msg.format(user_id, direction))
-
-        assert direction in ('followers', 'friends')
-
-        ffr = FollowFetchRow(
-            is_followers = (direction == 'followers'),
-            is_friends = (direction == 'friends'),
-            user_id = user_id
-        )
-
-        ff_id = self.db_load_data(Rowset(rows=[ffr], cls=FollowFetchRow),
-                                  how='insert', returning=['follow_fetch_id'],
-                                  conflict='raise')[0][0]
-
-        return ff_id
-
-    # edges are assumed to be (source, target)
-    def load_follow_edges(self, edges, follow_fetch_id):
-        logger.debug('Loading follow edges')
-
-        edges = [e for e in edges]
-
-        user_ids = list(set([x for y in edges for x in y]))
-        self.sync_users(targets=user_ids, target_type='user_ids',
-                        full=self.full, new=True, commit=False)
-
-        rows = Rowset(rows=(
-            FollowRow(
-                follow_fetch_id=follow_fetch_id,
-                source_user_id=source,
-                target_user_id=target
-            ) for source, target in edges
-        ), cls=FollowRow)
-
-        cols = ['follow_fetch_id', 'source_user_id', 'target_user_id']
-        self.db_load_data(rows, conflict='merge', conflict_constraint=cols)
-
-    ## Most API methods will encounter and need to handle new user
-    ## objects, not just the jobs that only load user info
-    def load_users(self, targets, kind):
-        logger.debug('Loading {0} users'.format(kind))
-
-        assert kind in ('users', 'user_ids')
-
-        if kind == 'users':
-            rows = [UserRow.from_tweepy(u) for u in targets]
-        else:
-            rows = [UserRow(user_id=u) for u in targets]
-
-        user_ids = [u.as_record()['user_id'] for u in rows]
-
-        urows = Rowset(rows=rows, cls=UserRow)
-        self.db_load_data(urows, conflict='merge',
-                          conflict_constraint=['user_id'])
-
-        if self.user_tag is not None:
-            logger.debug('Loading user tags: {0}'.format(self.user_tag))
-
-            tag_rows = Rowset(rows=(
-                UserTagRow(tag=self.user_tag, user_id=u)
-                for u in user_ids
-            ), cls=UserTagRow)
-
-            self.db_load_data(tag_rows, conflict='merge',
-                              conflict_constraint=['user_id', 'tag'])
-
-    def user_objects_for(self, objs, kind):
-        logger.debug('Fetching user objects for {0}'.format(kind))
-
-        assert kind in ('user_ids', 'screen_names', 'twitter_lists')
-
-        if kind == 'twitter_lists':
-            for i, obj in enumerate(objs):
-                logger.info('Running list {1}: {2}'.format(i, obj))
-
-                owner_screen_name, slug = obj.split('/')
-
-                yield from self.make_api_call(
-                    method=self.api.list_members,
-                    cursor=True,
-                    slug=slug,
-                    owner_screen_name=owner_screen_name
-                )
-        else:
-            for i, grp in enumerate(ut.grouper(objs, 100)): # max 100 per call
-                logger.info('Running {0} batch {1}'.format(kind, i))
-
-                yield from self.make_api_call(
-                    method=self.api.lookup_users,
-                    **{kind: grp}
-                )
-
-    def user_objects_for_lists(self, twitter_lists):
-        yield from self.user_objects_for(twitter_lists, kind='twitter_lists')
-
-    def user_objects_for_ids(self, user_ids, new=False):
-        if not new:
-            objs = user_ids
-        else:
-            objs = (
-                user_id
-                for user_id in user_ids
-                if not self.user_id_exists(user_id)
-            )
-        yield from self.user_objects_for(objs=objs, kind='user_ids')
-
-    def user_objects_for_screen_names(self, screen_names, new=False):
-        if not new:
-            objs = screen_names
-        else:
-            objs = (
-                screen_name
-                for screen_name in screen_names
-                if self.user_id_for_screen_name(screen_name) is None
-            )
-
-        yield from self.user_objects_for(objs=objs, kind='screen_names')
-
-    def tweet_objects_for(self, objs, kind, since_ids=None, max_tweets=None,
-                          since_timestamp=None):
-        msg = 'Loading tweet objects with ' +\
-        'since_ids={0}, max_tweets={1}, since_timestamp={2}'
-        logger.debug(msg.format(since_ids, max_tweets, since_timestamp))
-
-        assert kind in ('user_ids', 'screen_names', 'twitter_lists')
-
-        for i, obj in enumerate(objs):
-            if since_ids is not None:
-                since_id = since_ids[i]
-            else:
-                since_id = None
-
-            twargs = {
-                'count': 200, # the max in one call
-                'tweet_mode': 'extended', # don't truncate tweet text
-                'include_rts': True,
-                'since_id': since_id
-            }
-
-            if kind == 'twitter_lists':
-                method = self.api.list_timeline
-
-                owner_screen_name, slug = twitter_list.split('/')
-                twargs = dict(twargs, **{
-                    'slug': slug,
-                    'owner_screen_name': owner_screen_name
-                })
-            else:
-                method = self.api.user_timeline
-
-                param = 'user_id' if kind == 'user_ids' else 'screen_name'
-                twargs = dict(twargs, **{param: obj})
-
-            tweets = self.make_api_call(method, cursor=True,
-                                        max_items=max_tweets, **twargs)
-
-            yield from (
-                tweet
-                for tweet in tweets
-                if (since_timestamp is None) or \
-                   (tweet.created_at.timestamp() >= since_timestamp)
-            )
-
-    def tweet_objects_for_lists(self, twitter_lists, **kwargs):
-        yield from self.tweet_objects_for(objs=twitter_lists,
-                                          kind='twitter_list', **kwargs)
-
-    def tweet_objects_for_ids(self, user_ids, **kwargs):
-        yield from self.tweet_objects_for(objs=user_ids,
-                                          kind='user_ids', **kwargs)
-
-    def tweet_objects_for_screen_names(self, screen_names, **kwargs):
-        yield from self.tweet_objects_for(objs=screen_names,
-                                          kind='screen_names', **kwargs)
-
-    def follow_objects_for(self, objs, kind, direction):
-        logger.debug('Loading {0}'.format(direction))
-
-        assert kind in ('user_ids', 'screen_names')
-        assert direction in ('followers', 'friends')
-
-        for obj in objs:
-            param = ('user_id' if kind == 'user_ids' else 'screen_name')
-
-            if direction == 'followers':
-                method = self.api.followers_ids
-            if direction == 'friends':
-                method = self.api.friends_ids
-
-            edges = self.make_api_call(method, cursor=True, **{param: obj})
-
-            for item in edges:
-                if direction == 'followers':
-                    yield [item, obj]
-                else: # direction == 'friends'
-                    yield [obj, item]
-
-    def follow_objects_for_ids(self, user_ids, **kwargs):
-        yield from self.follow_objects_for(objs=user_ids,
-                                           kind='user_ids', **kwargs)
-
-    def follow_objects_for_screen_names(self, screen_names, **kwargs):
-        yield from self.follow_objects_for(objs=screen_names,
-                                           kind='screen_names', **kwargs)
-
-    # Given a set of targets, which may be screen names, user ids or
-    # users in a Twitter list and which may not exist in the twitter.user
-    # table yet, we want to a) resolve them all to user ids
-    # and b) ensure they all exist in the twitter.user table.
-    def sync_users(self, targets, target_type, new=True, full=False,
-                   commit=False):
-        msg = 'Syncing {0} users, new={1}, full={2}, commit={3}'
-        logger.debug(msg.format(target_type, new, full, commit))
-
-        # full doesn't matter in the first two cases: we have to fetch
-        # every user from the twitter API anyway because all we have
-        # is a screen name
-        if target_type == 'twitter_lists':
-            # "new" is ignored here: we have to fetch them all from the
-            # list members endpoint anyway to even learn who they are
-            kind = 'users'
-            users = self.user_objects_for_lists(self.targets)
-        elif target_type == 'screen_names':
-            kind = 'users'
-            users = self.user_objects_for_screen_names(targets, new=new)
-        elif full:
-            kind = 'users'
-            users = self.user_objects_for_ids(targets, new=new)
-        else:
-            kind = 'user_ids'
-            users = targets
-
-        n_items = 0
-        for i, batch in enumerate(ut.grouper(users, self.load_batch_size)):
-            msg = 'Running user batch {0}, cumulative users {1}'
-            msg = msg.format(i + 1, n_items)
-            logger.debug(msg)
-
-            self.load_users(targets=batch, kind=kind)
-
-            n_items += len(batch)
-
-            if commit:
-                self.commit()
+        self.session.add(md.SchemaVersion(version=__version__))
+        self.session.commit()
 
 class UserInfoJob(ApiJob):
+    resolve_mode = 'hydrate'
+
     def run(self):
-        # NOTE self.targets isn't a generator, so we can safely take its len()
-        msg = 'Loading info for {0} new or existing users'
-        msg = msg.format(len(self.targets))
-        logger.info(msg)
+        self.resolve_targets()
 
-        self.sync_users(targets=self.targets, target_type=self.target_type,
-                        new=False, full=True, commit=(not self.transaction))
-
-        if self.transaction:
-            self.commit()
-
-class FollowJob(ApiJob):
-    def __init__(self, **kwargs):
-        direction = kwargs.pop('direction', 'followers')
-        full = kwargs.pop('full', False)
-
-        assert full is not None
-        assert direction in ('followers', 'friends')
-
-        super(FollowJob, self).__init__(**kwargs)
-
-        assert self.target_type != 'twitter_lists'
-
-        self.direction = direction
-        self.full = full
-
-    # What we're doing here:
-    # 1) load user to twitter.user if not already there
-    # 2) load the follow_fetch row, get its id, ff_id
-    # 3) loop over pages of graph neighbors:
-        # 3a) get the users from twitter
-        # 3b) if requested, hydrate the users via users/lookup
-        # 3c) load the users to twitter.user, merging if present
-        # 3d) load the follow rows to twitter.follow, using ff_id
-    def run(self):
-        self.sync_users(targets=self.targets, target_type=self.target_type,
-                        new=True, full=self.full, commit=(not self.transaction))
-
-        if self.target_type == 'user_ids':
-            user_ids = self.targets
-        if self.target_type == 'screen_names':
-            user_ids = self.user_ids_for_screen_names(self.targets)
-
-        # there may be very very many users returned, so let's process
-        # them incrementally rather than building one giant list
-        n_items = 0
-        for i, (user_id, target) in enumerate(zip(user_ids, self.targets)):
-            if user_id is None and self.target_type == 'screen_names':
-                msg = 'Skipping unknown screen name {0}'.format(target)
-                logger.warning(msg)
-
-                continue
-
-            msg = 'Processing user {0} ({1} / {2})'
-            logger.debug(msg.format(user_id, i + 1, len(user_ids)))
-
-            ff_id = self.load_follow_fetch(user_id=user_id,
-                                           direction=self.direction)
-
-            edges = self.follow_objects_for(objs=[user_id], kind='user_ids',
-                                            direction=self.direction)
-            edges = ut.grouper(edges, self.load_batch_size)
-
-            for j, batch in enumerate(edges):
-                msg = 'Running user {0} ({1}/{2}) batch {3}, ' \
-                      'cumulative edges {4}'
-                msg = msg.format(user_id, i + 1, len(user_ids), j + 1, n_items)
-                logger.info(msg)
-
-                self.load_follow_edges(edges=batch, follow_fetch_id=ff_id)
-                n_items += len(batch)
-
-            # NOTE: it's safe to commit here even if make_api_call caught a
-            # BadUserError, because in that case it just won't return any rows
-            # and the loop above is a no-op
-            if not self.transaction:
-                self.commit()
-
-        if self.transaction:
-            self.commit()
+        self.session.commit()
 
 class TweetsJob(ApiJob):
+    resolve_mode = 'skip'
+
     def __init__(self, **kwargs):
         since_timestamp = kwargs.pop('since_timestamp', None)
         max_tweets = kwargs.pop('max_tweets', None)
         old_tweets = kwargs.pop('old_tweets', False)
-        tweet_tag = kwargs.pop('tweet_tag', None)
-        full = kwargs.pop('full', False)
 
         super(TweetsJob, self).__init__(**kwargs)
-
-        # NOTE this could be implemented but has not been
-        if self.target_type == 'twitter_lists':
-            raise NotImplementedError()
 
         self.since_timestamp = since_timestamp
         self.max_tweets = max_tweets
         self.old_tweets = old_tweets
-        self.tweet_tag = tweet_tag
-        self.full = full
 
-    def run(self):
-        self.sync_users(targets=self.targets, target_type=self.target_type,
-                        new=True, full=self.full, commit=(not self.transaction))
-
-        if self.target_type == 'user_ids':
-            user_ids = self.targets
-        if self.target_type == 'screen_names':
-            user_ids = self.user_ids_for_screen_names(self.targets)
-
+    def load_tweets_for(self, user):
         if self.old_tweets:
-            logger.debug('Allowing old tweets')
-            since_ids = [None for x in user_ids]
+            since_id = None
         else:
-            logger.debug('Skipping old tweets')
-            since_ids = self.max_tweet_ids_for_user_ids(user_ids)
+            since_id = self.session.query(sa.func.max(md.Tweet.tweet_id)) \
+                           .filter(md.Tweet.user_id==user.user_id).scalar()
+
+        twargs = {
+            'user_id': user.user_id,
+            'since_id': since_id,
+            'max_tweets': self.max_tweets,
+            'since_timestamp': self.since_timestamp
+        }
+
+        tweets = self.api.user_timeline(**twargs)
+        tweets = ut.grouper(tweets, self.load_batch_size)
 
         n_items = 0
-        for i, (user_id, since_id, target) in enumerate(zip(user_ids, since_ids,
-                                                            self.targets)):
-            if user_id is None and self.target_type == 'screen_names':
-                msg = 'Skipping unknown screen name {0}'.format(target)
-                logger.warning(msg)
+        for i, batch in enumerate(tweets):
+            msg = 'Running {0} batch {1}, within-user cumulative tweets {2}'
+            msg = msg.format(type(self), i + 1, n_items)
+            logger.debug(msg)
 
-                continue
+            for resp in batch:
+                tweet = md.Tweet.from_tweepy(resp, self.session)
 
-            msg = 'Processing user {0} ({1} / {2})'
-            logger.debug(msg.format(user_id, i + 1, len(user_ids)))
+                # The merge emits warnings about having disabled the
+                # save-update cascade on Hashtag, Url, Symbol and Media,
+                # which is intentional and not appropriate to show users.
+                with warnings.catch_warnings():
+                    warnings.simplefilter('ignore', category=sa.exc.SAWarning)
+                    self.session.merge(tweet)
 
-            tweets = self.tweet_objects_for_ids(**{
-                'user_ids': [user_id],
-                'since_ids': [since_id],
-                'max_tweets': self.max_tweets,
-                'since_timestamp': self.since_timestamp
-            })
+            n_items += len(batch)
 
-            for j, batch in enumerate(ut.grouper(tweets, self.load_batch_size)):
-                msg = 'Running user {0} ({1} / {2}) batch {3}, ' \
-                      'cumulative tweets {4}'
-                msg = msg.format(user_id, i + 1, len(user_ids), j + 1, n_items)
-                logger.info(msg)
+        return n_items
 
-                self.load_tweets(batch, load_mentions=True)
-                n_items += len(batch)
+    def run(self):
+        self.resolve_targets()
 
-            # NOTE: it's safe to commit here even if make_api_call caught a
-            # BadUserError, because in that case it just won't return any rows
-            # and the loop above is a no-op
-            if not self.transaction:
-                self.commit()
+        n_items = 0
+        for i, user in enumerate(self.users):
+            msg = 'Processing user_id {0} ({1} / {2}), ' \
+                  'across-user cumulative tweets {3}'
+            msg = msg.format(user.user_id, i + 1, len(self.users), n_items)
+            logger.info(msg)
 
-        if self.transaction:
-            self.commit()
+            try:
+                n_items += self.load_tweets_for(user)
+            except err.ProtectedUserError as e:
+                msg = 'Encountered protected user with user_id {0} in {1}'
+                msg = msg.format(user.user_id, self.__class__.__name__)
+
+                if not self.allow_api_errors:
+                    self.session.rollback()
+                    raise err.BadTargetError(message=msg, targets=[user.user_id])
+                else:
+                    logger.warning(msg)
+            except err.NotFoundError as e:
+                msg = 'Encountered nonexistent user with user_id {0} in {1}'
+                msg = msg.format(user.user_id, self.__class__.__name__)
+
+                if not self.allow_api_errors:
+                    self.session.rollback()
+                    raise err.BadTargetError(message=msg, targets=[user.user_id])
+                else:
+                    logger.warning(msg)
+            else:
+                self.session.commit()
+
+class FollowGraphJob(ApiJob):
+    # NOTE that here (unlike in TweetsJob), you can get gnarly primary key
+    # integrity errors on the user table if resolve_mode != 'skip': merging in
+    # an md.User object (but not flushing) and then running an insert against
+    # the user table may try to insert the same row again at commit if one of
+    # the User objects is for a row already loaded by the insert. (That is, if
+    # fetching users A and B, user B hadn't already been loaded and were
+    # hydrated here, and A follows B.) In this case, if this were not to be
+    # mode == 'skip' in the future, the easy thing to do is call
+    # self.session.flush() afterward. Note also that this only applies if the
+    # load_edges_for steps don't implicitly commit, which they do on most DBs.
+    # (See the comments in that method.)
+    resolve_mode = 'skip'
+
+    def __init__(self, **kwargs):
+        fast_load = kwargs.pop('fast_load', False)
+
+        super(FollowGraphJob, self).__init__(**kwargs)
+
+        self.fast_load = fast_load
+
+    @property
+    @abstractmethod
+    def direction(self):
+        raise NotImplementedError()
+
+    @property
+    @abstractmethod
+    def api_data_column(self):
+        raise NotImplementedError()
+
+    @property
+    def api_method_name(self):
+        return self.direction + '_ids'
+
+    @property
+    def target_user_column(self):
+        cols = {'source_user_id', 'target_user_id'}
+        return list(cols - {self.api_data_column})[0]
+
+    @property
+    def api_method(self):
+        return getattr(self.api, self.api_method_name)
+
+    def load_edges_for(self, user):
+        ids = self.api_method(user_id=user.user_id)
+        ids = ut.grouper(ids, self.load_batch_size)
+
+        # NOTE tl;dr the commit semantics here are complicated and depend on the
+        # database, but the details shouldn't matter. Depending on the DB,
+        # clearing the stg table may or may not commit; depending on the setting
+        # of self.fast_load, self.insert_stg_batch may or may not do so as well.
+        # BUT both of these affect only data in the stg table; if an error
+        # leaves it in an inconsistent state, we don't care. (If the
+        # resolve_mode for this job were 'fetch', we'd also have to consider
+        # whether and when any new users' rows were committed.) Whether there
+        # are 0 or more than 0 commits up to the end of the for loop below,
+        # there aren't any during the call to process_stg_data_for, which is the
+        # only part of this that modifies main data tables. So that call happens
+        # atomically, which is what we care about.
+
+        self.clear_stg_table()
+
+        n_items = 0
+        for j, batch in enumerate(ids):
+            msg = 'Running {0} batch {1}, within-user cumulative edges {2}'
+            msg = msg.format(type(self), j + 1, n_items)
+            logger.debug(msg)
+
+            n_items += self.insert_stg_batch(user, batch)
+
+        self.process_stg_data_for(user)
+
+        return n_items
+
+    def clear_stg_table(self):
+        # this is much, much faster than .delete() / DELETE FROM <tbl>, but not
+        # transactional on many DBs
+        md.StgFollow.__table__.drop(self.session.get_bind())
+        md.StgFollow.__table__.create(self.session.get_bind())
+
+    def insert_stg_batch(self, user, api_user_ids):
+        rows = [
+            {self.api_data_column: t, self.target_user_column: user.user_id}
+            for t in api_user_ids
+        ]
+
+        try:
+            self.session.bulk_insert_mappings(md.StgFollow, rows)
+        except sa.exc.IntegrityError:
+            self.session.rollback()
+
+            if not self.fast_load:
+                n_items = self.insert_stg_batch_robust(rows)
+            else:
+                raise
+        else:
+            n_items = len(rows)
+
+        # NOTE committing slows things down, but without it, we'd lose every
+        # row loaded before one of these duplicate key problems
+        if not self.fast_load:
+            self.session.commit()
+
+        return n_items
+
+    def insert_stg_batch_robust(self, rows):
+        nrows = 0
+
+        # NOTE Twitter sometimes returns the same ID more than once.
+        # This happens rarely (probably b/c of eventual consistency), so we
+        # don't need to worry too hard about performance in handling it.
+        # Thus: use bulk inserts, but catch the duplicate key error and,
+        # when handling it, re-attempt inserts of the same rows one by one,
+        # discarding any that raise the duplicate key error.
+        for row in rows:
+            try:
+                md.StgFollow.__table__.insert().values(**row)
+                nrows += 1
+            except sa.exc.IntegrityError:
+                msg = 'Encountered IntegrityError (likely dupe) on edge {0}'
+                logger.debug(msg.format(row))
+
+        return nrows
+
+    def process_stg_data_for(self, user):
+        ##
+        ## 1. Load any new users to user table
+        ##
+
+        flt = self.session.query(md.User).filter(
+            md.User.user_id == getattr(md.StgFollow, self.api_data_column)
+        ).correlate(md.StgFollow)
+
+        # We don't need to worry about inserting the same user_id value
+        # that's already in the user.user_id object (and causing a primary
+        # key integrity error on the user table) because that user_id is
+        # already in the self.target_user_column column; it would only also
+        # appear in the self.api_data_column column if you could follow
+        # yourself on Twitter, which you can't.
+        ins = md.User.__table__.insert().from_select(
+            ['user_id'],
+            self.session.query(
+                getattr(md.StgFollow, self.api_data_column)
+            ).filter(~flt.exists())
+        )
+
+        self.session.execute(ins)
+
+        ##
+        ## 2. Load new edges to follow table with valid_end_dt of null
+        ##
+
+        flt = self.session.query(md.Follow).filter(sa.and_(
+            md.Follow.valid_end_dt == None,
+            md.Follow.source_user_id == md.StgFollow.source_user_id,
+            md.Follow.target_user_id == md.StgFollow.target_user_id
+        )).correlate(md.StgFollow)
+
+        ins = md.Follow.__table__.insert().from_select(
+            ['source_user_id', 'target_user_id'],
+            self.session.query(
+                md.StgFollow.source_user_id,
+                md.StgFollow.target_user_id
+            ).filter(~flt.exists())
+        )
+
+        self.session.execute(ins)
+
+        ##
+        ## 3. Mark edges no longer present as expired (valid_end_dt := now())
+        ##
+
+        flt = self.session.query(md.StgFollow).filter(sa.and_(
+            md.StgFollow.source_user_id == md.Follow.source_user_id,
+            md.StgFollow.target_user_id == md.Follow.target_user_id
+        )).correlate(md.Follow)
+
+        upd = md.Follow.__table__.update().where(sa.and_(
+            md.Follow.valid_end_dt == None,
+            getattr(md.Follow, self.target_user_column) == user.user_id,
+
+            ~flt.exists()
+        )).values(valid_end_dt=sa.func.now())
+
+        self.session.execute(upd)
+
+    def run(self):
+        self.resolve_targets()
+
+        n_items = 0
+        for i, user in enumerate(self.users):
+            msg = 'Processing user_id {0} ({1} / {2}), ' \
+                  'across-user cumulative edges {3}'
+            msg = msg.format(user.user_id, i + 1, len(self.users), n_items)
+            logger.info(msg)
+
+            try:
+                n_items += self.load_edges_for(user)
+            except err.ProtectedUserError as e:
+                msg = 'Encountered protected user with user_id {0} in {1}'
+                msg = msg.format(user.user_id, self.__class__.__name__)
+
+                if not self.allow_api_errors:
+                    self.session.rollback()
+                    raise err.BadTargetError(message=msg, targets=[user.user_id])
+                else:
+                    logger.warning(msg)
+            except err.NotFoundError as e:
+                msg = 'Encountered nonexistent user with user_id {0} in {1}'
+                msg = msg.format(user.user_id, self.__class__.__name__)
+
+                if not self.allow_api_errors:
+                    self.session.rollback()
+                    raise err.BadTargetError(message=msg, targets=[user.user_id])
+                else:
+                    logger.warning(msg)
+            else:
+                self.session.commit()
+
+class FollowersJob(FollowGraphJob):
+    direction = 'followers'
+    api_data_column = 'source_user_id'
+
+class FriendsJob(FollowGraphJob):
+    direction = 'friends'
+    api_data_column = 'target_user_id'
 

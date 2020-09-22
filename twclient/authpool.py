@@ -1,30 +1,73 @@
+'''
+A version of tweepy.API with support for multiple sets of credentials
+'''
+
 import time
 import random
 import logging
 
 import tweepy
 
-import twclient.error as err
+from . import error as err
 
 logger = logging.getLogger(__name__)
 
-# This class transparently multiplexes access to multiple sets of Twitter API
-# credentials. It creates as many tweepy.API instances as it gets sets of API
-# creds, and then dispatches method calls to the appropriate instance, handling
-# rate limit and over-capacity errors. When one instance hits its rate limit,
-# we transparently switch over to the next.
 
-# User code can treat it as a drop-in replacement for tweepy.API.
+class AuthPoolAPI(object):  # pylint: disable=too-few-public-methods
+    '''
+    A version of tweepy.API with support for multiple sets of credentials.
 
-class AuthPoolAPI(object):
+    This class transparently proxies access to multiple sets of Twitter API
+    credentials. It creates as many tweepy.API instances as it gets sets of API
+    credentials, and then dispatches method calls to the appropriate instance,
+    handling rate limit and over-capacity errors. When one instance hits its
+    rate limit, this implementation transparently switches over to the next.
+    User code can treat it as a drop-in replacement for tweepy.API; see the
+    tweepy documentation for methods.
+
+    Parameters
+    ----------
+    auths : list of tweepy.AuthHandler
+        The Twitter API credentials to use.
+
+    capacity_sleep : float
+        How long to sleep before retrying after a Twitter capacity error, in
+        seconds.
+
+    capacity_retries : int
+        How many times to retry on capacity error before giving up.
+
+    **kwargs
+        Keyword arguments passed through to tweepy.API.
+
+    Raises
+    ------
+    error.CapacityError
+        If Twitter is over capacity for longer than (approximately)
+        `capacity_retries * capacity_sleep` seconds.
+    '''
+
+    # This value is set as an attribute on methods constructed and returned by
+    # __getattr__ to provide advice to code in twitter_api.py.
+    _authpool_return_types = {
+        'get_list': 'single',
+        'list_members': 'list',
+
+        'lookup_users': 'list',
+
+        'user_timeline': 'list',
+
+        'followers_ids': 'list',
+        'friends_ids': 'list'
+    }
+
     def __init__(self, **kwargs):
         try:
             auths = kwargs.pop('auths')
-            assert len(auths) > 0
-        except KeyError:
-            raise ValueError("Must provide more than 0 Twitter credential sets")
-
-        wait_on_rate_limit = kwargs.pop('wait_on_rate_limit', True)
+            assert auths
+        except (KeyError, AssertionError):
+            msg = "Must provide one or more Twitter credential sets"
+            raise ValueError(msg)
 
         capacity_sleep = kwargs.pop('capacity_sleep', 15 * 60)
         capacity_retries = kwargs.pop('capacity_retries', 3)
@@ -36,14 +79,13 @@ class AuthPoolAPI(object):
         # those instances with wait_on_rate_limit=False so that we can switch
         # between API instances on hitting the limit.
 
-        self._authpool_wait_on_rate_limit = wait_on_rate_limit
-
         self._authpool_capacity_sleep = capacity_sleep
         self._authpool_capacity_retries = capacity_retries
 
         self._authpool_current_api_index = 0
         self._authpool_apis = [
             tweepy.API(auth, wait_on_rate_limit=False, **kwargs)
+
             for auth in random.sample(auths, len(auths))
         ]
 
@@ -69,15 +111,14 @@ class AuthPoolAPI(object):
                 self._authpool_apis[i] = None
 
         free_inds = [
-                i
-                for i, t in enumerate(self._authpool_rate_limit_resets)
-                if t is None
+            i
+            for i, t in enumerate(self._authpool_rate_limit_resets)
+            if t is None
         ]
 
-        free_inds = random.sample(free_inds, len(free_inds))
-
-        if len(free_inds) > 0:
-            self._authpool_current_api_index = free_inds[0]
+        if free_inds:
+            new_ind = random.sample(free_inds, 1)[0]
+            self._authpool_current_api_index = new_ind
         else:
             # i.e., the one with the shortest wait for rate limit reset
             i = min(range(len(self._authpool_apis)),
@@ -111,8 +152,9 @@ class AuthPoolAPI(object):
         if not all(is_method):
             return getattr(self._authpool_current_api, name)
 
-        # this function proxies for the tweepy methods.
-        # we use "iself" to avoid confusing shadowing of the binding.
+        # this function proxies for whatever tweepy method was requested.
+        # we use "iself" to avoid confusing shadowing of the binding of "self"
+        # to __getattr__'s first argument.
         def func(iself, *args, **kwargs):
             cp_retry_cnt = 0
 
@@ -135,7 +177,7 @@ class AuthPoolAPI(object):
 
                     iself._authpool_switch_api()
                 except tweepy.error.TweepError as e:
-                    de = err.dispatch(e)
+                    de = err.dispatch_tweepy(e)
 
                     if not isinstance(de, err.CapacityError):
                         raise de
@@ -143,7 +185,8 @@ class AuthPoolAPI(object):
                         raise de
                     else:
                         msg = 'Over-capacity error on try {0}; sleeping {1}'
-                        msg = msg.format(cp_retry_cnt, iself._authpool_capacity_sleep)
+                        msg = msg.format(cp_retry_cnt,
+                                         iself._authpool_capacity_sleep)
                         logger.warning(msg)
 
                         time.sleep(iself._authpool_capacity_sleep)
@@ -159,6 +202,10 @@ class AuthPoolAPI(object):
             if all([k in vars(x).keys() for x in methods]):
                 if all([vars(x)[k] == v for x in methods]):
                     setattr(func, k, v)
+
+        # we use this attribute as a hint to TwitterApi.make_api_call
+        setattr(func, 'twclient_return_type',
+                self._authpool_return_types.get(name, 'unknown'))
 
         # the descriptor protocol: func is an unbound function, but the __get__
         # method returns func as a bound method of its argument

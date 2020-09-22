@@ -1,5 +1,8 @@
 # twclient
-This package provides a high-level command-line client for the Twitter API, with a focus on loading data into a Postgres instance. The goal is to be higher-level than twurl and offer useful primitives for researchers who want to get data out of Twitter, without worrying about the details. The client can handle multiple sets of API credentials seamlessly, helping avoid rate limit issues.
+
+FIXME update this and add badges
+
+This package provides a high-level command-line client for the Twitter API, with a focus on loading data into a database. The goal is to be higher-level than twurl and offer useful primitives for researchers who want to get data out of Twitter, without worrying about the details. The client can handle multiple sets of API credentials seamlessly, helping avoid rate limit issues.
 
 An example of usage:
 ```
@@ -27,9 +30,5 @@ twitter user_info -g subjects-friends
 twitter user_info -g subjects-followers
 ```
 
-After all of this, the loaded data is in the Postgres DB configured with `add-db`. You can query it with `psql` or other tools, and useful features have been normalized out to save processing time. The raw API responses are also saved for later analysis.
-
-Future development might focus on two current shortcomings:
-* It's not multithreaded, which can fail to take advantage of high rate limits.
-* The Postgres backend is hardcoded, ugly, and should be replaced with a more generic layer like sqlalchemy for extensibility.
+After all of this, the loaded data is in the database configured with `add-db`. You can query it with the usual tools, and useful features have been normalized out to save processing time. The raw API responses are also saved for later analysis.
 
