@@ -1,7 +1,12 @@
+'''
+Utilities for other parts of twclient
+'''
+
 import re
 import logging
 
 logger = logging.getLogger(__name__)
+
 
 def uniq(it):
     '''
@@ -26,11 +31,12 @@ def uniq(it):
     seen, ret = set(), []
 
     for s in it:
-        if not s in seen:
+        if s not in seen:
             ret += [s]
             seen.add(s)
 
     return ret
+
 
 def coalesce(*args):
     '''
@@ -56,6 +62,7 @@ def coalesce(*args):
     except StopIteration:
         return None
 
+
 # Generate chunks of size n from the iterable it
 def grouper(it, n=None):
     '''
@@ -73,10 +80,10 @@ def grouper(it, n=None):
     n : int, or None
         The size of each chunk.
 
-    Returns
-    -------
-    generator
-        The contents of iterable it, n at a time.
+    Yields
+    ------
+    list
+        A list of n consecutive elements from the iterable it.
     '''
 
     assert n is None or n > 0
@@ -99,11 +106,12 @@ def grouper(it, n=None):
         if len(ret) > 0:
             yield ret
 
+
 def split_camel_case(s):
     '''
     Turn a CamelCase VariableName into a list of component words.
 
-    For example, turns UserDataTableName into ['User', 'Data', 'Table', 'Name'].
+    For example, turn UserDataTableName into ['User', 'Data', 'Table', 'Name'].
 
     Parameters
     ----------
