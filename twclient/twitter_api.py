@@ -27,13 +27,10 @@ class TwitterApi(object):
         except KeyError:
             raise ValueError('auths argument is required')
 
-        abort_on_bad_targets = kwargs.pop('abort_on_bad_targets', False)
-
         super(TwitterApi, self).__init__(**kwargs)
 
         self.auths = auths
-        self.pool = ap.AuthPoolAPI(auths=auths, wait_on_rate_limit=True)
-        self.abort_on_bad_targets = abort_on_bad_targets
+        self.pool = ap.AuthPoolAPI(auths=auths)
 
     def make_api_call(self, method, cursor=False, max_items=None, **kwargs):
         msg = 'API call: {0} with params {1}, cursor {2}'
