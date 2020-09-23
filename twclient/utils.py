@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def uniq(it):
+def uniq(iterable):
     '''
     Deduplicate an interable, preserving original order.
 
@@ -30,10 +30,10 @@ def uniq(it):
 
     seen, ret = set(), []
 
-    for s in it:
-        if s not in seen:
-            ret += [s]
-            seen.add(s)
+    for val in iterable:
+        if val not in seen:
+            ret += [val]
+            seen.add(val)
 
     return ret
 
@@ -58,7 +58,8 @@ def coalesce(*args):
     '''
 
     try:
-        return next(filter(lambda x: x is not None, args))
+        present = iter([x for x in args if x is not None])
+        return next(present)
     except StopIteration:
         return None
 
@@ -103,7 +104,7 @@ def grouper(it, n=None):
 
         # at this point, we're out of
         # objects but len(ret) < n
-        if len(ret) > 0:
+        if ret:
             yield ret
 
 

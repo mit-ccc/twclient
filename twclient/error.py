@@ -9,6 +9,11 @@ import tweepy
 logger = logging.getLogger(__name__)
 
 
+#
+# Base classes
+#
+
+
 class TWClientError(Exception):
     '''
     The base class for all errors raised by twclient.
@@ -52,6 +57,11 @@ class TWClientError(Exception):
         ])
 
         return cls + '(' + arg_string + ')'
+
+
+#
+# Twitter API errors
+#
 
 
 # See Twitter docs:
@@ -131,6 +141,9 @@ class TwitterAPIError(TWClientError):
 
         This method is intended to be implemented by subclasses as their core
         piece of logic, so the implementation here raises NotImplementedError.
+        Note that while the subclass methods are mostly right, they may not
+        cover all edge cases, because Twitter's API documentation is frequently
+        incomplete.
 
         Parameters
         ----------
@@ -225,6 +238,11 @@ def dispatch_tweepy(ex):
         return CapacityError.from_tweepy(ex)
 
     return ex
+
+
+#
+# Higher-level errors
+#
 
 
 class SemanticError(TWClientError):
