@@ -1,102 +1,58 @@
-import json
+'''
+The database schema for storing Twitter data
+'''
+
 import hashlib
 import logging
-
-from abc import ABC, abstractmethod
 
 import sqlalchemy as sa
 import sqlalchemy.sql.functions as func
 
 from sqlalchemy.types import Boolean, Integer, BigInteger, String, UnicodeText
-from sqlalchemy.types import TIMESTAMP # recommended over DateTime for timezones
-from sqlalchemy.types import Float, Enum
+from sqlalchemy.types import TIMESTAMP  # recommended over DateTime for TZs
+from sqlalchemy.types import Float
 
 from sqlalchemy.orm import relationship
 from sqlalchemy.ext.declarative import as_declarative, declared_attr
-from sqlalchemy.schema import Table, Column, Index, ForeignKey
-from sqlalchemy.schema import UniqueConstraint, CheckConstraint
+from sqlalchemy.schema import Column, Index, ForeignKey
+from sqlalchemy.schema import UniqueConstraint
 
 from . import utils as ut
 
 logger = logging.getLogger(__name__)
 
-##
-## Base classes and infra
-##
+# Better to have these all in one file
+# pylint: disable=too-many-lines
 
-# This is from one of the standard sqlalchemy recipes:
-#     https://github.com/sqlalchemy/sqlalchemy/wiki/UniqueObject
-class UniqueMixin(object):
-    @staticmethod
-    def _unique(session, cls, hashfunc, queryfunc, constructor, kwargs):
-        cache = getattr(session, '_unique_cache', None)
-        if cache is None:
-            session._unique_cache = cache = {}
+# Not applicable: methods all from sqlalchemy, we just define table structure
+# pylint: disable=too-few-public-methods
 
-        key = (cls, hashfunc(**kwargs))
-        if key in cache:
-            return cache[key]
-        else:
-            with session.no_autoflush:
-                q = session.query(cls)
-                q = queryfunc(q, **kwargs)
-                obj = q.first()
-                if not obj:
-                    obj = constructor(**kwargs)
-                    session.add(obj)
-            cache[key] = obj
-            return obj
+# Not applicable: database tables have lots of columns
+# pylint: disable=too-many-instance-attributes
 
-    @classmethod
-    def unique_hash(cls, **kwargs):
-        keys = sorted(kwargs.keys())
-        s = ', '.join([str(k) + ': ' + str(kwargs[k]) for k in keys])
-        s = s.encode('utf-8')
+# This isn't a great way to handle these warnings, but sqlalchemy is so dynamic
+# that most attribute accesses aren't resolved until runtime
+# pylint: disable=no-member
 
-        return hashlib.sha1(s).hexdigest()
+#
+# Base classes and infra
+#
 
-    @classmethod
-    def unique_filter(cls, query, url):
-        return query.filter(cls.url == url)
-
-    @classmethod
-    def unique_filter(cls, query, **kwargs):
-        flts = [
-            getattr(cls, key) == kwargs[key]
-            for key in kwargs.keys()
-        ]
-
-        return query.filter(*flts)
-
-    @classmethod
-    def as_unique(cls, session, **kwargs):
-        return cls._unique(session, cls, cls.unique_hash, cls.unique_filter,
-                           cls, kwargs)
-
-# The @declared_attr is a bit of a hack - it puts the columns at the end in
-# tables, which declaring them as class attributes doesn't
-class TimestampsMixin(object):
-    @declared_attr
-    def insert_dt(cls):
-        return Column(TIMESTAMP(timezone=True), server_default=func.now(),
-               nullable=False)
-
-    @declared_attr
-    def modified_dt(cls):
-        return Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                      onupdate=func.now(), nullable=False)
 
 @as_declarative()
-class Base(object):
+class Base:
+    '''
+    The base class for sqlalchemy models.
+
+    This class provides some common functionality for sqlalchemy models in
+    twclient, including a common table name format.
+    '''
+
     @declared_attr
-    def __tablename__(cls):
+    def __tablename__(cls):  # noqa: 805 pylint: disable=no-self-argument
         return '_'.join(ut.split_camel_case(cls.__name__)).lower()
 
     def _repr(self, **fields):
-        '''
-        Helper for Base.__repr__ or subclasses with their own __repr__
-        '''
-
         field_strings = []
         at_least_one_attached_attribute = False
         for key, field in fields.items():
@@ -112,21 +68,248 @@ class Base(object):
 
     def __repr__(self):
         fieldnames = sa.inspect(self.__class__).columns.keys()
-        fields = {n : getattr(self, n) for n in fieldnames}
+        fields = {n: getattr(self, n) for n in fieldnames}
 
         return self._repr(**fields)
+
+
+# This is from one of the standard sqlalchemy recipes:
+#     https://github.com/sqlalchemy/sqlalchemy/wiki/UniqueObject
+class UniqueMixin:
+    '''
+    Provide a merge-like operation by unique constraint instead of primary key.
+
+    This class provides an analogue of Session.merge that works on any
+    candidate key (set of jointly unique and not null columns) rather than just
+    a primary key. The `as_unique` method either a) returns a persistent
+    instance of the model if a row with the given unique key values already
+    exists or b) creates a new one and adds it to the session.
+    '''
+
+    # NOTE this is a mutable class attribute - all instances share it.
+    # Probably this would pose garbage collection issues in a long-lived
+    # application, but here we don't care.
+    _unique_caches = {}
+
+    @staticmethod
+    def _unique_hash(**kwargs):
+        keys = sorted(kwargs.keys())
+
+        txt = ', '.join([str(k) + ': ' + str(kwargs[k]) for k in keys])
+        txt = txt.encode('utf-8')
+
+        return hashlib.sha1(txt).hexdigest()
+
+    @classmethod
+    def _unique_filter(cls, query, **kwargs):
+        flts = [
+            getattr(cls, key) == kwargs[key]
+            for key in kwargs
+        ]
+
+        return query.filter(*flts)
+
+    @classmethod
+    def as_unique(cls, session, **kwargs):
+        '''
+        Return an instance of a model, uniquely with respect to a DB session.
+
+        The `as_unique` method either a) returns a persistent instance of the
+        class cls if a row with the column values given in kwargs already
+        exists or b) creates a new one, adds it to the session and returns the
+        newly pending object. The keyword arguments should specify column names
+        and their values, and should uniquely identify a particular row. If a
+        unique constraint does not exist on the columns, this function may or
+        may not work correctly and will be quite slow.
+
+        Parameters
+        ----------
+        session : instance of sqlalchemy.orm.session.Session
+            A sqlalchemy database session.
+
+        **kwargs
+            Keyword arguments which should uniquely identify a database row.
+
+        Returns
+        -------
+        Instance of UniqueMixin
+            Instance of the model implementing this API.
+        '''
+
+        cls._unique_caches[session] = cls._unique_caches.get(session, {})
+        cache = cls._unique_caches[session]
+
+        key = (cls, cls._unique_hash(**kwargs))
+
+        if key in cache:
+            return cache[key]
+
+        with session.no_autoflush:
+            query = session.query(cls)
+            query = cls._unique_filter(query, **kwargs)
+            obj = query.first()
+
+            if not obj:
+                obj = cls(**kwargs)
+                session.add(obj)
+
+        cache[key] = obj
+        return obj
+
+
+# The @declared_attr is a bit of a hack - it puts the columns at the end in
+# tables, which declaring them as class attributes doesn't
+class TimestampsMixin:
+    '''
+    Add creation and modification timestamps to a model.
+
+    This mixin adds insert_dt and modified_dt columns, and logic to update
+    them, to classes descending from it. Nothing else needs to be done in
+    subclasses to add these columns.
+
+    Attributes
+    ----------
+    insert_dt
+    modified_dt
+    '''
+
+    @declared_attr
+    def insert_dt(cls):  # noqa: 805 pylint: disable=no-self-argument
+        '''
+        The load time of the row into the database.
+        '''
+
+        return Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                      nullable=False)
+
+    @declared_attr
+    def modified_dt(cls):  # noqa: 805 pylint: disable=no-self-argument
+        '''
+        The last time the row was modified. Note that this field is updated by
+        application logic rather than a trigger.
+        '''
+
+        return Column(TIMESTAMP(timezone=True), server_default=func.now(),
+                      onupdate=func.now(), nullable=False)
+
+
+class FromTweepyInterface:
+    '''
+    A model class capable of instantiating itself from a tweepy object.
+
+    Classes implementing this interface provide a from_tweepy method which
+    takes a tweepy object and optionally a sqlalchemy database session, and
+    returns the instance of the class represented by the tweepy object.
+    '''
+
+    @classmethod
+    def from_tweepy(cls, obj, session=None):
+        '''
+        Instantiate a class instance from a tweepy object.
+
+        This method constructs a class instance from a tweepy object. A
+        sqlalchemy database session is optional in general but may be required
+        by some subclasses which rely on UniqueMixin.as_unique. Subclasses are
+        expected to provide this logic, and the implementation here is an
+        abstract stub that raises NotImplementedError.
+
+        Parameters
+        ----------
+        obj : instance of tweepy.Model
+            The tweepy object to use as data source.
+
+        session : instance of sqlalchemy.orm.session.Session, or None
+            A sqlalchemy database session.
+
+        Returns
+        -------
+        Instance of FromTweepyInterface
+            The constructed class instance.
+        '''
+
+        raise NotImplementedError()
+
+
+class ListFromTweepyInterface:
+    '''
+    A model class capable of instantiating multiple instances of itself from a
+    tweepy object.
+
+    Classes implementing this interface provide a list_from_tweepy method which
+    takes a tweepy object and optionally a sqlalchemy database session, and
+    returns the list of instances of the class which the tweepy object
+    represents.
+    '''
+
+    @classmethod
+    def list_from_tweepy(cls, obj, session=None):
+        '''
+        Return a list of class instances from a tweepy object.
+
+        This method constructs multiple class instances from a tweepy object. A
+        sqlalchemy database session is optional in general but may be required
+        by some subclasses which rely on UniqueMixin.as_unique. Subclasses are
+        expected to provide this logic, and the implementation here is an
+        abstract stub that raises NotImplementedError.
+
+        Parameters
+        ----------
+        obj : instance of tweepy.Model
+            The tweepy object to use as data source.
+
+        session : instance of sqlalchemy.orm.session.Session, or None
+            A sqlalchemy database session.
+
+        Returns
+        -------
+        List of instances of FromTweepyInterface
+            The constructed class instances.
+        '''
+
+        raise NotImplementedError()
+
 
 # Store the creating package version in the DB to enable migrations (we don't
 # actually do any migrations or have any code to support them yet, but if this
 # isn't here to begin with it'll be a gigantic pain)
 class SchemaVersion(TimestampsMixin, Base):
+    '''
+    A stub table to store the schema version.
+
+    This table contains one row with the version of twclient which created the
+    database. This version string is stored to support future migrations,
+    though none are supported now.
+
+    Attributes
+    ----------
+    version
+        The creating package version.
+    '''
+
     version = Column(String(64), primary_key=True, nullable=False)
 
-##
-## Users, user tags and Twitter lists
-##
 
-class User(TimestampsMixin, Base):
+#
+# Users, user tags and Twitter lists
+#
+
+
+class User(TimestampsMixin, FromTweepyInterface, Base):
+    '''
+    A Twitter user.
+
+    This class and its associated user table represent attributes of a Twitter
+    user which can't change over time. In practice, that means only user IDs -
+    even screen names can change. See the UserData class and its user_data
+    table for records of these mutable attributes.
+
+    Attributes
+    ----------
+    user_id
+        The Twitter user ID for this user. This ID is assigned at account
+        creation and is stable for the lifetime of the account.
+    '''
+
     # this is the Twitter user id, not a surrogate key.
     # it simplifies the load process to use it as a pk.
     user_id = Column(BigInteger, primary_key=True, autoincrement=False)
@@ -143,16 +326,75 @@ class User(TimestampsMixin, Base):
     def from_tweepy(cls, obj, session=None):
         return cls(user_id=obj.id)
 
-class UserData(TimestampsMixin, Base):
+
+class UserData(TimestampsMixin, FromTweepyInterface, Base):
+    '''
+    Mutable attributes of a Twitter user.
+
+    This class and its associated user_data table represent records of a
+    Twitter user's mutable attributes. Many API requests to Twitter send back
+    user entities with various properties of a user, including things from
+    screen names and verified status to follower counts; we store these
+    entities here.
+
+    Attributes
+    ----------
+    user_data_id
+        An autoincrement ID for this fetch, not assigned by Twitter.
+
+    user_id
+        Twitter's user ID.
+
+    url_id
+        The user's profile URL (see the Url class).
+
+    api_response
+        The raw json text returned by Twitter.
+
+    screen_name
+        The user's screen name (note that this can change over time).
+
+    create_dt
+        The date and time the account was created.
+
+    protected
+        Does this account have protected tweets?
+
+    verified
+        Is this user verified?
+
+    display_name
+        The user's display name (not the screen name).
+
+    description
+        The user's bio text.
+
+    location
+        The user-provided free-form location field.
+
+    friends_count
+        The number of friends the user has (i.e., the number of other users
+        they follow).
+
+    followers_count
+        The number of followers the user has.
+
+    listed_count
+        The number of lists the user appears on.
+    '''
+
     user_data_id = Column(BigInteger, primary_key=True, autoincrement=True)
-    user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
+    user_id = Column(BigInteger,
+                     ForeignKey('user.user_id', deferrable=True),
                      nullable=False, index=True)
-    url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True),
+
+    url_id = Column(BigInteger,
+                    ForeignKey('url.url_id', deferrable=True),
                     nullable=True, index=True)
 
     api_response = Column(UnicodeText, nullable=False)
 
-    screen_name = Column(String(256), nullable=True)
+    screen_name = Column(String(256), index=True, nullable=True)
     create_dt = Column(TIMESTAMP(timezone=True), nullable=True)
     protected = Column(Boolean, nullable=True)
     verified = Column(Boolean, nullable=True)
@@ -166,12 +408,41 @@ class UserData(TimestampsMixin, Base):
     user = relationship('User', back_populates='data')
     url = relationship('Url', back_populates='user_data')
 
+    @staticmethod
+    def _user_url(obj):
+        url = None
+
+        try:
+            url = obj.entities['url']['urls'][0]['expanded_url']
+        except (KeyError, IndexError):
+            pass
+
+        try:
+            if url is None:
+                url = obj.entities['url']['urls'][0]['display_url']
+        except (KeyError, IndexError):
+            pass
+
+        try:
+            if url is None:
+                url = obj.entities['url']['urls'][0]['url']
+        except (KeyError, IndexError):
+            pass
+
+        try:
+            if url is None:
+                url = obj.url
+        except (KeyError, IndexError):
+            pass
+
+        return url
+
     @classmethod
     def from_tweepy(cls, obj, session=None):
-        # Twitter sometimes includes NUL bytes, which might be handled correctly
-        # by sqlalchemy + backend or might not: handling them is risky. We'll
-        # just drop them to be safe.
-        api_response = json.dumps(obj._json) # NOTE not public API
+        # Twitter sometimes includes NUL bytes, which might be handled
+        # correctly by sqlalchemy + backend or might not: handling them is
+        # risky. We'll just drop them to be safe.
+        api_response = ut.tweepy_to_json(obj)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '')
 
         args = {
@@ -192,55 +463,101 @@ class UserData(TimestampsMixin, Base):
             'listed_count': 'listed_count'
         }
 
-        for t, s in extra_fields.items():
-            if hasattr(obj, s):
-                args[t] = getattr(obj, s)
+        for target, source in extra_fields.items():
+            if hasattr(obj, source):
+                args[target] = getattr(obj, source)
 
         ret = cls(**args)
 
-        ## Populate the url field
-        url = None
-
-        try:
-            url = obj.entities['url']['urls'][0]['expanded_url']
-        except Exception:
-            pass
-
-        try:
-            if url is None:
-                url = obj.entities['url']['urls'][0]['display_url']
-        except Exception:
-            pass
-
-        try:
-            if url is None:
-                url = obj.entities['url']['urls'][0]['url']
-        except Exception:
-            pass
-
-        try:
-            if url is None:
-                url = obj.url
-        except Exception:
-            pass
-
+        url = cls._user_url(obj)
         if url is not None:
             ret.url = Url.as_unique(session, url=url)
 
         return ret
 
+
 class Tag(TimestampsMixin, Base):
+    '''
+    A tag that can be given to one or more Twitter users.
+
+    This class represents a tag that can be applied to a set of Twitter users
+    to help track them. Examples might include "treatment A", "journalists",
+    "survey_respondents_2020", etc.
+
+    Attributes
+    ----------
+    tag_id
+        An autoincrement ID for the tag.
+
+    name
+        The name of the tag.
+    '''
+
     tag_id = Column(Integer, primary_key=True, autoincrement=True)
     name = Column(UnicodeText, nullable=False, unique=True)
 
     users = relationship('User', secondary=lambda: UserTag.__table__,
                          back_populates='tags')
 
-class List(TimestampsMixin, Base):
+
+class List(TimestampsMixin, FromTweepyInterface, Base):
+    '''
+    A Twitter list of users.
+
+    Twitter allows users to create lists of other users, and represents these
+    lists as first-class entities in its API. This class represents one of
+    these lists (though not the users in it; see the UserList class for that).
+
+    Attributes
+    ----------
+    list_id
+        Twitter's ID for the list.
+
+    user_id
+        The Twitter user ID of the user who owns the list.
+
+    slug
+        The short name of the list (as it appears in, e.g., URLs).
+
+    api_response
+        The raw json text returned by Twitter.
+
+    create_dt
+        The date and time the list was created.
+
+    full_name
+        The list's "full name", which is its owning user's screen name (without
+        the @ sign) and its slug, separated by a slash. For example,
+        "cspan/members-of-congress".
+
+    display_name
+        The list's long-form display name, which may contain spaces and other
+        characters which are not URL-safe.
+
+    uri
+        A resource URI for this list within the domain of Twitter entities.
+
+    description
+        A free-form bio/description text for the list.
+
+    mode
+        Either "public" or "private" depending on the visibility of the list.
+
+    member_count
+        The number of users on the list.
+
+    subscriber_count
+        The number of users who subscribe to a public list (i.e., who have
+        signed up to be able to view the combined timelines of the list
+        members).
+    '''
+
     # as in Tweet and User, list_id is Twitter's id rather than a surrogate key
     list_id = Column(BigInteger, primary_key=True, autoincrement=False)
-    user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
-                     nullable=False) # no index needed given unique below
+
+    user_id = Column(BigInteger,
+                     ForeignKey('user.user_id', deferrable=True),
+                     nullable=False)  # no index needed given unique below
 
     slug = Column(UnicodeText, nullable=False)
     api_response = Column(UnicodeText, nullable=False)
@@ -262,7 +579,7 @@ class List(TimestampsMixin, Base):
     @classmethod
     def from_tweepy(cls, obj, session=None):
         # remove NUL bytes as above
-        api_response = json.dumps(obj._json)
+        api_response = ut.tweepy_to_json(obj)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '')
 
         args = {
@@ -282,9 +599,9 @@ class List(TimestampsMixin, Base):
             'subscriber_count': 'subscriber_count'
         }
 
-        for t, s in extra_fields.items():
-            if hasattr(obj, s):
-                args[t] = getattr(obj, s)
+        for target, source in extra_fields.items():
+            if hasattr(obj, source):
+                args[target] = getattr(obj, source)
 
         # other fields that take special handling
         if hasattr(obj, 'full_name'):
@@ -292,16 +609,49 @@ class List(TimestampsMixin, Base):
 
         return cls(**args)
 
+
 class UserList(Base):
+    '''
+    User membership status for Twitter lists.
+
+    This class represents a user's membership in a list, and records a user ID
+    and a list ID. The underlying table is in type-2 SCD format, which means
+    that the (user, list) edge is recorded together with the date it was
+    observed (its validity start date). When it ceases to be observed (i.e., is
+    missing on a fetch of the list members), the row is updated to add this
+    validity end date. If the user subsequently returns to the list, a new row
+    is added.
+
+    Attributes
+    ----------
+    user_list_id
+        An autoincrement row ID, not assigned by Twitter.
+
+    user_id
+        The Twitter user ID of the user who is a list member.
+
+    list_id
+        The Twitter list ID.
+
+    valid_start_dt
+        The SCD validity start date.
+
+    valid_end_dt
+        The SCD validity end date (None / NULL if the row is current).
+    '''
+
     user_list_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
-                     nullable=False) # no index needed given unique below
-    list_id = Column(BigInteger, ForeignKey('list.list_id', deferrable=True),
+    user_id = Column(BigInteger,
+                     ForeignKey('user.user_id', deferrable=True),
+                     nullable=False)  # no index needed given unique below
+
+    list_id = Column(BigInteger,
+                     ForeignKey('list.list_id', deferrable=True),
                      nullable=False, index=True)
 
-    valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
-                            nullable=False)
+    valid_start_dt = Column(TIMESTAMP(timezone=True), nullable=False,
+                            server_default=func.now())
     valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
 
     __table_args__ = (
@@ -312,30 +662,87 @@ class UserList(Base):
     lst = relationship('List', back_populates='list_memberships')
     user = relationship('User', back_populates='list_memberships')
 
+
 class UserTag(TimestampsMixin, Base):
+    '''
+    Users who have been assigned tags.
+
+    This table records the assignment of user tags (the Tag class) to users.
+
+    Attributes
+    ----------
+    user_tag_id
+        An autoincrement row ID.
+
+    user_id
+        The Twitter user ID of the user assigned a tag.
+
+    tag_id
+        The ID of the tag the user is assigned.
+    '''
+
     user_tag_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
-                     nullable=False) # no index needed given unique below
-    tag_id = Column(Integer, ForeignKey('tag.tag_id', deferrable=True),
+    user_id = Column(BigInteger,
+                     ForeignKey('user.user_id', deferrable=True),
+                     nullable=False)  # no index needed given unique below
+
+    tag_id = Column(Integer,
+                    ForeignKey('tag.tag_id', deferrable=True),
                     nullable=False, index=True)
 
     __table_args__ = (UniqueConstraint('user_id', 'tag_id'),)
 
-##
-## Follow graph
-##
+
+#
+# Follow graph
+#
+
 
 class Follow(Base):
+    '''
+    The Twitter follow graph.
+
+    This class records an edge in the Twitter follow graph. The underlying
+    table stores these edges in a type-2 SCD format, which means that the
+    (source_user, target_user) edge is recorded together with the date it was
+    observed (its validity start date). When it ceases to be observed (i.e., is
+    missing on a fetch where it would be present if still valid), the row is
+    updated to add this validity end date. If the follow relationship is
+    subsequently observed again, a new row is added.
+
+    Attributes
+    ----------
+    follow_id
+        An autoincrement row ID, not assigned by Twitter.
+
+    source_user_id
+        The origin user for the directed follow edge (i.e., a user who follows
+        the user given by target_user_id).
+
+    target_user_id
+        The destination user for the directed follow edge (i.e., a user who is
+        followed by the user given by source_user_id).
+
+    valid_start_dt
+        The SCD validity start date.
+
+    valid_end_dt
+        The SCD validity end date (None / NULL if the row is current).
+    '''
+
     follow_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
-    source_user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
-                            nullable=False)
-    target_user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
+    source_user_id = Column(BigInteger,
+                            ForeignKey('user.user_id', deferrable=True),
                             nullable=False)
 
-    valid_start_dt = Column(TIMESTAMP(timezone=True), server_default=func.now(),
+    target_user_id = Column(BigInteger,
+                            ForeignKey('user.user_id', deferrable=True),
                             nullable=False)
+
+    valid_start_dt = Column(TIMESTAMP(timezone=True), nullable=False,
+                            server_default=func.now())
     valid_end_dt = Column(TIMESTAMP(timezone=True), nullable=True)
 
     __table_args__ = (
@@ -357,24 +764,106 @@ class Follow(Base):
     )
 
 
-# A temp-ish table for SCD operations on Follow
+# FIXME? would it be faster to load rows without a PK index and then either
+# create one or select distinct in the insert of new rows?
 class StgFollow(Base):
+    '''
+    A staging table for the loading of follow-graph edges.
+    '''
+
     source_user_id = Column(BigInteger, primary_key=True, autoincrement=False)
     target_user_id = Column(BigInteger, primary_key=True, autoincrement=False)
 
-##
-## Tweets and tweet entities
-##
 
-class Tweet(TimestampsMixin, Base):
+#
+# Tweets and tweet entities
+#
+
+
+class Tweet(TimestampsMixin, FromTweepyInterface, Base):
+    '''
+    A tweet.
+
+    This model represents a tweet posted on Twitter and ingested from its API.
+    Several tweet properties are normalized from the raw json into database
+    entities and/or foreign keys.
+
+    Attributes
+    ----------
+    tweet_id
+        The ID assigned by Twitter to this tweet. These IDs are sequential
+        integers, so that tweets with higher numbers were posted later.
+
+    user_id
+        The Twitter user ID of the user posting the tweet.
+
+    retweeted_status_id
+        If this tweet is a retweet of another tweet, the ID of the retweeted
+        tweet. Because Twitter's API returns the other tweet as well in such
+        cases, this is stored in the database as a foreign key back to the
+        tweet table, helping with graph analysis.
+
+    quoted_status_id
+        If this tweet is a quote tweet of another tweet, the ID of the quoted
+        tweet. Because Twitter's API returns the other tweet as well in such
+        cases, this is stored in the database as a foreign key back to
+        the tweet table, helping with graph analysis.
+
+    api_response
+        The raw json text returned by Twitter.
+
+    content
+        The body of the tweet. This field may differ from what is observed in
+        the web interface on Twitter.com. In particular, retweets are prepended
+        with "RT @POSTING_USER" and links are rendered with t.co rather than
+        any display URLs.
+
+    create_dt
+        The date and time the tweet was posted.
+
+    in_reply_to_status_id
+        If this tweet is a reply, the ID of the tweet it was in reply to. The
+        Twitter API does not return an entity for a replied-to tweet, so this
+        field is not a foreign key (and may reference tweets not in the tweet
+        table).
+
+    in_reply_to_user_id
+        If this tweet is a reply, the ID of the user who posted the tweet it
+        was in reply to. The Twitter API does not return an entity for a
+        replied-to tweet, so this field is not a foreign key (and may refer to
+        users not in the user table).
+
+    lang
+        The detected language of the tweet.
+
+    source
+        The platform from which the tweet was posted (iPhone, Android, desktop,
+        etc).
+
+    truncated
+        Was the tweet text truncated at 140 characters? Should always be false,
+        included for visibility.
+
+    retweet_count
+        The number of times this tweet was retweeted.
+
+    favorite_count
+        The number of times this tweet was favorited / liked.
+    '''
+
     # as in User, this is the Twitter id rather than a surrogate key
     tweet_id = Column(BigInteger, primary_key=True, autoincrement=False)
-    user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
+
+    user_id = Column(BigInteger,
+                     ForeignKey('user.user_id', deferrable=True),
                      nullable=False, index=True)
 
-    retweeted_status_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
+    retweeted_status_id = Column(BigInteger,
+                                 ForeignKey('tweet.tweet_id', deferrable=True),
                                  nullable=True, index=True)
-    quoted_status_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
+
+    quoted_status_id = Column(BigInteger,
+                              ForeignKey('tweet.tweet_id', deferrable=True),
                               nullable=True, index=True)
 
     api_response = Column(UnicodeText, nullable=False)
@@ -392,7 +881,8 @@ class Tweet(TimestampsMixin, Base):
     retweet_count = Column(Integer, nullable=True)
     favorite_count = Column(Integer, nullable=True)
 
-    user = relationship('User', foreign_keys=[user_id], back_populates='tweets')
+    user = relationship('User', foreign_keys=[user_id],
+                        back_populates='tweets')
 
     retweet_of = relationship('Tweet', foreign_keys=[retweeted_status_id],
                               remote_side=[tweet_id])
@@ -408,7 +898,7 @@ class Tweet(TimestampsMixin, Base):
     @classmethod
     def from_tweepy(cls, obj, session=None):
         # remove NUL bytes as above
-        api_response = json.dumps(obj._json)
+        api_response = ut.tweepy_to_json(obj)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '')
 
         args = {
@@ -434,10 +924,10 @@ class Tweet(TimestampsMixin, Base):
             'favorite_count'
         ]
 
-        for t in extra_fields:
-            if hasattr(obj, t):
-                val = getattr(obj, t)
-                args[t] = (val if val != 'null' else None)
+        for name in extra_fields:
+            if hasattr(obj, name):
+                val = getattr(obj, name)
+                args[name] = (val if val != 'null' else None)
 
         ret = cls(**args)
 
@@ -465,7 +955,23 @@ class Tweet(TimestampsMixin, Base):
 
         return ret
 
+
 class Hashtag(TimestampsMixin, UniqueMixin, Base):
+    '''
+    A hashtag.
+
+    This class represents a hashtag used in a tweet. Hashtags are stored
+    without their '#' prefix.
+
+    Attributes
+    ----------
+    hashtag_id
+        An autoincrement row ID, not assigned by Twitter.
+
+    name
+        The text of the hashtag.
+    '''
+
     hashtag_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     name = Column(UnicodeText, nullable=False, unique=True)
@@ -473,7 +979,26 @@ class Hashtag(TimestampsMixin, UniqueMixin, Base):
     mentions = relationship('HashtagMention', back_populates='hashtag',
                             cascade_backrefs=False)
 
+
 class Symbol(TimestampsMixin, UniqueMixin, Base):
+    '''
+    A ticker symbol as detected by Twitter.
+
+    Twitter attempts to detect stock-ticker symbols when prefixed with a '$' (a
+    "cashtag") and make them searchable on its service. The detection is crude
+    and based on regular expressions, with no attempt to ensure the detected
+    symbols are real ticker symbols. Such cashtags are represented by this
+    class, stored without their leading '$'.
+
+    Attributes
+    ----------
+    symbol_id
+        An autoincrement row ID, not assigned by Twitter.
+
+    name
+        The text of the symbol / cashtag.
+    '''
+
     symbol_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     name = Column(UnicodeText, nullable=False, unique=True)
@@ -481,7 +1006,24 @@ class Symbol(TimestampsMixin, UniqueMixin, Base):
     mentions = relationship('SymbolMention', back_populates='symbol',
                             cascade_backrefs=False)
 
+
 class Url(TimestampsMixin, UniqueMixin, Base):
+    '''
+    A URL.
+
+    This class represents a unique URL that appeared somewhere on Twitter. URLs
+    are represented as a separate entity rather than multiple text fields to
+    make it easier to track them across the many places they may appear.
+
+    Attributes
+    ----------
+    url_id
+        An autoincrement row ID, not assigned by Twitter.
+
+    url
+        The URL itself.
+    '''
+
     url_id = Column(BigInteger, primary_key=True, autoincrement=True)
 
     url = Column(UnicodeText, nullable=False, unique=True)
@@ -495,7 +1037,23 @@ class Url(TimestampsMixin, UniqueMixin, Base):
     media_variants = relationship('MediaVariant', back_populates='url',
                                   cascade_backrefs=False)
 
-class MediaType(TimestampsMixin, UniqueMixin, Base):
+
+class MediaType(TimestampsMixin, UniqueMixin, FromTweepyInterface, Base):
+    '''
+    The type of a media object in a tweet.
+
+    Media objects in tweets can have several types: photo, video, and others.
+    This table tracks the observed types of media.
+
+    Attributes
+    ----------
+    media_type_id
+        An autoincrement row ID, not assigned by Twitter.
+
+    name
+        Twitter's name for this type of media.
+    '''
+
     media_type_id = Column(Integer, primary_key=True, autoincrement=True)
 
     name = Column(UnicodeText, nullable=False, unique=True)
@@ -503,14 +1061,62 @@ class MediaType(TimestampsMixin, UniqueMixin, Base):
     media = relationship('Media', back_populates='media_type',
                          cascade_backrefs=False)
 
-class Media(TimestampsMixin, Base):
+    @classmethod
+    def from_tweepy(cls, obj, session=None):
+        media_type = obj['type']
+        if 'additional_media_info' in obj.keys():
+            if 'embeddable' in obj['additional_media_info'].keys():
+                if not obj['additional_media_info']['embeddable']:
+                    media_type = 'unembeddable_video'
+
+        return cls.as_unique(session, name=media_type)
+
+
+class Media(TimestampsMixin, FromTweepyInterface, Base):
+    '''
+    A media object on Twitter.
+
+    This class represents media objects like photos and videos which occur in
+    tweets. The media's type and primary URL are recorded here. Note though
+    that for videos the "primary" URL is a thumbnail still; see the
+    MediaVariant class for the various video files actually available.
+
+    Attributes
+    ----------
+    media_id
+        Twitter's ID for this media.
+
+    media_type_id
+        The type of media.
+
+    media_url_id
+        The primary URL of the media. For videos, this URL is a thumbnail still
+        and the video files themselves are recorded in the MediaVariant class.
+
+    aspect_ratio_width
+        For videos, the first number of the video's aspect ratio (e.g., "16"
+        for a "16:9" aspect ratio). None / NULL otherwise.
+
+    aspect_ratio_height
+        For videos, the second number of the video's aspect ratio (e.g., "9"
+        for a "16:9" aspect ratio). None / NULL otherwise.
+
+    duration
+        For videos, the duration of the video in seconds. None / NULL
+        otherwise.
+    '''
+
     # Twitter gives these IDs, so unlike with the other entities we don't have
     # to make one up
     media_id = Column(BigInteger, primary_key=True, autoincrement=False)
 
-    media_type_id = Column(Integer, ForeignKey('media_type.media_type_id', deferrable=True),
+    media_type_id = Column(Integer,
+                           ForeignKey('media_type.media_type_id',
+                                      deferrable=True),
                            nullable=False)
-    media_url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True),
+
+    media_url_id = Column(BigInteger,
+                          ForeignKey('url.url_id', deferrable=True),
                           nullable=False)
 
     # video-specific attributes
@@ -525,10 +1131,56 @@ class Media(TimestampsMixin, Base):
     mentions = relationship('MediaMention', back_populates='media',
                             cascade_backrefs=False)
 
-class MediaVariant(TimestampsMixin, Base):
-    media_id = Column(BigInteger, ForeignKey('media.media_id', deferrable=True),
+    @classmethod
+    def from_tweepy(cls, obj, session=None):
+        kwargs = {
+            'media_id': obj['id']
+        }
+
+        # Info that's only populated for videos
+        if 'video_info' in obj.keys():
+            if 'duration_millis' in obj['video_info'].keys():
+                duration = obj['video_info']['duration_millis']
+                kwargs['duration'] = 0.001 * duration
+
+            if 'aspect_ratio' in obj['video_info'].keys():
+                width, height = obj['video_info']['aspect_ratio']
+
+                kwargs['aspect_ratio_width'] = width
+                kwargs['aspect_ratio_height'] = height
+
+        return cls(**kwargs)
+
+
+class MediaVariant(TimestampsMixin, ListFromTweepyInterface, Base):
+    '''
+    Specific video files for a Twitter video, which may have more than one.
+
+    Twitter video media may have multiple specific video files associated with
+    them, providing different bitrates, file formats or other properties. Each
+    such video file is a MediaVariant.
+
+    Attributes
+    ----------
+    media_id
+        The Twitter media entity this video file is associated with.
+
+    url_id
+        The URL of the video file.
+
+    bitrate
+        The bitrate of the video file.
+
+    content_type
+        The MIME type of the video.
+    '''
+
+    media_id = Column(BigInteger,
+                      ForeignKey('media.media_id', deferrable=True),
                       primary_key=True, autoincrement=False)
-    url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True),
+
+    url_id = Column(BigInteger,
+                    ForeignKey('url.url_id', deferrable=True),
                     primary_key=True, autoincrement=False)
 
     bitrate = Column(Integer, nullable=True)
@@ -538,19 +1190,75 @@ class MediaVariant(TimestampsMixin, Base):
     media = relationship('Media', back_populates='variants',
                          cascade_backrefs=False)
 
-class UserMention(TimestampsMixin, Base):
-    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
+    @classmethod
+    def list_from_tweepy(cls, obj, session=None):
+        ret = []
+
+        if 'video_info' not in obj.keys():
+            return ret
+
+        if 'variants' not in obj['video_info'].keys():
+            return ret
+
+        for entity in obj['video_info']['variants']:
+            kwargs = {
+                'media_id': obj['id']
+            }
+
+            if 'bitrate' in entity.keys():
+                kwargs['bitrate'] = entity['bitrate']
+
+            if 'content_type' in entity.keys():
+                kwargs['content_type'] = entity['content_type']
+
+            variant = cls(**kwargs)
+            variant.url = Url.as_unique(session, url=entity['url'])
+
+            ret += [variant]
+
+        return ret
+
+
+class UserMention(TimestampsMixin, ListFromTweepyInterface, Base):
+    '''
+    A mention of a user in a tweet.
+
+    This class represents a mention of a user in a tweet. There can be multiple
+    mentions of the same user in the same tweet, so we also record the position
+    in the tweet where the mention occurred.
+
+    Attributes
+    ----------
+    tweet_id
+        Twitter's ID for the tweet.
+
+    start_index
+        The index in the tweet content of the first character of this mention.
+
+    end_index
+        The index in the tweet content of the last character of this mention.
+
+    mentioned_user_id
+        The Twitter user ID of the user who was mentioned.
+    '''
+
+    tweet_id = Column(BigInteger,
+                      ForeignKey('tweet.tweet_id', deferrable=True),
                       primary_key=True, autoincrement=False)
+
     start_index = Column(Integer, primary_key=True, autoincrement=False)
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
-    mentioned_user_id = Column(BigInteger, ForeignKey('user.user_id', deferrable=True),
+    mentioned_user_id = Column(BigInteger,
+                               ForeignKey('user.user_id', deferrable=True),
                                nullable=False, index=True)
 
     user = relationship('User', back_populates='mentions')
     tweet = relationship('Tweet', back_populates='user_mentions')
 
-    __table_args__ = (UniqueConstraint('tweet_id', 'start_index', 'end_index'),)
+    __table_args__ = (
+        UniqueConstraint('tweet_id', 'start_index', 'end_index'),
+    )
 
     @classmethod
     def list_from_tweepy(cls, obj, session=None):
@@ -558,11 +1266,11 @@ class UserMention(TimestampsMixin, Base):
 
         if hasattr(obj, 'entities'):
             if 'user_mentions' in obj.entities.keys():
-                for mt in obj.entities['user_mentions']:
+                for mtn in obj.entities['user_mentions']:
                     kwargs = {
                         'tweet_id': obj.id,
-                        'start_index': mt['indices'][0],
-                        'end_index': mt['indices'][1]
+                        'start_index': mtn['indices'][0],
+                        'end_index': mtn['indices'][1]
                     }
 
                     ret = cls(**kwargs)
@@ -572,20 +1280,48 @@ class UserMention(TimestampsMixin, Base):
 
         return lst
 
-class HashtagMention(TimestampsMixin, Base):
-    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
+
+class HashtagMention(TimestampsMixin, ListFromTweepyInterface, Base):
+    '''
+    A mention of a hashtag in a tweet.
+
+    This class represents a mention of a hashtag in a tweet. There can be
+    multiple mentions of the same hashtag in the same tweet, so we also record
+    the position in the tweet where the mention occurred.
+
+    Attributes
+    ----------
+    tweet_id
+        Twitter's ID for the tweet.
+
+    start_index
+        The index in the tweet content of the first character of this mention.
+
+    end_index
+        The index in the tweet content of the last character of this mention.
+
+    hashtag_id
+        The (non-Twitter) ID of the hashtag that was mentioned.
+    '''
+
+    tweet_id = Column(BigInteger,
+                      ForeignKey('tweet.tweet_id', deferrable=True),
                       primary_key=True, autoincrement=False)
+
     start_index = Column(Integer, primary_key=True, autoincrement=False)
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
-    hashtag_id = Column(BigInteger, ForeignKey('hashtag.hashtag_id', deferrable=True),
+    hashtag_id = Column(BigInteger,
+                        ForeignKey('hashtag.hashtag_id', deferrable=True),
                         nullable=False, index=True)
 
     hashtag = relationship('Hashtag', back_populates='mentions')
     tweet = relationship('Tweet', back_populates='hashtag_mentions',
                          cascade_backrefs=False)
 
-    __table_args__ = (UniqueConstraint('tweet_id', 'start_index', 'end_index'),)
+    __table_args__ = (
+        UniqueConstraint('tweet_id', 'start_index', 'end_index'),
+    )
 
     @classmethod
     def list_from_tweepy(cls, obj, session=None):
@@ -593,34 +1329,62 @@ class HashtagMention(TimestampsMixin, Base):
 
         if hasattr(obj, 'entities'):
             if 'hashtags' in obj.entities.keys():
-                for mt in obj.entities['hashtags']:
+                for mtn in obj.entities['hashtags']:
                     kwargs = {
                         'tweet_id': obj.id,
-                        'start_index': mt['indices'][0],
-                        'end_index': mt['indices'][1]
+                        'start_index': mtn['indices'][0],
+                        'end_index': mtn['indices'][1]
                     }
 
                     ret = cls(**kwargs)
-                    ret.hashtag = Hashtag.as_unique(session, name=mt['text'])
+                    ret.hashtag = Hashtag.as_unique(session, name=mtn['text'])
 
                     lst += [ret]
 
         return lst
 
-class SymbolMention(TimestampsMixin, Base):
-    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
+
+class SymbolMention(TimestampsMixin, ListFromTweepyInterface, Base):
+    '''
+    A mention of a ticker symbol ("cashtag") in a tweet.
+
+    This class represents a mention of a ticker symbol in a tweet. There can be
+    multiple mentions of the same symbol in the same tweet, so we also record
+    the position in the tweet where the mention occurred.
+
+    Attributes
+    ----------
+    tweet_id
+        Twitter's ID for the tweet.
+
+    start_index
+        The index in the tweet content of the first character of this mention.
+
+    end_index
+        The index in the tweet content of the last character of this mention.
+
+    symbol_id
+        The (non-Twitter) ID of the symbol that was mentioned.
+    '''
+
+    tweet_id = Column(BigInteger,
+                      ForeignKey('tweet.tweet_id', deferrable=True),
                       primary_key=True, autoincrement=False)
+
     start_index = Column(Integer, primary_key=True, autoincrement=False)
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
-    symbol_id = Column(BigInteger, ForeignKey('symbol.symbol_id', deferrable=True),
+    symbol_id = Column(BigInteger,
+                       ForeignKey('symbol.symbol_id', deferrable=True),
                        nullable=False, index=True)
 
     symbol = relationship('Symbol', back_populates='mentions')
     tweet = relationship('Tweet', back_populates='symbol_mentions',
                          cascade_backrefs=False)
 
-    __table_args__ = (UniqueConstraint('tweet_id', 'start_index', 'end_index'),)
+    __table_args__ = (
+        UniqueConstraint('tweet_id', 'start_index', 'end_index'),
+    )
 
     @classmethod
     def list_from_tweepy(cls, obj, session=None):
@@ -628,27 +1392,80 @@ class SymbolMention(TimestampsMixin, Base):
 
         if hasattr(obj, 'entities'):
             if 'symbols' in obj.entities.keys():
-                for mt in obj.entities['symbols']:
+                for mtn in obj.entities['symbols']:
                     kwargs = {
                         'tweet_id': obj.id,
-                        'start_index': mt['indices'][0],
-                        'end_index': mt['indices'][1]
+                        'start_index': mtn['indices'][0],
+                        'end_index': mtn['indices'][1]
                     }
 
                     ret = cls(**kwargs)
-                    ret.symbol = Symbol.as_unique(session, name=mt['text'])
+                    ret.symbol = Symbol.as_unique(session, name=mtn['text'])
 
                     lst += [ret]
 
         return lst
 
-class UrlMention(TimestampsMixin, Base):
-    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
+
+class UrlMention(TimestampsMixin, ListFromTweepyInterface, Base):
+    '''
+    A mention of a URL in a tweet.
+
+    This class represents a mention of a URL in a tweet. There can be
+    multiple mentions of the same URL in the same tweet, so we also record
+    the position in the tweet where the mention occurred. Some attributes of
+    the URL mention itself, in addition to the URL, are also tracked here.
+
+    Attributes
+    ----------
+    tweet_id
+        Twitter's ID for the tweet.
+
+    start_index
+        The index in the tweet content of the first character of this mention.
+
+    end_index
+        The index in the tweet content of the last character of this mention.
+
+    url_id
+        The (non-Twitter) ID of the URL that was mentioned.
+
+    twitter_short_url
+        The t.co link that appears in the tweet body.
+
+    twitter_display_url
+        The display URL Twitter shows on its smartphone apps and desktop
+        website.
+
+    expanded_short_url
+        If the user inputs an already shortened URL (e.g., bit.ly), Twitter
+        resolves the URL further to a final page. In this case, we store the
+        original short URL that the user entered here and use the resolved page
+        as the main mentioned URL.
+
+    status
+        If a shortened URL input by a user was resolved further, the HTTP
+        status code of the final GET request in the chain. None / NULL
+        otherwise.
+
+    title
+        If a shortened URL input by a user was resolved further, the title of
+        the fetched page. None / NULL otherwise.
+
+    description
+        If a shortened URL input by a user was resolved further, the value of
+        the description meta tag for the fetched page. None / NULL otherwise.
+    '''
+
+    tweet_id = Column(BigInteger,
+                      ForeignKey('tweet.tweet_id', deferrable=True),
                       primary_key=True, autoincrement=False)
+
     start_index = Column(Integer, primary_key=True, autoincrement=False)
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
-    url_id = Column(BigInteger, ForeignKey('url.url_id', deferrable=True),
+    url_id = Column(BigInteger,
+                    ForeignKey('url.url_id', deferrable=True),
                     nullable=False, index=True)
 
     # These are properties of the specific URL mention, not the page at the
@@ -668,7 +1485,9 @@ class UrlMention(TimestampsMixin, Base):
     tweet = relationship('Tweet', back_populates='url_mentions',
                          cascade_backrefs=False)
 
-    __table_args__ = (UniqueConstraint('tweet_id', 'start_index', 'end_index'),)
+    __table_args__ = (
+        UniqueConstraint('tweet_id', 'start_index', 'end_index'),
+    )
 
     @classmethod
     def list_from_tweepy(cls, obj, session=None):
@@ -676,28 +1495,28 @@ class UrlMention(TimestampsMixin, Base):
 
         if hasattr(obj, 'entities'):
             if 'urls' in obj.entities.keys():
-                for mt in obj.entities['urls']:
+                for mtn in obj.entities['urls']:
                     kwargs = {
                         'tweet_id': obj.id,
-                        'start_index': mt['indices'][0],
-                        'end_index': mt['indices'][1]
+                        'start_index': mtn['indices'][0],
+                        'end_index': mtn['indices'][1]
                     }
 
-                    if 'url' in mt.keys():
-                        kwargs['twitter_short_url'] = mt['url']
+                    if 'url' in mtn.keys():
+                        kwargs['twitter_short_url'] = mtn['url']
 
-                    if 'display_url' in mt.keys():
-                        kwargs['twitter_display_url'] = mt['display_url']
+                    if 'display_url' in mtn.keys():
+                        kwargs['twitter_display_url'] = mtn['display_url']
 
-                    if 'unwound' in mt.keys():
-                        kwargs['status'] = mt['unwound']['status']
-                        kwargs['title'] = mt['unwound']['title']
-                        kwargs['description'] = mt['unwound']['description']
+                    if 'unwound' in mtn.keys():
+                        kwargs['status'] = mtn['unwound']['status']
+                        kwargs['title'] = mtn['unwound']['title']
+                        kwargs['description'] = mtn['unwound']['description']
 
-                        kwargs['expanded_short_url'] = mt['expanded_url']
-                        url = mt['unwound']['url']
+                        kwargs['expanded_short_url'] = mtn['expanded_url']
+                        url = mtn['unwound']['url']
                     else:
-                        url = mt['expanded_url']
+                        url = mtn['expanded_url']
 
                     ret = cls(**kwargs)
                     ret.url = Url.as_unique(session, url=url)
@@ -706,13 +1525,52 @@ class UrlMention(TimestampsMixin, Base):
 
         return lst
 
-class MediaMention(TimestampsMixin, Base):
-    tweet_id = Column(BigInteger, ForeignKey('tweet.tweet_id', deferrable=True),
+
+class MediaMention(TimestampsMixin, ListFromTweepyInterface, Base):
+    '''
+    A mention of a media object in a tweet.
+
+    This class represents a mention of a media object like a photo or video in
+    a tweet. There can be multiple mentions of the same media in the same
+    tweet, so we also record the position in the tweet where the mention
+    occurred. Some attributes of the media mention itself, in addition to the
+    URL, are also tracked here.
+
+    Attributes
+    ----------
+    tweet_id
+        Twitter's ID for the tweet.
+
+    start_index
+        The index in the tweet content of the first character of this mention.
+
+    end_index
+        The index in the tweet content of the last character of this mention.
+
+    media_id
+        Twitter's ID for the media that was mentioned.
+
+    twitter_short_url
+        The t.co link that appears in the tweet body.
+
+    twitter_display_url
+        The display URL Twitter shows on its smartphone apps and desktop
+        website.
+
+    twitter_expanded_url
+        The URL for the usual Twitter web viewer for this media, which one
+        would encounter after clicking on it from Twitter.com.
+    '''
+
+    tweet_id = Column(BigInteger,
+                      ForeignKey('tweet.tweet_id', deferrable=True),
                       primary_key=True, autoincrement=False)
+
     start_index = Column(Integer, primary_key=True, autoincrement=False)
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
-    media_id = Column(BigInteger, ForeignKey('media.media_id', deferrable=True),
+    media_id = Column(BigInteger,
+                      ForeignKey('media.media_id', deferrable=True),
                       nullable=False, index=True)
 
     # (Probably) properties of the specific media mention, not the media itself
@@ -724,97 +1582,56 @@ class MediaMention(TimestampsMixin, Base):
     tweet = relationship('Tweet', back_populates='media_mentions',
                          cascade_backrefs=False)
 
-    __table_args__ = (UniqueConstraint('tweet_id', 'start_index', 'end_index'),)
+    __table_args__ = (
+        UniqueConstraint('tweet_id', 'start_index', 'end_index'),
+    )
 
     @classmethod
     def list_from_tweepy(cls, obj, session=None):
         lst = []
 
         # the usual entities object provides incorrect information for media
-        # entities: https://developer.twitter.com/en/docs/twitter-api/v1/data-dictionary/overview/extended-entities-object
-        if hasattr(obj, 'extended_entities'):
-            if 'media' in obj.entities.keys():
-                for mt in obj.extended_entities['media']:
-                    ##
-                    ## The MediaMention object
-                    ##
+        # entities; see Twitter's docs for the "extended entities" object
+        if not hasattr(obj, 'extended_entities'):
+            return lst
 
-                    kwargs = {
-                        'tweet_id': obj.id,
-                        'start_index': mt['indices'][0],
-                        'end_index': mt['indices'][1]
-                    }
+        if 'media' not in obj.entities.keys():
+            return lst
 
-                    if 'url' in mt.keys():
-                        kwargs['twitter_short_url'] = mt['url']
+        for mtn in obj.extended_entities['media']:
+            #
+            # The MediaMention object
+            #
 
-                    if 'display_url' in mt.keys():
-                        kwargs['twitter_display_url'] = mt['display_url']
+            kwargs = {
+                'tweet_id': obj.id,
+                'start_index': mtn['indices'][0],
+                'end_index': mtn['indices'][1]
+            }
 
-                    if 'expanded_url' in mt.keys():
-                        kwargs['twitter_expanded_url'] = mt['expanded_url']
+            if 'url' in mtn.keys():
+                kwargs['twitter_short_url'] = mtn['url']
 
-                    ret = cls(**kwargs)
+            if 'display_url' in mtn.keys():
+                kwargs['twitter_display_url'] = mtn['display_url']
 
-                    ##
-                    ## The Media object
-                    ##
+            if 'expanded_url' in mtn.keys():
+                kwargs['twitter_expanded_url'] = mtn['expanded_url']
 
-                    kwargs = {
-                        'media_id': mt['id']
-                    }
+            ret = cls(**kwargs)
 
-                    # Info that's only populated for videos
-                    if 'video_info' in mt.keys():
-                        if 'duration_millis' in mt['video_info'].keys():
-                            kwargs['duration'] = 0.001 * mt['video_info']['duration_millis']
+            ret.media = Media.from_tweepy(mtn)
+            ret.media.media_type = MediaType.from_tweepy(mtn, session)
 
-                        if 'aspect_ratio' in mt['video_info'].keys():
-                            kwargs['aspect_ratio_width'] = mt['video_info']['aspect_ratio'][0]
-                            kwargs['aspect_ratio_height'] = mt['video_info']['aspect_ratio'][1]
+            if 'media_url_https' in mtn.keys():
+                media_url = mtn['media_url_https']
+            else:
+                media_url = mtn['media_url']
+            ret.media.url = Url.as_unique(session, url=media_url)
 
-                    ret.media = Media(**kwargs)
+            # "Variants" aka video files (multiple encodings per Media)
+            ret.media.variants = MediaVariant.list_from_tweepy(mtn, session)
 
-                    # What kind of media?
-                    media_type = mt['type']
-                    if 'additional_media_info' in mt.keys():
-                        if 'embeddable' in mt['additional_media_info'].keys():
-                            if not mt['additional_media_info']['embeddable']:
-                                media_type = 'unembeddable_video'
-                    ret.media.media_type = MediaType.as_unique(session, name=media_type)
-
-                    # The primary url of the media
-                    if 'media_url_https' in mt.keys():
-                        media_url = mt['media_url_https']
-                    else:
-                        media_url = mt['media_url']
-                    ret.media.url = Url.as_unique(session, url=media_url)
-
-                    ##
-                    ## "Variants" aka video files (multiple encodings per Media)
-                    ##
-                    if 'video_info' in mt.keys():
-                        if 'variants' in mt['video_info'].keys():
-                            variants = []
-                            for v in mt['video_info']['variants']:
-                                kwargs = {
-                                    'media_id': mt['id']
-                                }
-
-                                if 'bitrate' in v.keys():
-                                    kwargs['bitrate'] = v['bitrate']
-
-                                if 'content_type' in v.keys():
-                                    kwargs['content_type'] = v['content_type']
-
-                                obj = MediaVariant(**kwargs)
-                                obj.url = Url.as_unique(session, url=v['url'])
-
-                                variants += [obj]
-
-                            ret.media.variants = variants
-
-                    lst += [ret]
+            lst += [ret]
 
         return lst
-

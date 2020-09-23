@@ -8,12 +8,16 @@ import logging
 
 import tweepy
 
+from . import utils as ut
 from . import error as err
 
 logger = logging.getLogger(__name__)
 
+# The dynamic method construction in AuthPoolAPI confuses the linter
+# pylint: disable=protected-access
 
-class AuthPoolAPI(object):  # pylint: disable=too-few-public-methods
+
+class AuthPoolAPI:  # pylint: disable=too-few-public-methods
     '''
     A version of tweepy.API with support for multiple sets of credentials.
 
@@ -65,14 +69,14 @@ class AuthPoolAPI(object):  # pylint: disable=too-few-public-methods
         try:
             auths = kwargs.pop('auths')
             assert auths
-        except (KeyError, AssertionError):
+        except (KeyError, AssertionError) as exc:
             msg = "Must provide one or more Twitter credential sets"
-            raise ValueError(msg)
+            raise ValueError(msg) from exc
 
         capacity_sleep = kwargs.pop('capacity_sleep', 15 * 60)
         capacity_retries = kwargs.pop('capacity_retries', 3)
 
-        super(AuthPoolAPI, self).__init__()
+        super().__init__()
 
         # These attributes all have an "_authpool" prefix to avoid clashing
         # with attributes of the underlying tweepy.API instances. We create
@@ -89,7 +93,10 @@ class AuthPoolAPI(object):  # pylint: disable=too-few-public-methods
             for auth in random.sample(auths, len(auths))
         ]
 
-        self._authpool_rate_limit_resets = [None for x in self._authpool_apis]
+        self._authpool_rate_limit_resets = [
+            None
+            for x in self._authpool_apis
+        ]
 
     @property
     def _authpool_current_api(self):
@@ -104,11 +111,11 @@ class AuthPoolAPI(object):  # pylint: disable=too-few-public-methods
         self._authpool_rate_limit_resets[ind] = resume_time
 
     def _authpool_switch_api(self):
-        for i in range(len(self._authpool_apis)):
-            t = self._authpool_rate_limit_resets[i]
+        for ind in range(len(self._authpool_apis)):
+            reset_time = self._authpool_rate_limit_resets[ind]
 
-            if t is not None and t < time.time():
-                self._authpool_apis[i] = None
+            if reset_time is not None and reset_time < time.time():
+                self._authpool_apis[ind] = None
 
         free_inds = [
             i
@@ -118,16 +125,15 @@ class AuthPoolAPI(object):  # pylint: disable=too-few-public-methods
 
         if free_inds:
             new_ind = random.sample(free_inds, 1)[0]
-            self._authpool_current_api_index = new_ind
         else:
             # i.e., the one with the shortest wait for rate limit reset
-            i = min(range(len(self._authpool_apis)),
-                    key=lambda x: self._authpool_rate_limit_resets[x])
+            new_ind = min(range(len(self._authpool_apis)),
+                          key=lambda x: self._authpool_rate_limit_resets[x])
 
             # add a little fudge factor to be safe
-            time.sleep(self._authpool_rate_limit_resets[i] + 0.01)
+            time.sleep(self._authpool_rate_limit_resets[new_ind] + 0.01)
 
-            self._authpool_current_api_index = i
+        self._authpool_current_api_index = new_ind
 
     # We want to transparently proxy method calls to the underlying instances
     # of tweepy.API. To do that, first check if the requested attribute is a
@@ -154,8 +160,8 @@ class AuthPoolAPI(object):  # pylint: disable=too-few-public-methods
 
         # this function proxies for whatever tweepy method was requested.
         # we use "iself" to avoid confusing shadowing of the binding of "self"
-        # to __getattr__'s first argument.
-        def func(iself, *args, **kwargs):
+        # to __getattr__'s first argument. docstring is set dynamically below.
+        def func(iself, *args, **kwargs):  # pylint: disable=missing-docstring
             cp_retry_cnt = 0
 
             while True:
@@ -171,37 +177,51 @@ class AuthPoolAPI(object):  # pylint: disable=too-few-public-methods
                     cp_retry_cnt = 0
 
                     return ret
-                except tweepy.error.RateLimitError as e:
-                    resume_time = e.response.headers.get('x-rate-limit-reset')
+                except tweepy.error.RateLimitError as exc:
+                    resume_time = exc.response.headers \
+                                     .get('x-rate-limit-reset')
                     iself._authpool_mark_api_limited(resume_time)
 
                     iself._authpool_switch_api()
-                except tweepy.error.TweepError as e:
-                    de = err.dispatch_tweepy(e)
+                except tweepy.error.TweepError as exc:
+                    dexc = err.dispatch_tweepy(exc)
 
-                    if not isinstance(de, err.CapacityError):
-                        raise de
-                    elif cp_retry_cnt >= iself._authpool_capacity_retries:
-                        raise de
-                    else:
-                        msg = 'Over-capacity error on try {0}; sleeping {1}'
-                        msg = msg.format(cp_retry_cnt,
-                                         iself._authpool_capacity_sleep)
-                        logger.warning(msg)
+                    if not isinstance(dexc, err.CapacityError):
+                        raise dexc from exc
 
-                        time.sleep(iself._authpool_capacity_sleep)
+                    if cp_retry_cnt >= iself._authpool_capacity_retries:
+                        raise dexc from exc
 
-                        cp_retry_cnt += 1
+                    msg = 'Over-capacity error on try {0}; sleeping {1}'
+                    msg = msg.format(cp_retry_cnt,
+                                     iself._authpool_capacity_sleep)
+                    logger.warning(msg)
+
+                    time.sleep(iself._authpool_capacity_sleep)
+
+                    cp_retry_cnt += 1
+
+        # set the docstring
+        docstring = '''
+        This method proxies for an underlying method of tweepy.API.
+
+        The tweepy.API method's docstring follows:
+        '''
+
+        tweepy_docstring = getattr(self._authpool_current_api, name).__doc__
+        tweepy_docstring = ut.coalesce(tweepy_docstring, '')
+
+        func.__doc__ = docstring + tweepy_docstring
 
         # tweepy uses attributes to control cursors and pagination, so
         # we need to set them
         methods = [getattr(x, name) for x in self._authpool_apis]
         ind = self._authpool_current_api_index
 
-        for k, v in vars(methods[ind]).items():
-            if all([k in vars(x).keys() for x in methods]):
-                if all([vars(x)[k] == v for x in methods]):
-                    setattr(func, k, v)
+        for key, value in vars(methods[ind]).items():
+            if all([key in vars(x).keys() for x in methods]):
+                if all([vars(x)[key] == value for x in methods]):
+                    setattr(func, key, value)
 
         # we use this attribute as a hint to TwitterApi.make_api_call
         setattr(func, 'twclient_return_type',
@@ -209,7 +229,6 @@ class AuthPoolAPI(object):  # pylint: disable=too-few-public-methods
 
         # the descriptor protocol: func is an unbound function, but the __get__
         # method returns func as a bound method of its argument
-        setattr(self, name, func.__get__(self))
+        setattr(self, name, func.__get__(self, AuthPoolAPI))
 
         return getattr(self, name)
-

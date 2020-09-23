@@ -41,7 +41,7 @@ class TWClientError(Exception):
         message = kwargs.pop('message', '')
         exit_status = kwargs.pop('exit_status', 1)
 
-        super(TWClientError, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.message = message
         self.exit_status = exit_status
@@ -100,7 +100,7 @@ class TwitterAPIError(TWClientError):
         response = kwargs.pop('response', None)
         api_code = kwargs.pop('api_code', None)
 
-        super(TwitterAPIError, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.response = response
         self.api_code = api_code
@@ -117,13 +117,13 @@ class TwitterAPIError(TWClientError):
         return None
 
     @classmethod
-    def from_tweepy(cls, ex):
+    def from_tweepy(cls, exc):
         '''
         Construct an instance from a tweepy exception object.
 
         Parameters
         ----------
-        ex : instance of tweepy.error.TweepError
+        exc : instance of tweepy.error.TweepError
             The exception from which to generate a TwitterAPIError instance.
 
         Returns
@@ -131,11 +131,11 @@ class TwitterAPIError(TWClientError):
         Instance of the appropriate subclass of TwitterAPIError.
         '''
 
-        return cls(message=ex.reason, response=ex.response,
-                   api_code=ex.api_code)
+        return cls(message=exc.reason, response=exc.response,
+                   api_code=exc.api_code)
 
     @staticmethod
-    def tweepy_is_instance(ex):
+    def tweepy_is_instance(exc):
         '''
         Check whether a tweepy exception object can be converted to this class.
 
@@ -147,7 +147,7 @@ class TwitterAPIError(TWClientError):
 
         Parameters
         ----------
-        ex : instance of tweepy.error.TweepError
+        exc : instance of tweepy.error.TweepError
             The tweepy exception object to check.
 
         Returns
@@ -169,9 +169,9 @@ class NotFoundError(TwitterAPIError):
     '''
 
     @staticmethod
-    def tweepy_is_instance(ex):
-        return ex.api_code in (17, 34, 50, 63) or \
-            (ex.api_code is None and ex.response.status_code == 404)
+    def tweepy_is_instance(exc):
+        return exc.api_code in (17, 34, 50, 63) or \
+            (exc.api_code is None and exc.response.status_code == 404)
 
 
 # That is, accessing protected users' friends, followers, or tweets returns
@@ -186,8 +186,8 @@ class ProtectedUserError(TwitterAPIError):
     '''
 
     @staticmethod
-    def tweepy_is_instance(ex):
-        return ex.api_code is None and ex.response.status_code == 401
+    def tweepy_is_instance(exc):
+        return exc.api_code is None and exc.response.status_code == 401
 
 
 class CapacityError(TwitterAPIError):
@@ -200,12 +200,12 @@ class CapacityError(TwitterAPIError):
     '''
 
     @staticmethod
-    def tweepy_is_instance(ex):
-        return ex.api_code in (130, 131) or \
-            ex.response.status_code in (500, 503, 504)
+    def tweepy_is_instance(exc):
+        return exc.api_code in (130, 131) or \
+            exc.response.status_code in (500, 503, 504)
 
 
-def dispatch_tweepy(ex):
+def dispatch_tweepy(exc):
     '''
     Take an exception class and convert it to a TWClientError if applicable.
 
@@ -225,19 +225,19 @@ def dispatch_tweepy(ex):
         The dispatched (possibly new) exception instance.
     '''
 
-    if not isinstance(ex, tweepy.error.TweepError):
-        return ex
+    if not isinstance(exc, tweepy.error.TweepError):
+        return exc
 
-    if NotFoundError.tweepy_is_instance(ex):
-        return NotFoundError.from_tweepy(ex)
+    if NotFoundError.tweepy_is_instance(exc):
+        return NotFoundError.from_tweepy(exc)
 
-    if ProtectedUserError.tweepy_is_instance(ex):
-        return ProtectedUserError.from_tweepy(ex)
+    if ProtectedUserError.tweepy_is_instance(exc):
+        return ProtectedUserError.from_tweepy(exc)
 
-    if CapacityError.tweepy_is_instance(ex):
-        return CapacityError.from_tweepy(ex)
+    if CapacityError.tweepy_is_instance(exc):
+        return CapacityError.from_tweepy(exc)
 
-    return ex
+    return exc
 
 
 #
@@ -274,7 +274,7 @@ class BadTargetError(SemanticError):
     def __init__(self, **kwargs):
         targets = kwargs.pop('targets', [])
 
-        super(BadTargetError, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.targets = targets
 
@@ -300,7 +300,7 @@ class BadTagError(SemanticError):
     def __init__(self, **kwargs):
         tag = kwargs.pop('tag', None)
 
-        super(BadTagError, self).__init__(**kwargs)
+        super().__init__(**kwargs)
 
         self.tag = tag
 
@@ -315,4 +315,3 @@ class BadSchemaError(SemanticError):
     '''
 
     pass
-

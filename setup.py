@@ -1,12 +1,16 @@
 #!/usr/bin/env python3
 
-# FIXME do something about the sql files in docs
+'''
+twclient: A high-level analytics-focused client for the Twitter API
+'''
 
 import os
 
 from setuptools import setup, find_packages
 
-import twclient # for version
+import twclient  # for version
+
+# FIXME do something about the sql files in docs
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 README = os.path.join(HERE, 'README.md')
@@ -27,13 +31,13 @@ setup(
     author='William Brannon',
     author_email='wbrannon@mit.edu',
     url='https://github.com/wwbrannon/twclient',
-    # license='', # FIXME
+    # license='', # FIXME and create LICENSE file
 
     description='A high-level analytics-focused client for the Twitter API',
     long_description=long_description,
     long_description_content_type='text/markdown',
 
-    project_urls = {
+    project_urls={
         'Source Code': 'https://github.com/wwbrannon/twclient',
         'Bug Tracker': 'https://github.com/wwbrannon/twclient/issues',
         # 'Documentation': '',
@@ -69,4 +73,3 @@ setup(
         'Programming Language :: Python :: 3',
     ]
 )
-

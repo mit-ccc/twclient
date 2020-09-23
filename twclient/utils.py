@@ -3,6 +3,7 @@ Utilities for other parts of twclient
 '''
 
 import re
+import json
 import logging
 
 logger = logging.getLogger(__name__)
@@ -65,17 +66,17 @@ def coalesce(*args):
 
 
 # Generate chunks of size n from the iterable it
-def grouper(it, n=None):
+def grouper(iterable, chunk_size=None):
     '''
-    Generate chunks of size n from the iterable it.
+    Generate chunks of size n from the iterable iterable.
 
-    This function takes the iterable it n elements at a time, returning each
-    chunk of n elements as a list. If n is None, return the entire iterable at
-    once as a list.
+    This function takes the iterable iterable n elements at a time, returning
+    each chunk of n elements as a list. If n is None, return the entire
+    iterable at once as a list.
 
     Parameters
     ----------
-    it : iterable
+    iterable : iterable
         The iterable to chunk.
 
     n : int, or None
@@ -84,31 +85,34 @@ def grouper(it, n=None):
     Yields
     ------
     list
-        A list of n consecutive elements from the iterable it.
+        A list of n consecutive elements from the iterable iterable.
     '''
 
-    assert n is None or n > 0
+    try:
+        assert chunk_size is None or chunk_size > 0
+    except AssertionError as exc:
+        raise ValueError('Bad chunk_size value for grouper') from exc
 
-    if n is None:
-        yield [x for x in it]
+    if chunk_size is None:
+        yield iterable
     else:
         ret = []
 
-        for obj in it:
-            if len(ret) == n:
+        for obj in iterable:
+            if len(ret) == chunk_size:
                 yield ret
                 ret = []
 
-            if len(ret) < n:
+            if len(ret) < chunk_size:
                 ret += [obj]
 
         # at this point, we're out of
-        # objects but len(ret) < n
+        # objects but len(ret) < chunk_size
         if ret:
             yield ret
 
 
-def split_camel_case(s):
+def split_camel_case(txt):
     '''
     Turn a CamelCase VariableName into a list of component words.
 
@@ -125,5 +129,27 @@ def split_camel_case(s):
         The component words
     '''
 
-    return re.sub('([A-Z]+)', r' \1', s).split()
+    return re.sub('([A-Z]+)', r' \1', txt).split()
 
+
+# There's no good way to do this except accessing the _json attribute on a
+# tweepy Model instance. The JSONParser class in tweepy is poorly documented
+# and breaks some things that are possible without it, so we're left with this.
+# As of Sept 2020, this attribute is just the same json passed to the Model's
+# classmethod constructor - should really be public API.
+def tweepy_to_json(obj):
+    '''
+    Convert a tweepy object to json.
+
+    Parameters
+    ----------
+    obj : tweepy.Model instance
+        The tweepy object to convert to json.
+
+    Returns
+    -------
+    str
+        A json representation of obj.
+    '''
+
+    return json.dumps(obj._json)  # pylint: disable=protected-access
