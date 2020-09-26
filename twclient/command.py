@@ -379,69 +379,6 @@ class DatabaseCommand(Command):
         self.engine = sa.create_engine(self.database_url)
 
 
-class ApiCommand(Command):
-    '''
-    A command which uses Twitter API resources.
-
-    This class represents commands which require access to the Twitter API to
-    fetch new data.
-
-    Parameters
-    ----------
-    apis : list of str, or None
-        The names of API profiles in the config file to use. If None, all
-        available API profiles are used.
-
-    allow_api_errors : bool
-        Should this command continue if it encounters a Twitter API error (if
-        True) or abort (if False, default)?
-
-    Attributes
-    ----------
-    api : twitter_api.TwitterApi instance
-        The TwitterApi instance constructed from the selected API credentials.
-
-    allow_api_errors : bool
-        The value for this setting passed to __init__, or its default.
-    '''
-
-    def __init__(self, **kwargs):
-        apis = kwargs.pop('apis', None)
-        allow_api_errors = kwargs.pop('allow_api_errors', False)
-
-        super().__init__(**kwargs)
-
-        if apis:
-            profiles_to_use = apis
-        else:
-            profiles_to_use = self.config_api_profile_names
-
-        auths = []
-        for profile in profiles_to_use:
-            if 'token' in self.config[profile].keys():
-                auth = tweepy.OAuthHandler(
-                    self.config[profile]['consumer_key'],
-                    self.config[profile]['consumer_secret']
-                )
-
-                auth.set_access_token(self.config[profile]['token'],
-                                      self.config[profile]['secret'])
-            else:
-                auth = tweepy.AppAuthHandler(
-                    self.config[profile]['consumer_key'],
-                    self.config[profile]['consumer_secret']
-                )
-
-            auths += [auth]
-
-        if not auths:
-            msg = 'No Twitter credentials provided (use `config add-api`)'
-            self.error(msg)
-
-        self.allow_api_errors = allow_api_errors
-        self.api = ta.TwitterApi(auths=auths)
-
-
 class TargetCommand(Command):
     '''
     A command which takes targets.
@@ -539,6 +476,80 @@ class TargetCommand(Command):
         self.allow_missing_targets = allow_missing_targets
 
 
+class ApiCommand(DatabaseCommand, TargetCommand):
+    '''
+    A command which uses Twitter API resources.
+
+    This class represents commands which require access to the Twitter API to
+    fetch new data.
+
+    Parameters
+    ----------
+    apis : list of str, or None
+        The names of API profiles in the config file to use. If None, all
+        available API profiles are used.
+
+    allow_api_errors : bool
+        Should this command continue if it encounters a Twitter API error (if
+        True) or abort (if False, default)?
+
+    load_batch_size : int, or None
+        Load data to the database in batches of this size. The default is None,
+        which means load all data in one batch and is fastest. Other values can
+        minimize memory usage for large amounts of data at the cost of slower
+        loading.
+
+    Attributes
+    ----------
+    api : twitter_api.TwitterApi instance
+        The TwitterApi instance constructed from the selected API credentials.
+
+    allow_api_errors : bool
+        The parameter passed to __init__.
+
+    load_batch_size : int, or None
+        The parameter passed to __init__.
+    '''
+
+    def __init__(self, **kwargs):
+        apis = kwargs.pop('apis', None)
+        allow_api_errors = kwargs.pop('allow_api_errors', False)
+        load_batch_size = kwargs.pop('load_batch_size', None)
+
+        super().__init__(**kwargs)
+
+        if apis:
+            profiles_to_use = apis
+        else:
+            profiles_to_use = self.config_api_profile_names
+
+        auths = []
+        for profile in profiles_to_use:
+            if 'token' in self.config[profile].keys():
+                auth = tweepy.OAuthHandler(
+                    self.config[profile]['consumer_key'],
+                    self.config[profile]['consumer_secret']
+                )
+
+                auth.set_access_token(self.config[profile]['token'],
+                                      self.config[profile]['secret'])
+            else:
+                auth = tweepy.AppAuthHandler(
+                    self.config[profile]['consumer_key'],
+                    self.config[profile]['consumer_secret']
+                )
+
+            auths += [auth]
+
+        if not auths:
+            msg = 'No Twitter credentials provided (use `config add-api`)'
+            self.error(msg)
+
+        self.load_batch_size = load_batch_size
+        self.allow_api_errors = allow_api_errors
+        self.api = ta.TwitterApi(auths=auths)
+
+
 class InitializeCommand(DatabaseCommand):
     '''
     The command to (re-)initialize the database schema.
@@ -587,7 +598,7 @@ class InitializeCommand(DatabaseCommand):
             job.InitializeJob(engine=self.engine).run()
 
 
-class FetchCommand(DatabaseCommand, TargetCommand, ApiCommand):
+class FetchCommand(ApiCommand):
     '''
     The command to fetch new data from Twitter.
 
@@ -595,14 +606,11 @@ class FetchCommand(DatabaseCommand, TargetCommand, ApiCommand):
     Subcommands include "users", "friends", "followers", and "tweets", which
     load what their names indicate.
 
+    Note that the load_batch_size setting is not used for loading user rows,
+    but only for friends, followers and tweets.
+
     Parameters
     ----------
-    load_batch_size : int
-        Used only for tweets and follow-graph rows, not users. Load new rows
-        to the database in batches of this size. The default is 10000. Lower
-        values minimize memory usage at the cost of slower loading speeds,
-        while higher values do the reverse.
-
     since_timestamp : float
         Used only for loading tweets. Ignore (i.e., don't load) any tweets
         older than the time indicated by this Unix timestamp.
@@ -623,9 +631,6 @@ class FetchCommand(DatabaseCommand, TargetCommand, ApiCommand):
 
     Attributes
     ----------
-    load_batch_size : int
-        The parameter passed to __init__.
-
     since_timestamp : float
         The parameter passed to __init__.
 
@@ -644,8 +649,6 @@ class FetchCommand(DatabaseCommand, TargetCommand, ApiCommand):
     }
 
     def __init__(self, **kwargs):
-        load_batch_size = kwargs.pop('load_batch_size', 10000)
-
         # tweet-specific arguments
         since_timestamp = kwargs.pop('since_timestamp', None)
         max_tweets = kwargs.pop('max_tweets', None)
@@ -658,7 +661,6 @@ class FetchCommand(DatabaseCommand, TargetCommand, ApiCommand):
                 raise ValueError('since_timestamp, max_tweets and old_tweets '
                                  'are only valid with subcommand = "tweets"')
 
-        self.load_batch_size = load_batch_size
         self.since_timestamp = since_timestamp
         self.max_tweets = max_tweets
         self.old_tweets = old_tweets

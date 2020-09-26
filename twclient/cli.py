@@ -151,22 +151,30 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
     frp.add_argument('-p', '--allow-missing-targets', action='store_true',
                      help="continue even if a requested target should be "
                           "present in the database but isn't")
-    frp.add_argument('-j', '--fast-load', action='store_true',
-                     help='load rows faster but less robustly to duplicates')
+    frp.add_argument('-j', '--load-batch-size', type=int, default=None,
+                     help='load data to DB in batches of this size (default '
+                          'all at once), non-default values are slower but '
+                          'reduce memory usage')
 
     flp = fetch.add_parser('followers', help="Get user followers")
     flp = _add_fetch_arguments(flp)
     flp.add_argument('-p', '--allow-missing-targets', action='store_true',
                      help="continue even if a requested target should be "
                           "present in the database but isn't")
-    flp.add_argument('-j', '--fast-load', action='store_true',
-                     help='load rows faster but less robustly to duplicates')
+    flp.add_argument('-j', '--load-batch-size', type=int, default=None,
+                     help='load data to DB in batches of this size (default '
+                          'all at once), non-default values are slower but '
+                          'reduce memory usage')
 
     twp = fetch.add_parser('tweets', help="Get user tweets")
     twp = _add_fetch_arguments(twp)
     twp.add_argument('-p', '--allow-missing-targets', action='store_true',
                      help="continue even if a requested target should be "
                           "present in the database but isn't")
+    twp.add_argument('-j', '--load-batch-size', type=int, default=None,
+                     help='load data to DB in batches of this size (default '
+                          'all at once), non-default values are slower but '
+                          'reduce memory usage')
     twp.add_argument('-o', '--old-tweets', action='store_true',
                      help="Load tweets older than user's most recent in DB")
     twp.add_argument('-z', '--since-timestamp',
