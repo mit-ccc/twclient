@@ -603,11 +603,6 @@ class FetchCommand(DatabaseCommand, TargetCommand, ApiCommand):
         values minimize memory usage at the cost of slower loading speeds,
         while higher values do the reverse.
 
-    fast_load : bool
-        Used only for loading follow-graph rows. Load new rows to the database
-        in a way which is faster but will fail if Twitter returns any IDs more
-        than once. Because this happens reasonably often, the default is False.
-
     since_timestamp : float
         Used only for loading tweets. Ignore (i.e., don't load) any tweets
         older than the time indicated by this Unix timestamp.
@@ -631,9 +626,6 @@ class FetchCommand(DatabaseCommand, TargetCommand, ApiCommand):
     load_batch_size : int
         The parameter passed to __init__.
 
-    fast_load : bool
-        The parameter passed to __init__.
-
     since_timestamp : float
         The parameter passed to __init__.
 
@@ -654,9 +646,6 @@ class FetchCommand(DatabaseCommand, TargetCommand, ApiCommand):
     def __init__(self, **kwargs):
         load_batch_size = kwargs.pop('load_batch_size', 10000)
 
-        # follow-specific arguments
-        fast_load = kwargs.pop('fast_load', False)
-
         # tweet-specific arguments
         since_timestamp = kwargs.pop('since_timestamp', None)
         max_tweets = kwargs.pop('max_tweets', None)
@@ -670,7 +659,6 @@ class FetchCommand(DatabaseCommand, TargetCommand, ApiCommand):
                                  'are only valid with subcommand = "tweets"')
 
         self.load_batch_size = load_batch_size
-        self.fast_load = fast_load
         self.since_timestamp = since_timestamp
         self.max_tweets = max_tweets
         self.old_tweets = old_tweets
@@ -690,9 +678,6 @@ class FetchCommand(DatabaseCommand, TargetCommand, ApiCommand):
             args['since_timestamp'] = self.since_timestamp
             args['max_tweets'] = self.max_tweets
             args['old_tweets'] = self.old_tweets
-
-        if self.subcommand in ('friends', 'followers'):
-            args['fast_load'] = self.fast_load
 
         return args
 

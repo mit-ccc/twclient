@@ -764,8 +764,6 @@ class Follow(Base):
     )
 
 
-# FIXME? would it be faster to load rows without a PK index and then either
-# create one or select distinct in the insert of new rows?
 class StgFollow(Base):
     '''
     A staging table for the loading of follow-graph edges.

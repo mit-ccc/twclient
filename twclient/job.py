@@ -371,10 +371,11 @@ class ApiJob(TargetJob):
 
     load_batch_size : int
         Load new rows to the database in batches of this size. The default is
-        10000. Lower values minimize memory usage at the cost of slower loading
-        speeds, while higher values do the reverse. Target instances in
-        self.targets do not consider this value (it applies only to other rows
-        loaded by the ApiJob instance).
+        None, which loads all data retrieved in one batch. Lower values
+        minimize memory usage at the cost of slower loading speeds, while
+        higher values do the reverse. Target instances in self.targets do not
+        consider this value (it applies only to other rows loaded by the ApiJob
+        instance).
 
     Attributes
     ----------
@@ -395,7 +396,7 @@ class ApiJob(TargetJob):
             raise ValueError('Must provide api object') from exc
 
         allow_api_errors = kwargs.pop('allow_api_errors', False)
-        load_batch_size = kwargs.pop('load_batch_size', 10000)
+        load_batch_size = kwargs.pop('load_batch_size', None)
 
         super().__init__(**kwargs)
 
@@ -674,29 +675,22 @@ class FollowGraphJob(ApiJob):
     loading of a user, the user which encountered the error will be rolled back
     but edges for previously processed users will remain in the database.
 
-    Parameters
-    ----------
-    fast_load : bool
-        If True, load new rows to the database in a way which is faster but
-        will fail if Twitter returns any IDs more than once. Because this
-        happens reasonably often, the default is False.
+    Note that Twitter sometimes returns the same follower/friend ID more
+    than once (probably because of eventual consistency). As a result, there
+    is special loading logic for these jobs. Each batch of follower or friend
+    IDs is deduped before being inserted (the entire set of IDs at once if
+    load_batch_size is None); if an ID in one batch duplicates an ID received
+    in a previous batch, the batch is retried one row at a time (which is quite
+    slow). Consequently loading these rows is most efficient with
+    load_batch_size of None. Other values should be used only if memory is a
+    constraint.
 
     Attributes
     ----------
-    fast_load : bool
-        The parameter passed to __init__.
-
     direction
     '''
 
     resolve_mode = 'skip'
-
-    def __init__(self, **kwargs):
-        fast_load = kwargs.pop('fast_load', False)
-
-        super().__init__(**kwargs)
-
-        self.fast_load = fast_load
 
     @property
     @abstractmethod
@@ -726,18 +720,17 @@ class FollowGraphJob(ApiJob):
     def _api_method_name(self):
         return self.direction + '_ids'
 
-    # NOTE tl;dr the commit semantics here are complicated and depend on
-    # the database, but the details shouldn't matter. Depending on the DB,
-    # clearing the stg table may or may not commit; depending on the
-    # setting of self.fast_load, self._insert_stg_batch may or may not do
-    # so as well. BUT both of these affect only data in the stg table; if
+    # NOTE tl;dr the commit semantics here are complicated and depend on the
+    # database, but the details shouldn't matter. Depending on the DB, clearing
+    # the stg table may or may not commit; self._insert_stg_batch may issue one
+    # or many commits. BUT both of these affect only data in the stg table; if
     # an error leaves it in an inconsistent state, we don't care. (If the
     # resolve_mode for this job were 'fetch', we'd also have to consider
-    # whether and when any new users' rows were committed.) Whether there
-    # are 0 or more than 0 commits up to the end of the for loop below,
-    # there aren't any during the call to _process_stg_data_for, which is
-    # the only part of this that modifies main data tables. So that call
-    # happens atomically, which is what we care about.
+    # whether and when any new users' rows were committed.) Whether there are 0
+    # or more than 0 commits up to the end of the for loop below, there aren't
+    # any during the call to _process_stg_data_for, which is the only part of
+    # this that modifies main data tables. So that call happens atomically,
+    # which is what we care about.
     def _load_edges_for(self, user):
         api_method = getattr(self.api, self._api_method_name)
 
@@ -767,24 +760,16 @@ class FollowGraphJob(ApiJob):
     def _insert_stg_batch(self, user, api_user_ids):
         rows = [
             {self._api_data_column: t, self._target_user_column: user.user_id}
-            for t in api_user_ids
+            for t in set(api_user_ids)
         ]
 
         try:
             self.session.bulk_insert_mappings(md.StgFollow, rows)
         except sa.exc.IntegrityError:
             self.session.rollback()
-
-            if not self.fast_load:
-                n_items = self._insert_stg_batch_robust(rows)
-            else:
-                raise
+            n_items = self._insert_stg_batch_robust(rows)  # commits per row
         else:
             n_items = len(rows)
-
-        # NOTE committing slows things down, but without it, we'd lose every
-        # row loaded before one of these duplicate key problems
-        if not self.fast_load:
             self.session.commit()
 
         return n_items
@@ -805,10 +790,14 @@ class FollowGraphJob(ApiJob):
 
                 nrows += 1
             except sa.exc.IntegrityError:
+                self.session.rollback()
+
                 msg = 'Encountered IntegrityError (likely dupe) on edge {0}'
                 msg = msg.format(row)
 
                 logger.debug(msg)
+            else:
+                self.session.commit()
 
         return nrows
 
