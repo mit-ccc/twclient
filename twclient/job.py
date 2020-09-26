@@ -615,7 +615,7 @@ class TweetsJob(ApiJob):
                     warnings.simplefilter('ignore', category=sa.exc.SAWarning)
                     self.session.merge(tweet)
 
-            n_items += len(batch)
+                n_items += 1
 
         return n_items
 
