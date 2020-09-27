@@ -23,7 +23,7 @@ from . import twitter_api as ta
 logger = logging.getLogger(__name__)
 
 
-class Command(ABC):
+class _Command(ABC):
     '''
     A command which can be run from the twclient CLI.
 
@@ -95,7 +95,7 @@ class Command(ABC):
         '''
         Log an error encountered by this command and exit.
 
-        This function logs a message about an error encountered by the Command
+        This function logs a message about an error encountered by the _Command
         instance and exits. Currently it calls the error() method on the
         program's argparse.ArgumentParser object, but this may change.
 
@@ -136,7 +136,7 @@ class Command(ABC):
         '''
         Write the current state of the config back to the config file.
 
-        This function writes the current state of this Command's config out to
+        This function writes the current state of this _Command's config out to
         the path given for the config file. The config is validated before
         being written.
 
@@ -152,10 +152,11 @@ class Command(ABC):
 
     def validate_config(self):
         '''
-        Validate the current state of this Command's config.
+        Validate the current state of this _Command's config.
 
-        This function performs several checks of the validity of this Command's
-        config, and calls the error() method if any problem is detected.
+        This function performs several checks of the validity of this
+        _Command's config, and calls the error() method if any problem is
+        detected.
 
         Returns
         -------
@@ -298,7 +299,7 @@ class Command(ABC):
         '''
         Run this command.
 
-        This function is the main entrypoint for a Command instance. It
+        This function is the main entrypoint for a _Command instance. It
         dispatches the name of the subcommand to do_cli() for further
         processing.
 
@@ -325,7 +326,7 @@ class Command(ABC):
         raise NotImplementedError()
 
 
-class DatabaseCommand(Command):
+class _DatabaseCommand(_Command):
     '''
     A command which uses database resources.
 
@@ -379,7 +380,7 @@ class DatabaseCommand(Command):
         self.engine = sa.create_engine(self.database_url)
 
 
-class TargetCommand(Command):
+class _TargetCommand(_Command):
     '''
     A command which takes targets.
 
@@ -476,7 +477,7 @@ class TargetCommand(Command):
         self.allow_missing_targets = allow_missing_targets
 
 
-class ApiCommand(DatabaseCommand, TargetCommand):
+class _ApiCommand(_DatabaseCommand, _TargetCommand):
     '''
     A command which uses Twitter API resources.
 
@@ -550,12 +551,12 @@ class ApiCommand(DatabaseCommand, TargetCommand):
         self.api = ta.TwitterApi(auths=auths)
 
 
-class InitializeCommand(DatabaseCommand):
+class _InitializeCommand(_DatabaseCommand):
     '''
     The command to (re-)initialize the database schema.
 
     WARNING! This command drops all data in the database. If not backed up
-    elsewhere, it will be lost. The InitializeCommand applies the schema
+    elsewhere, it will be lost. The _InitializeCommand applies the schema
     defined in the models module against the selected database profile. Any
     existing data is dropped.
 
@@ -598,7 +599,7 @@ class InitializeCommand(DatabaseCommand):
             job.InitializeJob(engine=self.engine).run()
 
 
-class FetchCommand(ApiCommand):
+class _FetchCommand(_ApiCommand):
     '''
     The command to fetch new data from Twitter.
 
@@ -696,11 +697,11 @@ class FetchCommand(ApiCommand):
         job.TweetsJob(**self._job_args).run()
 
 
-class TagCommand(DatabaseCommand, TargetCommand):
+class _TagCommand(_DatabaseCommand, _TargetCommand):
     '''
     A command which manages user tags.
 
-    A TagCommand manages (creates, deletes, or applies to users) the user tags
+    A _TagCommand manages (creates, deletes, or applies to users) the user tags
     that can group users together for easier selection of targets. Subcommands
     are "create", "delete" and "apply".
 
@@ -758,11 +759,11 @@ class TagCommand(DatabaseCommand, TargetCommand):
         job.ApplyTagJob(**self._job_args).run()
 
 
-class ConfigCommand(Command):
+class _ConfigCommand(_Command):
     '''
     A command to manage the config file.
 
-    A ConfigCommand interacts with the config file. It can list or modify the
+    A _ConfigCommand interacts with the config file. It can list or modify the
     contents of the file. Subcommands are roughly divided into two groups: a)
     those which interact with database profiles ("add-db", "rm-db", "list-db",
     "set-db-default") and b) those which interact with API profiles ("add-api",

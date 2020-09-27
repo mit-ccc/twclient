@@ -7,7 +7,8 @@ The command-line interface script
 import logging
 import argparse as ap
 
-from . import command as cmd
+from .command import _ConfigCommand, _TagCommand, _InitializeCommand, \
+                     _FetchCommand
 
 logger = logging.getLogger(__name__)
 
@@ -221,10 +222,10 @@ def cli():
     _log_setup(verbosity)
 
     cls = {
-        'config': cmd.ConfigCommand,
-        'tag': cmd.TagCommand,
-        'initialize': cmd.InitializeCommand,
-        'fetch': cmd.FetchCommand
+        'config': _ConfigCommand,
+        'tag': _TagCommand,
+        'initialize': _InitializeCommand,
+        'fetch': _FetchCommand
     }[command]
 
     cls(parser=parser, **vars(args)).run()
