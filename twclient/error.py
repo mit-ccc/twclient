@@ -84,8 +84,6 @@ class TwitterAPIError(TWClientError):
 
     Attributes
     ----------
-    http_code
-
     response : requests.Response object
         The Twitter API response which led to this error being raised.
 

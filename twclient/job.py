@@ -210,13 +210,6 @@ class TargetJob(Job):
 
     allow_missing_targets : bool
         The parameter passed to __init__.
-
-    resolve_mode
-    resolved
-    users
-    bad_targets
-    missing_targets
-    good_targets
     '''
 
     def __init__(self, **kwargs):
@@ -684,10 +677,6 @@ class FollowGraphJob(ApiJob):
     slow). Consequently loading these rows is most efficient with
     load_batch_size of None. Other values should be used only if memory is a
     constraint.
-
-    Attributes
-    ----------
-    direction
     '''
 
     resolve_mode = 'skip'

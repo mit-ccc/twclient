@@ -52,14 +52,6 @@ class Target(ABC):
 
         randomize : bool
             Whether raw targets should be processed in a randomized order.
-
-        context
-        resolved
-        allowed_resolve_modes
-        users
-        bad_targets
-        missing_targets
-        good_targets
     '''
 
     def __init__(self, **kwargs):

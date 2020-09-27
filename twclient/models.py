@@ -166,11 +166,6 @@ class TimestampsMixin:
     This mixin adds insert_dt and modified_dt columns, and logic to update
     them, to classes descending from it. Nothing else needs to be done in
     subclasses to add these columns.
-
-    Attributes
-    ----------
-    insert_dt
-    modified_dt
     '''
 
     @declared_attr

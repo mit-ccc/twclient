@@ -53,11 +53,6 @@ class _Command(ABC):
 
     config_file : str
         The absolute path to the config file, after tilde expansion.
-
-    config_profile_names
-    config_db_profile_names
-    config_api_profile_names
-    subcommand_to_method
     '''
 
     def __init__(self, **kwargs):

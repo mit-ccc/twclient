@@ -54,7 +54,7 @@ def coalesce(*args):
 
     Returns
     -------
-    object, or None
+    object
         Returns the first non-None argument, or None.
     '''
 
