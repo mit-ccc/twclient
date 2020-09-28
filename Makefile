@@ -1,12 +1,27 @@
-ENVPATH := env/
+ENVPATH := env
 PYTHON  := python3
-PIP     := pip3
 
-.PHONY: env list clean docs
+.PHONY: test test-all upload register env lint clean docs
+
+test:
+	py.test tests
+
+alltest:
+	tox
+
+upload:
+	$(PYTHON) setup.py sdist bdist_wheel upload
+
+register:
+	$(PYTHON) setup.py register
 
 env:
-	$(PYTHON) -m venv env
-	source env/bin/activate && $(PIP) install -q pylint flake8 mypy -e .
+	rm -rf $(ENVPATH)
+	$(PYTHON) -m venv $(ENVPATH)
+	$(ENVPATH)/bin/pip install --upgrade pip setuptools wheel
+	$(ENVPATH)/bin/pip install pylint flake8 mypy
+	$(ENVPATH)/bin/pip install .[test]
+	$(ENVPATH)/bin/pip install -e .
 
 lint:
 	pylint twclient/

@@ -4,34 +4,49 @@
 twclient: A high-level analytics-focused client for the Twitter API
 '''
 
+# FIXME do something about the sql files in docs
+# FIXME license param to setup(), create LICENSE file, license classifier
+
+# See docs at:
+# https://packaging.python.org/guides/distributing-packages-using-setuptools/
+
 import os
 
 from setuptools import setup, find_packages
 
 import twclient  # for version
 
-# FIXME do something about the sql files in docs
-
 HERE = os.path.dirname(os.path.abspath(__file__))
 README = os.path.join(HERE, 'README.md')
-CHANGES = os.path.join(HERE, 'CHANGES.md')
+CHANGELOG = os.path.join(HERE, 'CHANGELOG.md')
 
 with open(README, encoding='utf-8', mode='rt') as f:
     readme_text = f.read().strip()
 
-with open(README, encoding='utf-8', mode='rt') as f:
-    changes_text = f.read().strip()
+with open(CHANGELOG, encoding='utf-8', mode='rt') as f:
+    changelog_text = f.read().strip()
 
-long_description = readme_text + '\n\n' + changes_text
+long_description = readme_text + '\n\n' + changelog_text
 
-# https://packaging.python.org/guides/distributing-packages-using-setuptools/
+install_deps = [
+    'tweepy',
+    'sqlalchemy'
+]
+
+extras = {
+    'test': [
+        'coverage',
+        'pytest'
+    ]
+}
+
 setup(
     name='twclient',
     version=twclient.__version__,
     author='William Brannon',
     author_email='wbrannon@mit.edu',
     url='https://github.com/wwbrannon/twclient',
-    # license='', # FIXME and create LICENSE file
+    # license='',
 
     description='A high-level analytics-focused client for the Twitter API',
     long_description=long_description,
@@ -46,10 +61,9 @@ setup(
     zip_safe=True,
     packages=find_packages(),
     include_package_data=True,
-    install_requires=[
-        'tweepy',
-        'sqlalchemy'
-    ],
+
+    install_requires=install_deps,
+    extras_require=extras,
 
     entry_points={
         'console_scripts': [
@@ -62,7 +76,7 @@ setup(
     classifiers=[
         'Development Status :: 4 - Beta',
 
-        # 'License :: OSI Approved :: MIT License', # FIXME
+        # 'License :: OSI Approved :: MIT License',
 
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules'
