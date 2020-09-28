@@ -20,6 +20,7 @@ env:
 	$(PYTHON) -m venv $(ENVPATH)
 	$(ENVPATH)/bin/pip install --upgrade pip setuptools wheel
 	$(ENVPATH)/bin/pip install pylint flake8 mypy
+	$(ENVPATH)/bin/pip install psycopg2 mysql-connector-python
 	$(ENVPATH)/bin/pip install .[test]
 	$(ENVPATH)/bin/pip install -e .
 
