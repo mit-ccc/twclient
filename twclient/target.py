@@ -307,7 +307,7 @@ class Target(ABC):
         # input and the number of user objects returned.
         if user_ids:
             requested = user_ids
-            received = [u.user_id for u in objs]
+            received = [u.id for u in objs]
         else:  # screen_names
             requested = [sn.lower() for sn in screen_names]
             received = [u.screen_name.lower() for u in objs]
