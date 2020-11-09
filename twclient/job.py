@@ -402,7 +402,7 @@ class ApiJob(TargetJob):
 
         if self.resolve_mode != 'skip' and self.bad_targets:
             msg = 'Twitter API says target(s) nonexistent/suspended/bad: {0}'
-            msg = msg.format(', '.join(self.bad_targets))
+            msg = msg.format(', '.join([str(s) for s in self.bad_targets]))
 
             if self.allow_api_errors:
                 logger.warning(msg)
