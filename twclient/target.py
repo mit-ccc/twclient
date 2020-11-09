@@ -83,7 +83,7 @@ class Target(ABC):
         self.targets = deduped
 
         if self.randomize:
-            # make partial loads more statistically useful
+            # make partial / failed loads more statistically useful
             random.shuffle(self.targets)
 
         if self.resolved:
@@ -313,6 +313,7 @@ class Target(ABC):
             received = [u.screen_name.lower() for u in objs]
 
         bad_targets = list(set(requested) - set(received))
+        bad_targets = [sn for sn in screen_names if sn.lower() in bad_targets]
 
         return users, bad_targets
 
