@@ -394,10 +394,11 @@ class _TargetCommand(_Command):
     select_tags : list of str
         User tags stored in the database, specifying users to operate on.
 
-    twitter_lists : list of str
-        The "full names" of Twitter lists whose member users to operate on. (A
-        "full name" is of the form owning_user/slug, like
-        "cspan/members-of-congress".)
+    twitter_lists : list of str or int
+        The Twitter lists whose member users to operate on, whether list IDs or
+        in the form owning_user/slug, like "cspan/members-of-congress". If a
+        passed element is str, it will be identified as list-ID or owner/slug
+        format by the presence of a slash.
 
     randomize : bool
         Shoul the targets be processd in a randomized order? Passed through to

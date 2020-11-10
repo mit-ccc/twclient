@@ -25,7 +25,8 @@ def _add_target_arguments(parser):
     parser.add_argument('-n', '--screen-names', nargs='+',
                         help='process particular Twitter screen names')
     parser.add_argument('-l', '--twitter-lists', nargs='+',
-                        help='process all users in particular Twitter lists')
+                        help='process all users in particular Twitter lists '
+                             '(list ID or owner/slug)')
 
     return parser
 
