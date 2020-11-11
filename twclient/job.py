@@ -84,7 +84,12 @@ class Job(ABC):
         if self._schema_verified:
             return
 
-        schema_version = self.session.query(md.SchemaVersion).all()
+        try:
+            schema_version = self.session.query(md.SchemaVersion).all()
+        except sa.exc.ProgrammingError:
+            msg = 'Bad or missing schema version tag in database (have you '
+                  'initialized it?)'
+            raise err.BadSchemaError(message=msg)
 
         if len(schema_version) != 1:
             msg = 'Bad or missing schema version tag in database'
