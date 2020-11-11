@@ -534,8 +534,14 @@ class TwitterListTarget(Target):
                 ))
 
     def _hydrate_lists(self, lists):
-        self._hydrate_lists_ids([obj for obj in lists if '/' not in obj])
-        self._hydrate_lists_fullnames([obj for obj in lists if '/' in obj])
+        ids = [obj for obj in lists if '/' not in obj]
+        fullnames = [obj for obj in lists if '/' in obj]
+
+        if ids:
+            self._hydrate_lists_ids(ids)
+
+        if fullnames:
+            self._hydrate_lists_fullnames(fullnames)
 
     def _hydrate_lists_ids(self, lists):
         for target in lists:
