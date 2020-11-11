@@ -131,7 +131,9 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
                           key=lambda x: self._authpool_rate_limit_resets[x])
 
             # add a little fudge factor to be safe
-            time.sleep(self._authpool_rate_limit_resets[new_ind] + 0.01)
+            wake_time = self._authpool_rate_limit_resets[new_ind] + 0.01
+            logger.info('Sleeping %f seconds for rate limit', wake_time)
+            time.sleep(wake_time)
 
         self._authpool_current_api_index = new_ind
 
