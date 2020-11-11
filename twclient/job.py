@@ -86,10 +86,10 @@ class Job(ABC):
 
         try:
             schema_version = self.session.query(md.SchemaVersion).all()
-        except sa.exc.ProgrammingError:
-            msg = 'Bad or missing schema version tag in database (have you '
+        except sa.exc.ProgrammingError as exc:
+            msg = 'Bad or missing schema version tag in database (have you ' \
                   'initialized it?)'
-            raise err.BadSchemaError(message=msg)
+            raise err.BadSchemaError(message=msg) from exc
 
         if len(schema_version) != 1:
             msg = 'Bad or missing schema version tag in database'
