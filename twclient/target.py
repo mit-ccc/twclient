@@ -89,6 +89,8 @@ class Target(ABC):
         if self.resolved:
             self._validate_context(context)
 
+        self._validate_targets()
+
     @abstractmethod
     def resolve(self, context=None):
         '''
@@ -245,6 +247,10 @@ class Target(ABC):
             raise AttributeError('Must call resolve() first')
 
         return self._context
+
+    # A stub for subclasses
+    def _validate_targets(self):
+        pass
 
     def _validate_context(self, context):
         if context.resolve_mode not in self.allowed_resolve_modes:
@@ -492,6 +498,19 @@ class TwitterListTarget(Target):
 
     allowed_resolve_modes = ('fetch', 'hydrate', 'skip')
 
+    def _validate_targets(self):
+        fullnames = [obj for obj in self.targets if '/' in obj]
+        ids = [obj for obj in self.targets if '/' not in obj]
+
+        if len(fullnames) + len(ids) < len(self.targets):
+            raise err.BadTargetError(message='Malformed list specification(s)')
+
+        try:
+            ids = [int(i) for i in ids]
+        except ValueError as exc:
+            msg = 'Malformed list specification(s)'
+            raise err.BadTargetError(message=msg) from exc
+
     def _update_memberships(self, lst, members):
         # record user memberships in list
         new_uids = [u.user_id for u in members]
@@ -515,6 +534,36 @@ class TwitterListTarget(Target):
                 ))
 
     def _hydrate_lists(self, lists):
+        self._hydrate_lists_ids([obj for obj in lists if '/' not in obj])
+        self._hydrate_lists_fullnames([obj for obj in lists if '/' in obj])
+
+    def _hydrate_lists_ids(self, lists):
+        for target in lists:
+            try:
+                twargs = {'list_id': int(target)}
+
+                # Fetch the list itself
+                resp = self.context.api.get_list(**twargs)
+                owning_user = self._tweepy_to_user(resp.user)
+
+                lst = md.List.from_tweepy(resp, self.context.session)
+                lst.owning_user = owning_user
+
+                # Fetch the list members from Twitter
+                users = list(self.context.api.list_members(**twargs))
+            except err.NotFoundError:
+                # the bad targets are logged in the calling Job class
+                self._add_bad_targets([target])
+                continue
+            else:
+                lst = self.context.session.merge(lst)
+
+                users = [self._tweepy_to_user(u) for u in users]
+                self._add_users(users)
+
+                self._update_memberships(lst, users)
+
+    def _hydrate_lists_fullnames(self, lists):
         owner_screen_names = [obj.split('/')[0] for obj in lists]
         slugs = [obj.split('/')[1] for obj in lists]
 
@@ -530,7 +579,7 @@ class TwitterListTarget(Target):
         # Get list info and list members
         #
 
-        for target, owner, slug in zip(self.targets, owners, slugs):
+        for target, owner, slug in zip(lists, owners, slugs):
             if owner in bad_owners:
                 self._add_bad_targets([target])
                 continue
@@ -564,23 +613,30 @@ class TwitterListTarget(Target):
         else:  # not context and not self.resolved
             raise ValueError('No context object set and none provided')
 
-        owner_screen_names = [obj.split('/')[0] for obj in self.targets]
-        slugs = [obj.split('/')[1] for obj in self.targets]
-
         if context.resolve_mode == 'hydrate':
             self._hydrate_lists(self.targets)
 
         new = []
-        for target, name, slug in zip(self.targets, owner_screen_names, slugs):
+        for target in self.targets:
             try:
-                owner = self._user_for_screen_name(name)
-                assert owner is not None  # caught below
+                if '/' in target: # list "full name" e.g. "foxnews/hosts"
+                    name = target.split('/')[0]
+                    slug = target.split('/')[1]
 
-                lst = self.context.session.query(md.List).filter(and_(
-                    md.List.user_id == owner.user_id,
-                    md.List.slug == slug
-                )).one_or_none()
-                assert lst is not None
+                    owner = self._user_for_screen_name(name)
+
+                    assert owner is not None  # caught below, list not ingested
+
+                    lst = self.context.session.query(md.List).filter(and_(
+                        md.List.user_id == owner.user_id,
+                        md.List.slug == slug
+                    )).one_or_none()
+                else: # target is Twitter's integer list ID
+                    lst = self.context.session.query(md.List).filter(
+                        md.List.list_id == int(target)
+                    ).one_or_none()
+
+                assert lst is not None # also list not ingested
             except AssertionError:  # list hasn't been ingested
                 self._add_missing_targets([target])
 
