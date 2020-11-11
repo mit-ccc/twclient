@@ -180,7 +180,7 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
                 except tweepy.error.RateLimitError as exc:
                     resume_time = exc.response.headers \
                                      .get('x-rate-limit-reset')
-                    iself._authpool_mark_api_limited(resume_time)
+                    iself._authpool_mark_api_limited(float(resume_time))
 
                     iself._authpool_switch_api()
                 except tweepy.error.TweepError as exc:
