@@ -619,7 +619,7 @@ class TwitterListTarget(Target):
         new = []
         for target in self.targets:
             try:
-                if '/' in target: # list "full name" e.g. "foxnews/hosts"
+                if '/' in target:  # list "full name" e.g. "foxnews/hosts"
                     name = target.split('/')[0]
                     slug = target.split('/')[1]
 
@@ -631,12 +631,12 @@ class TwitterListTarget(Target):
                         md.List.user_id == owner.user_id,
                         md.List.slug == slug
                     )).one_or_none()
-                else: # target is Twitter's integer list ID
+                else:  # target is Twitter's integer list ID
                     lst = self.context.session.query(md.List).filter(
                         md.List.list_id == int(target)
                     ).one_or_none()
 
-                assert lst is not None # also list not ingested
+                assert lst is not None  # also list not ingested
             except AssertionError:  # list hasn't been ingested
                 self._add_missing_targets([target])
 
