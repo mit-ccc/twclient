@@ -343,7 +343,7 @@ class Target(ABC):
             func.lower(md.UserData.screen_name) == screen_name.lower()
         ).order_by(
             md.UserData.user_data_id.desc()
-        ).first()
+        ).first().user
 
 
 class UserIdTarget(Target):
