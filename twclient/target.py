@@ -339,11 +339,16 @@ class Target(ABC):
         self._add_bad_targets(bad_targets)
 
     def _user_for_screen_name(self, screen_name):
-        return self.context.session.query(md.UserData).filter(
+        ud = self.context.session.query(md.UserData).filter(
             func.lower(md.UserData.screen_name) == screen_name.lower()
         ).order_by(
             md.UserData.user_data_id.desc()
-        ).first().user
+        ).first()
+
+        if ud is None:
+            return None
+        else:
+            return ud.user
 
 
 class UserIdTarget(Target):
