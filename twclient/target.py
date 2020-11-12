@@ -264,7 +264,7 @@ class Target(ABC):
         if not self.resolved:
             raise AttributeError('Must call resolve() first')
 
-        self._users.extend(users)
+        self._users.extend([u for u in users if u not in self._users])
 
     def _add_bad_targets(self, targets):
         if not self.resolved:
