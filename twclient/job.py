@@ -752,10 +752,12 @@ class FollowGraphJob(ApiJob):
         md.StgFollow.__table__.create(self.session.get_bind())
 
     def _insert_stg_batch(self, user, api_user_ids):
-        rows = [
+        api_user_ids = set(api_user_ids)
+
+        rows = (
             {self._api_data_column: t, self._target_user_column: user.user_id}
-            for t in set(api_user_ids)
-        ]
+            for t in api_user_ids
+        )
 
         try:
             self.session.bulk_insert_mappings(md.StgFollow, rows)
@@ -763,9 +765,10 @@ class FollowGraphJob(ApiJob):
             self.session.rollback()
             logger.info('Working around duplicates in Twitter API response')
 
-            n_items = self._insert_stg_batch_robust(rows)  # commits per row
+            # issues a commit for every row
+            n_items = self._insert_stg_batch_robust(user, api_user_ids)
         else:
-            n_items = len(rows)
+            n_items = len(api_user_ids)
             self.session.commit()
 
         return n_items
@@ -776,10 +779,15 @@ class FollowGraphJob(ApiJob):
     # Thus: use bulk inserts, but catch the duplicate key error and,
     # when handling it, re-attempt inserts of the same rows one by one,
     # discarding any that raise the duplicate key error.
-    def _insert_stg_batch_robust(self, rows):
+    def _insert_stg_batch_robust(self, user, api_user_ids):
         nrows = 0
 
-        for row in rows:
+        for api_uid in api_user_ids:
+            row = {
+                self._api_data_column: api_uid,
+                self._target_user_column: user.user_id
+            }
+
             try:
                 ins = md.StgFollow.__table__.insert().values(**row)
                 self.session.execute(ins)
