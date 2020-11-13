@@ -761,6 +761,8 @@ class FollowGraphJob(ApiJob):
             self.session.bulk_insert_mappings(md.StgFollow, rows)
         except sa.exc.IntegrityError:
             self.session.rollback()
+            logger.info('Working around duplicates in Twitter API response')
+
             n_items = self._insert_stg_batch_robust(rows)  # commits per row
         else:
             n_items = len(rows)
