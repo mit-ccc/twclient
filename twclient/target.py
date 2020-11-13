@@ -465,7 +465,7 @@ class SelectTagTarget(Target):
 
         filters = [md.Tag.name == tag for tag in self.targets]
         tags = self.context.session.query(md.Tag).filter(or_(*filters)).all()
-        new = list(set(self.targets) - set(tags))
+        new = list(set(self.targets) - set([t.name for t in tags]))
 
         if new:
             msg = 'Requested tag(s) {0} do not exist'
