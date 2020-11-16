@@ -91,23 +91,25 @@ class UniqueMixin:
     # application, but here we don't care.
     _unique_caches = {}
 
+    # As in TimestampsMixin, hack to put the columns at the end in tables,
+    # which declaring them as class attributes doesn't
+    @declared_attr
+    def unique_hash(cls):  # noqa: 805 pylint: disable=no-self-argument
+        '''
+        A hash to implement a unique constraint without length limits.
+        '''
+
+        # SHA-1 hashes in hex message digest format are 40 chars
+        return Column(String(length=40), nullable=False, unique=True)
+
     @staticmethod
-    def _unique_hash(**kwargs):
+    def _make_hash(**kwargs):
         keys = sorted(kwargs.keys())
 
         txt = ', '.join([str(k) + ': ' + str(kwargs[k]) for k in keys])
         txt = txt.encode('utf-8')
 
         return hashlib.sha1(txt).hexdigest()
-
-    @classmethod
-    def _unique_filter(cls, query, **kwargs):
-        flts = [
-            getattr(cls, key) == kwargs[key]
-            for key in kwargs
-        ]
-
-        return query.filter(*flts)
 
     @classmethod
     def as_unique(cls, session, **kwargs):
@@ -139,18 +141,17 @@ class UniqueMixin:
         cls._unique_caches[session] = cls._unique_caches.get(session, {})
         cache = cls._unique_caches[session]
 
-        key = (cls, cls._unique_hash(**kwargs))
+        uhash = cls._make_hash(**kwargs)
+        key = (cls, uhash)
 
         if key in cache:
             return cache[key]
 
         with session.no_autoflush:
-            query = session.query(cls)
-            query = cls._unique_filter(query, **kwargs)
-            obj = query.first()
+            obj = session.query(cls).filter_by(unique_hash=uhash).first()
 
             if not obj:
-                obj = cls(**kwargs)
+                obj = cls(unique_hash=uhash, **kwargs)
                 session.add(obj)
 
         cache[key] = obj
