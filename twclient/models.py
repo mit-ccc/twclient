@@ -883,7 +883,8 @@ class Tweet(TimestampsMixin, FromTweepyInterface, Base):
     quote_of = relationship('Tweet', foreign_keys=[quoted_status_id],
                             remote_side=[tweet_id])
 
-    user_mentions = relationship('UserMention', back_populates='tweet')
+    user_mentions = relationship('UserMention', back_populates='tweet',
+                                 cascade='all, delete-orphan')
     hashtag_mentions = relationship('HashtagMention', back_populates='tweet',
                                     cascade='all, delete-orphan')
     symbol_mentions = relationship('SymbolMention', back_populates='tweet',
