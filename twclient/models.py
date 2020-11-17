@@ -884,10 +884,14 @@ class Tweet(TimestampsMixin, FromTweepyInterface, Base):
                             remote_side=[tweet_id])
 
     user_mentions = relationship('UserMention', back_populates='tweet')
-    hashtag_mentions = relationship('HashtagMention', back_populates='tweet')
-    symbol_mentions = relationship('SymbolMention', back_populates='tweet')
-    url_mentions = relationship('UrlMention', back_populates='tweet')
-    media_mentions = relationship('MediaMention', back_populates='tweet')
+    hashtag_mentions = relationship('HashtagMention', back_populates='tweet',
+                                    cascade='all, delete-orphan')
+    symbol_mentions = relationship('SymbolMention', back_populates='tweet',
+                                   cascade='all, delete-orphan')
+    url_mentions = relationship('UrlMention', back_populates='tweet',
+                                cascade='all, delete-orphan')
+    media_mentions = relationship('MediaMention', back_populates='tweet',
+                                  cascade='all, delete-orphan')
 
     @classmethod
     def from_tweepy(cls, obj, session=None):
