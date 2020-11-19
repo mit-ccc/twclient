@@ -156,6 +156,19 @@ class TwitterAPIError(TWClientError):
         raise NotImplementedError()
 
 
+class ReadFailureError(TwitterAPIError):
+    '''
+    A low-level network problem occurred in communicating with the Twitter API.
+
+    Something went wrong at a low level during communication with the Twitter
+    API and no sensible response could be retrieved.
+    '''
+
+    @staticmethod
+    def tweepy_is_instance(exc):
+        return exc.response is None
+
+
 class NotFoundError(TwitterAPIError):
     '''
     A requested object was not found.
@@ -168,8 +181,13 @@ class NotFoundError(TwitterAPIError):
 
     @staticmethod
     def tweepy_is_instance(exc):
-        return exc.api_code in (17, 34, 50, 63) or \
-            (exc.api_code is None and exc.response.status_code == 404)
+        return \
+            exc.api_code in (17, 34, 50, 63) or \
+            (
+                exc.api_code is None and
+                exc.response is not None and
+                exc.response.status_code == 404
+            )
 
 
 # That is, accessing protected users' friends, followers, or tweets returns
@@ -185,7 +203,10 @@ class ProtectedUserError(TwitterAPIError):
 
     @staticmethod
     def tweepy_is_instance(exc):
-        return exc.api_code is None and exc.response.status_code == 401
+        return \
+            exc.api_code is None and \
+            exc.response is not None and \
+            exc.response.status_code == 401
 
 
 class CapacityError(TwitterAPIError):
@@ -199,8 +220,12 @@ class CapacityError(TwitterAPIError):
 
     @staticmethod
     def tweepy_is_instance(exc):
-        return exc.api_code in (130, 131) or \
-            exc.response.status_code in (500, 503, 504)
+        return \
+            exc.api_code in (130, 131) or \
+            (
+                exc.response is not None and
+                exc.response.status_code in (500, 503, 504)
+            )
 
 
 def dispatch_tweepy(exc):
@@ -226,14 +251,12 @@ def dispatch_tweepy(exc):
     if not isinstance(exc, tweepy.error.TweepError):
         return exc
 
-    if NotFoundError.tweepy_is_instance(exc):
-        return NotFoundError.from_tweepy(exc)
+    klasses = [ReadFailureError, NotFoundError, ProtectedUserError,
+               CapacityError]
 
-    if ProtectedUserError.tweepy_is_instance(exc):
-        return ProtectedUserError.from_tweepy(exc)
-
-    if CapacityError.tweepy_is_instance(exc):
-        return CapacityError.from_tweepy(exc)
+    for kls in klasses:
+        if kls.tweepy_is_instance(exc):
+            return kls.from_tweepy(exc)
 
     return exc
 
