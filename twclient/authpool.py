@@ -188,13 +188,14 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
                 except tweepy.error.TweepError as exc:
                     dexc = err.dispatch_tweepy(exc)
 
-                    if not isinstance(dexc, err.CapacityError):
+                    if not isinstance(dexc, err.TwitterServiceError):
                         raise dexc from exc
 
                     if cp_retry_cnt >= iself._authpool_capacity_retries:
                         raise dexc from exc
 
-                    msg = 'Over-capacity error on try {0}; sleeping {1}'
+                    msg = 'Over-capacity or Twitter service error on try ' \
+                          '{0}; sleeping {1}'
                     msg = msg.format(cp_retry_cnt,
                                      iself._authpool_capacity_sleep)
                     logger.warning(msg)

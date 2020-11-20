@@ -156,7 +156,19 @@ class TwitterAPIError(TWClientError):
         raise NotImplementedError()
 
 
-class ReadFailureError(TwitterAPIError):
+class TwitterServiceError(TwitterAPIError):  # pylint: disable=abstract-method
+    '''
+    A problem with the Twitter service.
+
+    A request to the Twitter service encountered a problem which was with the
+    service rather than the request itself. Generally requests encountering
+    this error should be retried.
+    '''
+
+    pass
+
+
+class ReadFailureError(TwitterServiceError):
     '''
     A low-level network problem occurred in communicating with the Twitter API.
 
@@ -169,7 +181,39 @@ class ReadFailureError(TwitterAPIError):
         return exc.response is None
 
 
-class NotFoundError(TwitterAPIError):
+class CapacityError(TwitterServiceError):
+    '''
+    The Twitter API is temporarily over capacity.
+
+    This error is raised when Twitter's API indicates that it's over capacity
+    and cannot fulfill a request. Code catching this exception should generally
+    sleep a reasonable period of time and retry the request.
+    '''
+
+    @staticmethod
+    def tweepy_is_instance(exc):
+        return \
+            exc.api_code in (130, 131) or \
+            (
+                exc.response is not None and
+                exc.response.status_code in (500, 503, 504)
+            )
+
+
+class TwitterLogicError(TwitterAPIError):  # pylint: disable=abstract-method
+    '''
+    A request to the Twitter service encountered a logical error condition.
+
+    This error is raised when a request to the Twitter service was received and
+    executed successfully but returned a logical error condition. For example,
+    requesting tweets from a user with protected tweets will raise a subclass
+    of this exception class.
+    '''
+
+    pass
+
+
+class NotFoundError(TwitterLogicError):
     '''
     A requested object was not found.
 
@@ -192,7 +236,7 @@ class NotFoundError(TwitterAPIError):
 
 # That is, accessing protected users' friends, followers, or tweets returns
 # an HTTP 401 with message "Not authorized." and no Twitter status code.
-class ProtectedUserError(TwitterAPIError):
+class ProtectedUserError(TwitterLogicError):
     '''
     A requested user has protected tweets.
 
@@ -207,25 +251,6 @@ class ProtectedUserError(TwitterAPIError):
             exc.api_code is None and \
             exc.response is not None and \
             exc.response.status_code == 401
-
-
-class CapacityError(TwitterAPIError):
-    '''
-    The Twitter API is temporarily over capacity.
-
-    This error is raised when Twitter's API indicates that it's over capacity
-    and cannot fulfill a request. Code catching this exception should generally
-    sleep a reasonable period of time and retry the request.
-    '''
-
-    @staticmethod
-    def tweepy_is_instance(exc):
-        return \
-            exc.api_code in (130, 131) or \
-            (
-                exc.response is not None and
-                exc.response.status_code in (500, 503, 504)
-            )
 
 
 def dispatch_tweepy(exc):
