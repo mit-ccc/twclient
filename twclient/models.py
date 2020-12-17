@@ -1273,7 +1273,7 @@ class UserMention(TimestampsMixin, ListFromTweepyInterface, Base):
                     }
 
                     ret = cls(**kwargs)
-                    ret.user = User.from_tweepy(obj.user, session)
+                    ret.user = User(user_id=mtn['id'])
 
                     lst += [ret]
 
