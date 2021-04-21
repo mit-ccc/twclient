@@ -1,34 +1,60 @@
 # twclient
 
-FIXME update this and add badges
-
-This package provides a high-level command-line client for the Twitter API, with a focus on loading data into a database. The goal is to be higher-level than twurl and offer useful primitives for researchers who want to get data out of Twitter, without worrying about the details. The client can handle multiple sets of API credentials seamlessly, helping avoid rate limit issues.
+This package provides a high-level command-line client for the Twitter API, with
+a focus on loading data into a database. The goal is to be higher-level than
+twurl and offer useful primitives for researchers who want to get data out of
+Twitter, without worrying about the details. The client can handle multiple sets
+of API credentials seamlessly, helping avoid rate limit issues.
 
 An example of usage:
 ```
-# set up the DB and the Twitter credentials
-twitter add-db -s /var/run/postgresql # only local socket auth supported so far
-twitter add-api -n twitter1 --consumer-key XXXXX --consumer-secret XXXXXX
-twitter add-api -n twitter2 --consumer-key XXXXX --consumer-secret XXXXXX
-twitter add-api -n twitter3 --consumer-key XXXXX --consumer-secret XXXXXX
+#
+# Setup
+#
 
-# initialize the DB schema
+# Set up the database. This creates a persistent profile in a config file, no
+# need to type the URL repeatedly.
+twitter config add-db -u "postgresql:///" postgres
+
+# Set up the Twitter credentials. Similarly, this stores the credentials in a
+# config file for ease of use. Only two sets of credentials are shown, but
+# arbitrarily many can be added.
+twitter config add-api -n twitter1 \
+    --consumer-key XXXXX \
+    --consumer-secret XXXXXX \
+    --token XXXXXX \
+    --token-secret XXXXXX
+
+twitter config add-api -n twitter2 \
+    --consumer-key XXXXX \
+    --consumer-secret XXXXXX \
+    --token XXXXXX \
+    --token-secret XXXXXX
+
+# Initialize the DB schema, dropping any existing data.
 twitter initialize -y
 
-# load some users, tagging them "subjects" for later use
-twitter user_info -n wwbrannon socialmachines mit -u 'subjects'
+#
+# Pull data
+#
 
-# get their friends and followers, tagging them as well:
-twitter friends -g subjects -u subjects-friends
-twitter followers -g subjects -u subjects-followers
+# Load some users and their basic info
+twitter fetch users -n wwbrannon socialmachines mit -l mit/a-twitter-list
 
-# get their tweets:
-twitter tweets -g subjects
+# Tag them for ease of analysis
+twitter tag create subjects
+twitter tag apply subjects -n wwbrannon socialmachines mit -l mit/a-twitter-list
 
-# the friends and followers are just bare IDs, but if you want to "hydrate" them:
-twitter user_info -g subjects-friends
-twitter user_info -g subjects-followers
+# Get their friends and followers
+twitter fetch friends -g subjects
+twitter fetch followers -g subjects
+
+# Get their tweets
+twitter fetch tweets -g subjects
 ```
 
-After all of this, the loaded data is in the database configured with `add-db`. You can query it with the usual tools, and useful features have been normalized out to save processing time. The raw API responses are also saved for later analysis.
+After all of this, the loaded data is in the database configured with `config
+add-db`. You can query it with the usual tools, and useful features have been
+normalized out to save processing time. The raw API responses are also saved for
+later analysis.
 
