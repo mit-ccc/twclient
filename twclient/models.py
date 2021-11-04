@@ -438,8 +438,9 @@ class UserData(TimestampsMixin, FromTweepyInterface, Base):
         # Twitter sometimes includes NUL bytes, which might be handled
         # correctly by sqlalchemy + backend or might not: handling them is
         # risky. We'll just drop them to be safe.
-        api_response = api_response.replace('\00', '').replace(r'\u0000', '')
         api_response = ut.tweepy_to_json(obj)
+        api_response = api_response.replace('\00', '').replace(r'\u0000', '') \
+                                   .replace(r'\00', '').replace(r'\x00', '')
 
         args = {
             'user_id': obj.id,
@@ -575,8 +576,9 @@ class List(TimestampsMixin, FromTweepyInterface, Base):
     @classmethod
     def from_tweepy(cls, obj, session=None):
         # remove NUL bytes as above
-        api_response = api_response.replace('\00', '').replace(r'\u0000', '')
         api_response = ut.tweepy_to_json(obj)
+        api_response = api_response.replace('\00', '').replace(r'\u0000', '') \
+                                   .replace(r'\00', '').replace(r'\x00', '')
 
         args = {
             'list_id': obj.id,
@@ -897,8 +899,9 @@ class Tweet(TimestampsMixin, FromTweepyInterface, Base):
     @classmethod
     def from_tweepy(cls, obj, session=None):
         # remove NUL bytes as above
-        api_response = api_response.replace('\00', '').replace(r'\u0000', '')
         api_response = ut.tweepy_to_json(obj)
+        api_response = api_response.replace('\00', '').replace(r'\u0000', '') \
+                                   .replace(r'\00', '').replace(r'\x00', '')
 
         args = {
             'tweet_id': obj.id,
