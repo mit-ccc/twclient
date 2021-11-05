@@ -1,3 +1,8 @@
+-- this is ultimately from the "quoted status" fields that come back on Twitter
+-- API responses; how it overlaps or doesn't with the retweet graph from
+-- retweeted_status_id (i.e. when a quote tweet is or isn't a retweet) depends
+-- on how Twitter defines and returns them in the API
+
 with tmp_universe as
 (
     select
