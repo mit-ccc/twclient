@@ -61,6 +61,7 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
     config_subparser = subparsers.add_parser('config',
                                              help='Manage configuration')
     config = config_subparser.add_subparsers(dest='subcommand')
+    config.required = True
 
     #
     # Config file handling
@@ -106,6 +107,7 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
 
     tag_subparser = subparsers.add_parser('tag', help='Manage user tags')
     tag = tag_subparser.add_subparsers(dest='subcommand')
+    tag.required = True
 
     tcp = tag.add_parser('create', help='create a user tag')
     tcp.add_argument('name', help='the name of the tag')
@@ -144,6 +146,7 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
 
     fetch_subparser = subparsers.add_parser('fetch', help='Fetch Twitter data')
     fetch = fetch_subparser.add_subparsers(dest='subcommand')
+    fetch.required = True
 
     uip = fetch.add_parser('users', help='Get user info / "hydrate" users')
     uip = _add_fetch_arguments(uip)
