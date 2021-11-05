@@ -2,22 +2,26 @@ with tmp_universe as
 (
     select
         u.user_id
-    from twitter.user u
-        inner join twitter.user_tag ut using(user_id)
+    from "user" u -- standard sql reserves this table name, need to quote it
+        inner join user_tag ut using(user_id)
+        inner join tag ta using(tag_id)
     where
-        ut.tag = 'universe'
+        -- just an example of using tagging, a tag
+        -- with this name is not created automatically
+        ta.name = 'universe'
 )
 select
     uts.user_id as source_user_id,
     utt.user_id as target_user_id,
 
-    extract(year from tws.tweet_create_dt) as year,
-    extract(month from tws.tweet_create_dt) as month,
+    -- can also, e.g., group by time
+    -- extract(year from tws.create_dt) as year,
+    -- extract(month from tws.create_dt) as month,
 
-    count(*) as retweets
+    count(*) as num
 from tmp_universe uts
-    inner join twitter.tweet tws on tws.user_id = uts.user_id
-    inner join twitter.tweet twt on twt.tweet_id = tws.retweeted_status_id
+    inner join tweet tws on tws.user_id = uts.user_id
+    inner join tweet twt on twt.tweet_id = tws.retweeted_status_id
     inner join tmp_universe utt on utt.user_id = twt.user_id
-group by 1,2,3,4;
+group by 1,2;
 

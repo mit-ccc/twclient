@@ -12,12 +12,16 @@ with tmp_universe as
 )
 select
     uts.user_id as source_user_id,
-    utt.user_id as target_user_id
+    utt.user_id as target_user_id,
+
+    -- can also, e.g., group by time
+    -- extract(year from tws.create_dt) as year,
+    -- extract(month from tws.create_dt) as month,
+
+    count(*) as num
 from tmp_universe uts
-    inner join follow fo on fo.source_user_id = uts.user_id
-    inner join tmp_universe utt on utt.user_id = fo.target_user_id
-where
-    -- the follow table does type-2 SCD, so this condition says
-    -- "only currently valid rows (not marked obsolete by a subsequent fetch)"
-    fo.valid_end_dt is null;
+    inner join tweet tws on tws.user_id = uts.user_id
+    inner join tweet twt on twt.tweet_id = tws.quoted_status_id
+    inner join tmp_universe utt on utt.user_id = twt.user_id
+group by 1,2;
 

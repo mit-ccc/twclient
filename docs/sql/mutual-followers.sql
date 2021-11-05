@@ -1,35 +1,19 @@
-with tmp_radio as
+-- this is just iteration in sql, it's straightforward but very slow if there
+-- are either lots of users or esp users with lots of followers or esp esp both
+-- because it's roughly O(n^2)
+
+with tmp_universe as
 (
     select
         u.user_id
-    from twitter.user u
-        inner join twitter.user_tag ut using(user_id)
+    from "user" u -- standard sql reserves this table name, need to quote it
+        inner join user_tag ut using(user_id)
+        inner join tag ta using(tag_id)
     where
-        ut.tag = 'radio'
-),
-
-tmp_last_follow_fetch as
-(
-    select
-        x.follow_fetch_id
-    from
-    (
-        select
-            ff.follow_fetch_id,
-
-            row_number() over (
-                partition by ff.user_id
-                order by ff.insert_dt desc -- most recent
-            ) as rn
-        from twitter.follow_fetch ff
-            inner join tmp_radio tr using(user_id)
-        where
-            ff.is_followers
-    ) x
-    where
-        x.rn = 1
+        -- just an example of using tagging, a tag
+        -- with this name is not created automatically
+        ta.name = 'universe'
 )
-
 select
     ut1.user_id as user_id1,
     ut2.user_id as user_id2,
@@ -41,23 +25,24 @@ select
         (
             select
                 fo.source_user_id as user_id
-            from twitter.follow fo
-                inner join tmp_last_follow_fetch ff using(follow_fetch_id)
+            from follow fo
             where
+                fo.valid_end_dt is null and
                 fo.target_user_id = ut1.user_id
 
             intersect all
 
             select
                 fo.source_user_id as user_id
-            from twitter.follow fo
-                inner join tmp_last_follow_fetch ff using(follow_fetch_id)
+            from follow fo
             where
+                fo.valid_end_dt is null and
                 fo.target_user_id = ut2.user_id
         ) x
     ) as mutual_followers
-from tmp_radio ut1
-    cross join tmp_radio ut2
-where
-    ut2.user_id > ut1.user_id;
+from tmp_universe ut1
+    -- ">" general theta join rather than "=" equijoin because we don't want
+    -- e.g. pair (123, 789) and also pair (789, 123), in particular because the
+    -- query planner isn't very smart about this and it costs twice as much
+    inner join tmp_universe ut2 on ut2.user_id > ut1.user_id;
 
