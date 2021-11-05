@@ -17,7 +17,7 @@ logger = logging.getLogger(__name__)
 # pylint: disable=protected-access
 
 
-class AuthPoolAPI:  # pylint: disable=too-few-public-methods
+class AuthPoolAPI(object):  # pylint: disable=too-few-public-methods
     '''
     A version of tweepy.API with support for multiple sets of credentials.
 

@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 @as_declarative()
-class Base:
+class Base(object):
     '''
     The base class for sqlalchemy models.
 
@@ -75,7 +75,7 @@ class Base:
 
 # This is from one of the standard sqlalchemy recipes:
 #     https://github.com/sqlalchemy/sqlalchemy/wiki/UniqueObject
-class UniqueMixin:
+class UniqueMixin(object):
     '''
     Provide a merge-like operation by unique constraint instead of primary key.
 
@@ -160,7 +160,7 @@ class UniqueMixin:
 
 # The @declared_attr is a bit of a hack - it puts the columns at the end in
 # tables, which declaring them as class attributes doesn't
-class TimestampsMixin:
+class TimestampsMixin(object):
     '''
     Add creation and modification timestamps to a model.
 
@@ -189,7 +189,7 @@ class TimestampsMixin:
                       onupdate=func.now(), nullable=False)
 
 
-class FromTweepyInterface:
+class FromTweepyInterface(object):
     '''
     A model class capable of instantiating itself from a tweepy object.
 
@@ -226,7 +226,7 @@ class FromTweepyInterface:
         raise NotImplementedError()
 
 
-class ListFromTweepyInterface:
+class ListFromTweepyInterface(object):
     '''
     A model class capable of instantiating multiple instances of itself from a
     tweepy object.
