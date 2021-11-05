@@ -50,7 +50,7 @@ class Base:
 
     @declared_attr
     def __tablename__(cls):  # noqa: 805 pylint: disable=no-self-argument
-        return '_'.join(ut.split_camel_case(cls.__name__)).lower()
+        return '_'.join(ut._split_camel_case(cls.__name__)).lower()
 
     def _repr(self, **fields):
         field_strings = []
@@ -438,7 +438,7 @@ class UserData(TimestampsMixin, FromTweepyInterface, Base):
         # Twitter sometimes includes NUL bytes, which might be handled
         # correctly by sqlalchemy + backend or might not: handling them is
         # risky. We'll just drop them to be safe.
-        api_response = ut.tweepy_to_json(obj)
+        api_response = ut._tweepy_to_json(obj)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '') \
                                    .replace(r'\00', '').replace(r'\x00', '')
 
@@ -576,7 +576,7 @@ class List(TimestampsMixin, FromTweepyInterface, Base):
     @classmethod
     def from_tweepy(cls, obj, session=None):
         # remove NUL bytes as above
-        api_response = ut.tweepy_to_json(obj)
+        api_response = ut._tweepy_to_json(obj)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '') \
                                    .replace(r'\00', '').replace(r'\x00', '')
 
@@ -899,7 +899,7 @@ class Tweet(TimestampsMixin, FromTweepyInterface, Base):
     @classmethod
     def from_tweepy(cls, obj, session=None):
         # remove NUL bytes as above
-        api_response = ut.tweepy_to_json(obj)
+        api_response = ut._tweepy_to_json(obj)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '') \
                                    .replace(r'\00', '').replace(r'\x00', '')
 
