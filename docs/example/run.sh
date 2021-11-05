@@ -11,12 +11,19 @@ set -xe
 
 ## Lists first
 # they don't have to be first, just arbitrarily
+
+# the lists can be either the user/slug-name format or the numeric list ID and
+# you can mix them together in the arguments to "twitter fetch users -l"
 tail -n +2 lists.csv | xargs twitter -v fetch users -b -l
 
 twitter tag create twitter_lists
 tail -n +2 lists.csv | xargs twitter tag apply twitter_lists -l
 
 ## Then users
+
+# unlike with lists, there isn't a command-line option that takes both user IDs
+# and screen names at once (because they ultimately have to be separate Twitter
+# API calls) so you can't mix IDs and screen names in the users.csv file
 tail -n +2 users.csv | xargs twitter -v fetch users -b -n
 
 twitter tag create twitter_users
