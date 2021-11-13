@@ -1,3 +1,5 @@
+[![License](https://img.shields.io/:license-mit-blue.svg?style=flat)](https://mit-license.org/)
+
 # twclient
 
 This package provides a high-level command-line client for the Twitter API, with
