@@ -10,4 +10,3 @@ from .authpool import AuthPoolAPI
 from .twitter_api import TwitterApi
 
 from . import job, target
-
