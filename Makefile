@@ -1,33 +1,7 @@
 ENVPATH := env
 PYTHON  := python3
 
-.PHONY: test test-all upload register env lint clean docs
-
-test:
-	py.test tests
-
-alltest:
-	tox
-
-upload:
-	$(PYTHON) setup.py sdist bdist_wheel upload
-
-register:
-	$(PYTHON) setup.py register
-
-env:
-	rm -rf $(ENVPATH)
-	$(PYTHON) -m venv $(ENVPATH)
-	$(ENVPATH)/bin/pip install --upgrade pip setuptools wheel
-	$(ENVPATH)/bin/pip install pylint flake8 mypy
-	$(ENVPATH)/bin/pip install psycopg2 mysql-connector-python
-	$(ENVPATH)/bin/pip install .[test]
-	$(ENVPATH)/bin/pip install -e .
-
-lint:
-	pylint twclient/
-	flake8 twclient/
-	# mypy twclient/
+.PHONY: clean lint docs env
 
 clean:
 	rm -rf build/ dist/ twclient.egg-info/ docs/_build/
@@ -36,8 +10,23 @@ clean:
 	find . -name '*.pyo' -exec rm -f {} \+
 	find . -name '*~'    -exec rm -f {} \+
 
+lint:
+	pylint src/
+	flake8 src/
+	# mypy src/
+
 docs:
 	rm -rf docs/source/
-	sphinx-apidoc -o docs/source/ twclient/ twclient/command.py
+	sphinx-apidoc -o docs/source/ src/twclient/
 	cd docs && $(MAKE) html man
+
+env:
+	rm -rf $(ENVPATH)
+	$(PYTHON) -m venv $(ENVPATH)
+	$(ENVPATH)/bin/pip install --upgrade pip setuptools wheel
+	$(ENVPATH)/bin/pip install pylint flake8 mypy
+	$(ENVPATH)/bin/pip install psycopg2 mysql-connector-python
+	$(ENVPATH)/bin/pip install .[test]
+	$(ENVPATH)/bin/pip install .[docs]
+	$(ENVPATH)/bin/pip install -e .
 
