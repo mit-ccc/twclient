@@ -6,16 +6,9 @@ PYTHON  := python3
 env:
 	$(PYTHON) -m venv $(ENVPATH)
 	
-	$(ENVPATH)/bin/pip install --upgrade pip setuptools wheel
-	
-	$(ENVPATH)/bin/pip install .[docs]
-	$(ENVPATH)/bin/pip install .[test]
-	
-	$(ENVPATH)/bin/pip install pylint flake8 mypy
-	$(ENVPATH)/bin/pip install psycopg2 mysql-connector-python
-	$(ENVPATH)/bin/pip install tox-pyenv tox-travis
-	
+	$(ENVPATH)/bin/pip install -U pip
 	$(ENVPATH)/bin/pip install -e .
+	$(ENVPATH)/bin/pip install .[docs] .[test] .[dev]
 
 pyenv:
 	# for multi-python testing with tox; assumes pyenv is already installed
