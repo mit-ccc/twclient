@@ -17,7 +17,7 @@ lint:
 
 docs:
 	rm -rf docs/source/
-	sphinx-apidoc -o docs/source/ src/twclient/
+	sphinx-apidoc -f -o docs/source/ src/twclient/ src/twclient/command.py
 	cd docs && $(MAKE) html man
 
 env:
