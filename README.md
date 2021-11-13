@@ -1,3 +1,9 @@
+<!--
+[![Build Status](https://img.shields.io/travis/wwbrannon/foo.svg?style=flat)](https://travis-ci.org/wwbrannon/foo)
+[![Coverage Status](https://codecov.io/gh/wwbrannon/foo/branch/master/graph/badge.svg)](https://codecov.io/github/wwbrannon/foo?branch=master)
+-->
+[![License](https://img.shields.io/:license-mit-blue.svg?style=flat)](https://mit-license.org/)
+
 # twclient
 
 This package provides a high-level command-line client for the Twitter API, with
