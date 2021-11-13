@@ -40,7 +40,7 @@ logger = logging.getLogger(__name__)
 
 
 @as_declarative()
-class Base:
+class Base(object):
     '''
     The base class for sqlalchemy models.
 
@@ -50,7 +50,7 @@ class Base:
 
     @declared_attr
     def __tablename__(cls):  # noqa: 805 pylint: disable=no-self-argument
-        return '_'.join(ut.split_camel_case(cls.__name__)).lower()
+        return '_'.join(ut._split_camel_case(cls.__name__)).lower()
 
     def _repr(self, **fields):
         field_strings = []
@@ -75,7 +75,7 @@ class Base:
 
 # This is from one of the standard sqlalchemy recipes:
 #     https://github.com/sqlalchemy/sqlalchemy/wiki/UniqueObject
-class UniqueMixin:
+class UniqueMixin(object):
     '''
     Provide a merge-like operation by unique constraint instead of primary key.
 
@@ -160,7 +160,7 @@ class UniqueMixin:
 
 # The @declared_attr is a bit of a hack - it puts the columns at the end in
 # tables, which declaring them as class attributes doesn't
-class TimestampsMixin:
+class TimestampsMixin(object):
     '''
     Add creation and modification timestamps to a model.
 
@@ -189,7 +189,7 @@ class TimestampsMixin:
                       onupdate=func.now(), nullable=False)
 
 
-class FromTweepyInterface:
+class FromTweepyInterface(object):
     '''
     A model class capable of instantiating itself from a tweepy object.
 
@@ -226,7 +226,7 @@ class FromTweepyInterface:
         raise NotImplementedError()
 
 
-class ListFromTweepyInterface:
+class ListFromTweepyInterface(object):
     '''
     A model class capable of instantiating multiple instances of itself from a
     tweepy object.
@@ -438,7 +438,7 @@ class UserData(TimestampsMixin, FromTweepyInterface, Base):
         # Twitter sometimes includes NUL bytes, which might be handled
         # correctly by sqlalchemy + backend or might not: handling them is
         # risky. We'll just drop them to be safe.
-        api_response = ut.tweepy_to_json(obj)
+        api_response = ut._tweepy_to_json(obj)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '') \
                                    .replace(r'\00', '').replace(r'\x00', '')
 
@@ -576,7 +576,7 @@ class List(TimestampsMixin, FromTweepyInterface, Base):
     @classmethod
     def from_tweepy(cls, obj, session=None):
         # remove NUL bytes as above
-        api_response = ut.tweepy_to_json(obj)
+        api_response = ut._tweepy_to_json(obj)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '') \
                                    .replace(r'\00', '').replace(r'\x00', '')
 
@@ -899,7 +899,7 @@ class Tweet(TimestampsMixin, FromTweepyInterface, Base):
     @classmethod
     def from_tweepy(cls, obj, session=None):
         # remove NUL bytes as above
-        api_response = ut.tweepy_to_json(obj)
+        api_response = ut._tweepy_to_json(obj)
         api_response = api_response.replace('\00', '').replace(r'\u0000', '') \
                                    .replace(r'\00', '').replace(r'\x00', '')
 

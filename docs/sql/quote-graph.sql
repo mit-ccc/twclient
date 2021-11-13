@@ -1,7 +1,7 @@
--- this is ultimately from the "retweeted status" fields that come back on
--- Twitter API responses; how it overlaps or doesn't with the quote graph
--- from quoted_status_id (i.e. when a quote tweet is or isn't a retweet)
--- depends on how Twitter defines and returns them in the API
+-- this is ultimately from the "quoted status" fields that come back on Twitter
+-- API responses; how it overlaps or doesn't with the retweet graph from
+-- retweeted_status_id (i.e. when a quote tweet is or isn't a retweet) depends
+-- on how Twitter defines and returns them in the API
 
 with tmp_universe as
 (
@@ -26,7 +26,7 @@ select
     count(*) as num
 from tmp_universe uts
     inner join tweet tws on tws.user_id = uts.user_id
-    inner join tweet twt on twt.tweet_id = tws.retweeted_status_id
+    inner join tweet twt on twt.tweet_id = tws.quoted_status_id
     inner join tmp_universe utt on utt.user_id = twt.user_id
 group by 1,2;
 

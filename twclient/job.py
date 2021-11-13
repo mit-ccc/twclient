@@ -595,7 +595,7 @@ class TweetsJob(ApiJob):
         }
 
         tweets = self.api.user_timeline(**twargs)
-        tweets = ut.grouper(tweets, self.load_batch_size)
+        tweets = ut._grouper(tweets, self.load_batch_size)
 
         n_items = 0
         for ind, batch in enumerate(tweets):
@@ -729,7 +729,7 @@ class FollowGraphJob(ApiJob):
         api_method = getattr(self.api, self._api_method_name)
 
         ids = api_method(user_id=user.user_id)
-        ids = ut.grouper(ids, self.load_batch_size)
+        ids = ut._grouper(ids, self.load_batch_size)
 
         self._clear_stg_table()
 

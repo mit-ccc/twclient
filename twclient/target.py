@@ -72,7 +72,7 @@ class Target(ABC):
         self._bad_targets = []
         self._missing_targets = []
 
-        deduped = ut.uniq(targets)
+        deduped = ut._uniq(targets)
         dupes = list(set(targets) - set(deduped))
 
         if dupes:
@@ -295,8 +295,8 @@ class Target(ABC):
 
     # splitting this out from _hydrate_users simplifies TwitterListTarget
     def _hydrate_sub(self, user_ids=None, screen_names=None):
-        user_ids = ut.coalesce(user_ids, [])
-        screen_names = ut.coalesce(screen_names, [])
+        user_ids = ut._coalesce(user_ids, [])
+        screen_names = ut._coalesce(screen_names, [])
 
         try:
             assert bool(user_ids) ^ bool(screen_names)
