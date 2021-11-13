@@ -1,5 +1,8 @@
+graft src
+
 include README.md
 include CHANGES.md
 include LICENSE
 
 exclude .pylintrc
+exclude .gitignore
