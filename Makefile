@@ -11,7 +11,7 @@ env:
 	$(ENVPATH)/bin/pip install .[docs] .[test] .[dev]
 
 pyenv:
-	# for multi-python testing with tox; assumes pyenv is already installed
+	# for local multi-python testing with tox; assumes pyenv already installed
 	pyenv install -s 3.10.0
 	pyenv install -s 3.6.8
 	pyenv install -s 3.7.12
@@ -27,9 +27,15 @@ clean:
 	find . -name '*~'    -exec rm -f {} \+
 
 lint:
-	pylint src/
-	flake8 src/
-	# mypy src/
+	# stop the build if there are Python syntax errors or undefined names
+	flake8 src test --count --select=E9,F63,F7,F82 --show-source --statistics
+	
+	# exit-zero treats all errors as warnings. The GitHub editor is 127 chars wide
+	flake8 src test --count --exit-zero --max-line-length=127 --statistics
+	
+	pylint src test
+	
+	# mypy src test
 
 docs:
 	rm -rf docs/source/
