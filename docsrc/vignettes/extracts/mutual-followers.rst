@@ -1,5 +1,7 @@
+-- mutual followers
+
 -- this is just iteration in sql, it's straightforward but very slow if there
--- are either lots of users or esp users with lots of friends or esp esp both
+-- are either lots of users or esp users with lots of followers or esp esp both
 -- because it's roughly O(n^2)
 
 with tmp_universe as
@@ -24,22 +26,22 @@ select
         from
         (
             select
-                fo.target_user_id as user_id
+                fo.source_user_id as user_id
             from follow fo
             where
                 fo.valid_end_dt is null and
-                fo.source_user_id = ut1.user_id
+                fo.target_user_id = ut1.user_id
 
             intersect all
 
             select
-                fo.target_user_id as user_id
+                fo.source_user_id as user_id
             from follow fo
             where
                 fo.valid_end_dt is null and
-                fo.source_user_id = ut2.user_id
+                fo.target_user_id = ut2.user_id
         ) x
-    ) as mutual_friends
+    ) as mutual_followers
 from tmp_universe ut1
     -- ">" general theta join rather than "=" equijoin because we don't want
     -- e.g. pair (123, 789) and also pair (789, 123), in particular because the
