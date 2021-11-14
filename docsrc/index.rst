@@ -4,10 +4,10 @@
    contain the root `toctree` directive.
 
 Twclient Documentation
-====================================
+======================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Contents:
 
    readme

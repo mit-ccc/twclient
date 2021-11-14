@@ -1,8 +1,6 @@
-#!/usr/bin/env python3
-
-"""
-Supporting classes for the command-line interface
-"""
+'''
+Supporting classes for the command-line interface.
+'''
 
 import os
 import sys

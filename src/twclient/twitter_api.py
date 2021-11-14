@@ -1,5 +1,5 @@
 '''
-A Twitter API wrapper for job classes
+A Twitter API wrapper for job classes.
 '''
 
 import logging

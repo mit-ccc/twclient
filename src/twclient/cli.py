@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 
-"""
-The command-line interface script
-"""
+'''
+The command-line interface script.
+'''
 
 import logging
 import argparse as ap

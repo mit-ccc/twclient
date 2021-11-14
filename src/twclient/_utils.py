@@ -1,5 +1,5 @@
 '''
-Utilities for other parts of twclient
+Utilities for other parts of twclient.
 '''
 
 import re

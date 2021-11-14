@@ -1,66 +1,61 @@
-twclient package
-================
-
-Module contents
----------------
+twclient
+========
 
 .. automodule:: twclient
    :members:
-   :undoc-members:
-   :show-inheritance:
 
 Submodules
 ----------
 
-twclient.authpool module
-------------------------
+twclient.authpool
+-----------------
 
 .. automodule:: twclient.authpool
    :members:
    :undoc-members:
    :show-inheritance:
 
-twclient.cli module
--------------------
+twclient.cli
+------------
 
 .. automodule:: twclient.cli
    :members:
    :undoc-members:
    :show-inheritance:
 
-twclient.error module
----------------------
+twclient.error
+--------------
 
 .. automodule:: twclient.error
    :members:
    :undoc-members:
    :show-inheritance:
 
-twclient.job module
--------------------
+twclient.job
+------------
 
 .. automodule:: twclient.job
    :members:
    :undoc-members:
    :show-inheritance:
 
-twclient.models module
-----------------------
+twclient.models
+---------------
 
 .. automodule:: twclient.models
    :members:
    :show-inheritance:
 
-twclient.target module
-----------------------
+twclient.target
+---------------
 
 .. automodule:: twclient.target
    :members:
    :undoc-members:
    :show-inheritance:
 
-twclient.twitter\_api module
-----------------------------
+twclient.twitter\_api
+---------------------
 
 .. automodule:: twclient.twitter_api
    :members:

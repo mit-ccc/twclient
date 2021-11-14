@@ -1,5 +1,5 @@
 '''
-Exceptions that twclient code may raise
+Exceptions that twclient code may raise.
 '''
 
 import logging

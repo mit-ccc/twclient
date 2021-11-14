@@ -1,5 +1,5 @@
 '''
-The database schema for storing Twitter data
+The database schema for storing Twitter data.
 '''
 
 import hashlib
@@ -198,6 +198,8 @@ class FromTweepyInterface:
     returns the instance of the class represented by the tweepy object.
     '''
 
+    # Subclasses are expected to provide this logic, and the implementation
+    # here is an abstract stub that raises NotImplementedError.
     @classmethod
     def from_tweepy(cls, obj, session=None):
         '''
@@ -205,9 +207,7 @@ class FromTweepyInterface:
 
         This method constructs a class instance from a tweepy object. A
         sqlalchemy database session is optional in general but may be required
-        by some subclasses which rely on UniqueMixin.as_unique. Subclasses are
-        expected to provide this logic, and the implementation here is an
-        abstract stub that raises NotImplementedError.
+        by some subclasses which rely on UniqueMixin.as_unique.
 
         Parameters
         ----------
@@ -541,7 +541,7 @@ class List(TimestampsMixin, FromTweepyInterface, Base):
         Either "public" or "private" depending on the visibility of the list.
 
     member_count
-        The number of users on the list.
+        The number of users on the list as of modified_dt.
 
     subscriber_count
         The number of users who subscribe to a public list (i.e., who have

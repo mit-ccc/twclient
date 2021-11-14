@@ -1,5 +1,5 @@
 '''
-Classes encapsulating the "targets" of certain jobs
+Classes encapsulating the "targets" of certain jobs.
 '''
 
 import random
