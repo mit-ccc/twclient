@@ -49,7 +49,7 @@ class Base:
     '''
 
     @declared_attr
-    def __tablename__(cls):  # noqa: 805 pylint: disable=no-self-argument
+    def __tablename__(cls):  # pylint: disable=no-self-argument
         return '_'.join(ut.split_camel_case(cls.__name__)).lower()
 
     def _repr(self, **fields):
@@ -94,7 +94,7 @@ class UniqueMixin:
     # As in TimestampsMixin, hack to put the columns at the end in tables,
     # which declaring them as class attributes doesn't
     @declared_attr
-    def unique_hash(cls):  # noqa: 805 pylint: disable=no-self-argument
+    def unique_hash(cls):  # pylint: disable=no-self-argument
         '''
         A hash to implement a unique constraint without length limits.
         '''
@@ -170,7 +170,7 @@ class TimestampsMixin:
     '''
 
     @declared_attr
-    def insert_dt(cls):  # noqa: 805 pylint: disable=no-self-argument
+    def insert_dt(cls):  # pylint: disable=no-self-argument
         '''
         The load time of the row into the database.
         '''
@@ -179,7 +179,7 @@ class TimestampsMixin:
                       nullable=False)
 
     @declared_attr
-    def modified_dt(cls):  # noqa: 805 pylint: disable=no-self-argument
+    def modified_dt(cls):  # pylint: disable=no-self-argument
         '''
         The last time the row was modified. Note that this field is updated by
         application logic rather than a trigger.
