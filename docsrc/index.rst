@@ -5,9 +5,9 @@ Twclient Documentation
    :maxdepth: 1
    :caption: Overview:
 
-   readme
-   changelog
-   license
+   overview/readme
+   overview/changelog
+   overview/license
 
 .. toctree::
    :maxdepth: 1

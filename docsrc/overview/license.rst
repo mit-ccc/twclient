@@ -2,4 +2,4 @@
      License
 ================
 
-.. include:: ../LICENSE.rst
+.. include:: ../../LICENSE.rst
