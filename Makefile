@@ -35,7 +35,7 @@ devsetup:
 	
 	$(ENVPATH)/bin/pip install -U pip
 	$(ENVPATH)/bin/pip install -e .
-	$(ENVPATH)/bin/pip install .[docs] .[test] .[dev]
+	$(ENVPATH)/bin/pip install .[test,dev,docs]
 
 clean:
 	rm -rf build/ dist/ twclient.egg-info/ docs/_build/ env/
