@@ -1,18 +1,17 @@
-.. twclient documentation master file, created by
-   sphinx-quickstart on Mon Sep 21 19:00:35 2020.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
 Twclient Documentation
 ======================
 
 .. toctree::
    :maxdepth: 1
-   :caption: Contents:
+   :caption: Overview:
 
    readme
    changelog
    license
+
+.. toctree::
+   :maxdepth: 1
+   :caption: Reference:
 
    api/modules
 
@@ -20,5 +19,3 @@ Indices and tables
 ==================
 
 * :ref:`genindex`
-* :ref:`modindex`
-* :ref:`search`

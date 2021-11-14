@@ -1,7 +1,8 @@
-twclient
-========
+API Documentation
+=================
 
 .. toctree::
    :maxdepth: 4
 
    twclient
+

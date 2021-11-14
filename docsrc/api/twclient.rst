@@ -1,5 +1,5 @@
-twclient
-========
+API Documentation
+=================
 
 .. automodule:: twclient
    :members:
