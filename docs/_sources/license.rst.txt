@@ -2,4 +2,4 @@
      LICENSE
 ================
 
-.. mdinclude:: ../LICENSE.md
+.. include:: ../LICENSE.rst

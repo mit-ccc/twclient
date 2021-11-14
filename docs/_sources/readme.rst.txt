@@ -2,4 +2,4 @@
      README
 ================
 
-.. includedoc:: ../README.md
+.. include:: ../README.rst
