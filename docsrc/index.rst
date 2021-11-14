@@ -11,8 +11,8 @@ Twclient Documentation
    :caption: Contents:
 
    readme
-   api
    changelog
+   license
 
 Indices and tables
 ==================
