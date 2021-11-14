@@ -41,6 +41,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../changelog.html">CHANGELOG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">LICENSE</a></li>
 </ul>
 
         </div>
@@ -202,16 +203,16 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">reason</span><span class="p">,</span> <span class="n">response</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">response</span><span class="p">,</span>
                    <span class="n">api_code</span><span class="o">=</span><span class="n">exc</span><span class="o">.</span><span class="n">api_code</span><span class="p">)</span></div>
 
+    <span class="c1"># This method is intended to be implemented by subclasses as their core</span>
+    <span class="c1"># piece of logic, so the implementation here raises NotImplementedError.</span>
+    <span class="c1"># Note that while the subclass methods are mostly right, they may not cover</span>
+    <span class="c1"># all edge cases, because Twitter&#39;s API documentation is frequently</span>
+    <span class="c1"># incomplete.</span>
 <div class="viewcode-block" id="TwitterAPIError.tweepy_is_instance"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.TwitterAPIError.tweepy_is_instance">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">tweepy_is_instance</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Check whether a tweepy exception object can be converted to this class.</span>
-
-<span class="sd">        This method is intended to be implemented by subclasses as their core</span>
-<span class="sd">        piece of logic, so the implementation here raises NotImplementedError.</span>
-<span class="sd">        Note that while the subclass methods are mostly right, they may not</span>
-<span class="sd">        cover all edge cases, because Twitter&#39;s API documentation is frequently</span>
-<span class="sd">        incomplete.</span>
+<span class="sd">        Check whether a tweepy exception object can be converted to this class</span>
+<span class="sd">        via from_tweepy().</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -220,7 +221,7 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        Instance of the appropriate subclass of TwitterAPIError.</span>
+<span class="sd">        True if exc is convertible, False otherwise : Boolean.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>

@@ -132,16 +132,16 @@ class TwitterAPIError(TWClientError):
         return cls(message=exc.reason, response=exc.response,
                    api_code=exc.api_code)
 
+    # This method is intended to be implemented by subclasses as their core
+    # piece of logic, so the implementation here raises NotImplementedError.
+    # Note that while the subclass methods are mostly right, they may not cover
+    # all edge cases, because Twitter's API documentation is frequently
+    # incomplete.
     @staticmethod
     def tweepy_is_instance(exc):
         '''
-        Check whether a tweepy exception object can be converted to this class.
-
-        This method is intended to be implemented by subclasses as their core
-        piece of logic, so the implementation here raises NotImplementedError.
-        Note that while the subclass methods are mostly right, they may not
-        cover all edge cases, because Twitter's API documentation is frequently
-        incomplete.
+        Check whether a tweepy exception object can be converted to this class
+        via from_tweepy().
 
         Parameters
         ----------
@@ -150,7 +150,7 @@ class TwitterAPIError(TWClientError):
 
         Returns
         -------
-        Instance of the appropriate subclass of TwitterAPIError.
+        True if exc is convertible, False otherwise : Boolean.
         '''
 
         raise NotImplementedError()

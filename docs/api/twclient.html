@@ -42,6 +42,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../changelog.html">CHANGELOG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../license.html">LICENSE</a></li>
 </ul>
 
         </div>
@@ -191,21 +192,17 @@ sleep a reasonable period of time and retry the request.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="twclient.error.CapacityError.tweepy_is_instance">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tweepy_is_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/twclient/error.html#CapacityError.tweepy_is_instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.CapacityError.tweepy_is_instance" title="Permalink to this definition"></a></dt>
-<dd><p>Check whether a tweepy exception object can be converted to this class.</p>
-<p>This method is intended to be implemented by subclasses as their core
-piece of logic, so the implementation here raises NotImplementedError.
-Note that while the subclass methods are mostly right, they may not
-cover all edge cases, because Twitter’s API documentation is frequently
-incomplete.</p>
+<dd><p>Check whether a tweepy exception object can be converted to this class
+via from_tweepy().</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>exc</strong> (<em>instance of tweepy.error.TweepError</em>) – The tweepy exception object to check.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p><strong>True if exc is convertible, False otherwise</strong></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Instance of the appropriate subclass of TwitterAPIError.</p>
+<dd class="field-odd"><p>Boolean.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -224,21 +221,17 @@ what object was not found, so we combine these errors into one class.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="twclient.error.NotFoundError.tweepy_is_instance">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tweepy_is_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/twclient/error.html#NotFoundError.tweepy_is_instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.NotFoundError.tweepy_is_instance" title="Permalink to this definition"></a></dt>
-<dd><p>Check whether a tweepy exception object can be converted to this class.</p>
-<p>This method is intended to be implemented by subclasses as their core
-piece of logic, so the implementation here raises NotImplementedError.
-Note that while the subclass methods are mostly right, they may not
-cover all edge cases, because Twitter’s API documentation is frequently
-incomplete.</p>
+<dd><p>Check whether a tweepy exception object can be converted to this class
+via from_tweepy().</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>exc</strong> (<em>instance of tweepy.error.TweepError</em>) – The tweepy exception object to check.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p><strong>True if exc is convertible, False otherwise</strong></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Instance of the appropriate subclass of TwitterAPIError.</p>
+<dd class="field-odd"><p>Boolean.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -256,21 +249,17 @@ friends/followers will not be and instead will raise this error.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="twclient.error.ProtectedUserError.tweepy_is_instance">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tweepy_is_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/twclient/error.html#ProtectedUserError.tweepy_is_instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.ProtectedUserError.tweepy_is_instance" title="Permalink to this definition"></a></dt>
-<dd><p>Check whether a tweepy exception object can be converted to this class.</p>
-<p>This method is intended to be implemented by subclasses as their core
-piece of logic, so the implementation here raises NotImplementedError.
-Note that while the subclass methods are mostly right, they may not
-cover all edge cases, because Twitter’s API documentation is frequently
-incomplete.</p>
+<dd><p>Check whether a tweepy exception object can be converted to this class
+via from_tweepy().</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>exc</strong> (<em>instance of tweepy.error.TweepError</em>) – The tweepy exception object to check.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p><strong>True if exc is convertible, False otherwise</strong></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Instance of the appropriate subclass of TwitterAPIError.</p>
+<dd class="field-odd"><p>Boolean.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -287,21 +276,17 @@ API and no sensible response could be retrieved.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="twclient.error.ReadFailureError.tweepy_is_instance">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tweepy_is_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/twclient/error.html#ReadFailureError.tweepy_is_instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.ReadFailureError.tweepy_is_instance" title="Permalink to this definition"></a></dt>
-<dd><p>Check whether a tweepy exception object can be converted to this class.</p>
-<p>This method is intended to be implemented by subclasses as their core
-piece of logic, so the implementation here raises NotImplementedError.
-Note that while the subclass methods are mostly right, they may not
-cover all edge cases, because Twitter’s API documentation is frequently
-incomplete.</p>
+<dd><p>Check whether a tweepy exception object can be converted to this class
+via from_tweepy().</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>exc</strong> (<em>instance of tweepy.error.TweepError</em>) – The tweepy exception object to check.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p><strong>True if exc is convertible, False otherwise</strong></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Instance of the appropriate subclass of TwitterAPIError.</p>
+<dd class="field-odd"><p>Boolean.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -416,21 +401,17 @@ underlying instances of tweepy.error.TweepError which gave rise to them.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="twclient.error.TwitterAPIError.tweepy_is_instance">
 <em class="property"><span class="pre">static</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">tweepy_is_instance</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/twclient/error.html#TwitterAPIError.tweepy_is_instance"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.TwitterAPIError.tweepy_is_instance" title="Permalink to this definition"></a></dt>
-<dd><p>Check whether a tweepy exception object can be converted to this class.</p>
-<p>This method is intended to be implemented by subclasses as their core
-piece of logic, so the implementation here raises NotImplementedError.
-Note that while the subclass methods are mostly right, they may not
-cover all edge cases, because Twitter’s API documentation is frequently
-incomplete.</p>
+<dd><p>Check whether a tweepy exception object can be converted to this class
+via from_tweepy().</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>exc</strong> (<em>instance of tweepy.error.TweepError</em>) – The tweepy exception object to check.</p>
 </dd>
 <dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
+<dd class="field-even"><p><strong>True if exc is convertible, False otherwise</strong></p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Instance of the appropriate subclass of TwitterAPIError.</p>
+<dd class="field-odd"><p>Boolean.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2276,12 +2257,12 @@ them, to classes descending from it. Nothing else needs to be done in
 subclasses to add these columns.</p>
 <dl class="py attribute">
 <dt class="sig sig-object py" id="twclient.models.TimestampsMixin.insert_dt">
-<span class="sig-name descname"><span class="pre">insert_dt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Column(None,</span> <span class="pre">TIMESTAMP(timezone=True),</span> <span class="pre">table=None,</span> <span class="pre">nullable=False,</span> <span class="pre">server_default=DefaultClause(&lt;sqlalchemy.sql.functions.now</span> <span class="pre">at</span> <span class="pre">0x10d0a3a60;</span> <span class="pre">now&gt;,</span> <span class="pre">for_update=False))</span></em><a class="headerlink" href="#twclient.models.TimestampsMixin.insert_dt" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">insert_dt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Column(None,</span> <span class="pre">TIMESTAMP(timezone=True),</span> <span class="pre">table=None,</span> <span class="pre">nullable=False,</span> <span class="pre">server_default=DefaultClause(&lt;sqlalchemy.sql.functions.now</span> <span class="pre">at</span> <span class="pre">0x104bdad90;</span> <span class="pre">now&gt;,</span> <span class="pre">for_update=False))</span></em><a class="headerlink" href="#twclient.models.TimestampsMixin.insert_dt" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 <dl class="py attribute">
 <dt class="sig sig-object py" id="twclient.models.TimestampsMixin.modified_dt">
-<span class="sig-name descname"><span class="pre">modified_dt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Column(None,</span> <span class="pre">TIMESTAMP(timezone=True),</span> <span class="pre">table=None,</span> <span class="pre">nullable=False,</span> <span class="pre">onupdate=ColumnDefault(&lt;sqlalchemy.sql.functions.now</span> <span class="pre">at</span> <span class="pre">0x10d1a20d0;</span> <span class="pre">now&gt;),</span> <span class="pre">server_default=DefaultClause(&lt;sqlalchemy.sql.functions.now</span> <span class="pre">at</span> <span class="pre">0x10d1a2100;</span> <span class="pre">now&gt;,</span> <span class="pre">for_update=False))</span></em><a class="headerlink" href="#twclient.models.TimestampsMixin.modified_dt" title="Permalink to this definition"></a></dt>
+<span class="sig-name descname"><span class="pre">modified_dt</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">Column(None,</span> <span class="pre">TIMESTAMP(timezone=True),</span> <span class="pre">table=None,</span> <span class="pre">nullable=False,</span> <span class="pre">onupdate=ColumnDefault(&lt;sqlalchemy.sql.functions.now</span> <span class="pre">at</span> <span class="pre">0x104dfd3a0;</span> <span class="pre">now&gt;),</span> <span class="pre">server_default=DefaultClause(&lt;sqlalchemy.sql.functions.now</span> <span class="pre">at</span> <span class="pre">0x104dfd310;</span> <span class="pre">now&gt;,</span> <span class="pre">for_update=False))</span></em><a class="headerlink" href="#twclient.models.TimestampsMixin.modified_dt" title="Permalink to this definition"></a></dt>
 <dd></dd></dl>
 
 </dd></dl>
