@@ -15,9 +15,7 @@ tests:
 check: lint tests
 
 doc:
-	rm -rf docs/source/
-	sphinx-apidoc -f -o docs/source/ src/twclient/ src/twclient/command.py
-	cd docs && $(MAKE) html man
+	cd docsrc && $(MAKE)
 
 ## Local dev use only, not used in CI ##
 
