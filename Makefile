@@ -1,17 +1,12 @@
 ENVPATH := env
 PYTHON  := python3
 
-.PHONY: lint doc tests check devsetup clean
+.PHONY: lint tests check doc devsetup clean
 
 ## For use locally or in CI ##
 
 lint:
-	# E9,F63,F7,F82: syntax errors, undefined names
-	flake8 src test --count --select=E9,F63,F7,F82 --show-source --statistics
-	flake8 src test --count --exit-zero --max-line-length=127 --statistics
-	
 	pylint src test
-	
 	# mypy src test
 
 tests:
