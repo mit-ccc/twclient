@@ -2,4 +2,4 @@
    CHANGELOG
 ================
 
-.. include:: ../CHANGELOG.md
+.. mdinclude:: ../CHANGELOG.md

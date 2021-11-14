@@ -22,7 +22,6 @@ import sys
 sys.path.insert(0, os.path.abspath('..'))
 
 from recommonmark.parser import CommonMarkParser
-
 from twclient import __version__
 
 
@@ -65,8 +64,8 @@ master_doc = 'index'
 
 # General information about the project.
 project = 'twclient'
-copyright = '2020, William Brannon'
 author = 'William Brannon'
+copyright = '2019-2021, Massachusetts Institute of Technology'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -135,11 +134,11 @@ htmlhelp_basename = 'twclientdoc'
 latex_elements = {
     # The paper size ('letterpaper' or 'a4paper').
     #
-    # 'papersize': 'letterpaper',
+    'papersize': 'letterpaper',
 
     # The font size ('10pt', '11pt' or '12pt').
     #
-    # 'pointsize': '10pt',
+    'pointsize': '10pt',
 
     # Additional stuff for the LaTeX preamble.
     #
@@ -147,7 +146,7 @@ latex_elements = {
 
     # Latex figure (float) alignment
     #
-    # 'figure_align': 'htbp',
+    'figure_align': 'htbp',
 }
 
 # Grouping the document tree into LaTeX files. List of tuples
@@ -176,6 +175,6 @@ man_pages = [
 #  dir menu entry, description, category)
 texinfo_documents = [
     (master_doc, 'twclient', 'twclient Documentation',
-     author, 'twclient', 'One line description of project.',
+     author, 'twclient', 'A high-level analytics-focused client for the Twitter API.',
      'Miscellaneous'),
 ]
