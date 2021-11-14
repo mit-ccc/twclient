@@ -1,43 +1,44 @@
 ENVPATH := env
 PYTHON  := python3
 
-.PHONY: test test-all upload register env lint clean docs
+.PHONY: lint tests check doc devsetup clean
 
-test:
-	py.test tests
-
-alltest:
-	tox
-
-upload:
-	$(PYTHON) setup.py sdist bdist_wheel upload
-
-register:
-	$(PYTHON) setup.py register
-
-env:
-	rm -rf $(ENVPATH)
-	$(PYTHON) -m venv $(ENVPATH)
-	$(ENVPATH)/bin/pip install --upgrade pip setuptools wheel
-	$(ENVPATH)/bin/pip install pylint flake8 mypy
-	$(ENVPATH)/bin/pip install psycopg2 mysql-connector-python
-	$(ENVPATH)/bin/pip install .[test]
-	$(ENVPATH)/bin/pip install -e .
+## For use locally or in CI ##
 
 lint:
-	pylint twclient/
-	flake8 twclient/
-	# mypy twclient/
+	pylint src test
+	# mypy src test
+
+tests:
+	coverage run -m tox
+
+check: lint tests
+
+doc:
+	cd docsrc && $(MAKE)
+
+## Local dev use only, not used in CI ##
+
+devsetup:
+	# for local multi-python testing with tox; assumes pyenv already installed
+	pyenv install -s 3.6.8
+	pyenv install -s 3.7.12
+	pyenv install -s 3.8.12
+	pyenv install -s 3.9.7
+	pyenv install -s 3.10.0
+	pyenv local 3.6.8 3.7.12 3.8.12 3.9.7 3.10.0
+	
+	rm -rf $(ENVPATH)
+	$(PYTHON) -m venv $(ENVPATH)
+	
+	$(ENVPATH)/bin/pip install -U pip
+	$(ENVPATH)/bin/pip install -e .
+	$(ENVPATH)/bin/pip install .[test,dev,docs]
 
 clean:
-	rm -rf build/ dist/ twclient.egg-info/ docs/_build/
+	rm -rf build/ dist/ twclient.egg-info/ docs/_build/ env/
 	find . -name '__pycache__' -exec rm -rf {} \+
 	find . -name '*.pyc' -exec rm -f {} \+
 	find . -name '*.pyo' -exec rm -f {} \+
 	find . -name '*~'    -exec rm -f {} \+
-
-docs:
-	rm -rf docs/source/
-	sphinx-apidoc -o docs/source/ twclient/ twclient/command.py
-	cd docs && $(MAKE) html man
 
