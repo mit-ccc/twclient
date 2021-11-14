@@ -41,6 +41,8 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../changelog.html">CHANGELOG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">LICENSE</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">twclient</a></li>
 </ul>
 
         </div>
@@ -119,7 +121,7 @@
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="nd">@declared_attr</span>
-    <span class="k">def</span> <span class="nf">__tablename__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>  <span class="c1"># noqa: 805 pylint: disable=no-self-argument</span>
+    <span class="k">def</span> <span class="nf">__tablename__</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>  <span class="c1"># pylint: disable=no-self-argument</span>
         <span class="k">return</span> <span class="s1">&#39;_&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">ut</span><span class="o">.</span><span class="n">split_camel_case</span><span class="p">(</span><span class="bp">cls</span><span class="o">.</span><span class="vm">__name__</span><span class="p">))</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
 
     <span class="k">def</span> <span class="nf">_repr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">fields</span><span class="p">):</span>
@@ -164,7 +166,7 @@
     <span class="c1"># As in TimestampsMixin, hack to put the columns at the end in tables,</span>
     <span class="c1"># which declaring them as class attributes doesn&#39;t</span>
     <span class="nd">@declared_attr</span>
-    <span class="k">def</span> <span class="nf">unique_hash</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>  <span class="c1"># noqa: 805 pylint: disable=no-self-argument</span>
+    <span class="k">def</span> <span class="nf">unique_hash</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>  <span class="c1"># pylint: disable=no-self-argument</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        A hash to implement a unique constraint without length limits.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -240,7 +242,7 @@
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="nd">@declared_attr</span>
-    <span class="k">def</span> <span class="nf">insert_dt</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>  <span class="c1"># noqa: 805 pylint: disable=no-self-argument</span>
+    <span class="k">def</span> <span class="nf">insert_dt</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>  <span class="c1"># pylint: disable=no-self-argument</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        The load time of the row into the database.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
@@ -249,7 +251,7 @@
                       <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="nd">@declared_attr</span>
-    <span class="k">def</span> <span class="nf">modified_dt</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>  <span class="c1"># noqa: 805 pylint: disable=no-self-argument</span>
+    <span class="k">def</span> <span class="nf">modified_dt</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>  <span class="c1"># pylint: disable=no-self-argument</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        The last time the row was modified. Note that this field is updated by</span>
 <span class="sd">        application logic rather than a trigger.</span>

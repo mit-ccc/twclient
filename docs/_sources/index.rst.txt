@@ -14,6 +14,8 @@ Twclient Documentation
    changelog
    license
 
+   api/modules
+
 Indices and tables
 ==================
 

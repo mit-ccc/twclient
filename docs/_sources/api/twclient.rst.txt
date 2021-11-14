@@ -1,6 +1,14 @@
 twclient package
 ================
 
+Module contents
+---------------
+
+.. automodule:: twclient
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 Submodules
 ----------
 
@@ -41,7 +49,6 @@ twclient.models module
 
 .. automodule:: twclient.models
    :members:
-   :undoc-members:
    :show-inheritance:
 
 twclient.target module
@@ -60,10 +67,3 @@ twclient.twitter\_api module
    :undoc-members:
    :show-inheritance:
 
-Module contents
----------------
-
-.. automodule:: twclient
-   :members:
-   :undoc-members:
-   :show-inheritance:
