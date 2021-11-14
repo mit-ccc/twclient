@@ -4,9 +4,6 @@ API Documentation
 .. automodule:: twclient
    :members:
 
-Submodules
-----------
-
 twclient.authpool
 -----------------
 
