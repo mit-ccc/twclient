@@ -254,7 +254,7 @@ class TargetJob(Job):
         by calling resolve_targets().
         '''
 
-        return all([t.resolved for t in self.targets])
+        return all(t.resolved for t in self.targets)
 
     def _combine_sub_attrs(self, attr):
         if not self.resolved:

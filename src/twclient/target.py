@@ -466,8 +466,11 @@ class SelectTagTarget(Target):
             raise ValueError('No context object set and none provided')
 
         filters = [md.Tag.name == tag for tag in self.targets]
+
         tags = self.context.session.query(md.Tag).filter(or_(*filters)).all()
-        new = list(set(self.targets) - set([t.name for t in tags]))
+        tag_names = [t.name for t in tags]
+
+        new = list({t for t in self.targets if t not in tag_names})
 
         if new:
             msg = 'Requested tag(s) {0} do not exist'

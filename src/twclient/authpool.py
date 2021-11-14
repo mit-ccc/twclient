@@ -111,7 +111,7 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
         self._authpool_rate_limit_resets[ind] = resume_time
 
     def _authpool_switch_api(self):
-        for ind in range(len(self._authpool_apis)):
+        for ind in enumerate(self._authpool_apis):
             reset_time = self._authpool_rate_limit_resets[ind]
 
             if reset_time is not None and reset_time < time.time():
@@ -149,7 +149,7 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
     # on self via the descriptor protocol. The methods don't exist until called
     # and then are created and set JIT.
     def __getattr__(self, name):
-        if not all([hasattr(x, name) for x in self._authpool_apis]):
+        if not all(hasattr(x, name) for x in self._authpool_apis):
             raise AttributeError(name)
 
         is_method = [
@@ -222,8 +222,8 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
         ind = self._authpool_current_api_index
 
         for key, value in vars(methods[ind]).items():
-            if all([key in vars(x).keys() for x in methods]):
-                if all([vars(x)[key] == value for x in methods]):
+            if all(key in vars(x).keys() for x in methods):
+                if all(vars(x)[key] == value for x in methods):
                     setattr(func, key, value)
 
         # we use this attribute as a hint to TwitterApi.make_api_call
