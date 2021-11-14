@@ -30,11 +30,10 @@ class TWClientError(Exception):
     Attributes
     ----------
     message : str
-        The reason for this error.
+        The parameter passed to __init__.
 
     exit_status
-        If the exception is caught at the top-level command-line script,
-        this value is passed to `sys.exit`.
+        The parameter passed to __init__.
     '''
 
     def __init__(self, **kwargs):
@@ -85,10 +84,10 @@ class TwitterAPIError(TWClientError):
     Attributes
     ----------
     response : requests.Response object
-        The Twitter API response which led to this error being raised.
+        The parameter passed to __init__.
 
     api_code : int
-        The API code Twitter returned.
+        The parameter passed to __init__.
     '''
 
     _repr_attrs = ['message', 'exit_status', 'response', 'api_code',
@@ -150,7 +149,8 @@ class TwitterAPIError(TWClientError):
 
         Returns
         -------
-        True if exc is convertible, False otherwise : Boolean.
+        Boolean
+            True if exc is convertible, False otherwise.
         '''
 
         raise NotImplementedError()
@@ -255,7 +255,7 @@ class ProtectedUserError(TwitterLogicError):
 
 def dispatch_tweepy(exc):
     '''
-    Take an exception class and convert it to a TWClientError if applicable.
+    Take an exception instance and convert it to a TWClientError if applicable.
 
     This class takes in an arbitrary exception ex and dispatches it in the
     following way: a) if ex is a tweepy.error.TweepError, convert it to the
@@ -315,6 +315,11 @@ class BadTargetError(SemanticError):
     ----------
     targets : list of str or int
         The Twitter user IDs or screen names causing the error.
+
+    Attributes
+    ----------
+    targets : list of str or int
+        The parameter passed to __init__.
     '''
 
     def __init__(self, **kwargs):
@@ -340,7 +345,7 @@ class BadTagError(SemanticError):
     Attributes
     ----------
     tag : str
-        The name of the nonexistent tag.
+        The parameter passed to __init__.
     '''
 
     def __init__(self, **kwargs):

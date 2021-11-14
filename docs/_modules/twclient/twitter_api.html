@@ -41,6 +41,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../changelog.html">CHANGELOG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">LICENSE</a></li>
 </ul>
 
         </div>
@@ -102,7 +103,7 @@
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    auths : list of tweepy.AuthHandler</span>
-<span class="sd">        The Twitter API credentials passed on initialization.</span>
+<span class="sd">        The parameter passed to __init__.</span>
 
 <span class="sd">    pool : instance of models.AuthPoolAPI</span>
 <span class="sd">        The AuthPoolAPI constructed with the API credentials.</span>
@@ -162,8 +163,9 @@
 
 <span class="sd">        **kwargs</span>
 <span class="sd">            Other arguments to pass through to the tweepy method, or to</span>
-<span class="sd">            tweepy.Cursor if cursor == True. (In the latter case, the arguments</span>
-<span class="sd">            will be passed through to the method ultimately called.)</span>
+<span class="sd">            tweepy.Cursor if cursor == True. (In the latter case, tweepy.Cursor</span>
+<span class="sd">            will in turn pass arguments it doesn&#39;t consume through to the</span>
+<span class="sd">            method ultimately called.)</span>
 
 <span class="sd">        Yields</span>
 <span class="sd">        ------</span>
@@ -302,8 +304,8 @@
 
 <span class="sd">        This method wraps a call to Twitter&#39;s lists/show method (via the</span>
 <span class="sd">        make_api_call method, and ultimately via tweepy.API&#39;s get_list method).</span>
-<span class="sd">        The target list may be specified, as in the list_members method, by</span>
-<span class="sd">        exactly one of a) full_name, b) list_id, or c) slug and exactly one of</span>
+<span class="sd">        The target list must be specified, as in the list_members method, by</span>
+<span class="sd">        exactly one of list_id or slug as well as exactly one of</span>
 <span class="sd">        owner_screen_name or owner_id.</span>
 
 <span class="sd">        Parameters</span>
@@ -353,8 +355,8 @@
 
 <span class="sd">        This method wraps a call to Twitter&#39;s lists/members API method (via the</span>
 <span class="sd">        make_api_call method and ultimately via tweepy.API&#39;s list_members</span>
-<span class="sd">        method). The target list may be specified, as in the get_list method,</span>
-<span class="sd">        by exactly one of a) full_name, b) list_id, or c) slug and exactly one</span>
+<span class="sd">        method). The target list must be specified, as in the get_list method,</span>
+<span class="sd">        by exactly one of list_id or slug as well as exactly one</span>
 <span class="sd">        of owner_screen_name or owner_id.</span>
 
 <span class="sd">        Parameters</span>

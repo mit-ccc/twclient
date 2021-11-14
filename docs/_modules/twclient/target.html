@@ -41,6 +41,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../changelog.html">CHANGELOG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">LICENSE</a></li>
 </ul>
 
         </div>
@@ -107,7 +108,7 @@
 <span class="sd">        context : instance of job.Job, or None</span>
 <span class="sd">            The Job instance&#39;s database and API connections will be used as</span>
 <span class="sd">            needed to resolve raw targets to users. If not passed on</span>
-<span class="sd">            initialization, this</span>
+<span class="sd">            initialization, a context object must be passed to ``resolve()``.</span>
 
 <span class="sd">        randomize : bool</span>
 <span class="sd">            Whether to process raw targets in a randomized order. This may</span>
@@ -117,11 +118,12 @@
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">        targets : list of str or int</span>
-<span class="sd">            The deduplicated list of raw targets passed in as the targets</span>
-<span class="sd">            parameter.</span>
+<span class="sd">            The list of raw targets passed in as the targets parameter, but</span>
+<span class="sd">            deduplicated (without changing the relative order of any retained</span>
+<span class="sd">            targets).</span>
 
 <span class="sd">        randomize : bool</span>
-<span class="sd">            Whether raw targets should be processed in a randomized order.</span>
+<span class="sd">            The parameter passed to __init__.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -161,6 +163,8 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_validate_targets</span><span class="p">()</span>
 
+    <span class="c1"># This method is intended to be implemented by subclasses as</span>
+    <span class="c1"># their main piece of logic, so the implementation on Target is abstract.</span>
 <div class="viewcode-block" id="Target.resolve"><a class="viewcode-back" href="../../api/twclient.html#twclient.target.Target.resolve">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
@@ -174,9 +178,8 @@
 <span class="sd">        and the .users attribute contains all users which could be resolved</span>
 <span class="sd">        from any of the raw targets. If no context parameter was passed to</span>
 <span class="sd">        __init__, one must be given here. If one was passed to __init__, it is</span>
-<span class="sd">        replaced with the value passed here so long as bool(context) == True.</span>
-<span class="sd">        This method is intended to be implemented by subclasses as their main</span>
-<span class="sd">        piece of logic, so the implementation on Target is abstract.</span>
+<span class="sd">        replaced with the value passed here so long as ``bool(context) ==</span>
+<span class="sd">        True``.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -282,12 +285,13 @@
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">good_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Raw targets which were successfully resolved to users.</span>
+<span class="sd">        Raw targets which were successfully resolved to users, either in the</span>
+<span class="sd">        database or via the Twitter API.</span>
 
 <span class="sd">        These are targets which, depending on the context object&#39;s setting of</span>
 <span class="sd">        resolve_mode, may have been looked for in the database or via Twitter&#39;s</span>
 <span class="sd">        API, and were found without error. Note that .good_targets and .users</span>
-<span class="sd">        are different: if one target is, for example, the Twitter list name</span>
+<span class="sd">        are different: if one target is, for example, the Twitter list named</span>
 <span class="sd">        &quot;cspan/members-of-congress&quot;, that value will appear in .good_targets</span>
 <span class="sd">        and several hundred models.User objects for the Congressional Twitter</span>
 <span class="sd">        accounts will appear in .users. Accessing this attribute before</span>
@@ -560,20 +564,20 @@
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of Twitter lists to resolve to users.</span>
 
-<span class="sd">    This class takes targets specified by the &quot;full names&quot; of Twitter lists.</span>
-<span class="sd">    (That is, the owner_screen_name/slug format, like</span>
-<span class="sd">    &quot;cspan/members-of-congress&quot;.) These targets are resolved to models.User</span>
-<span class="sd">    objects in one of three ways, determined by the value of</span>
-<span class="sd">    context.resolve_mode. If the resolve mode is &#39;fetch&#39;, the lists are first</span>
-<span class="sd">    looked up in the database, with any missing lists looked up via Twitter&#39;s</span>
-<span class="sd">    API. (No lists will be in missing_targets in this case, only good_targets</span>
-<span class="sd">    or bad_targets.) If the mode is &#39;hydrate&#39;, all lists will be looked up via</span>
-<span class="sd">    Twitter&#39;s API. If mode is &#39;skip&#39;, lists not found in the database will not</span>
-<span class="sd">    be looked up via Twitter API, and will be left in missing_targets. Any</span>
-<span class="sd">    other resolve mode set on the context object will raise an error. Note that</span>
-<span class="sd">    not only the users who are list members are stored, but also the list and</span>
-<span class="sd">    its association with the users are added to the context object&#39;s database</span>
-<span class="sd">    session.</span>
+<span class="sd">    This class takes Twitter lists as targets. These lists can be specified by</span>
+<span class="sd">    their &quot;full names&quot; (that is, the owner_screen_name/slug format, like</span>
+<span class="sd">    &quot;cspan/members-of-congress&quot;) or by their numeric IDs. The list targets are</span>
+<span class="sd">    resolved to models.User objects in one of three ways, determined by the</span>
+<span class="sd">    value of context.resolve_mode. If the resolve mode is &#39;fetch&#39;, the lists</span>
+<span class="sd">    are first looked up in the database, with any missing lists looked up via</span>
+<span class="sd">    Twitter&#39;s API. (No lists will be in missing_targets in this case, only</span>
+<span class="sd">    good_targets or bad_targets.) If the mode is &#39;hydrate&#39;, all lists will be</span>
+<span class="sd">    looked up via Twitter&#39;s API. If mode is &#39;skip&#39;, lists not found in the</span>
+<span class="sd">    database will not be looked up via Twitter API, and will be left in</span>
+<span class="sd">    missing_targets. Any other resolve mode set on the context object will</span>
+<span class="sd">    raise an error. Note that not only the users who are list members are</span>
+<span class="sd">    stored, but also the list itself and its association with the users are</span>
+<span class="sd">    added to the appropriate tables in the context object&#39;s database session.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">allowed_resolve_modes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;fetch&#39;</span><span class="p">,</span> <span class="s1">&#39;hydrate&#39;</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">)</span>

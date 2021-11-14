@@ -41,6 +41,7 @@
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../changelog.html">CHANGELOG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../license.html">LICENSE</a></li>
 </ul>
 
         </div>
@@ -172,7 +173,7 @@
             <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">__version__</span><span class="p">,</span> <span class="n">db_version</span><span class="p">)</span>
             <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadSchemaError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span>
 
-        <span class="k">if</span> <span class="n">db_version</span> <span class="o">&lt;</span> <span class="n">__version__</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">db_version</span> <span class="o">&lt;</span> <span class="n">__version__</span><span class="p">:</span>  <span class="c1"># likely to change in future versions</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Package version </span><span class="si">{0}</span><span class="s1"> cannot migrate old schema version &#39;</span> \
                   <span class="s1">&#39;</span><span class="si">{1}</span><span class="s1">; consider downgrading the package version&#39;</span>
             <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">__version__</span><span class="p">,</span> <span class="n">db_version</span><span class="p">)</span>
@@ -214,13 +215,12 @@
 
         <span class="k">return</span> <span class="n">instance</span></div>
 
+    <span class="c1"># This method is the main entrypoint for the Job class. Subclasses are</span>
+    <span class="c1"># expected to override it with their business logic.</span>
 <div class="viewcode-block" id="Job.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.Job.run">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        The main entrypoint for the Job class.</span>
-
-<span class="sd">        This method is the main entrypoint for the Job class. Subclasses are</span>
-<span class="sd">        expected to override it with their business logic.</span>
+<span class="sd">        Run the job.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
@@ -269,7 +269,7 @@
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
 <span class="sd">    targets : list of target.Target</span>
-<span class="sd">        The list of targets for</span>
+<span class="sd">        The list of targets for the job.</span>
 
 <span class="sd">    allow_missing_targets : bool</span>
 <span class="sd">        If resolving the targets indicates that some targets should be in the</span>
@@ -337,8 +337,8 @@
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        The combined set of users referred to by all targets.</span>
 
-<span class="sd">        This is the union of all the users in the Target instances in</span>
-<span class="sd">        self.targets. If the targets have not been resolved, accessing this</span>
+<span class="sd">        This is the union of all the users referred to by the Target instances</span>
+<span class="sd">        in self.targets. If the targets have not been resolved, accessing this</span>
 <span class="sd">        attribute will raise AttributeError.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
@@ -351,7 +351,9 @@
 
 <span class="sd">        This is the union of all the bad raw targets in the Target instances in</span>
 <span class="sd">        self.targets. If the targets have not been resolved, accessing this</span>
-<span class="sd">        attribute will raise AttributeError.</span>
+<span class="sd">        attribute will raise AttributeError. See the documentation for</span>
+<span class="sd">        target.Target for details of what a target and raw target are and its</span>
+<span class="sd">        bad_targets attribute for what it means for a raw target to be bad.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;bad_targets&#39;</span><span class="p">)</span>
@@ -363,7 +365,10 @@
 
 <span class="sd">        This is the union of all the missing raw targets in the Target</span>
 <span class="sd">        instances in self.targets. If the targets have not been resolved,</span>
-<span class="sd">        accessing this attribute will raise AttributeError.</span>
+<span class="sd">        accessing this attribute will raise AttributeError. See the</span>
+<span class="sd">        documentation for target.Target for details of what a target and raw</span>
+<span class="sd">        target are and its missing_targets attribute for what it means for a</span>
+<span class="sd">        raw target to be missing.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;missing_targets&#39;</span><span class="p">)</span>
@@ -375,7 +380,9 @@
 
 <span class="sd">        This is the union of all the good raw targets in the Target instances</span>
 <span class="sd">        in self.targets. If the targets have not been resolved, accessing this</span>
-<span class="sd">        attribute will raise AttributeError.</span>
+<span class="sd">        attribute will raise AttributeError. See the documentation for</span>
+<span class="sd">        target.Target for details of what a target and raw target are and its</span>
+<span class="sd">        good_targets attribute for what it means for a raw target to be good.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;good_targets&#39;</span><span class="p">)</span>
@@ -442,8 +449,12 @@
 <span class="sd">        None, which loads all data retrieved in one batch. Lower values</span>
 <span class="sd">        minimize memory usage at the cost of slower loading speeds, while</span>
 <span class="sd">        higher values do the reverse. Target instances in self.targets do not</span>
-<span class="sd">        consider this value (it applies only to other rows loaded by the ApiJob</span>
-<span class="sd">        instance).</span>
+<span class="sd">        consider this value--it applies only to other rows loaded by the ApiJob</span>
+<span class="sd">        instance--because there are generally not enough targets to consume a</span>
+<span class="sd">        significant amount of memory. Followers and friends lists in particular</span>
+<span class="sd">        can be large enough to cause out-of-memory conditions; setting</span>
+<span class="sd">        ``load_batch_size`` to an appropriate value (e.g., 5000) can address</span>
+<span class="sd">        this problem.</span>
 
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
@@ -528,15 +539,15 @@
 
 <span class="sd">    This job applies an existing user tag to a set of users. If the tag does</span>
 <span class="sd">    not exist, error.BadTagError is raised. (Use CreateTagJob to create a new</span>
-<span class="sd">    tag.) The targets are resolved to users with resolve_mode == &#39;skip&#39; (i.e.,</span>
-<span class="sd">    any requested users which do not exist in the database are not looked up</span>
-<span class="sd">    from the Twitter API). If any users were not successfully resolved,</span>
-<span class="sd">    error.BadTargetError is raised unless the allow_missing_targets parameter</span>
-<span class="sd">    is True. Otherwise, any users which were successfully resolved from the</span>
-<span class="sd">    targets are given the tag. In particular, if no users were successfully</span>
-<span class="sd">    resolved and allow_missing_users is True, nothing is done and no error is</span>
-<span class="sd">    raised. The entire job is run as one transaction; if anything goes wrong,</span>
-<span class="sd">    no tags are applied.</span>
+<span class="sd">    tag.) The targets are resolved to users with ``resolve_mode == &#39;skip&#39;``</span>
+<span class="sd">    (i.e., any requested users which do not exist in the database are not</span>
+<span class="sd">    looked up from the Twitter API). If any users were not successfully</span>
+<span class="sd">    resolved, error.BadTargetError is raised unless the allow_missing_targets</span>
+<span class="sd">    parameter is True. Otherwise, any users which were successfully resolved</span>
+<span class="sd">    from the targets are given the tag. In particular, if no users were</span>
+<span class="sd">    successfully resolved and allow_missing_users is True, nothing is done and</span>
+<span class="sd">    no error is raised. The entire job is run as one transaction; if anything</span>
+<span class="sd">    goes wrong, no tags are applied.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">resolve_mode</span> <span class="o">=</span> <span class="s1">&#39;skip&#39;</span>
@@ -578,11 +589,11 @@
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job which hydrates users.</span>
 
-<span class="sd">    This job resolves its targets to users with resolve_mode == &#39;hydrate&#39;. That</span>
-<span class="sd">    is, it fetches data on those users from Twitter&#39;s users/lookup endpoint,</span>
-<span class="sd">    and stores the resulting data in the database. No other work is done. The</span>
-<span class="sd">    entire job is run in one transaction; if anything goes wrong, no users are</span>
-<span class="sd">    loaded.</span>
+<span class="sd">    This job resolves its targets to users with ``resolve_mode == &#39;hydrate&#39;``.</span>
+<span class="sd">    That is, it fetches data on those users from Twitter&#39;s ``users/lookup``</span>
+<span class="sd">    endpoint, and stores the resulting data in the database. No other work is</span>
+<span class="sd">    done. The entire job is run in one transaction; if anything goes wrong, no</span>
+<span class="sd">    users are loaded.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">resolve_mode</span> <span class="o">=</span> <span class="s1">&#39;hydrate&#39;</span>

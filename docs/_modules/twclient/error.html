@@ -101,11 +101,10 @@
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    message : str</span>
-<span class="sd">        The reason for this error.</span>
+<span class="sd">        The parameter passed to __init__.</span>
 
 <span class="sd">    exit_status</span>
-<span class="sd">        If the exception is caught at the top-level command-line script,</span>
-<span class="sd">        this value is passed to `sys.exit`.</span>
+<span class="sd">        The parameter passed to __init__.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -156,10 +155,10 @@
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    response : requests.Response object</span>
-<span class="sd">        The Twitter API response which led to this error being raised.</span>
+<span class="sd">        The parameter passed to __init__.</span>
 
 <span class="sd">    api_code : int</span>
-<span class="sd">        The API code Twitter returned.</span>
+<span class="sd">        The parameter passed to __init__.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">_repr_attrs</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;message&#39;</span><span class="p">,</span> <span class="s1">&#39;exit_status&#39;</span><span class="p">,</span> <span class="s1">&#39;response&#39;</span><span class="p">,</span> <span class="s1">&#39;api_code&#39;</span><span class="p">,</span>
@@ -221,7 +220,8 @@
 
 <span class="sd">        Returns</span>
 <span class="sd">        -------</span>
-<span class="sd">        True if exc is convertible, False otherwise : Boolean.</span>
+<span class="sd">        Boolean</span>
+<span class="sd">            True if exc is convertible, False otherwise.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
@@ -326,7 +326,7 @@
 
 <div class="viewcode-block" id="dispatch_tweepy"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.dispatch_tweepy">[docs]</a><span class="k">def</span> <span class="nf">dispatch_tweepy</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    Take an exception class and convert it to a TWClientError if applicable.</span>
+<span class="sd">    Take an exception instance and convert it to a TWClientError if applicable.</span>
 
 <span class="sd">    This class takes in an arbitrary exception ex and dispatches it in the</span>
 <span class="sd">    following way: a) if ex is a tweepy.error.TweepError, convert it to the</span>
@@ -386,6 +386,11 @@
 <span class="sd">    ----------</span>
 <span class="sd">    targets : list of str or int</span>
 <span class="sd">        The Twitter user IDs or screen names causing the error.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    targets : list of str or int</span>
+<span class="sd">        The parameter passed to __init__.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -411,7 +416,7 @@
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    tag : str</span>
-<span class="sd">        The name of the nonexistent tag.</span>
+<span class="sd">        The parameter passed to __init__.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
