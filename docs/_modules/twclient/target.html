@@ -39,9 +39,9 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">License</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul>
@@ -50,7 +50,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidocs.html">API Documentation</a></li>
 </ul>
 
         </div>
@@ -95,7 +95,7 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Target"><a class="viewcode-back" href="../../api/twclient.html#twclient.target.Target">[docs]</a><span class="k">class</span> <span class="nc">Target</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="Target"><a class="viewcode-back" href="../../apidocs.html#twclient.target.Target">[docs]</a><span class="k">class</span> <span class="nc">Target</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Encapsulate the notion of a &quot;target&quot; for certain kinds of jobs.</span>
 
@@ -174,7 +174,7 @@
 
     <span class="c1"># This method is intended to be implemented by subclasses as</span>
     <span class="c1"># their main piece of logic, so the implementation on Target is abstract.</span>
-<div class="viewcode-block" id="Target.resolve"><a class="viewcode-back" href="../../api/twclient.html#twclient.target.Target.resolve">[docs]</a>    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Target.resolve"><a class="viewcode-back" href="../../apidocs.html#twclient.target.Target.resolve">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Resolve this Target object into users.</span>
@@ -436,7 +436,7 @@
         <span class="k">return</span> <span class="n">ret</span></div>
 
 
-<div class="viewcode-block" id="UserIdTarget"><a class="viewcode-back" href="../../api/twclient.html#twclient.target.UserIdTarget">[docs]</a><span class="k">class</span> <span class="nc">UserIdTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+<div class="viewcode-block" id="UserIdTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.UserIdTarget">[docs]</a><span class="k">class</span> <span class="nc">UserIdTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of Twitter user IDs to resolve to users.</span>
 
@@ -454,7 +454,7 @@
 
     <span class="n">allowed_resolve_modes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;fetch&#39;</span><span class="p">,</span> <span class="s1">&#39;hydrate&#39;</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="UserIdTarget.resolve"><a class="viewcode-back" href="../../api/twclient.html#twclient.target.UserIdTarget.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="UserIdTarget.resolve"><a class="viewcode-back" href="../../apidocs.html#twclient.target.UserIdTarget.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">context</span><span class="p">:</span>  <span class="c1"># replace current context if there is one</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_mark_resolved</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
@@ -479,7 +479,7 @@
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Not all requested users are loaded&#39;</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="ScreenNameTarget"><a class="viewcode-back" href="../../api/twclient.html#twclient.target.ScreenNameTarget">[docs]</a><span class="k">class</span> <span class="nc">ScreenNameTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+<div class="viewcode-block" id="ScreenNameTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.ScreenNameTarget">[docs]</a><span class="k">class</span> <span class="nc">ScreenNameTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of screen names to resolve to users.</span>
 
@@ -497,7 +497,7 @@
 
     <span class="n">allowed_resolve_modes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;fetch&#39;</span><span class="p">,</span> <span class="s1">&#39;hydrate&#39;</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="ScreenNameTarget.resolve"><a class="viewcode-back" href="../../api/twclient.html#twclient.target.ScreenNameTarget.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="ScreenNameTarget.resolve"><a class="viewcode-back" href="../../apidocs.html#twclient.target.ScreenNameTarget.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">context</span><span class="p">:</span>  <span class="c1"># replace current context if there is one</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_mark_resolved</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
@@ -523,7 +523,7 @@
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Not all requested users are loaded&#39;</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="SelectTagTarget"><a class="viewcode-back" href="../../api/twclient.html#twclient.target.SelectTagTarget">[docs]</a><span class="k">class</span> <span class="nc">SelectTagTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+<div class="viewcode-block" id="SelectTagTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.SelectTagTarget">[docs]</a><span class="k">class</span> <span class="nc">SelectTagTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of user tags to resolve to users.</span>
 
@@ -540,7 +540,7 @@
 
     <span class="n">allowed_resolve_modes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;hydrate&#39;</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="SelectTagTarget.resolve"><a class="viewcode-back" href="../../api/twclient.html#twclient.target.SelectTagTarget.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="SelectTagTarget.resolve"><a class="viewcode-back" href="../../apidocs.html#twclient.target.SelectTagTarget.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">context</span><span class="p">:</span>  <span class="c1"># replace current context if there is one</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_mark_resolved</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
@@ -569,7 +569,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_users</span><span class="p">(</span><span class="n">users</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="TwitterListTarget"><a class="viewcode-back" href="../../api/twclient.html#twclient.target.TwitterListTarget">[docs]</a><span class="k">class</span> <span class="nc">TwitterListTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+<div class="viewcode-block" id="TwitterListTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.TwitterListTarget">[docs]</a><span class="k">class</span> <span class="nc">TwitterListTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of Twitter lists to resolve to users.</span>
 
@@ -704,7 +704,7 @@
 
                 <span class="bp">self</span><span class="o">.</span><span class="n">_update_memberships</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">users</span><span class="p">)</span>
 
-<div class="viewcode-block" id="TwitterListTarget.resolve"><a class="viewcode-back" href="../../api/twclient.html#twclient.target.TwitterListTarget.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="TwitterListTarget.resolve"><a class="viewcode-back" href="../../apidocs.html#twclient.target.TwitterListTarget.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">if</span> <span class="n">context</span><span class="p">:</span>  <span class="c1"># replace current context if there is one</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">_mark_resolved</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
         <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>

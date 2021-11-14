@@ -39,9 +39,9 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">License</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul>
@@ -50,7 +50,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidocs.html">API Documentation</a></li>
 </ul>
 
         </div>
@@ -109,7 +109,7 @@
 <span class="c1">#</span>
 
 
-<div class="viewcode-block" id="Job"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.Job">[docs]</a><span class="k">class</span> <span class="nc">Job</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="Job"><a class="viewcode-back" href="../../apidocs.html#twclient.job.Job">[docs]</a><span class="k">class</span> <span class="nc">Job</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job to be run against the database and possibly also the Twitter API.</span>
 
@@ -147,7 +147,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_schema_verified</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="Job.ensure_schema_version"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.Job.ensure_schema_version">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_schema_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="Job.ensure_schema_version"><a class="viewcode-back" href="../../apidocs.html#twclient.job.Job.ensure_schema_version">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_schema_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Ensure that the database schema is a usable version.</span>
 
@@ -190,7 +190,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_schema_verified</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="Job.get_or_create"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.Job.get_or_create">[docs]</a>    <span class="k">def</span> <span class="nf">get_or_create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="Job.get_or_create"><a class="viewcode-back" href="../../apidocs.html#twclient.job.Job.get_or_create">[docs]</a>    <span class="k">def</span> <span class="nf">get_or_create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Get a persistent object or create a pending one.</span>
 
@@ -226,7 +226,7 @@
 
     <span class="c1"># This method is the main entrypoint for the Job class. Subclasses are</span>
     <span class="c1"># expected to override it with their business logic.</span>
-<div class="viewcode-block" id="Job.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.Job.run">[docs]</a>    <span class="nd">@abstractmethod</span>
+<div class="viewcode-block" id="Job.run"><a class="viewcode-back" href="../../apidocs.html#twclient.job.Job.run">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Run the job.</span>
@@ -235,7 +235,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="TagJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.TagJob">[docs]</a><span class="k">class</span> <span class="nc">TagJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
+<div class="viewcode-block" id="TagJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.TagJob">[docs]</a><span class="k">class</span> <span class="nc">TagJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job which uses user tags.</span>
 
@@ -266,7 +266,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ensure_schema_version</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="TargetJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.TargetJob">[docs]</a><span class="k">class</span> <span class="nc">TargetJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
+<div class="viewcode-block" id="TargetJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.TargetJob">[docs]</a><span class="k">class</span> <span class="nc">TargetJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job which requires targets.</span>
 
@@ -396,7 +396,7 @@
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;good_targets&#39;</span><span class="p">)</span>
 
-<div class="viewcode-block" id="TargetJob.resolve_targets"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.TargetJob.resolve_targets">[docs]</a>    <span class="k">def</span> <span class="nf">resolve_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TargetJob.resolve_targets"><a class="viewcode-back" href="../../apidocs.html#twclient.job.TargetJob.resolve_targets">[docs]</a>    <span class="k">def</span> <span class="nf">resolve_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Resolve all of the targets in self.targets to users.</span>
 
@@ -410,7 +410,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">validate_targets</span><span class="p">()</span></div>
 
-<div class="viewcode-block" id="TargetJob.validate_targets"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.TargetJob.validate_targets">[docs]</a>    <span class="k">def</span> <span class="nf">validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TargetJob.validate_targets"><a class="viewcode-back" href="../../apidocs.html#twclient.job.TargetJob.validate_targets">[docs]</a>    <span class="k">def</span> <span class="nf">validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Validate the targets in self.targets.</span>
 
@@ -436,7 +436,7 @@
                 <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="ApiJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.ApiJob">[docs]</a><span class="k">class</span> <span class="nc">ApiJob</span><span class="p">(</span><span class="n">TargetJob</span><span class="p">):</span>
+<div class="viewcode-block" id="ApiJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ApiJob">[docs]</a><span class="k">class</span> <span class="nc">ApiJob</span><span class="p">(</span><span class="n">TargetJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job requiring access to the Twitter API.</span>
 
@@ -492,7 +492,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">load_batch_size</span> <span class="o">=</span> <span class="n">load_batch_size</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">allow_api_errors</span> <span class="o">=</span> <span class="n">allow_api_errors</span>
 
-<div class="viewcode-block" id="ApiJob.validate_targets"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.ApiJob.validate_targets">[docs]</a>    <span class="k">def</span> <span class="nf">validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ApiJob.validate_targets"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ApiJob.validate_targets">[docs]</a>    <span class="k">def</span> <span class="nf">validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">validate_targets</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">!=</span> <span class="s1">&#39;skip&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">bad_targets</span><span class="p">:</span>
@@ -505,7 +505,7 @@
                 <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadTargetError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bad_targets</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="CreateTagJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.CreateTagJob">[docs]</a><span class="k">class</span> <span class="nc">CreateTagJob</span><span class="p">(</span><span class="n">TagJob</span><span class="p">):</span>
+<div class="viewcode-block" id="CreateTagJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.CreateTagJob">[docs]</a><span class="k">class</span> <span class="nc">CreateTagJob</span><span class="p">(</span><span class="n">TagJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Create a user tag.</span>
 
@@ -514,13 +514,13 @@
 <span class="sd">    ApplyTagJob for that.)</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="CreateTagJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.CreateTagJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="CreateTagJob.run"><a class="viewcode-back" href="../../apidocs.html#twclient.job.CreateTagJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">Tag</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="DeleteTagJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.DeleteTagJob">[docs]</a><span class="k">class</span> <span class="nc">DeleteTagJob</span><span class="p">(</span><span class="n">TagJob</span><span class="p">):</span>
+<div class="viewcode-block" id="DeleteTagJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.DeleteTagJob">[docs]</a><span class="k">class</span> <span class="nc">DeleteTagJob</span><span class="p">(</span><span class="n">TagJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Delete a user tag.</span>
 
@@ -529,7 +529,7 @@
 <span class="sd">    deleted.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="DeleteTagJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.DeleteTagJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DeleteTagJob.run"><a class="viewcode-back" href="../../apidocs.html#twclient.job.DeleteTagJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">Tag</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span><span class="o">.</span><span class="n">one_or_none</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="n">tag</span><span class="p">:</span>
@@ -542,7 +542,7 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="ApplyTagJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.ApplyTagJob">[docs]</a><span class="k">class</span> <span class="nc">ApplyTagJob</span><span class="p">(</span><span class="n">TagJob</span><span class="p">,</span> <span class="n">TargetJob</span><span class="p">):</span>
+<div class="viewcode-block" id="ApplyTagJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ApplyTagJob">[docs]</a><span class="k">class</span> <span class="nc">ApplyTagJob</span><span class="p">(</span><span class="n">TagJob</span><span class="p">,</span> <span class="n">TargetJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Apply a user tag to a set of users.</span>
 
@@ -561,7 +561,7 @@
 
     <span class="n">resolve_mode</span> <span class="o">=</span> <span class="s1">&#39;skip&#39;</span>
 
-<div class="viewcode-block" id="ApplyTagJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.ApplyTagJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="ApplyTagJob.run"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ApplyTagJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resolve_targets</span><span class="p">()</span>
 
         <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">Tag</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span><span class="o">.</span><span class="n">one_or_none</span><span class="p">()</span>
@@ -576,7 +576,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="InitializeJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.InitializeJob">[docs]</a><span class="k">class</span> <span class="nc">InitializeJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
+<div class="viewcode-block" id="InitializeJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.InitializeJob">[docs]</a><span class="k">class</span> <span class="nc">InitializeJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job which initializes the selected database and sets up the schema.</span>
 
@@ -586,7 +586,7 @@
 <span class="sd">    with migrations and compatibility checks.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="InitializeJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.InitializeJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="InitializeJob.run"><a class="viewcode-back" href="../../apidocs.html#twclient.job.InitializeJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="n">md</span><span class="o">.</span><span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">drop_all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
         <span class="n">md</span><span class="o">.</span><span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">create_all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
 
@@ -594,7 +594,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="UserInfoJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.UserInfoJob">[docs]</a><span class="k">class</span> <span class="nc">UserInfoJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
+<div class="viewcode-block" id="UserInfoJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.UserInfoJob">[docs]</a><span class="k">class</span> <span class="nc">UserInfoJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job which hydrates users.</span>
 
@@ -607,13 +607,13 @@
 
     <span class="n">resolve_mode</span> <span class="o">=</span> <span class="s1">&#39;hydrate&#39;</span>
 
-<div class="viewcode-block" id="UserInfoJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.UserInfoJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="UserInfoJob.run"><a class="viewcode-back" href="../../apidocs.html#twclient.job.UserInfoJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resolve_targets</span><span class="p">()</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="TweetsJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.TweetsJob">[docs]</a><span class="k">class</span> <span class="nc">TweetsJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
+<div class="viewcode-block" id="TweetsJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.TweetsJob">[docs]</a><span class="k">class</span> <span class="nc">TweetsJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Fetch user tweets from the Twitter API.</span>
 
@@ -707,7 +707,7 @@
 
         <span class="k">return</span> <span class="n">n_items</span>
 
-<div class="viewcode-block" id="TweetsJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.TweetsJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="TweetsJob.run"><a class="viewcode-back" href="../../apidocs.html#twclient.job.TweetsJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resolve_targets</span><span class="p">()</span>
 
         <span class="n">n_items</span> <span class="o">=</span> <span class="mi">0</span>
@@ -750,7 +750,7 @@
 <span class="c1"># self.session.flush() afterward. Note also that this only applies if the</span>
 <span class="c1"># _load_edges_for steps don&#39;t implicitly commit, which they do on most DBs.</span>
 <span class="c1"># (See the comments in that method.)</span>
-<div class="viewcode-block" id="FollowGraphJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.FollowGraphJob">[docs]</a><span class="k">class</span> <span class="nc">FollowGraphJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
+<div class="viewcode-block" id="FollowGraphJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.FollowGraphJob">[docs]</a><span class="k">class</span> <span class="nc">FollowGraphJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Fetch follow-graph edges from the Twitter API.</span>
 
@@ -957,7 +957,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">upd</span><span class="p">)</span>
 
-<div class="viewcode-block" id="FollowGraphJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.FollowGraphJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="FollowGraphJob.run"><a class="viewcode-back" href="../../apidocs.html#twclient.job.FollowGraphJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">resolve_targets</span><span class="p">()</span>
 
         <span class="n">n_items</span> <span class="o">=</span> <span class="mi">0</span>
@@ -989,7 +989,7 @@
                 <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="FollowersJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.FollowersJob">[docs]</a><span class="k">class</span> <span class="nc">FollowersJob</span><span class="p">(</span><span class="n">FollowGraphJob</span><span class="p">):</span>
+<div class="viewcode-block" id="FollowersJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.FollowersJob">[docs]</a><span class="k">class</span> <span class="nc">FollowersJob</span><span class="p">(</span><span class="n">FollowGraphJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A FollowGraphJob which fetches user followers.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
@@ -998,7 +998,7 @@
     <span class="n">_api_data_column</span> <span class="o">=</span> <span class="s1">&#39;source_user_id&#39;</span></div>
 
 
-<div class="viewcode-block" id="FriendsJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.FriendsJob">[docs]</a><span class="k">class</span> <span class="nc">FriendsJob</span><span class="p">(</span><span class="n">FollowGraphJob</span><span class="p">):</span>
+<div class="viewcode-block" id="FriendsJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.FriendsJob">[docs]</a><span class="k">class</span> <span class="nc">FriendsJob</span><span class="p">(</span><span class="n">FollowGraphJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A FollowGraphJob which fetches user friends.</span>
 <span class="sd">    &#39;&#39;&#39;</span>

@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Fetching data &mdash; twclient 0.2.0 documentation</title>
+  <title>Changelog &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Extracting data" href="extract.html" />
-    <link rel="prev" title="License" href="../overview/license.html" /> 
+    <link rel="next" title="License" href="license.html" />
+    <link rel="prev" title="README" href="readme.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -41,15 +41,24 @@
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
-<ul>
-<li class="toctree-l1"><a class="reference internal" href="../overview/readme.html">README</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/license.html">License</a></li>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="readme.html">README</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Changelog</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#id1">Changelog</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#unreleased">[Unreleased]</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#added">Added</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
-<ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Fetching data</a></li>
-<li class="toctree-l1"><a class="reference internal" href="extract.html">Extracting data</a></li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../vignettes/fetch.html">Fetching data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../vignettes/extract.html">Extracting data</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
 <ul>
@@ -70,9 +79,9 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Fetching data</li>
+      <li>Changelog</li>
       <li class="wy-breadcrumbs-aside">
-            <a href="../_sources/vignettes/fetch.rst.txt" rel="nofollow"> View page source</a>
+            <a href="../_sources/overview/changelog.rst.txt" rel="nofollow"> View page source</a>
       </li>
   </ul>
   <hr/>
@@ -80,17 +89,48 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="fetching-data">
-<h1>Fetching data<a class="headerlink" href="#fetching-data" title="Permalink to this headline"></a></h1>
-<p>TODO - integrate sql/ directory</p>
+  <section id="changelog">
+<h1>Changelog<a class="headerlink" href="#changelog" title="Permalink to this headline"></a></h1>
+<section id="id1">
+<h2>Changelog<a class="headerlink" href="#id1" title="Permalink to this headline"></a></h2>
+<p>All notable changes to this project will be documented here.</p>
+<p>The format is based on <a class="reference external" href="https://keepachangelog.com/en/1.0.0/">Keep a
+Changelog</a>, and this project
+follows <a class="reference external" href="https://semver.org/spec/v2.0.0.html">Semantic Versioning</a>.</p>
+<section id="unreleased">
+<h3>[Unreleased]<a class="headerlink" href="#unreleased" title="Permalink to this headline"></a></h3>
+<section id="added">
+<h4>Added<a class="headerlink" href="#added" title="Permalink to this headline"></a></h4>
+<ul class="simple">
+<li><p>First stable version.</p></li>
+<li><p>API documentation.</p></li>
+<li><p>A command-line interface for easy automated fetching of data.</p></li>
+<li><p>A stable relational data model, to make further analysis or data
+processing independent of the details of data ingest.</p></li>
+<li><p>Support for fetching follow-graph edges, tweets, lists and user info.</p></li>
+<li><p>Support for a variety of database backends via sqlalchemy.</p></li>
+<li><p>Type-2 SCD for tracking the follow graph and list membership over
+time.</p></li>
+<li><p>Many sanity checks in the data model to ensure correctness of loaded
+data.</p></li>
+<li><p>Loaded data is extensively normalized: mentions, replies, retweets,
+and entities like hashtags are extracted into first-class objects for
+more convenient and accessible analysis.</p></li>
+<li><p>Users can be tagged into arbitrary groups for greater convenience in
+analysis or data collection.</p></li>
+<li><p>Support for both app-only and user authentication to the Twitter API.</p></li>
+</ul>
+</section>
+</section>
+</section>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../overview/license.html" class="btn btn-neutral float-left" title="License" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="extract.html" class="btn btn-neutral float-right" title="Extracting data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="readme.html" class="btn btn-neutral float-left" title="README" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="license.html" class="btn btn-neutral float-right" title="License" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

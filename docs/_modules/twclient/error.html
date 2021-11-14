@@ -39,9 +39,9 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">License</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul>
@@ -50,7 +50,7 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../api/modules.html">API Documentation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../apidocs.html">API Documentation</a></li>
 </ul>
 
         </div>
@@ -94,7 +94,7 @@
 <span class="c1">#</span>
 
 
-<div class="viewcode-block" id="TWClientError"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.TWClientError">[docs]</a><span class="k">class</span> <span class="nc">TWClientError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="TWClientError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TWClientError">[docs]</a><span class="k">class</span> <span class="nc">TWClientError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    The base class for all errors raised by twclient.</span>
 
@@ -145,7 +145,7 @@
 
 <span class="c1"># See Twitter docs:</span>
 <span class="c1"># https://developer.twitter.com/en/support/twitter-api/error-troubleshooting</span>
-<div class="viewcode-block" id="TwitterAPIError"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.TwitterAPIError">[docs]</a><span class="k">class</span> <span class="nc">TwitterAPIError</span><span class="p">(</span><span class="n">TWClientError</span><span class="p">):</span>
+<div class="viewcode-block" id="TwitterAPIError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TwitterAPIError">[docs]</a><span class="k">class</span> <span class="nc">TwitterAPIError</span><span class="p">(</span><span class="n">TWClientError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Base class for errors returned by the Twitter API.</span>
 
@@ -193,7 +193,7 @@
 
         <span class="k">return</span> <span class="kc">None</span>
 
-<div class="viewcode-block" id="TwitterAPIError.from_tweepy"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.TwitterAPIError.from_tweepy">[docs]</a>    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="TwitterAPIError.from_tweepy"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TwitterAPIError.from_tweepy">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_tweepy</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">exc</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Construct an instance from a tweepy exception object.</span>
@@ -216,7 +216,7 @@
     <span class="c1"># Note that while the subclass methods are mostly right, they may not cover</span>
     <span class="c1"># all edge cases, because Twitter&#39;s API documentation is frequently</span>
     <span class="c1"># incomplete.</span>
-<div class="viewcode-block" id="TwitterAPIError.tweepy_is_instance"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.TwitterAPIError.tweepy_is_instance">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="TwitterAPIError.tweepy_is_instance"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TwitterAPIError.tweepy_is_instance">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">tweepy_is_instance</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Check whether a tweepy exception object can be converted to this class</span>
@@ -236,7 +236,7 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="TwitterServiceError"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.TwitterServiceError">[docs]</a><span class="k">class</span> <span class="nc">TwitterServiceError</span><span class="p">(</span><span class="n">TwitterAPIError</span><span class="p">):</span>  <span class="c1"># pylint: disable=abstract-method</span>
+<div class="viewcode-block" id="TwitterServiceError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TwitterServiceError">[docs]</a><span class="k">class</span> <span class="nc">TwitterServiceError</span><span class="p">(</span><span class="n">TwitterAPIError</span><span class="p">):</span>  <span class="c1"># pylint: disable=abstract-method</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A problem with the Twitter service.</span>
 
@@ -248,7 +248,7 @@
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="ReadFailureError"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.ReadFailureError">[docs]</a><span class="k">class</span> <span class="nc">ReadFailureError</span><span class="p">(</span><span class="n">TwitterServiceError</span><span class="p">):</span>
+<div class="viewcode-block" id="ReadFailureError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.ReadFailureError">[docs]</a><span class="k">class</span> <span class="nc">ReadFailureError</span><span class="p">(</span><span class="n">TwitterServiceError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A low-level network problem occurred in communicating with the Twitter API.</span>
 
@@ -256,12 +256,12 @@
 <span class="sd">    API and no sensible response could be retrieved.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="ReadFailureError.tweepy_is_instance"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.ReadFailureError.tweepy_is_instance">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ReadFailureError.tweepy_is_instance"><a class="viewcode-back" href="../../apidocs.html#twclient.error.ReadFailureError.tweepy_is_instance">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">tweepy_is_instance</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
         <span class="k">return</span> <span class="n">exc</span><span class="o">.</span><span class="n">response</span> <span class="ow">is</span> <span class="kc">None</span></div></div>
 
 
-<div class="viewcode-block" id="CapacityError"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.CapacityError">[docs]</a><span class="k">class</span> <span class="nc">CapacityError</span><span class="p">(</span><span class="n">TwitterServiceError</span><span class="p">):</span>
+<div class="viewcode-block" id="CapacityError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.CapacityError">[docs]</a><span class="k">class</span> <span class="nc">CapacityError</span><span class="p">(</span><span class="n">TwitterServiceError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    The Twitter API is temporarily over capacity.</span>
 
@@ -270,7 +270,7 @@
 <span class="sd">    sleep a reasonable period of time and retry the request.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="CapacityError.tweepy_is_instance"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.CapacityError.tweepy_is_instance">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="CapacityError.tweepy_is_instance"><a class="viewcode-back" href="../../apidocs.html#twclient.error.CapacityError.tweepy_is_instance">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">tweepy_is_instance</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
         <span class="k">return</span> \
             <span class="n">exc</span><span class="o">.</span><span class="n">api_code</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">130</span><span class="p">,</span> <span class="mi">131</span><span class="p">)</span> <span class="ow">or</span> \
@@ -280,7 +280,7 @@
             <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="TwitterLogicError"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.TwitterLogicError">[docs]</a><span class="k">class</span> <span class="nc">TwitterLogicError</span><span class="p">(</span><span class="n">TwitterAPIError</span><span class="p">):</span>  <span class="c1"># pylint: disable=abstract-method</span>
+<div class="viewcode-block" id="TwitterLogicError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TwitterLogicError">[docs]</a><span class="k">class</span> <span class="nc">TwitterLogicError</span><span class="p">(</span><span class="n">TwitterAPIError</span><span class="p">):</span>  <span class="c1"># pylint: disable=abstract-method</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A request to the Twitter service encountered a logical error condition.</span>
 
@@ -293,7 +293,7 @@
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="NotFoundError"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.NotFoundError">[docs]</a><span class="k">class</span> <span class="nc">NotFoundError</span><span class="p">(</span><span class="n">TwitterLogicError</span><span class="p">):</span>
+<div class="viewcode-block" id="NotFoundError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.NotFoundError">[docs]</a><span class="k">class</span> <span class="nc">NotFoundError</span><span class="p">(</span><span class="n">TwitterLogicError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A requested object was not found.</span>
 
@@ -303,7 +303,7 @@
 <span class="sd">    what object was not found, so we combine these errors into one class.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="NotFoundError.tweepy_is_instance"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.NotFoundError.tweepy_is_instance">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="NotFoundError.tweepy_is_instance"><a class="viewcode-back" href="../../apidocs.html#twclient.error.NotFoundError.tweepy_is_instance">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">tweepy_is_instance</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
         <span class="k">return</span> \
             <span class="n">exc</span><span class="o">.</span><span class="n">api_code</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">17</span><span class="p">,</span> <span class="mi">34</span><span class="p">,</span> <span class="mi">50</span><span class="p">,</span> <span class="mi">63</span><span class="p">)</span> <span class="ow">or</span> \
@@ -316,7 +316,7 @@
 
 <span class="c1"># That is, accessing protected users&#39; friends, followers, or tweets returns</span>
 <span class="c1"># an HTTP 401 with message &quot;Not authorized.&quot; and no Twitter status code.</span>
-<div class="viewcode-block" id="ProtectedUserError"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.ProtectedUserError">[docs]</a><span class="k">class</span> <span class="nc">ProtectedUserError</span><span class="p">(</span><span class="n">TwitterLogicError</span><span class="p">):</span>
+<div class="viewcode-block" id="ProtectedUserError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.ProtectedUserError">[docs]</a><span class="k">class</span> <span class="nc">ProtectedUserError</span><span class="p">(</span><span class="n">TwitterLogicError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A requested user has protected tweets.</span>
 
@@ -325,7 +325,7 @@
 <span class="sd">    friends/followers will not be and instead will raise this error.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="ProtectedUserError.tweepy_is_instance"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.ProtectedUserError.tweepy_is_instance">[docs]</a>    <span class="nd">@staticmethod</span>
+<div class="viewcode-block" id="ProtectedUserError.tweepy_is_instance"><a class="viewcode-back" href="../../apidocs.html#twclient.error.ProtectedUserError.tweepy_is_instance">[docs]</a>    <span class="nd">@staticmethod</span>
     <span class="k">def</span> <span class="nf">tweepy_is_instance</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
         <span class="k">return</span> \
             <span class="n">exc</span><span class="o">.</span><span class="n">api_code</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">and</span> \
@@ -333,7 +333,7 @@
             <span class="n">exc</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">status_code</span> <span class="o">==</span> <span class="mi">401</span></div></div>
 
 
-<div class="viewcode-block" id="dispatch_tweepy"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.dispatch_tweepy">[docs]</a><span class="k">def</span> <span class="nf">dispatch_tweepy</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
+<div class="viewcode-block" id="dispatch_tweepy"><a class="viewcode-back" href="../../apidocs.html#twclient.error.dispatch_tweepy">[docs]</a><span class="k">def</span> <span class="nf">dispatch_tweepy</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Take an exception instance and convert it to a TWClientError if applicable.</span>
 
@@ -371,7 +371,7 @@
 <span class="c1">#</span>
 
 
-<div class="viewcode-block" id="SemanticError"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.SemanticError">[docs]</a><span class="k">class</span> <span class="nc">SemanticError</span><span class="p">(</span><span class="n">TWClientError</span><span class="p">):</span>
+<div class="viewcode-block" id="SemanticError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.SemanticError">[docs]</a><span class="k">class</span> <span class="nc">SemanticError</span><span class="p">(</span><span class="n">TWClientError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Base class for non-Twitter error conditions.</span>
 
@@ -383,7 +383,7 @@
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="BadTargetError"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.BadTargetError">[docs]</a><span class="k">class</span> <span class="nc">BadTargetError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
+<div class="viewcode-block" id="BadTargetError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.BadTargetError">[docs]</a><span class="k">class</span> <span class="nc">BadTargetError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A specified target user is protected, suspended or otherwise nonexistent.</span>
 
@@ -410,7 +410,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span></div>
 
 
-<div class="viewcode-block" id="BadTagError"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.BadTagError">[docs]</a><span class="k">class</span> <span class="nc">BadTagError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
+<div class="viewcode-block" id="BadTagError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.BadTagError">[docs]</a><span class="k">class</span> <span class="nc">BadTagError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A requested tag does not exist.</span>
 
@@ -436,7 +436,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tag</span> <span class="o">=</span> <span class="n">tag</span></div>
 
 
-<div class="viewcode-block" id="BadSchemaError"><a class="viewcode-back" href="../../api/twclient.html#twclient.error.BadSchemaError">[docs]</a><span class="k">class</span> <span class="nc">BadSchemaError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
+<div class="viewcode-block" id="BadSchemaError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.BadSchemaError">[docs]</a><span class="k">class</span> <span class="nc">BadSchemaError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    The database schema is corrupt or the wrong version.</span>
 
