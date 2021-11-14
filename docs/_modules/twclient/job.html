@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>twclient.job &mdash; twclient 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> twclient
+          </a>
+              <div class="version">
+                0.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">CHANGELOG</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">twclient</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>twclient.job</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for twclient.job</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Job classes which actually implement command logic.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">warnings</span>
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">import</span> <span class="nn">sqlalchemy</span> <span class="k">as</span> <span class="nn">sa</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">sessionmaker</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">__version__</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">error</span> <span class="k">as</span> <span class="n">err</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">ut</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">models</span> <span class="k">as</span> <span class="n">md</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+<span class="c1"># This isn&#39;t a great way to handle these warnings, but sqlalchemy is so dynamic</span>
+<span class="c1"># that most attribute accesses aren&#39;t resolved until runtime</span>
+<span class="c1"># pylint: disable=no-member</span>
+
+<span class="c1">#</span>
+<span class="c1"># Job classes</span>
+<span class="c1"># These encapsulate different types of loading jobs, including</span>
+<span class="c1"># the details of interacting with the database and Twitter API</span>
+<span class="c1">#</span>
+
+
+<div class="viewcode-block" id="Job"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.Job">[docs]</a><span class="k">class</span> <span class="nc">Job</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job to be run against the database and possibly also the Twitter API.</span>
+
+<span class="sd">    This class represents a job to be run against the database. Subclasses may</span>
+<span class="sd">    or may not also support access to the Twitter API.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    engine : sqlalchemy.engine.Engine instance</span>
+<span class="sd">        The sqlalchemy engine representing the database to connect to.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    engine : sqlalchemy.engine.Engine instance</span>
+<span class="sd">        The parameter passed to __init__.</span>
+
+<span class="sd">    session : sqlalchemy.orm.session.Session instance</span>
+<span class="sd">        The actual database session to use.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">engine</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;engine&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;engine instance is required&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">engine</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sessionfactory</span> <span class="o">=</span> <span class="n">sessionmaker</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sessionfactory</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sessionfactory</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schema_verified</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="Job.ensure_schema_version"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.Job.ensure_schema_version">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_schema_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Ensure that the database schema is a usable version.</span>
+
+<span class="sd">        This method checks that the schema present in the database referred to</span>
+<span class="sd">        by self.engine is a version the Job class knows how to work with. If</span>
+<span class="sd">        the schema is an unsupported version or is missing / corrupt, an</span>
+<span class="sd">        instance of error.BadSchemaError will be raised.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema_verified</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">schema_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">SchemaVersion</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">sa</span><span class="o">.</span><span class="n">exc</span><span class="o">.</span><span class="n">ProgrammingError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Bad or missing schema version tag in database (have you &#39;</span> \
+                  <span class="s1">&#39;initialized it?)&#39;</span>
+            <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadSchemaError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">schema_version</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Bad or missing schema version tag in database&#39;</span>
+            <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadSchemaError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">db_version</span> <span class="o">=</span> <span class="n">schema_version</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">version</span>
+
+        <span class="k">if</span> <span class="n">db_version</span> <span class="o">&gt;</span> <span class="n">__version__</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Package version </span><span class="si">{0}</span><span class="s1"> cannot use future schema version </span><span class="si">{1}</span><span class="s1">&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">__version__</span><span class="p">,</span> <span class="n">db_version</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadSchemaError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">db_version</span> <span class="o">&lt;</span> <span class="n">__version__</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Package version </span><span class="si">{0}</span><span class="s1"> cannot migrate old schema version &#39;</span> \
+                  <span class="s1">&#39;</span><span class="si">{1}</span><span class="s1">; consider downgrading the package version&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">__version__</span><span class="p">,</span> <span class="n">db_version</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadSchemaError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schema_verified</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="Job.get_or_create"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.Job.get_or_create">[docs]</a>    <span class="k">def</span> <span class="nf">get_or_create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get a persistent object or create a pending one.</span>
+
+<span class="sd">        Given a model and a set of kwargs, interpretable as the values of the</span>
+<span class="sd">        model&#39;s attributes, which together should identify one row in the</span>
+<span class="sd">        database, query for it and a) return a persistent object if the</span>
+<span class="sd">        row exists, or otherwise b) create and return a pending object with the</span>
+<span class="sd">        appropriate attribute values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model : instance of models.Base</span>
+<span class="sd">            A sqlalchemy model object.</span>
+
+<span class="sd">        **kwargs</span>
+<span class="sd">            Keyword arguments specifying the values of the model&#39;s attributes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        instance of models.Base</span>
+<span class="sd">            The persistent or pending object.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">one_or_none</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">instance</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">instance</span>
+
+        <span class="n">instance</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">instance</span></div>
+
+<div class="viewcode-block" id="Job.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.Job.run">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The main entrypoint for the Job class.</span>
+
+<span class="sd">        This method is the main entrypoint for the Job class. Subclasses are</span>
+<span class="sd">        expected to override it with their business logic.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="TagJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.TagJob">[docs]</a><span class="k">class</span> <span class="nc">TagJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job which uses user tags.</span>
+
+<span class="sd">    A TagJob is a class which requires a user tag. It ensures that the database</span>
+<span class="sd">    schema version is correct, and leaves other logic for subclasses.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tag : str</span>
+<span class="sd">        The name of a user tag.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    tag : str</span>
+<span class="sd">        The parameter passed to __init__.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">tag</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;tag&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must provide tag argument&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">tag</span> <span class="o">=</span> <span class="n">tag</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_schema_version</span><span class="p">()</span></div>
+
+
+<div class="viewcode-block" id="TargetJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.TargetJob">[docs]</a><span class="k">class</span> <span class="nc">TargetJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job which requires targets.</span>
+
+<span class="sd">    A TargetJob is a job which requires a set of target.Target instances to</span>
+<span class="sd">    specify users. An instance of this class must specify its resolve mode for</span>
+<span class="sd">    the Target classes, and has defaut logic to resolve them and expose their</span>
+<span class="sd">    users.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    targets : list of target.Target</span>
+<span class="sd">        The list of targets for</span>
+
+<span class="sd">    allow_missing_targets : bool</span>
+<span class="sd">        If resolving the targets indicates that some targets should be in the</span>
+<span class="sd">        database but are not (i.e., one of the Target instances in self.targets</span>
+<span class="sd">        has a non-empty missing_targets attribute), should we raise</span>
+<span class="sd">        error.BadTargetError (if False, default) or continue and ignore the</span>
+<span class="sd">        missing targets (if True)?</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    targets : list of target.Target</span>
+<span class="sd">        The parameter passed to __init__.</span>
+
+<span class="sd">    allow_missing_targets : bool</span>
+<span class="sd">        The parameter passed to __init__.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;targets&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must provide list of targets&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="n">allow_missing_targets</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;allow_missing_targets&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allow_missing_targets</span> <span class="o">=</span> <span class="n">allow_missing_targets</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_schema_version</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">resolve_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The resolve mode attribute to specify behavior of Target instances.</span>
+
+<span class="sd">        This attribute is consumed by the Target instances in self.targets.</span>
+<span class="sd">        Acceptable values include &#39;fetch&#39;, &#39;skip&#39;, &#39;hydrate&#39;. See the</span>
+<span class="sd">        documentation for target.Target for more information.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">resolved</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Have all targets been resolved to users?</span>
+
+<span class="sd">        This attribute is false on instantiation, and is normally set to True</span>
+<span class="sd">        by calling resolve_targets().</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">resolved</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_combine_sub_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Must call resolve_targets() first&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">it</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">]))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">users</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The combined set of users referred to by all targets.</span>
+
+<span class="sd">        This is the union of all the users in the Target instances in</span>
+<span class="sd">        self.targets. If the targets have not been resolved, accessing this</span>
+<span class="sd">        attribute will raise AttributeError.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bad_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The combined set of bad raw targets referred to by all targets.</span>
+
+<span class="sd">        This is the union of all the bad raw targets in the Target instances in</span>
+<span class="sd">        self.targets. If the targets have not been resolved, accessing this</span>
+<span class="sd">        attribute will raise AttributeError.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;bad_targets&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">missing_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The combined set of missing raw targets referred to by all targets.</span>
+
+<span class="sd">        This is the union of all the missing raw targets in the Target</span>
+<span class="sd">        instances in self.targets. If the targets have not been resolved,</span>
+<span class="sd">        accessing this attribute will raise AttributeError.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;missing_targets&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">good_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The combined set of good raw targets referred to by all targets.</span>
+
+<span class="sd">        This is the union of all the good raw targets in the Target instances</span>
+<span class="sd">        in self.targets. If the targets have not been resolved, accessing this</span>
+<span class="sd">        attribute will raise AttributeError.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;good_targets&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TargetJob.resolve_targets"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.TargetJob.resolve_targets">[docs]</a>    <span class="k">def</span> <span class="nf">resolve_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Resolve all of the targets in self.targets to users.</span>
+
+<span class="sd">        This method resolves all of the targets in self.targets to users (and</span>
+<span class="sd">        bad/missing raw targets, if applicable) and validates them using</span>
+<span class="sd">        whatever logic the subclass has defined for validate_targets().</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_targets</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TargetJob.validate_targets"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.TargetJob.validate_targets">[docs]</a>    <span class="k">def</span> <span class="nf">validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Validate the targets in self.targets.</span>
+
+<span class="sd">        This method is a hook called by resolve_targets to ensure that the</span>
+<span class="sd">        targets in self.targets have resolved into a sane configuration. If any</span>
+<span class="sd">        error is detected, error.BadTargetError should be raised. The default</span>
+<span class="sd">        implementation here checks whether there are missing targets (i.e.,</span>
+<span class="sd">        targets which should have been but were not found in the database), and</span>
+<span class="sd">        raises error.BadTargetError unless self.allow_missing_targets evaluates</span>
+<span class="sd">        to True. Subclasses may override with other configurations.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">==</span> <span class="s1">&#39;skip&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_targets</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Target(s) not in database: </span><span class="si">{0}</span><span class="s1">&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_targets</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_missing_targets</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadTargetError</span><span class="p">(</span>
+                    <span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span>
+                    <span class="n">targets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_targets</span>
+                <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ApiJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.ApiJob">[docs]</a><span class="k">class</span> <span class="nc">ApiJob</span><span class="p">(</span><span class="n">TargetJob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job requiring access to the Twitter API.</span>
+
+<span class="sd">    This class represents a job which needs access to the Twitter API. It</span>
+<span class="sd">    configures API access and user validation logic, and defers other</span>
+<span class="sd">    functionality to subclasses.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    api : instance of twitter_api.TwitterApi</span>
+<span class="sd">        The TwitterApi instance to use for API access.</span>
+
+<span class="sd">    allow_api_errors : bool</span>
+<span class="sd">        If the Twitter API returns an error, should we abort (if False,</span>
+<span class="sd">        default), or ignore and continue (if True)?</span>
+
+<span class="sd">    load_batch_size : int</span>
+<span class="sd">        Load new rows to the database in batches of this size. The default is</span>
+<span class="sd">        None, which loads all data retrieved in one batch. Lower values</span>
+<span class="sd">        minimize memory usage at the cost of slower loading speeds, while</span>
+<span class="sd">        higher values do the reverse. Target instances in self.targets do not</span>
+<span class="sd">        consider this value (it applies only to other rows loaded by the ApiJob</span>
+<span class="sd">        instance).</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    api : instance of twitter_api.TwitterApi</span>
+<span class="sd">        The parameter passed to __init__.</span>
+
+<span class="sd">    allow_api_errors : bool</span>
+<span class="sd">        The parameter passed to __init__.</span>
+
+<span class="sd">    load_batch_size : int</span>
+<span class="sd">        The parameter passed to __init__.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">api</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;api&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must provide api object&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="n">allow_api_errors</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;allow_api_errors&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">load_batch_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;load_batch_size&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">api</span> <span class="o">=</span> <span class="n">api</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_batch_size</span> <span class="o">=</span> <span class="n">load_batch_size</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allow_api_errors</span> <span class="o">=</span> <span class="n">allow_api_errors</span>
+
+<div class="viewcode-block" id="ApiJob.validate_targets"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.ApiJob.validate_targets">[docs]</a>    <span class="k">def</span> <span class="nf">validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">validate_targets</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">!=</span> <span class="s1">&#39;skip&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">bad_targets</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Twitter API says target(s) nonexistent/suspended/bad: </span><span class="si">{0}</span><span class="s1">&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">str</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">bad_targets</span><span class="p">]))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_api_errors</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadTargetError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bad_targets</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="CreateTagJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.CreateTagJob">[docs]</a><span class="k">class</span> <span class="nc">CreateTagJob</span><span class="p">(</span><span class="n">TagJob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Create a user tag.</span>
+
+<span class="sd">    This job creates a new user tag. If the tag already exists, nothing is done</span>
+<span class="sd">    and no error is raised. The tag is not applied to any users. (See</span>
+<span class="sd">    ApplyTagJob for that.)</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="CreateTagJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.CreateTagJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">get_or_create</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">Tag</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="DeleteTagJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.DeleteTagJob">[docs]</a><span class="k">class</span> <span class="nc">DeleteTagJob</span><span class="p">(</span><span class="n">TagJob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Delete a user tag.</span>
+
+<span class="sd">    This job deletes a user tag. If the tag does not exist, nothing is done and</span>
+<span class="sd">    no error is raised. Any existing assignments of the tag to users are also</span>
+<span class="sd">    deleted.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="DeleteTagJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.DeleteTagJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">Tag</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span><span class="o">.</span><span class="n">one_or_none</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">tag</span><span class="p">:</span>
+            <span class="c1"># DELETE is slow on many databases, but we&#39;re assuming none of</span>
+            <span class="c1"># these lists are especially large - a few thousand rows, tops.</span>
+            <span class="c1"># follow graph jobs have at least potentially really large data</span>
+            <span class="c1"># and need to rely on DROP TABLE / CREATE TABLE (see below).</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">delete</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="ApplyTagJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.ApplyTagJob">[docs]</a><span class="k">class</span> <span class="nc">ApplyTagJob</span><span class="p">(</span><span class="n">TagJob</span><span class="p">,</span> <span class="n">TargetJob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Apply a user tag to a set of users.</span>
+
+<span class="sd">    This job applies an existing user tag to a set of users. If the tag does</span>
+<span class="sd">    not exist, error.BadTagError is raised. (Use CreateTagJob to create a new</span>
+<span class="sd">    tag.) The targets are resolved to users with resolve_mode == &#39;skip&#39; (i.e.,</span>
+<span class="sd">    any requested users which do not exist in the database are not looked up</span>
+<span class="sd">    from the Twitter API). If any users were not successfully resolved,</span>
+<span class="sd">    error.BadTargetError is raised unless the allow_missing_targets parameter</span>
+<span class="sd">    is True. Otherwise, any users which were successfully resolved from the</span>
+<span class="sd">    targets are given the tag. In particular, if no users were successfully</span>
+<span class="sd">    resolved and allow_missing_users is True, nothing is done and no error is</span>
+<span class="sd">    raised. The entire job is run as one transaction; if anything goes wrong,</span>
+<span class="sd">    no tags are applied.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">resolve_mode</span> <span class="o">=</span> <span class="s1">&#39;skip&#39;</span>
+
+<div class="viewcode-block" id="ApplyTagJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.ApplyTagJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resolve_targets</span><span class="p">()</span>
+
+        <span class="n">tag</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">Tag</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="p">)</span><span class="o">.</span><span class="n">one_or_none</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">tag</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Tag </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">tag</span><span class="si">}</span><span class="s1"> does not exist&#39;</span>
+            <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadTagError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span> <span class="n">tag</span><span class="o">=</span><span class="n">tag</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+            <span class="n">user</span><span class="o">.</span><span class="n">tags</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">tag</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="InitializeJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.InitializeJob">[docs]</a><span class="k">class</span> <span class="nc">InitializeJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job which initializes the selected database and sets up the schema.</span>
+
+<span class="sd">    WARNING! This job will drop all data in the selected database! This job</span>
+<span class="sd">    (re-)initializes the selected database and applies the schema to it. The</span>
+<span class="sd">    version of the creating package will also be stored to help future versions</span>
+<span class="sd">    with migrations and compatibility checks.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+<div class="viewcode-block" id="InitializeJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.InitializeJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">md</span><span class="o">.</span><span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">drop_all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
+        <span class="n">md</span><span class="o">.</span><span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">create_all</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">SchemaVersion</span><span class="p">(</span><span class="n">version</span><span class="o">=</span><span class="n">__version__</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="UserInfoJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.UserInfoJob">[docs]</a><span class="k">class</span> <span class="nc">UserInfoJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job which hydrates users.</span>
+
+<span class="sd">    This job resolves its targets to users with resolve_mode == &#39;hydrate&#39;. That</span>
+<span class="sd">    is, it fetches data on those users from Twitter&#39;s users/lookup endpoint,</span>
+<span class="sd">    and stores the resulting data in the database. No other work is done. The</span>
+<span class="sd">    entire job is run in one transaction; if anything goes wrong, no users are</span>
+<span class="sd">    loaded.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">resolve_mode</span> <span class="o">=</span> <span class="s1">&#39;hydrate&#39;</span>
+
+<div class="viewcode-block" id="UserInfoJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.UserInfoJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resolve_targets</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="TweetsJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.TweetsJob">[docs]</a><span class="k">class</span> <span class="nc">TweetsJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Fetch user tweets from the Twitter API.</span>
+
+<span class="sd">    This job fetches user tweets from Twitter&#39;s statuses/user_timeline endpoint</span>
+<span class="sd">    and loads them to the database. Several options are provided to control</span>
+<span class="sd">    which of a given user&#39;s tweets are loaded. The loaded tweets are</span>
+<span class="sd">    extensively normalized to extract other entities (mentions, mentioned</span>
+<span class="sd">    users, hashtags, photos and videos, etc). The job is run in one transaction</span>
+<span class="sd">    per user; if anything goes wrong during loading of a user, the user which</span>
+<span class="sd">    encountered the error will be rolled back but tweets for previously</span>
+<span class="sd">    processed users will remain in the database.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    since_timestamp : float, or None</span>
+<span class="sd">        A Unix timestamp. Tweets older than this will not be loaded, and an</span>
+<span class="sd">        attempt will be made not to fetch them from the API in order to</span>
+<span class="sd">        minimize usage of rate-limited endpoints.</span>
+
+<span class="sd">    max_tweets : int, or None</span>
+<span class="sd">        Stop loading tweets for each user after this many. If None, load all</span>
+<span class="sd">        available tweets. After loading max_tweets tweets, no further calls to</span>
+<span class="sd">        the Twitter endpoint will be made (to minimize usage of rate-limited</span>
+<span class="sd">        endpoints).</span>
+
+<span class="sd">    old_tweets : bool</span>
+<span class="sd">        Should we, for each user, fetch only tweets newer than the newest one</span>
+<span class="sd">        in the database (if False, default), or fetch all tweets (if True)?</span>
+<span class="sd">        This can be done efficiently thanks to the Twitter endpoint&#39;s since_id</span>
+<span class="sd">        parameter and the fact that tweet IDs are sequential.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    since_timestamp : float</span>
+<span class="sd">        The parameter passed to __init__.</span>
+
+<span class="sd">    max_tweets : int</span>
+<span class="sd">        The parameter passed to __init__.</span>
+
+<span class="sd">    old_tweets : bool</span>
+<span class="sd">        The parameter passed to __init__.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">resolve_mode</span> <span class="o">=</span> <span class="s1">&#39;skip&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">since_timestamp</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;since_timestamp&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">max_tweets</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;max_tweets&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">old_tweets</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;old_tweets&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">since_timestamp</span> <span class="o">=</span> <span class="n">since_timestamp</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_tweets</span> <span class="o">=</span> <span class="n">max_tweets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">old_tweets</span> <span class="o">=</span> <span class="n">old_tweets</span>
+
+    <span class="k">def</span> <span class="nf">_load_tweets_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">old_tweets</span><span class="p">:</span>
+            <span class="n">since_id</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">since_id</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">Tweet</span><span class="o">.</span><span class="n">tweet_id</span><span class="p">))</span> \
+                           <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">Tweet</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span><span class="o">.</span><span class="n">scalar</span><span class="p">()</span>
+
+        <span class="n">twargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+            <span class="s1">&#39;since_id&#39;</span><span class="p">:</span> <span class="n">since_id</span><span class="p">,</span>
+            <span class="s1">&#39;max_tweets&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_tweets</span><span class="p">,</span>
+            <span class="s1">&#39;since_timestamp&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">since_timestamp</span>
+        <span class="p">}</span>
+
+        <span class="n">tweets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">user_timeline</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">)</span>
+        <span class="n">tweets</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">grouper</span><span class="p">(</span><span class="n">tweets</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_batch_size</span><span class="p">)</span>
+
+        <span class="n">n_items</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">batch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">tweets</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Running </span><span class="si">{0}</span><span class="s1"> batch </span><span class="si">{1}</span><span class="s1">, within-user cumulative tweets </span><span class="si">{2}</span><span class="s1">&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_items</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">resp</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">:</span>
+                <span class="n">tweet</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">Tweet</span><span class="o">.</span><span class="n">from_tweepy</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+
+                <span class="c1"># The merge emits warnings about having disabled the</span>
+                <span class="c1"># save-update cascade on Hashtag, Url, Symbol and Media,</span>
+                <span class="c1"># which is intentional and not appropriate to show users.</span>
+                <span class="k">with</span> <span class="n">warnings</span><span class="o">.</span><span class="n">catch_warnings</span><span class="p">():</span>
+                    <span class="n">warnings</span><span class="o">.</span><span class="n">simplefilter</span><span class="p">(</span><span class="s1">&#39;ignore&#39;</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">sa</span><span class="o">.</span><span class="n">exc</span><span class="o">.</span><span class="n">SAWarning</span><span class="p">)</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">tweet</span><span class="p">)</span>
+
+                <span class="n">n_items</span> <span class="o">+=</span> <span class="mi">1</span>
+
+        <span class="k">return</span> <span class="n">n_items</span>
+
+<div class="viewcode-block" id="TweetsJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.TweetsJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resolve_targets</span><span class="p">()</span>
+
+        <span class="n">n_items</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">user</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Processing user_id </span><span class="si">{0}</span><span class="s1"> (</span><span class="si">{1}</span><span class="s1"> / </span><span class="si">{2}</span><span class="s1">), &#39;</span> \
+                  <span class="s1">&#39;across-user cumulative tweets </span><span class="si">{3}</span><span class="s1">&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">),</span> <span class="n">n_items</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">n_items</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_tweets_for</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">ProtectedUserError</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">NotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">ProtectedUserError</span><span class="p">):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Encountered protected user (user_id </span><span class="si">{0}</span><span class="s1">) in </span><span class="si">{1}</span><span class="s1">&#39;</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># isinstance(e, err.NotFoundError)</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Encountered nonexistent user (user_id </span><span class="si">{0}</span><span class="s1">) in </span><span class="si">{1}</span><span class="s1">&#39;</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_api_errors</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+                    <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadTargetError</span><span class="p">(</span>
+                        <span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span>
+                        <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">]</span>
+                    <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
+
+
+<span class="c1"># NOTE that here (unlike in TweetsJob), you can get gnarly primary key</span>
+<span class="c1"># integrity errors on the user table if resolve_mode != &#39;skip&#39;: merging in</span>
+<span class="c1"># an md.User object (but not flushing) and then running an insert against</span>
+<span class="c1"># the user table may try to insert the same row again at commit if one of</span>
+<span class="c1"># the User objects is for a row already loaded by the insert. (That is, if</span>
+<span class="c1"># fetching users A and B, user B hadn&#39;t already been loaded and were</span>
+<span class="c1"># hydrated here, and A follows B.) In this case, if this were not to be</span>
+<span class="c1"># mode == &#39;skip&#39; in the future, the easy thing to do is call</span>
+<span class="c1"># self.session.flush() afterward. Note also that this only applies if the</span>
+<span class="c1"># _load_edges_for steps don&#39;t implicitly commit, which they do on most DBs.</span>
+<span class="c1"># (See the comments in that method.)</span>
+<div class="viewcode-block" id="FollowGraphJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.FollowGraphJob">[docs]</a><span class="k">class</span> <span class="nc">FollowGraphJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Fetch follow-graph edges from the Twitter API.</span>
+
+<span class="sd">    This job fetches follow-graph edges from the Twitter API for a given set of</span>
+<span class="sd">    users. Subclasses must specify which direction of edges to fetch (users&#39;</span>
+<span class="sd">    friends or followers). The edges are stored in the follow table, which uses</span>
+<span class="sd">    a type 2 SCD format to allow tracking historical follow-graph state with</span>
+<span class="sd">    reduced space requirements, and are first loaded to a staging table. The</span>
+<span class="sd">    job is run in one transaction per user; if anything goes wrong during</span>
+<span class="sd">    loading of a user, the user which encountered the error will be rolled back</span>
+<span class="sd">    but edges for previously processed users will remain in the database.</span>
+
+<span class="sd">    Note that Twitter sometimes returns the same follower/friend ID more</span>
+<span class="sd">    than once (probably because of eventual consistency). As a result, there</span>
+<span class="sd">    is special loading logic for these jobs. Each batch of follower or friend</span>
+<span class="sd">    IDs is deduped before being inserted (the entire set of IDs at once if</span>
+<span class="sd">    load_batch_size is None); if an ID in one batch duplicates an ID received</span>
+<span class="sd">    in a previous batch, the batch is retried one row at a time (which is quite</span>
+<span class="sd">    slow). Consequently loading these rows is most efficient with</span>
+<span class="sd">    load_batch_size of None. Other values should be used only if memory is a</span>
+<span class="sd">    constraint.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">resolve_mode</span> <span class="o">=</span> <span class="s1">&#39;skip&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">direction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The &quot;direction&quot; of follow edges to load.</span>
+
+<span class="sd">        Given a set of users, we might want to fetch the users who follow them</span>
+<span class="sd">        (their &quot;followers&quot;) or the users they follow (their &quot;friends&quot;). This</span>
+<span class="sd">        attribute, which subclasses must set, should be either &quot;friends&quot; or</span>
+<span class="sd">        &quot;followers&quot; to specify which direction of fetch is intended.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">_api_data_column</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_target_user_column</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;source_user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;target_user_id&#39;</span><span class="p">}</span>
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">cols</span> <span class="o">-</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_api_data_column</span><span class="p">})[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_api_method_name</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">direction</span> <span class="o">+</span> <span class="s1">&#39;_ids&#39;</span>
+
+    <span class="c1"># NOTE tl;dr the commit semantics here are complicated and depend on the</span>
+    <span class="c1"># database, but the details shouldn&#39;t matter. Depending on the DB, clearing</span>
+    <span class="c1"># the stg table may or may not commit; self._insert_stg_batch may issue one</span>
+    <span class="c1"># or many commits. BUT both of these affect only data in the stg table; if</span>
+    <span class="c1"># an error leaves it in an inconsistent state, we don&#39;t care. (If the</span>
+    <span class="c1"># resolve_mode for this job were &#39;fetch&#39;, we&#39;d also have to consider</span>
+    <span class="c1"># whether and when any new users&#39; rows were committed.) Whether there are 0</span>
+    <span class="c1"># or more than 0 commits up to the end of the for loop below, there aren&#39;t</span>
+    <span class="c1"># any during the call to _process_stg_data_for, which is the only part of</span>
+    <span class="c1"># this that modifies main data tables. So that call happens atomically,</span>
+    <span class="c1"># which is what we care about.</span>
+    <span class="k">def</span> <span class="nf">_load_edges_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="n">api_method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_method_name</span><span class="p">)</span>
+
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">api_method</span><span class="p">(</span><span class="n">user_id</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">grouper</span><span class="p">(</span><span class="n">ids</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">load_batch_size</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_clear_stg_table</span><span class="p">()</span>
+
+        <span class="n">n_items</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">batch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ids</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Running </span><span class="si">{0}</span><span class="s1"> batch </span><span class="si">{1}</span><span class="s1">, within-user cumulative edges </span><span class="si">{2}</span><span class="s1">&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="bp">self</span><span class="p">),</span> <span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_items</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="n">n_items</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_insert_stg_batch</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">batch</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_process_stg_data_for</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">n_items</span>
+
+    <span class="c1"># this is much, much faster than .delete() / DELETE FROM &lt;tbl&gt;, but not</span>
+    <span class="c1"># transactional on many DBs</span>
+    <span class="k">def</span> <span class="nf">_clear_stg_table</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_bind</span><span class="p">())</span>
+        <span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">get_bind</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_insert_stg_batch</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">api_user_ids</span><span class="p">):</span>
+        <span class="n">api_user_ids</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">api_user_ids</span><span class="p">)</span>
+
+        <span class="n">rows</span> <span class="o">=</span> <span class="p">(</span>
+            <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">_api_data_column</span><span class="p">:</span> <span class="n">t</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_user_column</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">}</span>
+            <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">api_user_ids</span>
+        <span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">bulk_insert_mappings</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+        <span class="k">except</span> <span class="n">sa</span><span class="o">.</span><span class="n">exc</span><span class="o">.</span><span class="n">IntegrityError</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Working around duplicates in Twitter API response&#39;</span><span class="p">)</span>
+
+            <span class="c1"># issues a commit for every row</span>
+            <span class="n">n_items</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_insert_stg_batch_robust</span><span class="p">(</span><span class="n">user</span><span class="p">,</span> <span class="n">api_user_ids</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">n_items</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">api_user_ids</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">n_items</span>
+
+    <span class="c1"># NOTE Twitter sometimes returns the same ID more than once.</span>
+    <span class="c1"># This happens rarely (probably b/c of eventual consistency), so we</span>
+    <span class="c1"># don&#39;t need to worry too hard about performance in handling it.</span>
+    <span class="c1"># Thus: use bulk inserts, but catch the duplicate key error and,</span>
+    <span class="c1"># when handling it, re-attempt inserts of the same rows one by one,</span>
+    <span class="c1"># discarding any that raise the duplicate key error.</span>
+    <span class="k">def</span> <span class="nf">_insert_stg_batch_robust</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">,</span> <span class="n">api_user_ids</span><span class="p">):</span>
+        <span class="n">nrows</span> <span class="o">=</span> <span class="mi">0</span>
+
+        <span class="k">for</span> <span class="n">api_uid</span> <span class="ow">in</span> <span class="n">api_user_ids</span><span class="p">:</span>
+            <span class="n">row</span> <span class="o">=</span> <span class="p">{</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_api_data_column</span><span class="p">:</span> <span class="n">api_uid</span><span class="p">,</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_target_user_column</span><span class="p">:</span> <span class="n">user</span><span class="o">.</span><span class="n">user_id</span>
+            <span class="p">}</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">ins</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">insert</span><span class="p">()</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="o">**</span><span class="n">row</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">ins</span><span class="p">)</span>
+
+                <span class="n">nrows</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="k">except</span> <span class="n">sa</span><span class="o">.</span><span class="n">exc</span><span class="o">.</span><span class="n">IntegrityError</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+                <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Encountered IntegrityError (likely dupe) on edge </span><span class="si">{0}</span><span class="s1">&#39;</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">row</span><span class="p">)</span>
+
+                <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span>
+
+        <span class="k">return</span> <span class="n">nrows</span>
+
+    <span class="k">def</span> <span class="nf">_process_stg_data_for</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user</span><span class="p">):</span>
+        <span class="c1">#</span>
+        <span class="c1"># 1. Load any new users to user table</span>
+        <span class="c1">#</span>
+
+        <span class="n">flt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">md</span><span class="o">.</span><span class="n">User</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_data_column</span><span class="p">)</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="p">)</span>
+
+        <span class="c1"># We don&#39;t need to worry about inserting the same user_id value</span>
+        <span class="c1"># that&#39;s already in the user.user_id object (and causing a primary</span>
+        <span class="c1"># key integrity error on the user table) because that user_id is</span>
+        <span class="c1"># already in the self._target_user_column column; it would only also</span>
+        <span class="c1"># appear in the self._api_data_column column if you could follow</span>
+        <span class="c1"># yourself on Twitter, which you can&#39;t.</span>
+        <span class="n">ins</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">User</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">insert</span><span class="p">()</span><span class="o">.</span><span class="n">from_select</span><span class="p">(</span>
+            <span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_api_data_column</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="o">~</span><span class="n">flt</span><span class="o">.</span><span class="n">exists</span><span class="p">())</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">ins</span><span class="p">)</span>
+
+        <span class="c1">#</span>
+        <span class="c1"># 2. Load new edges to follow table with valid_end_dt of null</span>
+        <span class="c1">#</span>
+
+        <span class="n">flt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">Follow</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span>
+            <span class="n">md</span><span class="o">.</span><span class="n">Follow</span><span class="o">.</span><span class="n">valid_end_dt</span><span class="o">.</span><span class="n">is_</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
+            <span class="n">md</span><span class="o">.</span><span class="n">Follow</span><span class="o">.</span><span class="n">source_user_id</span> <span class="o">==</span> <span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="o">.</span><span class="n">source_user_id</span><span class="p">,</span>
+            <span class="n">md</span><span class="o">.</span><span class="n">Follow</span><span class="o">.</span><span class="n">target_user_id</span> <span class="o">==</span> <span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="o">.</span><span class="n">target_user_id</span>
+        <span class="p">))</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="p">)</span>
+
+        <span class="n">ins</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">Follow</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">insert</span><span class="p">()</span><span class="o">.</span><span class="n">from_select</span><span class="p">(</span>
+            <span class="p">[</span><span class="s1">&#39;source_user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;target_user_id&#39;</span><span class="p">],</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                <span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="o">.</span><span class="n">source_user_id</span><span class="p">,</span>
+                <span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="o">.</span><span class="n">target_user_id</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="o">~</span><span class="n">flt</span><span class="o">.</span><span class="n">exists</span><span class="p">())</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">ins</span><span class="p">)</span>
+
+        <span class="c1">#</span>
+        <span class="c1"># 3. Mark edges no longer present as expired (valid_end_dt := now())</span>
+        <span class="c1">#</span>
+
+        <span class="n">flt</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span>
+            <span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="o">.</span><span class="n">source_user_id</span> <span class="o">==</span> <span class="n">md</span><span class="o">.</span><span class="n">Follow</span><span class="o">.</span><span class="n">source_user_id</span><span class="p">,</span>
+            <span class="n">md</span><span class="o">.</span><span class="n">StgFollow</span><span class="o">.</span><span class="n">target_user_id</span> <span class="o">==</span> <span class="n">md</span><span class="o">.</span><span class="n">Follow</span><span class="o">.</span><span class="n">target_user_id</span>
+        <span class="p">))</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">Follow</span><span class="p">)</span>
+
+        <span class="n">upd</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">Follow</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">update</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">sa</span><span class="o">.</span><span class="n">and_</span><span class="p">(</span>
+            <span class="n">md</span><span class="o">.</span><span class="n">Follow</span><span class="o">.</span><span class="n">valid_end_dt</span><span class="o">.</span><span class="n">is_</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
+            <span class="nb">getattr</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">Follow</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">_target_user_column</span><span class="p">)</span> <span class="o">==</span> <span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+
+            <span class="o">~</span><span class="n">flt</span><span class="o">.</span><span class="n">exists</span><span class="p">()</span>
+        <span class="p">))</span><span class="o">.</span><span class="n">values</span><span class="p">(</span><span class="n">valid_end_dt</span><span class="o">=</span><span class="n">sa</span><span class="o">.</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">execute</span><span class="p">(</span><span class="n">upd</span><span class="p">)</span>
+
+<div class="viewcode-block" id="FollowGraphJob.run"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.FollowGraphJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resolve_targets</span><span class="p">()</span>
+
+        <span class="n">n_items</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">user</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Processing user_id </span><span class="si">{0}</span><span class="s1"> (</span><span class="si">{1}</span><span class="s1"> / </span><span class="si">{2}</span><span class="s1">), &#39;</span> \
+                  <span class="s1">&#39;across-user cumulative edges </span><span class="si">{3}</span><span class="s1">&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">),</span> <span class="n">n_items</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">n_items</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_edges_for</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">ProtectedUserError</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">NotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">ProtectedUserError</span><span class="p">):</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Encountered protected user with user_id </span><span class="si">{0}</span><span class="s1"> in </span><span class="si">{1}</span><span class="s1">&#39;</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># isinstance(e, err.NotFoundError)</span>
+                    <span class="k">pass</span>
+                <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+                <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_api_errors</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">rollback</span><span class="p">()</span>
+
+                    <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadTargetError</span><span class="p">(</span>
+                        <span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span>
+                        <span class="n">targets</span><span class="o">=</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">]</span>
+                    <span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="FollowersJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.FollowersJob">[docs]</a><span class="k">class</span> <span class="nc">FollowersJob</span><span class="p">(</span><span class="n">FollowGraphJob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A FollowGraphJob which fetches user followers.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">direction</span> <span class="o">=</span> <span class="s1">&#39;followers&#39;</span>
+    <span class="n">_api_data_column</span> <span class="o">=</span> <span class="s1">&#39;source_user_id&#39;</span></div>
+
+
+<div class="viewcode-block" id="FriendsJob"><a class="viewcode-back" href="../../api/twclient.html#twclient.job.FriendsJob">[docs]</a><span class="k">class</span> <span class="nc">FriendsJob</span><span class="p">(</span><span class="n">FollowGraphJob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A FollowGraphJob which fetches user friends.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">direction</span> <span class="o">=</span> <span class="s1">&#39;friends&#39;</span>
+    <span class="n">_api_data_column</span> <span class="o">=</span> <span class="s1">&#39;target_user_id&#39;</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019-2021, Massachusetts Institute of Technology.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
