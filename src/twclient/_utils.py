@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 
-def _uniq(iterable):
+def uniq(iterable):
     '''
     Deduplicate an interable, preserving original order.
 
@@ -39,7 +39,7 @@ def _uniq(iterable):
     return ret
 
 
-def _coalesce(*args):
+def coalesce(*args):
     '''
     Return the first argument that's not None.
 
@@ -66,7 +66,7 @@ def _coalesce(*args):
 
 
 # Generate chunks of size n from the iterable it
-def _grouper(iterable, chunk_size=None):
+def grouper(iterable, chunk_size=None):
     '''
     Generate chunks of size n from the iterable iterable.
 
@@ -112,7 +112,7 @@ def _grouper(iterable, chunk_size=None):
             yield ret
 
 
-def _split_camel_case(txt):
+def split_camel_case(txt):
     '''
     Turn a CamelCase VariableName into a list of component words.
 
@@ -137,7 +137,7 @@ def _split_camel_case(txt):
 # and breaks some things that are possible without it, so we're left with this.
 # As of Sept 2020, this attribute is just the same json passed to the Model's
 # classmethod constructor - should really be public API.
-def _tweepy_to_json(obj):
+def tweepy_to_json(obj):
     '''
     Convert a tweepy object to json.
 

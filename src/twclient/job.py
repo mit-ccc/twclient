@@ -13,7 +13,7 @@ from sqlalchemy.orm import sessionmaker
 
 from . import __version__
 from . import error as err
-from . import utils as ut
+from . import _utils as ut
 from . import models as md
 
 logger = logging.getLogger(__name__)
@@ -477,7 +477,7 @@ class ApplyTagJob(TagJob, TargetJob):
         tag = self.session.query(md.Tag).filter_by(name=self.tag).one_or_none()
 
         if not tag:
-            msg = 'Tag {0} does not exist'.format(self.tag)
+            msg = f'Tag {self.tag} does not exist'
             raise err.BadTagError(message=msg, tag=tag)
 
         for user in self.users:
@@ -595,7 +595,7 @@ class TweetsJob(ApiJob):
         }
 
         tweets = self.api.user_timeline(**twargs)
-        tweets = ut._grouper(tweets, self.load_batch_size)
+        tweets = ut.grouper(tweets, self.load_batch_size)
 
         n_items = 0
         for ind, batch in enumerate(tweets):
@@ -729,7 +729,7 @@ class FollowGraphJob(ApiJob):
         api_method = getattr(self.api, self._api_method_name)
 
         ids = api_method(user_id=user.user_id)
-        ids = ut._grouper(ids, self.load_batch_size)
+        ids = ut.grouper(ids, self.load_batch_size)
 
         self._clear_stg_table()
 

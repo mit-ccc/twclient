@@ -10,7 +10,7 @@ from sqlalchemy import or_, and_, func
 
 from . import models as md
 from . import error as err
-from . import utils as ut
+from . import _utils as ut
 
 logger = logging.getLogger(__name__)
 
@@ -72,7 +72,7 @@ class Target(ABC):
         self._bad_targets = []
         self._missing_targets = []
 
-        deduped = ut._uniq(targets)
+        deduped = ut.uniq(targets)
         dupes = list(set(targets) - set(deduped))
 
         if dupes:
@@ -295,8 +295,8 @@ class Target(ABC):
 
     # splitting this out from _hydrate_users simplifies TwitterListTarget
     def _hydrate_sub(self, user_ids=None, screen_names=None):
-        user_ids = ut._coalesce(user_ids, [])
-        screen_names = ut._coalesce(screen_names, [])
+        user_ids = ut.coalesce(user_ids, [])
+        screen_names = ut.coalesce(screen_names, [])
 
         try:
             assert bool(user_ids) ^ bool(screen_names)
@@ -339,16 +339,18 @@ class Target(ABC):
         self._add_bad_targets(bad_targets)
 
     def _user_for_screen_name(self, screen_name):
-        ud = self.context.session.query(md.UserData).filter(
+        user_data = self.context.session.query(md.UserData).filter(
             func.lower(md.UserData.screen_name) == screen_name.lower()
         ).order_by(
             md.UserData.user_data_id.desc()
         ).first()
 
-        if ud is None:
-            return None
+        if user_data is None:
+            ret = None
         else:
-            return ud.user
+            ret = user_data.user
+
+        return ret
 
 
 class UserIdTarget(Target):

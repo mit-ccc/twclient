@@ -72,7 +72,7 @@ class _Command(ABC):
             raise ValueError('Must provide config argument') from exc
 
         if subcommand not in self.subcommand_to_method.keys():
-            raise ValueError('Bad subcommand {0}'.format(subcommand))
+            raise ValueError(f'Bad subcommand {subcommand}')
 
         super().__init__(**kwargs)
 
@@ -142,7 +142,7 @@ class _Command(ABC):
 
         self.validate_config()
 
-        with open(self.config_file, 'wt') as fobj:
+        with open(self.config_file, 'wt', encoding='utf-8') as fobj:
             self.config.write(fobj)
 
     def validate_config(self):
@@ -188,7 +188,7 @@ class _Command(ABC):
                     'token' not in self.config[profile].keys()
                 )
             except AssertionError:
-                self.error(err_string + 'Bad API profile {0}'.format(profile))
+                self.error(err_string + f'Bad API profile {profile}')
 
         for profile in self.config_db_profile_names:
             try:
@@ -198,7 +198,7 @@ class _Command(ABC):
                 assert 'is_default' in self.config[profile].keys()
                 assert 'database_url' in self.config[profile].keys()
             except AssertionError:
-                self.error(err_string + 'Bad DB profile {0}'.format(profile))
+                self.error(err_string + f'Bad DB profile {profile}')
 
         try:
             assert sum([
@@ -898,7 +898,7 @@ class _ConfigCommand(_Command):
             msg = 'DB profile {0} not found'
             self.error(msg.format(self.name))
         elif self.name in self.config_api_profile_names:
-            self.error('Profile {0} is an API profile'.format(self.name))
+            self.error(f'Profile {self.name} is an API profile')
         else:
             if self.config.getboolean(self.name, 'is_default'):
                 for name in self.config_db_profile_names:
@@ -915,7 +915,7 @@ class _ConfigCommand(_Command):
             msg = 'API profile {0} not found'
             self.error(msg.format(self.name))
         elif self.name in self.config_db_profile_names:
-            self.error('Profile {0} is a DB profile'.format(self.name))
+            self.error(f'Profile {self.name} is a DB profile')
         else:
             self.config.pop(self.name)
 
@@ -926,7 +926,7 @@ class _ConfigCommand(_Command):
             msg = 'DB profile {0} not found'
             self.error(msg.format(self.name))
         elif self.name in self.config_api_profile_names:
-            self.error('Profile {0} is an API profile'.format(self.name))
+            self.error(f'Profile {self.name} is an API profile')
         else:
             for name in self.config_db_profile_names:
                 self.config[name]['is_default'] = False
@@ -939,7 +939,7 @@ class _ConfigCommand(_Command):
         if self.name == 'DEFAULT':
             self.error('Profile name may not be "DEFAULT"')
         elif self.name in self.config_profile_names:
-            self.error('Profile {0} already exists'.format(self.name))
+            self.error(f'Profile {self.name} already exists')
 
         self.config[self.name] = {
             'type': 'database',
@@ -953,8 +953,7 @@ class _ConfigCommand(_Command):
         if self.name == 'DEFAULT':
             self.error('Profile name may not be "DEFAULT"')
         elif self.name in self.config_profile_names:
-            msg = 'Profile {0} already exists'
-            self.error(msg.format(self.name))
+            self.error(f'Profile {self.name} already exists')
         else:
             self.config[self.name] = {
                 'type': 'api',

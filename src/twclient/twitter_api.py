@@ -7,13 +7,13 @@ import logging
 import tweepy
 
 from . import error as err
-from . import utils as ut
+from . import _utils as ut
 from . import authpool as ap
 
 logger = logging.getLogger(__name__)
 
 
-class TwitterApi(object):
+class TwitterApi:
     '''
     Wrap calls to the Twitter API with cursoring, common parameters, etc.
 
@@ -51,7 +51,7 @@ class TwitterApi(object):
             raise ValueError("Must provide user_id xor screen_name") from exc
 
         user_type = 'user_id' if user_id is not None else 'screen_name'
-        user = ut._coalesce(user_id, screen_name)
+        user = ut.coalesce(user_id, screen_name)
 
         return user, user_type
 
@@ -128,10 +128,10 @@ class TwitterApi(object):
             elif return_type == 'list':
                 yield from ret
             else:  # return_type == 'unknown'
-                msg = 'Return type of method {0} unspecified'.format(method)
+                msg = f'Return type of method {method} unspecified'
                 raise RuntimeError(msg)
         except Exception as exc:
-            msg = 'Exception in call to Twitter API: {0}'.format(repr(exc))
+            msg = f'Exception in call to Twitter API: {repr(exc)}'
             logger.debug(msg, exc_info=True)
 
             raise
@@ -173,8 +173,8 @@ class TwitterApi(object):
             The hydrated user objects.
         '''
 
-        user_ids = ut._coalesce(user_ids, [])
-        screen_names = ut._coalesce(screen_names, [])
+        user_ids = ut.coalesce(user_ids, [])
+        screen_names = ut.coalesce(screen_names, [])
 
         msg = 'Hydrating user_ids {0} and screen_names {1}'
         msg = msg.format(user_ids, screen_names)
@@ -186,7 +186,7 @@ class TwitterApi(object):
             raise ValueError('No users provided to lookup_users') from exc
 
         if user_ids:
-            for grp in ut._grouper(user_ids, 100):  # max 100 per call
+            for grp in ut.grouper(user_ids, 100):  # max 100 per call
                 twargs = {
                     'method': 'lookup_users',
                     'include_entities': True,  # include user sub-objects
@@ -209,7 +209,7 @@ class TwitterApi(object):
                 yield from ret
 
         if screen_names:  # NOTE not elif: we want to handle both
-            for grp in ut._grouper(screen_names, 100):  # max 100 per call
+            for grp in ut.grouper(screen_names, 100):  # max 100 per call
                 twargs = {
                     'method': 'lookup_users',
                     'include_entities': True,  # include user sub-objects
