@@ -20,7 +20,7 @@ Twclient Documentation
    :maxdepth: 1
    :caption: Reference:
 
-   api/modules
+   apidocs
 
 Indices and tables
 ==================
