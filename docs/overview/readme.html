@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>README &mdash; twclient 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Changelog" href="changelog.html" />
+    <link rel="prev" title="Twclient Documentation" href="../index.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> twclient
+          </a>
+              <div class="version">
+                0.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+<ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="#">README</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#twclient">twclient</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../vignettes/fetch.html">Fetching data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../vignettes/extract.html">Extracting data</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../apidocs.html">API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">twclient</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>README</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/overview/readme.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="readme">
+<h1>README<a class="headerlink" href="#readme" title="Permalink to this headline"></a></h1>
+<section id="twclient">
+<h2>twclient<a class="headerlink" href="#twclient" title="Permalink to this headline"></a></h2>
+<p>This package provides a high-level command-line client for the Twitter API,
+with a focus on loading data into a database. The goal is to be higher-level
+than twurl or tweepy and offer useful primitives for researchers who want to
+get data out of Twitter, without worrying about the details. The client can
+handle multiple sets of API credentials seamlessly, helping avoid rate limit
+issues.</p>
+<p>An example of usage:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#</span>
+<span class="c1"># Setup</span>
+<span class="c1">#</span>
+
+<span class="c1"># Set up the database. This creates a persistent profile in a config file, no</span>
+<span class="c1"># need to type the URL repeatedly.</span>
+<span class="n">twitter</span> <span class="n">config</span> <span class="n">add</span><span class="o">-</span><span class="n">db</span> <span class="o">-</span><span class="n">u</span> <span class="s2">&quot;postgresql:///&quot;</span> <span class="n">postgres</span>
+
+<span class="c1"># Set up the Twitter credentials. Similarly, this stores the credentials in a</span>
+<span class="c1"># config file for ease of use. Only two sets of credentials are shown, but</span>
+<span class="c1"># arbitrarily many can be added.</span>
+<span class="n">twitter</span> <span class="n">config</span> <span class="n">add</span><span class="o">-</span><span class="n">api</span> <span class="o">-</span><span class="n">n</span> <span class="n">twitter1</span> \
+    <span class="o">--</span><span class="n">consumer</span><span class="o">-</span><span class="n">key</span> <span class="n">XXXXX</span> \
+    <span class="o">--</span><span class="n">consumer</span><span class="o">-</span><span class="n">secret</span> <span class="n">XXXXXX</span> \
+    <span class="o">--</span><span class="n">token</span> <span class="n">XXXXXX</span> \
+    <span class="o">--</span><span class="n">token</span><span class="o">-</span><span class="n">secret</span> <span class="n">XXXXXX</span>
+
+<span class="n">twitter</span> <span class="n">config</span> <span class="n">add</span><span class="o">-</span><span class="n">api</span> <span class="o">-</span><span class="n">n</span> <span class="n">twitter2</span> \
+    <span class="o">--</span><span class="n">consumer</span><span class="o">-</span><span class="n">key</span> <span class="n">XXXXX</span> \
+    <span class="o">--</span><span class="n">consumer</span><span class="o">-</span><span class="n">secret</span> <span class="n">XXXXXX</span> \
+    <span class="o">--</span><span class="n">token</span> <span class="n">XXXXXX</span> \
+    <span class="o">--</span><span class="n">token</span><span class="o">-</span><span class="n">secret</span> <span class="n">XXXXXX</span>
+
+<span class="c1"># Initialize the DB schema, dropping any existing data.</span>
+<span class="n">twitter</span> <span class="n">initialize</span> <span class="o">-</span><span class="n">y</span>
+
+<span class="c1">#</span>
+<span class="c1"># Pull data</span>
+<span class="c1">#</span>
+
+<span class="c1"># Load some users and their basic info</span>
+<span class="n">twitter</span> <span class="n">fetch</span> <span class="n">users</span> <span class="o">-</span><span class="n">n</span> <span class="n">wwbrannon</span> <span class="n">socialmachines</span> <span class="n">mit</span> <span class="o">-</span><span class="n">l</span> <span class="n">mit</span><span class="o">/</span><span class="n">a</span><span class="o">-</span><span class="n">twitter</span><span class="o">-</span><span class="nb">list</span>
+
+<span class="c1"># Tag them for ease of analysis</span>
+<span class="n">twitter</span> <span class="n">tag</span> <span class="n">create</span> <span class="n">subjects</span>
+<span class="n">twitter</span> <span class="n">tag</span> <span class="n">apply</span> <span class="n">subjects</span> <span class="o">-</span><span class="n">n</span> <span class="n">wwbrannon</span> <span class="n">socialmachines</span> <span class="n">mit</span> <span class="o">-</span><span class="n">l</span> <span class="n">mit</span><span class="o">/</span><span class="n">a</span><span class="o">-</span><span class="n">twitter</span><span class="o">-</span><span class="nb">list</span>
+
+<span class="c1"># Get their friends and followers</span>
+<span class="n">twitter</span> <span class="n">fetch</span> <span class="n">friends</span> <span class="o">-</span><span class="n">g</span> <span class="n">subjects</span>
+<span class="n">twitter</span> <span class="n">fetch</span> <span class="n">followers</span> <span class="o">-</span><span class="n">g</span> <span class="n">subjects</span>
+
+<span class="c1"># Get their tweets</span>
+<span class="n">twitter</span> <span class="n">fetch</span> <span class="n">tweets</span> <span class="o">-</span><span class="n">g</span> <span class="n">subjects</span>
+</pre></div>
+</div>
+<p>After all of this, the loaded data is in the database configured with
+<code class="docutils literal notranslate"><span class="pre">config</span> <span class="pre">add-db</span></code>. You can query it with the usual tools, and useful
+features have been normalized out to save processing time. The raw API
+responses are also saved for later analysis.</p>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="../index.html" class="btn btn-neutral float-left" title="Twclient Documentation" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="changelog.html" class="btn btn-neutral float-right" title="Changelog" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019-2021, Massachusetts Institute of Technology.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

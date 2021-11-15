@@ -1,0 +1,789 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>twclient.target &mdash; twclient 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> twclient
+          </a>
+              <div class="version">
+                0.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../vignettes/fetch.html">Fetching data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../vignettes/extract.html">Extracting data</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apidocs.html">API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">twclient</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      <li>twclient.target</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for twclient.target</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Classes encapsulating the &quot;targets&quot; of certain jobs.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">random</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">or_</span><span class="p">,</span> <span class="n">and_</span><span class="p">,</span> <span class="n">func</span>
+
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">models</span> <span class="k">as</span> <span class="n">md</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">error</span> <span class="k">as</span> <span class="n">err</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">ut</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="Target"><a class="viewcode-back" href="../../apidocs.html#twclient.target.Target">[docs]</a><span class="k">class</span> <span class="nc">Target</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Encapsulate the notion of a &quot;target&quot; for certain kinds of jobs.</span>
+
+<span class="sd">    Some of the operations defined by Job classes operate on users. These users</span>
+<span class="sd">    can be specified in several ways (user IDs, screen names, tags stored in</span>
+<span class="sd">    the database, Twitter lists) and the classes defined here provide a</span>
+<span class="sd">    consistent interface for these various ways of specifying job targets. Each</span>
+<span class="sd">    class takes a number of raw targets (user IDs, tags, etc) and provides a</span>
+<span class="sd">    resolve() method that calculates the corresponding model.User objects.</span>
+<span class="sd">    After calling resolve(), a list of the User objects are available in the</span>
+<span class="sd">    .users attribute.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">        targets : list of str or int</span>
+<span class="sd">            The raw targets to be resolved to users. These will be deduplicated</span>
+<span class="sd">            in a way that preserves order.</span>
+
+<span class="sd">        context : instance of job.Job, or None</span>
+<span class="sd">            The Job instance&#39;s database and API connections will be used as</span>
+<span class="sd">            needed to resolve raw targets to users. If not passed on</span>
+<span class="sd">            initialization, a context object must be passed to ``resolve()``.</span>
+
+<span class="sd">        randomize : bool</span>
+<span class="sd">            Whether to process raw targets in a randomized order. This may</span>
+<span class="sd">            allow loads which are interrupted partway through to retain some</span>
+<span class="sd">            useful statistical properties.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">        targets : list of str or int</span>
+<span class="sd">            The list of raw targets passed in as the targets parameter, but</span>
+<span class="sd">            deduplicated (without changing the relative order of any retained</span>
+<span class="sd">            targets).</span>
+
+<span class="sd">        randomize : bool</span>
+<span class="sd">            The parameter passed to __init__.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">targets</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;targets&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must specify targets&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="n">context</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;context&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="n">randomize</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;randomize&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">randomize</span> <span class="o">=</span> <span class="n">randomize</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="n">context</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_users</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bad_targets</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_missing_targets</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">deduped</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">uniq</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+        <span class="n">dupes</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">deduped</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">dupes</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Deduping after following duplicate targets given: </span><span class="si">{0}</span><span class="s1">&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">dupes</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="o">=</span> <span class="n">deduped</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">randomize</span><span class="p">:</span>
+            <span class="c1"># make partial / failed loads more statistically useful</span>
+            <span class="n">random</span><span class="o">.</span><span class="n">shuffle</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_validate_context</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_targets</span><span class="p">()</span>
+
+    <span class="c1"># This method is intended to be implemented by subclasses as</span>
+    <span class="c1"># their main piece of logic, so the implementation on Target is abstract.</span>
+<div class="viewcode-block" id="Target.resolve"><a class="viewcode-back" href="../../apidocs.html#twclient.target.Target.resolve">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Resolve this Target object into users.</span>
+
+<span class="sd">        The resolve() method looks up the raw targets provided at self.targets</span>
+<span class="sd">        and populates several attributes of this Target instance according to</span>
+<span class="sd">        the resolve_mode set on the self.context object. The .good_targets,</span>
+<span class="sd">        .bad_targets and .missing_targets attributes are populated to reflect</span>
+<span class="sd">        dispositions of the raw targets, as discussed in their documentation,</span>
+<span class="sd">        and the .users attribute contains all users which could be resolved</span>
+<span class="sd">        from any of the raw targets. If no context parameter was passed to</span>
+<span class="sd">        __init__, one must be given here. If one was passed to __init__, it is</span>
+<span class="sd">        replaced with the value passed here so long as ``bool(context) ==</span>
+<span class="sd">        True``.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        context : job.Job object, or None</span>
+<span class="sd">            The Job instance to use as context for resolving targets to users.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">allowed_resolve_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The resolve modes this Target implements.</span>
+
+<span class="sd">        The Job instance referred to by self.context has a resolve_mode</span>
+<span class="sd">        attribute, specifying how it wants Targets to look up their users. The</span>
+<span class="sd">        allowed_resolve_modes attribute declares what resolve_mode values this</span>
+<span class="sd">        Target instance can handle; if a Job instance with an incompatible</span>
+<span class="sd">        resolve_mode is given as context, an error will be raised. This</span>
+<span class="sd">        attribute must be defined in subclasses, because different types of</span>
+<span class="sd">        targets are compatible or not with different values of this parameter.</span>
+<span class="sd">        Consequently the version on Target is abstract.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">resolved</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Has this Target been set up with a Job instance as context?</span>
+
+<span class="sd">        A Target instance can only resolve its users and make them available in</span>
+<span class="sd">        the .users attribute after being given a Job instance as context. This</span>
+<span class="sd">        attribute is True if the Target has a context and false otherwise.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">users</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The users resolved from this Target&#39;s raw targets.</span>
+
+<span class="sd">        The users attribute contains a list of the models.User attributes</span>
+<span class="sd">        resolved from the raw targets (user IDs, screen names, Twitter lists</span>
+<span class="sd">        or tags) passed to this Target instance. If no raw targets could be</span>
+<span class="sd">        resolved to a models.User instance, this attribute will be an empty</span>
+<span class="sd">        list. Note that raw targets may fail to resolve because they are not</span>
+<span class="sd">        found in the database, if context.resolve_mode requires users to</span>
+<span class="sd">        be loaded already, or because Twitter&#39;s API returns no users or raises</span>
+<span class="sd">        an error. Note also that accessing this attribute before calling</span>
+<span class="sd">        resolve() will raise AttributeError.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Must call resolve() first&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_users</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bad_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Raw targets which were supposed to be looked up via the Twitter API</span>
+<span class="sd">        and which, on doing so, were found not to exist.</span>
+
+<span class="sd">        Specifically, these bad targets are users which were not returned by</span>
+<span class="sd">        users/lookup (indicating that they are suspended, nonexistent, or</span>
+<span class="sd">        otherwise bad), or lists which cause lists/show to raise an error. A</span>
+<span class="sd">        list which exists but has no members is not an error. Note that a</span>
+<span class="sd">        list not existing does not indicate for sure whether the owning user</span>
+<span class="sd">        exists. Accessing this attribute before calling .resolve() will raise</span>
+<span class="sd">        AttributeError.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Must call resolve() first&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_bad_targets</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">missing_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Raw targets which were supposed to be found in the database but were</span>
+<span class="sd">        not there.</span>
+
+<span class="sd">        These bad targets may be users which are not present in the user</span>
+<span class="sd">        table, or lists which are not found in the list table. Note that a list</span>
+<span class="sd">        not being present in the database does not indicate for sure whether</span>
+<span class="sd">        the owning user is. Accessing this attribute before calling .resolve()</span>
+<span class="sd">        will raise AttributeError.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Must call resolve() first&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_missing_targets</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">good_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Raw targets which were successfully resolved to users, either in the</span>
+<span class="sd">        database or via the Twitter API.</span>
+
+<span class="sd">        These are targets which, depending on the context object&#39;s setting of</span>
+<span class="sd">        resolve_mode, may have been looked for in the database or via Twitter&#39;s</span>
+<span class="sd">        API, and were found without error. Note that .good_targets and .users</span>
+<span class="sd">        are different: if one target is, for example, the Twitter list named</span>
+<span class="sd">        &quot;cspan/members-of-congress&quot;, that value will appear in .good_targets</span>
+<span class="sd">        and several hundred models.User objects for the Congressional Twitter</span>
+<span class="sd">        accounts will appear in .users. Accessing this attribute before</span>
+<span class="sd">        calling .resolve() will raise AttributeError.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Must call resolve() first&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span>
+            <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">-</span>
+            <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">bad_targets</span><span class="p">)</span> <span class="o">-</span>
+            <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_targets</span><span class="p">)</span>
+        <span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">context</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The Job instance to be used as context by resolve().</span>
+
+<span class="sd">        The resolve() method can only look up users with a Job instance as</span>
+<span class="sd">        context, to support database lookups and Twitter API calls. The context</span>
+<span class="sd">        can be provided on initialization or as an argument to resolve().</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Must call resolve() first&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_context</span>
+
+    <span class="c1"># A stub for subclasses</span>
+    <span class="k">def</span> <span class="nf">_validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">_validate_context</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">allowed_resolve_modes</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Bad operating mode for resolve()&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_mark_resolved</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_validate_context</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_context</span> <span class="o">=</span> <span class="n">context</span>
+
+    <span class="k">def</span> <span class="nf">_add_users</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">users</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Must call resolve() first&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_users</span><span class="o">.</span><span class="n">extend</span><span class="p">([</span><span class="n">u</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">users</span> <span class="k">if</span> <span class="n">u</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_users</span><span class="p">])</span>
+
+    <span class="k">def</span> <span class="nf">_add_bad_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Must call resolve() first&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;All bad targets must be in self.targets&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_bad_targets</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_missing_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">targets</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Must call resolve() first&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">set</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;All missing targets must be in self.targets&#39;</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_missing_targets</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_tweepy_to_user</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obj</span><span class="p">):</span>
+        <span class="n">user</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">User</span><span class="o">.</span><span class="n">from_tweepy</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
+
+        <span class="n">data</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">UserData</span><span class="o">.</span><span class="n">from_tweepy</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">user</span>
+
+    <span class="c1"># splitting this out from _hydrate_users simplifies TwitterListTarget</span>
+    <span class="k">def</span> <span class="nf">_hydrate_sub</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">screen_names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">user_ids</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">user_ids</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">screen_names</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">screen_names</span><span class="p">,</span> <span class="p">[])</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">assert</span> <span class="nb">bool</span><span class="p">(</span><span class="n">user_ids</span><span class="p">)</span> <span class="o">^</span> <span class="nb">bool</span><span class="p">(</span><span class="n">screen_names</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">AssertionError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must provide user_ids xor screen_names&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="n">twargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;user_ids&#39;</span><span class="p">:</span> <span class="n">user_ids</span><span class="p">,</span> <span class="s1">&#39;screen_names&#39;</span><span class="p">:</span> <span class="n">screen_names</span><span class="p">}</span>
+        <span class="n">objs</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">lookup_users</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">))</span>
+
+        <span class="n">users</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_tweepy_to_user</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">objs</span><span class="p">]</span>
+
+        <span class="c1"># NOTE tweepy&#39;s lookup_users doesn&#39;t raise an exception on bad users,</span>
+        <span class="c1"># it just doesn&#39;t return them, so we need to check the length of the</span>
+        <span class="c1"># input and the number of user objects returned.</span>
+        <span class="k">if</span> <span class="n">user_ids</span><span class="p">:</span>
+            <span class="n">requested</span> <span class="o">=</span> <span class="n">user_ids</span>
+            <span class="n">received</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span><span class="o">.</span><span class="n">id</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">objs</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># screen_names</span>
+            <span class="n">requested</span> <span class="o">=</span> <span class="p">[</span><span class="n">sn</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">sn</span> <span class="ow">in</span> <span class="n">screen_names</span><span class="p">]</span>
+            <span class="n">received</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span><span class="o">.</span><span class="n">screen_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">objs</span><span class="p">]</span>
+
+        <span class="n">bad_targets</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">requested</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">received</span><span class="p">))</span>
+        <span class="n">bad_targets</span> <span class="o">=</span> <span class="p">[</span><span class="n">sn</span> <span class="k">for</span> <span class="n">sn</span> <span class="ow">in</span> <span class="n">screen_names</span> <span class="k">if</span> <span class="n">sn</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span> <span class="ow">in</span> <span class="n">bad_targets</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">users</span><span class="p">,</span> <span class="n">bad_targets</span>
+
+    <span class="k">def</span> <span class="nf">_hydrate_users</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">screen_names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">user_ids</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">user_ids</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="k">if</span> <span class="n">screen_names</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">screen_names</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="n">users</span><span class="p">,</span> <span class="n">bad_targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hydrate_sub</span><span class="p">(</span>
+            <span class="n">user_ids</span><span class="o">=</span><span class="n">user_ids</span><span class="p">,</span>
+            <span class="n">screen_names</span><span class="o">=</span><span class="n">screen_names</span>
+        <span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_users</span><span class="p">(</span><span class="n">users</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_bad_targets</span><span class="p">(</span><span class="n">bad_targets</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_user_for_screen_name</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">screen_name</span><span class="p">):</span>
+        <span class="n">user_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">UserData</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+            <span class="n">func</span><span class="o">.</span><span class="n">lower</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">UserData</span><span class="o">.</span><span class="n">screen_name</span><span class="p">)</span> <span class="o">==</span> <span class="n">screen_name</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">order_by</span><span class="p">(</span>
+            <span class="n">md</span><span class="o">.</span><span class="n">UserData</span><span class="o">.</span><span class="n">user_data_id</span><span class="o">.</span><span class="n">desc</span><span class="p">()</span>
+        <span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">user_data</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">user_data</span><span class="o">.</span><span class="n">user</span>
+
+        <span class="k">return</span> <span class="n">ret</span></div>
+
+
+<div class="viewcode-block" id="UserIdTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.UserIdTarget">[docs]</a><span class="k">class</span> <span class="nc">UserIdTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A set of Twitter user IDs to resolve to users.</span>
+
+<span class="sd">    This class takes targets specified by Twitter&#39;s numeric user IDs. These</span>
+<span class="sd">    targets are resolved to models.User objects in one of three ways,</span>
+<span class="sd">    determined by the value of context.resolve_mode. If the resolve mode is</span>
+<span class="sd">    &#39;fetch&#39;, users are first looked up in the database, with any missing from</span>
+<span class="sd">    the database looked up via Twitter&#39;s API. (No users will be in</span>
+<span class="sd">    missing_targets in this case, only good_targets or bad_targets.) If the</span>
+<span class="sd">    mode is &#39;hydrate&#39;, all users will be looked up via Twitter&#39;s API. If mode</span>
+<span class="sd">    is &#39;skip&#39;, users not found in the database will not be looked up via</span>
+<span class="sd">    Twitter API, and will be left in missing_targets. Any other resolve mode</span>
+<span class="sd">    set on the context object will raise an error.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">allowed_resolve_modes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;fetch&#39;</span><span class="p">,</span> <span class="s1">&#39;hydrate&#39;</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="UserIdTarget.resolve"><a class="viewcode-back" href="../../apidocs.html#twclient.target.UserIdTarget.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">context</span><span class="p">:</span>  <span class="c1"># replace current context if there is one</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mark_resolved</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># we already have a context object</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># not context and not self.resolved</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No context object set and none provided&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">==</span> <span class="s1">&#39;hydrate&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hydrate_users</span><span class="p">(</span><span class="n">user_ids</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">existing</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">User</span><span class="p">)</span> \
+                           <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">User</span><span class="o">.</span><span class="n">user_id</span><span class="o">.</span><span class="n">in_</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">))</span>
+            <span class="n">new</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="o">-</span> <span class="p">{</span><span class="n">u</span><span class="o">.</span><span class="n">user_id</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">existing</span><span class="p">})</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_users</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_missing_targets</span><span class="p">(</span><span class="n">new</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">new</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">==</span> <span class="s1">&#39;fetch&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_hydrate_users</span><span class="p">(</span><span class="n">user_ids</span><span class="o">=</span><span class="n">new</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># context.resolve_mode == &#39;skip&#39;</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Not all requested users are loaded&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ScreenNameTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.ScreenNameTarget">[docs]</a><span class="k">class</span> <span class="nc">ScreenNameTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A set of screen names to resolve to users.</span>
+
+<span class="sd">    This class takes targets specified by Twitter screen names for users.</span>
+<span class="sd">    These targets are resolved to models.User objects in one of three ways,</span>
+<span class="sd">    determined by the value of context.resolve_mode. If the resolve mode is</span>
+<span class="sd">    &#39;fetch&#39;, users are first looked up in the database, with any missing from</span>
+<span class="sd">    the database looked up via Twitter&#39;s API. (No users will be in</span>
+<span class="sd">    missing_targets in this case, only good_targets or bad_targets.) If the</span>
+<span class="sd">    mode is &#39;hydrate&#39;, all users will be looked up via Twitter&#39;s API. If mode</span>
+<span class="sd">    is &#39;skip&#39;, users not found in the database will not be looked up via</span>
+<span class="sd">    Twitter API, and will be left in missing_targets. Any other resolve mode</span>
+<span class="sd">    set on the context object will raise an error.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">allowed_resolve_modes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;fetch&#39;</span><span class="p">,</span> <span class="s1">&#39;hydrate&#39;</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="ScreenNameTarget.resolve"><a class="viewcode-back" href="../../apidocs.html#twclient.target.ScreenNameTarget.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">context</span><span class="p">:</span>  <span class="c1"># replace current context if there is one</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mark_resolved</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># we already have a context object</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># not context and not self.resolved</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No context object set and none provided&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">==</span> <span class="s1">&#39;hydrate&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hydrate_users</span><span class="p">(</span><span class="n">screen_names</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">users</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_user_for_screen_name</span><span class="p">(</span><span class="n">s</span><span class="p">)</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">]</span>
+
+            <span class="n">existing</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">users</span> <span class="k">if</span> <span class="n">u</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">]</span>
+            <span class="n">new</span> <span class="o">=</span> <span class="p">[</span><span class="n">sn</span> <span class="k">for</span> <span class="n">u</span><span class="p">,</span> <span class="n">sn</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">users</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span> <span class="k">if</span> <span class="n">u</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_users</span><span class="p">(</span><span class="n">existing</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_missing_targets</span><span class="p">(</span><span class="n">new</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="n">new</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">==</span> <span class="s1">&#39;fetch&#39;</span><span class="p">:</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">_hydrate_users</span><span class="p">(</span><span class="n">screen_names</span><span class="o">=</span><span class="n">new</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># context.resolve_mode == &#39;skip&#39;</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Not all requested users are loaded&#39;</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="SelectTagTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.SelectTagTarget">[docs]</a><span class="k">class</span> <span class="nc">SelectTagTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A set of user tags to resolve to users.</span>
+
+<span class="sd">    This class takes targets specified by user tags, as recorded in the</span>
+<span class="sd">    user_tag table in the database. These tags are first looked up in the</span>
+<span class="sd">    database and resolved to a list of user IDs. Any tags which do not exist in</span>
+<span class="sd">    the database are added to the missing_targets attribute. The resulting list</span>
+<span class="sd">    of user IDs is then resolved to models.User objects in one of two ways,</span>
+<span class="sd">    determined by the value of context.resolve_mode. If the mode is &#39;hydrate&#39;,</span>
+<span class="sd">    all users will be looked up via Twitter&#39;s API. If the mode is &#39;skip&#39;,</span>
+<span class="sd">    users will be returned with the data stored for them in the database. Any</span>
+<span class="sd">    other resolve mode set on the context object will raise an error.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">allowed_resolve_modes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;hydrate&#39;</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="SelectTagTarget.resolve"><a class="viewcode-back" href="../../apidocs.html#twclient.target.SelectTagTarget.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">context</span><span class="p">:</span>  <span class="c1"># replace current context if there is one</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mark_resolved</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># we already have a context object</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># not context and not self.resolved</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No context object set and none provided&#39;</span><span class="p">)</span>
+
+        <span class="n">filters</span> <span class="o">=</span> <span class="p">[</span><span class="n">md</span><span class="o">.</span><span class="n">Tag</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">tag</span> <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">]</span>
+
+        <span class="n">tags</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">Tag</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">or_</span><span class="p">(</span><span class="o">*</span><span class="n">filters</span><span class="p">))</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="n">tag_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">t</span><span class="o">.</span><span class="n">name</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tags</span><span class="p">]</span>
+
+        <span class="n">new</span> <span class="o">=</span> <span class="nb">list</span><span class="p">({</span><span class="n">t</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="k">if</span> <span class="n">t</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">tag_names</span><span class="p">})</span>
+
+        <span class="k">if</span> <span class="n">new</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Requested tag(s) </span><span class="si">{0}</span><span class="s1"> do not exist&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">new</span><span class="p">))</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_missing_targets</span><span class="p">(</span><span class="n">new</span><span class="p">)</span>
+
+        <span class="n">users</span> <span class="o">=</span> <span class="p">[</span><span class="n">user</span> <span class="k">for</span> <span class="n">tag</span> <span class="ow">in</span> <span class="n">tags</span> <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">tag</span><span class="o">.</span><span class="n">users</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">==</span> <span class="s1">&#39;hydrate&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hydrate_users</span><span class="p">(</span><span class="n">user_ids</span><span class="o">=</span><span class="p">[</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span> <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">users</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># context.resolve_mode == &#39;skip&#39;</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_users</span><span class="p">(</span><span class="n">users</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="TwitterListTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.TwitterListTarget">[docs]</a><span class="k">class</span> <span class="nc">TwitterListTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A set of Twitter lists to resolve to users.</span>
+
+<span class="sd">    This class takes Twitter lists as targets. These lists can be specified by</span>
+<span class="sd">    their &quot;full names&quot; (that is, the owner_screen_name/slug format, like</span>
+<span class="sd">    &quot;cspan/members-of-congress&quot;) or by their numeric IDs. The list targets are</span>
+<span class="sd">    resolved to models.User objects in one of three ways, determined by the</span>
+<span class="sd">    value of context.resolve_mode. If the resolve mode is &#39;fetch&#39;, the lists</span>
+<span class="sd">    are first looked up in the database, with any missing lists looked up via</span>
+<span class="sd">    Twitter&#39;s API. (No lists will be in missing_targets in this case, only</span>
+<span class="sd">    good_targets or bad_targets.) If the mode is &#39;hydrate&#39;, all lists will be</span>
+<span class="sd">    looked up via Twitter&#39;s API. If mode is &#39;skip&#39;, lists not found in the</span>
+<span class="sd">    database will not be looked up via Twitter API, and will be left in</span>
+<span class="sd">    missing_targets. Any other resolve mode set on the context object will</span>
+<span class="sd">    raise an error. Note that not only the users who are list members are</span>
+<span class="sd">    stored, but also the list itself and its association with the users are</span>
+<span class="sd">    added to the appropriate tables in the context object&#39;s database session.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">allowed_resolve_modes</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;fetch&#39;</span><span class="p">,</span> <span class="s1">&#39;hydrate&#39;</span><span class="p">,</span> <span class="s1">&#39;skip&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">fullnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="k">if</span> <span class="s1">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">]</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="k">if</span> <span class="s1">&#39;/&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">fullnames</span><span class="p">)</span> <span class="o">+</span> <span class="nb">len</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadTargetError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="s1">&#39;Malformed list specification(s)&#39;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="nb">int</span><span class="p">(</span><span class="n">i</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">ids</span><span class="p">]</span>
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Malformed list specification(s)&#39;</span>
+            <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadTargetError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+    <span class="k">def</span> <span class="nf">_update_memberships</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lst</span><span class="p">,</span> <span class="n">members</span><span class="p">):</span>
+        <span class="c1"># record user memberships in list</span>
+        <span class="n">new_uids</span> <span class="o">=</span> <span class="p">[</span><span class="n">u</span><span class="o">.</span><span class="n">user_id</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">members</span><span class="p">]</span>
+        <span class="n">prev_uids</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">m</span><span class="o">.</span><span class="n">user_id</span>
+            <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">lst</span><span class="o">.</span><span class="n">list_memberships</span>
+            <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">valid_end_dt</span> <span class="ow">is</span> <span class="kc">None</span>  <span class="c1"># SCD type 2&#39;s currently valid rows</span>
+        <span class="p">]</span>
+
+        <span class="c1"># mark rows no longer in Twitter API&#39;s list as invalid</span>
+        <span class="k">for</span> <span class="n">mem</span> <span class="ow">in</span> <span class="n">lst</span><span class="o">.</span><span class="n">list_memberships</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">mem</span><span class="o">.</span><span class="n">user_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">new_uids</span><span class="p">:</span>
+                <span class="n">mem</span><span class="o">.</span><span class="n">valid_end_dt</span> <span class="o">=</span> <span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">()</span>
+
+        <span class="c1"># add rows for users newly present in Twitter API&#39;s list</span>
+        <span class="k">for</span> <span class="n">user</span> <span class="ow">in</span> <span class="n">members</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">user</span><span class="o">.</span><span class="n">user_id</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">prev_uids</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">UserList</span><span class="p">(</span>
+                    <span class="n">list_id</span><span class="o">=</span><span class="n">lst</span><span class="o">.</span><span class="n">list_id</span><span class="p">,</span>
+                    <span class="n">user_id</span><span class="o">=</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span>
+                <span class="p">))</span>
+
+    <span class="k">def</span> <span class="nf">_hydrate_lists</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lists</span><span class="p">):</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">lists</span> <span class="k">if</span> <span class="s1">&#39;/&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">]</span>
+        <span class="n">fullnames</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">lists</span> <span class="k">if</span> <span class="s1">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">obj</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">ids</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hydrate_lists_ids</span><span class="p">(</span><span class="n">ids</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">fullnames</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hydrate_lists_fullnames</span><span class="p">(</span><span class="n">fullnames</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_hydrate_lists_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lists</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="n">lists</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">twargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;list_id&#39;</span><span class="p">:</span> <span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="p">)}</span>
+
+                <span class="c1"># Fetch the list itself</span>
+                <span class="n">resp</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">get_list</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">)</span>
+                <span class="n">owning_user</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_tweepy_to_user</span><span class="p">(</span><span class="n">resp</span><span class="o">.</span><span class="n">user</span><span class="p">)</span>
+
+                <span class="n">lst</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">List</span><span class="o">.</span><span class="n">from_tweepy</span><span class="p">(</span><span class="n">resp</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+                <span class="n">lst</span><span class="o">.</span><span class="n">owning_user</span> <span class="o">=</span> <span class="n">owning_user</span>
+
+                <span class="c1"># Fetch the list members from Twitter</span>
+                <span class="n">users</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">list_members</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">))</span>
+            <span class="k">except</span> <span class="n">err</span><span class="o">.</span><span class="n">NotFoundError</span><span class="p">:</span>
+                <span class="c1"># the bad targets are logged in the calling Job class</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_bad_targets</span><span class="p">([</span><span class="n">target</span><span class="p">])</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+
+                <span class="n">users</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_tweepy_to_user</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">users</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_users</span><span class="p">(</span><span class="n">users</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_update_memberships</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">users</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_hydrate_lists_fullnames</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lists</span><span class="p">):</span>
+        <span class="n">owner_screen_names</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">lists</span><span class="p">]</span>
+        <span class="n">slugs</span> <span class="o">=</span> <span class="p">[</span><span class="n">obj</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">obj</span> <span class="ow">in</span> <span class="n">lists</span><span class="p">]</span>
+
+        <span class="c1">#</span>
+        <span class="c1"># Hydrate the list owners</span>
+        <span class="c1">#</span>
+
+        <span class="c1"># _hydrate_sub doesn&#39;t raise NotFoundError on bad users because</span>
+        <span class="c1"># lookup_users doesn&#39;t do so - no need to catch it</span>
+        <span class="n">owners</span><span class="p">,</span> <span class="n">bad_owners</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hydrate_sub</span><span class="p">(</span><span class="n">screen_names</span><span class="o">=</span><span class="n">owner_screen_names</span><span class="p">)</span>
+
+        <span class="c1">#</span>
+        <span class="c1"># Get list info and list members</span>
+        <span class="c1">#</span>
+
+        <span class="k">for</span> <span class="n">target</span><span class="p">,</span> <span class="n">owner</span><span class="p">,</span> <span class="n">slug</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">lists</span><span class="p">,</span> <span class="n">owners</span><span class="p">,</span> <span class="n">slugs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">owner</span> <span class="ow">in</span> <span class="n">bad_owners</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_bad_targets</span><span class="p">([</span><span class="n">target</span><span class="p">])</span>
+                <span class="k">continue</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">twargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;slug&#39;</span><span class="p">:</span> <span class="n">slug</span><span class="p">,</span> <span class="s1">&#39;owner_id&#39;</span><span class="p">:</span> <span class="n">owner</span><span class="o">.</span><span class="n">user_id</span><span class="p">}</span>
+
+                <span class="c1"># Fetch the list itself</span>
+                <span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">get_list</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">)</span>
+                <span class="n">lst</span> <span class="o">=</span> <span class="n">md</span><span class="o">.</span><span class="n">List</span><span class="o">.</span><span class="n">from_tweepy</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+
+                <span class="c1"># Fetch the list members from Twitter</span>
+                <span class="n">users</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">list_members</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">))</span>
+            <span class="k">except</span> <span class="n">err</span><span class="o">.</span><span class="n">NotFoundError</span><span class="p">:</span>
+                <span class="c1"># the bad targets are logged in the calling Job class</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_bad_targets</span><span class="p">([</span><span class="n">target</span><span class="p">])</span>
+                <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">merge</span><span class="p">(</span><span class="n">lst</span><span class="p">)</span>
+
+                <span class="n">users</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_tweepy_to_user</span><span class="p">(</span><span class="n">u</span><span class="p">)</span> <span class="k">for</span> <span class="n">u</span> <span class="ow">in</span> <span class="n">users</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_users</span><span class="p">(</span><span class="n">users</span><span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_update_memberships</span><span class="p">(</span><span class="n">lst</span><span class="p">,</span> <span class="n">users</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TwitterListTarget.resolve"><a class="viewcode-back" href="../../apidocs.html#twclient.target.TwitterListTarget.resolve">[docs]</a>    <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">context</span><span class="p">:</span>  <span class="c1"># replace current context if there is one</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_mark_resolved</span><span class="p">(</span><span class="n">context</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">pass</span>  <span class="c1"># we already have a context object</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c1"># not context and not self.resolved</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;No context object set and none provided&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">==</span> <span class="s1">&#39;hydrate&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hydrate_lists</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+
+        <span class="n">new</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
+            <span class="k">try</span><span class="p">:</span>
+                <span class="k">if</span> <span class="s1">&#39;/&#39;</span> <span class="ow">in</span> <span class="n">target</span><span class="p">:</span>  <span class="c1"># list &quot;full name&quot; e.g. &quot;foxnews/hosts&quot;</span>
+                    <span class="n">name</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                    <span class="n">slug</span> <span class="o">=</span> <span class="n">target</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span>
+
+                    <span class="n">owner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_user_for_screen_name</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+
+                    <span class="k">assert</span> <span class="n">owner</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># caught below, list not ingested</span>
+
+                    <span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">List</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">and_</span><span class="p">(</span>
+                        <span class="n">md</span><span class="o">.</span><span class="n">List</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">owner</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+                        <span class="n">md</span><span class="o">.</span><span class="n">List</span><span class="o">.</span><span class="n">slug</span> <span class="o">==</span> <span class="n">slug</span>
+                    <span class="p">))</span><span class="o">.</span><span class="n">one_or_none</span><span class="p">()</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># target is Twitter&#39;s integer list ID</span>
+                    <span class="n">lst</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">List</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                        <span class="n">md</span><span class="o">.</span><span class="n">List</span><span class="o">.</span><span class="n">list_id</span> <span class="o">==</span> <span class="nb">int</span><span class="p">(</span><span class="n">target</span><span class="p">)</span>
+                    <span class="p">)</span><span class="o">.</span><span class="n">one_or_none</span><span class="p">()</span>
+
+                <span class="k">assert</span> <span class="n">lst</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>  <span class="c1"># also list not ingested</span>
+            <span class="k">except</span> <span class="ne">AssertionError</span><span class="p">:</span>  <span class="c1"># list hasn&#39;t been ingested</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_missing_targets</span><span class="p">([</span><span class="n">target</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">==</span> <span class="s1">&#39;fetch&#39;</span><span class="p">:</span>
+                    <span class="n">new</span> <span class="o">+=</span> <span class="p">[</span><span class="n">target</span><span class="p">]</span>
+                <span class="k">else</span><span class="p">:</span>  <span class="c1"># context.resolve_mode == &#39;skip&#39;</span>
+                    <span class="k">continue</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="c1"># every user currently recorded as a list member</span>
+                <span class="n">users</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">context</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">User</span><span class="p">)</span><span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                    <span class="n">md</span><span class="o">.</span><span class="n">User</span><span class="o">.</span><span class="n">user_id</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span>
+                        <span class="n">m</span><span class="o">.</span><span class="n">user_id</span>
+                        <span class="k">for</span> <span class="n">m</span> <span class="ow">in</span> <span class="n">lst</span><span class="o">.</span><span class="n">list_memberships</span>
+                        <span class="k">if</span> <span class="n">m</span><span class="o">.</span><span class="n">valid_end_dt</span> <span class="ow">is</span> <span class="kc">None</span>  <span class="c1"># as above</span>
+                    <span class="p">])</span>
+                <span class="p">)</span>
+
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_users</span><span class="p">(</span><span class="n">users</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">context</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">==</span> <span class="s1">&#39;fetch&#39;</span> <span class="ow">and</span> <span class="n">new</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hydrate_lists</span><span class="p">(</span><span class="n">new</span><span class="p">)</span></div></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019-2021, Massachusetts Institute of Technology.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
