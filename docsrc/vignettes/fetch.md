@@ -116,7 +116,7 @@ comments as inline text
 
 ```
 # Set up the database. This creates a persistent profile in a config file called
-# `~/.twclientrc`, so there's need to type the URL repeatedly.
+# `~/.twclientrc`, so there's no need to type the URL repeatedly.
 twitter config add-db -u "postgresql:///" postgres
 
 # Initialize the DB schema, **dropping any existing data**.
