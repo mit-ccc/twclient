@@ -1,5 +1,5 @@
 '''
-A Twitter API wrapper for job classes
+A Twitter API wrapper for job classes.
 '''
 
 import logging
@@ -32,7 +32,7 @@ class TwitterApi:
     Attributes
     ----------
     auths : list of tweepy.AuthHandler
-        The Twitter API credentials passed on initialization.
+        The parameter passed to __init__.
 
     pool : instance of models.AuthPoolAPI
         The AuthPoolAPI constructed with the API credentials.
@@ -92,8 +92,9 @@ class TwitterApi:
 
         **kwargs
             Other arguments to pass through to the tweepy method, or to
-            tweepy.Cursor if cursor == True. (In the latter case, the arguments
-            will be passed through to the method ultimately called.)
+            tweepy.Cursor if cursor == True. (In the latter case, tweepy.Cursor
+            will in turn pass arguments it doesn't consume through to the
+            method ultimately called.)
 
         Yields
         ------
@@ -232,8 +233,8 @@ class TwitterApi:
 
         This method wraps a call to Twitter's lists/show method (via the
         make_api_call method, and ultimately via tweepy.API's get_list method).
-        The target list may be specified, as in the list_members method, by
-        exactly one of a) full_name, b) list_id, or c) slug and exactly one of
+        The target list must be specified, as in the list_members method, by
+        exactly one of list_id or slug as well as exactly one of
         owner_screen_name or owner_id.
 
         Parameters
@@ -283,8 +284,8 @@ class TwitterApi:
 
         This method wraps a call to Twitter's lists/members API method (via the
         make_api_call method and ultimately via tweepy.API's list_members
-        method). The target list may be specified, as in the get_list method,
-        by exactly one of a) full_name, b) list_id, or c) slug and exactly one
+        method). The target list must be specified, as in the get_list method,
+        by exactly one of list_id or slug as well as exactly one
         of owner_screen_name or owner_id.
 
         Parameters
@@ -395,7 +396,7 @@ class TwitterApi:
         Parameters
         ----------
         user_id : int, or None
-            Twitter's integer user ID for the user whose followers' IDS are to
+            Twitter's integer user ID for the user whose followers' IDs are to
             be retrieved.
 
         screen_name : str, or None
@@ -441,7 +442,7 @@ class TwitterApi:
         Parameters
         ----------
         user_id : int, or None
-            Twitter's integer user ID for the user whose friends' IDS are to
+            Twitter's integer user ID for the user whose friends' IDs are to
             be retrieved.
 
         screen_name : str, or None

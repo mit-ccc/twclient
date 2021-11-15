@@ -102,7 +102,7 @@ class Job(ABC):
             msg = msg.format(__version__, db_version)
             raise err.BadSchemaError(message=msg)
 
-        if db_version < __version__:
+        if db_version < __version__:  # likely to change in future versions
             msg = 'Package version {0} cannot migrate old schema version ' \
                   '{1}; consider downgrading the package version'
             msg = msg.format(__version__, db_version)
@@ -144,13 +144,12 @@ class Job(ABC):
 
         return instance
 
+    # This method is the main entrypoint for the Job class. Subclasses are
+    # expected to override it with their business logic.
     @abstractmethod
     def run(self):
         '''
-        The main entrypoint for the Job class.
-
-        This method is the main entrypoint for the Job class. Subclasses are
-        expected to override it with their business logic.
+        Run the job.
         '''
 
         raise NotImplementedError()
@@ -199,7 +198,7 @@ class TargetJob(Job):
     Parameters
     ----------
     targets : list of target.Target
-        The list of targets for
+        The list of targets for the job.
 
     allow_missing_targets : bool
         If resolving the targets indicates that some targets should be in the
@@ -267,8 +266,8 @@ class TargetJob(Job):
         '''
         The combined set of users referred to by all targets.
 
-        This is the union of all the users in the Target instances in
-        self.targets. If the targets have not been resolved, accessing this
+        This is the union of all the users referred to by the Target instances
+        in self.targets. If the targets have not been resolved, accessing this
         attribute will raise AttributeError.
         '''
 
@@ -281,7 +280,9 @@ class TargetJob(Job):
 
         This is the union of all the bad raw targets in the Target instances in
         self.targets. If the targets have not been resolved, accessing this
-        attribute will raise AttributeError.
+        attribute will raise AttributeError. See the documentation for
+        target.Target for details of what a target and raw target are and its
+        bad_targets attribute for what it means for a raw target to be bad.
         '''
 
         return self._combine_sub_attrs('bad_targets')
@@ -293,7 +294,10 @@ class TargetJob(Job):
 
         This is the union of all the missing raw targets in the Target
         instances in self.targets. If the targets have not been resolved,
-        accessing this attribute will raise AttributeError.
+        accessing this attribute will raise AttributeError. See the
+        documentation for target.Target for details of what a target and raw
+        target are and its missing_targets attribute for what it means for a
+        raw target to be missing.
         '''
 
         return self._combine_sub_attrs('missing_targets')
@@ -305,7 +309,9 @@ class TargetJob(Job):
 
         This is the union of all the good raw targets in the Target instances
         in self.targets. If the targets have not been resolved, accessing this
-        attribute will raise AttributeError.
+        attribute will raise AttributeError. See the documentation for
+        target.Target for details of what a target and raw target are and its
+        good_targets attribute for what it means for a raw target to be good.
         '''
 
         return self._combine_sub_attrs('good_targets')
@@ -372,8 +378,12 @@ class ApiJob(TargetJob):
         None, which loads all data retrieved in one batch. Lower values
         minimize memory usage at the cost of slower loading speeds, while
         higher values do the reverse. Target instances in self.targets do not
-        consider this value (it applies only to other rows loaded by the ApiJob
-        instance).
+        consider this value--it applies only to other rows loaded by the ApiJob
+        instance--because there are generally not enough targets to consume a
+        significant amount of memory. Followers and friends lists in particular
+        can be large enough to cause out-of-memory conditions; setting
+        ``load_batch_size`` to an appropriate value (e.g., 5000) can address
+        this problem.
 
     Attributes
     ----------
@@ -458,15 +468,15 @@ class ApplyTagJob(TagJob, TargetJob):
 
     This job applies an existing user tag to a set of users. If the tag does
     not exist, error.BadTagError is raised. (Use CreateTagJob to create a new
-    tag.) The targets are resolved to users with resolve_mode == 'skip' (i.e.,
-    any requested users which do not exist in the database are not looked up
-    from the Twitter API). If any users were not successfully resolved,
-    error.BadTargetError is raised unless the allow_missing_targets parameter
-    is True. Otherwise, any users which were successfully resolved from the
-    targets are given the tag. In particular, if no users were successfully
-    resolved and allow_missing_users is True, nothing is done and no error is
-    raised. The entire job is run as one transaction; if anything goes wrong,
-    no tags are applied.
+    tag.) The targets are resolved to users with ``resolve_mode == 'skip'``
+    (i.e., any requested users which do not exist in the database are not
+    looked up from the Twitter API). If any users were not successfully
+    resolved, error.BadTargetError is raised unless the allow_missing_targets
+    parameter is True. Otherwise, any users which were successfully resolved
+    from the targets are given the tag. In particular, if no users were
+    successfully resolved and allow_missing_users is True, nothing is done and
+    no error is raised. The entire job is run as one transaction; if anything
+    goes wrong, no tags are applied.
     '''
 
     resolve_mode = 'skip'
@@ -508,11 +518,11 @@ class UserInfoJob(ApiJob):
     '''
     A job which hydrates users.
 
-    This job resolves its targets to users with resolve_mode == 'hydrate'. That
-    is, it fetches data on those users from Twitter's users/lookup endpoint,
-    and stores the resulting data in the database. No other work is done. The
-    entire job is run in one transaction; if anything goes wrong, no users are
-    loaded.
+    This job resolves its targets to users with ``resolve_mode == 'hydrate'``.
+    That is, it fetches data on those users from Twitter's ``users/lookup``
+    endpoint, and stores the resulting data in the database. No other work is
+    done. The entire job is run in one transaction; if anything goes wrong, no
+    users are loaded.
     '''
 
     resolve_mode = 'hydrate'

@@ -37,10 +37,20 @@
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
 <ul>
-<li class="toctree-l1"><a class="reference internal" href="../../readme.html">README</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../changelog.html">CHANGELOG</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../vignettes/fetch.html">Fetching data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../vignettes/extract.html">Extracting data</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apidocs.html">API Documentation</a></li>
 </ul>
 
         </div>
@@ -69,7 +79,7 @@
              
   <h1>Source code for twclient.twitter_api</h1><div class="highlight"><pre>
 <span></span><span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">A Twitter API wrapper for job classes</span>
+<span class="sd">A Twitter API wrapper for job classes.</span>
 <span class="sd">&#39;&#39;&#39;</span>
 
 <span class="kn">import</span> <span class="nn">logging</span>
@@ -83,7 +93,7 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="TwitterApi"><a class="viewcode-back" href="../../api/twclient.html#twclient.twitter_api.TwitterApi">[docs]</a><span class="k">class</span> <span class="nc">TwitterApi</span><span class="p">:</span>
+<div class="viewcode-block" id="TwitterApi"><a class="viewcode-back" href="../../apidocs.html#twclient.twitter_api.TwitterApi">[docs]</a><span class="k">class</span> <span class="nc">TwitterApi</span><span class="p">:</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Wrap calls to the Twitter API with cursoring, common parameters, etc.</span>
 
@@ -102,7 +112,7 @@
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    auths : list of tweepy.AuthHandler</span>
-<span class="sd">        The Twitter API credentials passed on initialization.</span>
+<span class="sd">        The parameter passed to __init__.</span>
 
 <span class="sd">    pool : instance of models.AuthPoolAPI</span>
 <span class="sd">        The AuthPoolAPI constructed with the API credentials.</span>
@@ -136,7 +146,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">auths</span> <span class="o">=</span> <span class="n">auths</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">pool</span> <span class="o">=</span> <span class="n">ap</span><span class="o">.</span><span class="n">AuthPoolAPI</span><span class="p">(</span><span class="n">auths</span><span class="o">=</span><span class="n">auths</span><span class="p">)</span>
 
-<div class="viewcode-block" id="TwitterApi.make_api_call"><a class="viewcode-back" href="../../api/twclient.html#twclient.twitter_api.TwitterApi.make_api_call">[docs]</a>    <span class="k">def</span> <span class="nf">make_api_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">cursor</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">max_items</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="TwitterApi.make_api_call"><a class="viewcode-back" href="../../apidocs.html#twclient.twitter_api.TwitterApi.make_api_call">[docs]</a>    <span class="k">def</span> <span class="nf">make_api_call</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">method</span><span class="p">,</span> <span class="n">cursor</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">max_items</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Make a call to the Twitter API.</span>
 
@@ -162,8 +172,9 @@
 
 <span class="sd">        **kwargs</span>
 <span class="sd">            Other arguments to pass through to the tweepy method, or to</span>
-<span class="sd">            tweepy.Cursor if cursor == True. (In the latter case, the arguments</span>
-<span class="sd">            will be passed through to the method ultimately called.)</span>
+<span class="sd">            tweepy.Cursor if cursor == True. (In the latter case, tweepy.Cursor</span>
+<span class="sd">            will in turn pass arguments it doesn&#39;t consume through to the</span>
+<span class="sd">            method ultimately called.)</span>
 
 <span class="sd">        Yields</span>
 <span class="sd">        ------</span>
@@ -210,7 +221,7 @@
     <span class="c1"># Direct wraps of Twitter API methods</span>
     <span class="c1">#</span>
 
-<div class="viewcode-block" id="TwitterApi.lookup_users"><a class="viewcode-back" href="../../api/twclient.html#twclient.twitter_api.TwitterApi.lookup_users">[docs]</a>    <span class="k">def</span> <span class="nf">lookup_users</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">screen_names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="TwitterApi.lookup_users"><a class="viewcode-back" href="../../apidocs.html#twclient.twitter_api.TwitterApi.lookup_users">[docs]</a>    <span class="k">def</span> <span class="nf">lookup_users</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_ids</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">screen_names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Call Twitter&#39;s users/lookup API method.</span>
 
@@ -295,15 +306,15 @@
 
                 <span class="k">yield from</span> <span class="n">ret</span></div>
 
-<div class="viewcode-block" id="TwitterApi.get_list"><a class="viewcode-back" href="../../api/twclient.html#twclient.twitter_api.TwitterApi.get_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">slug</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">owner_screen_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="TwitterApi.get_list"><a class="viewcode-back" href="../../apidocs.html#twclient.twitter_api.TwitterApi.get_list">[docs]</a>    <span class="k">def</span> <span class="nf">get_list</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">slug</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">owner_screen_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                  <span class="n">owner_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Call Twitter&#39;s lists/show API method.</span>
 
 <span class="sd">        This method wraps a call to Twitter&#39;s lists/show method (via the</span>
 <span class="sd">        make_api_call method, and ultimately via tweepy.API&#39;s get_list method).</span>
-<span class="sd">        The target list may be specified, as in the list_members method, by</span>
-<span class="sd">        exactly one of a) full_name, b) list_id, or c) slug and exactly one of</span>
+<span class="sd">        The target list must be specified, as in the list_members method, by</span>
+<span class="sd">        exactly one of list_id or slug as well as exactly one of</span>
 <span class="sd">        owner_screen_name or owner_id.</span>
 
 <span class="sd">        Parameters</span>
@@ -346,15 +357,15 @@
 
         <span class="k">return</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">make_api_call</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">))</span></div>
 
-<div class="viewcode-block" id="TwitterApi.list_members"><a class="viewcode-back" href="../../api/twclient.html#twclient.twitter_api.TwitterApi.list_members">[docs]</a>    <span class="k">def</span> <span class="nf">list_members</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">slug</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">owner_screen_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+<div class="viewcode-block" id="TwitterApi.list_members"><a class="viewcode-back" href="../../apidocs.html#twclient.twitter_api.TwitterApi.list_members">[docs]</a>    <span class="k">def</span> <span class="nf">list_members</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">list_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">slug</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">owner_screen_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
                      <span class="n">owner_id</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Call Twitter&#39;s lists/members API method.</span>
 
 <span class="sd">        This method wraps a call to Twitter&#39;s lists/members API method (via the</span>
 <span class="sd">        make_api_call method and ultimately via tweepy.API&#39;s list_members</span>
-<span class="sd">        method). The target list may be specified, as in the get_list method,</span>
-<span class="sd">        by exactly one of a) full_name, b) list_id, or c) slug and exactly one</span>
+<span class="sd">        method). The target list must be specified, as in the get_list method,</span>
+<span class="sd">        by exactly one of list_id or slug as well as exactly one</span>
 <span class="sd">        of owner_screen_name or owner_id.</span>
 
 <span class="sd">        Parameters</span>
@@ -398,7 +409,7 @@
 
         <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_api_call</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TwitterApi.user_timeline"><a class="viewcode-back" href="../../api/twclient.html#twclient.twitter_api.TwitterApi.user_timeline">[docs]</a>    <span class="k">def</span> <span class="nf">user_timeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">screen_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="TwitterApi.user_timeline"><a class="viewcode-back" href="../../apidocs.html#twclient.twitter_api.TwitterApi.user_timeline">[docs]</a>    <span class="k">def</span> <span class="nf">user_timeline</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">screen_name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Call Twitter&#39;s statuses/user_timeline API method.</span>
 
@@ -454,7 +465,7 @@
 
         <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_api_call</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TwitterApi.followers_ids"><a class="viewcode-back" href="../../api/twclient.html#twclient.twitter_api.TwitterApi.followers_ids">[docs]</a>    <span class="k">def</span> <span class="nf">followers_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">screen_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="TwitterApi.followers_ids"><a class="viewcode-back" href="../../apidocs.html#twclient.twitter_api.TwitterApi.followers_ids">[docs]</a>    <span class="k">def</span> <span class="nf">followers_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">screen_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Call Twitter&#39;s followers/ids API method.</span>
 
@@ -465,7 +476,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        user_id : int, or None</span>
-<span class="sd">            Twitter&#39;s integer user ID for the user whose followers&#39; IDS are to</span>
+<span class="sd">            Twitter&#39;s integer user ID for the user whose followers&#39; IDs are to</span>
 <span class="sd">            be retrieved.</span>
 
 <span class="sd">        screen_name : str, or None</span>
@@ -498,7 +509,7 @@
 
         <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_api_call</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">)</span></div>
 
-<div class="viewcode-block" id="TwitterApi.friends_ids"><a class="viewcode-back" href="../../api/twclient.html#twclient.twitter_api.TwitterApi.friends_ids">[docs]</a>    <span class="k">def</span> <span class="nf">friends_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">screen_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+<div class="viewcode-block" id="TwitterApi.friends_ids"><a class="viewcode-back" href="../../apidocs.html#twclient.twitter_api.TwitterApi.friends_ids">[docs]</a>    <span class="k">def</span> <span class="nf">friends_ids</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">user_id</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">screen_name</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Call Twitter&#39;s friends/ids API method.</span>
 
@@ -511,7 +522,7 @@
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
 <span class="sd">        user_id : int, or None</span>
-<span class="sd">            Twitter&#39;s integer user ID for the user whose friends&#39; IDS are to</span>
+<span class="sd">            Twitter&#39;s integer user ID for the user whose friends&#39; IDs are to</span>
 <span class="sd">            be retrieved.</span>
 
 <span class="sd">        screen_name : str, or None</span>

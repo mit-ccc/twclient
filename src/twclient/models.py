@@ -1,5 +1,5 @@
 '''
-The database schema for storing Twitter data
+The database schema for storing Twitter data.
 '''
 
 import hashlib
@@ -49,7 +49,7 @@ class Base:
     '''
 
     @declared_attr
-    def __tablename__(cls):  # noqa: 805 pylint: disable=no-self-argument
+    def __tablename__(cls):  # pylint: disable=no-self-argument
         return '_'.join(ut.split_camel_case(cls.__name__)).lower()
 
     def _repr(self, **fields):
@@ -94,7 +94,7 @@ class UniqueMixin:
     # As in TimestampsMixin, hack to put the columns at the end in tables,
     # which declaring them as class attributes doesn't
     @declared_attr
-    def unique_hash(cls):  # noqa: 805 pylint: disable=no-self-argument
+    def unique_hash(cls):  # pylint: disable=no-self-argument
         '''
         A hash to implement a unique constraint without length limits.
         '''
@@ -170,7 +170,7 @@ class TimestampsMixin:
     '''
 
     @declared_attr
-    def insert_dt(cls):  # noqa: 805 pylint: disable=no-self-argument
+    def insert_dt(cls):  # pylint: disable=no-self-argument
         '''
         The load time of the row into the database.
         '''
@@ -179,7 +179,7 @@ class TimestampsMixin:
                       nullable=False)
 
     @declared_attr
-    def modified_dt(cls):  # noqa: 805 pylint: disable=no-self-argument
+    def modified_dt(cls):  # pylint: disable=no-self-argument
         '''
         The last time the row was modified. Note that this field is updated by
         application logic rather than a trigger.
@@ -198,6 +198,8 @@ class FromTweepyInterface:
     returns the instance of the class represented by the tweepy object.
     '''
 
+    # Subclasses are expected to provide this logic, and the implementation
+    # here is an abstract stub that raises NotImplementedError.
     @classmethod
     def from_tweepy(cls, obj, session=None):
         '''
@@ -205,9 +207,7 @@ class FromTweepyInterface:
 
         This method constructs a class instance from a tweepy object. A
         sqlalchemy database session is optional in general but may be required
-        by some subclasses which rely on UniqueMixin.as_unique. Subclasses are
-        expected to provide this logic, and the implementation here is an
-        abstract stub that raises NotImplementedError.
+        by some subclasses which rely on UniqueMixin.as_unique.
 
         Parameters
         ----------
@@ -541,7 +541,7 @@ class List(TimestampsMixin, FromTweepyInterface, Base):
         Either "public" or "private" depending on the visibility of the list.
 
     member_count
-        The number of users on the list.
+        The number of users on the list as of modified_dt.
 
     subscriber_count
         The number of users who subscribe to a public list (i.e., who have

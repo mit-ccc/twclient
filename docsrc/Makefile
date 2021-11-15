@@ -18,7 +18,7 @@ all: github
 github: html
 	cp -a _build/html/. ../docs
 
-html: apidoc
+html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
 
 apidoc:

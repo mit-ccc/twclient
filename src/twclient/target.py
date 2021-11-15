@@ -1,5 +1,5 @@
 '''
-Classes encapsulating the "targets" of certain jobs
+Classes encapsulating the "targets" of certain jobs.
 '''
 
 import random
@@ -37,7 +37,7 @@ class Target(ABC):
         context : instance of job.Job, or None
             The Job instance's database and API connections will be used as
             needed to resolve raw targets to users. If not passed on
-            initialization, this
+            initialization, a context object must be passed to ``resolve()``.
 
         randomize : bool
             Whether to process raw targets in a randomized order. This may
@@ -47,11 +47,12 @@ class Target(ABC):
     Attributes
     ----------
         targets : list of str or int
-            The deduplicated list of raw targets passed in as the targets
-            parameter.
+            The list of raw targets passed in as the targets parameter, but
+            deduplicated (without changing the relative order of any retained
+            targets).
 
         randomize : bool
-            Whether raw targets should be processed in a randomized order.
+            The parameter passed to __init__.
     '''
 
     def __init__(self, **kwargs):
@@ -91,6 +92,8 @@ class Target(ABC):
 
         self._validate_targets()
 
+    # This method is intended to be implemented by subclasses as
+    # their main piece of logic, so the implementation on Target is abstract.
     @abstractmethod
     def resolve(self, context=None):
         '''
@@ -104,9 +107,8 @@ class Target(ABC):
         and the .users attribute contains all users which could be resolved
         from any of the raw targets. If no context parameter was passed to
         __init__, one must be given here. If one was passed to __init__, it is
-        replaced with the value passed here so long as bool(context) == True.
-        This method is intended to be implemented by subclasses as their main
-        piece of logic, so the implementation on Target is abstract.
+        replaced with the value passed here so long as ``bool(context) ==
+        True``.
 
         Parameters
         ----------
@@ -212,12 +214,13 @@ class Target(ABC):
     @property
     def good_targets(self):
         '''
-        Raw targets which were successfully resolved to users.
+        Raw targets which were successfully resolved to users, either in the
+        database or via the Twitter API.
 
         These are targets which, depending on the context object's setting of
         resolve_mode, may have been looked for in the database or via Twitter's
         API, and were found without error. Note that .good_targets and .users
-        are different: if one target is, for example, the Twitter list name
+        are different: if one target is, for example, the Twitter list named
         "cspan/members-of-congress", that value will appear in .good_targets
         and several hundred models.User objects for the Congressional Twitter
         accounts will appear in .users. Accessing this attribute before
@@ -490,20 +493,20 @@ class TwitterListTarget(Target):
     '''
     A set of Twitter lists to resolve to users.
 
-    This class takes targets specified by the "full names" of Twitter lists.
-    (That is, the owner_screen_name/slug format, like
-    "cspan/members-of-congress".) These targets are resolved to models.User
-    objects in one of three ways, determined by the value of
-    context.resolve_mode. If the resolve mode is 'fetch', the lists are first
-    looked up in the database, with any missing lists looked up via Twitter's
-    API. (No lists will be in missing_targets in this case, only good_targets
-    or bad_targets.) If the mode is 'hydrate', all lists will be looked up via
-    Twitter's API. If mode is 'skip', lists not found in the database will not
-    be looked up via Twitter API, and will be left in missing_targets. Any
-    other resolve mode set on the context object will raise an error. Note that
-    not only the users who are list members are stored, but also the list and
-    its association with the users are added to the context object's database
-    session.
+    This class takes Twitter lists as targets. These lists can be specified by
+    their "full names" (that is, the owner_screen_name/slug format, like
+    "cspan/members-of-congress") or by their numeric IDs. The list targets are
+    resolved to models.User objects in one of three ways, determined by the
+    value of context.resolve_mode. If the resolve mode is 'fetch', the lists
+    are first looked up in the database, with any missing lists looked up via
+    Twitter's API. (No lists will be in missing_targets in this case, only
+    good_targets or bad_targets.) If the mode is 'hydrate', all lists will be
+    looked up via Twitter's API. If mode is 'skip', lists not found in the
+    database will not be looked up via Twitter API, and will be left in
+    missing_targets. Any other resolve mode set on the context object will
+    raise an error. Note that not only the users who are list members are
+    stored, but also the list itself and its association with the users are
+    added to the appropriate tables in the context object's database session.
     '''
 
     allowed_resolve_modes = ('fetch', 'hydrate', 'skip')

@@ -1,5 +1,5 @@
 '''
-A version of tweepy.API with support for multiple sets of credentials
+A version of tweepy.API with support for multiple sets of credentials.
 '''
 
 import time
