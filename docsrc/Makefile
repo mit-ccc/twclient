@@ -4,14 +4,11 @@
 # You can set these variables from the command line.
 SPHINXOPTS    =
 SPHINXBUILD   = sphinx-build
-SPHINXAPIDOC  = sphinx-apidoc
 SPHINXPROJ    = twclient
 SOURCEDIR     = .
 BUILDDIR      = _build
-CODEDIR       = ../src/twclient/
-CODEEXCLUDES  = ../src/twclient/command.py
 
-.PHONY: all github html apidoc help Makefile
+.PHONY: all github html help Makefile
 
 all: github
 
@@ -20,9 +17,6 @@ github: html
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
-
-apidoc:
-	$(SPHINXAPIDOC) -f -o api/ $(CODEDIR) $(CODEEXCLUDES)
 
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
