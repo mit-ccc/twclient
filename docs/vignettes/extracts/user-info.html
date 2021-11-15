@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>User info &mdash; twclient 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="API Documentation" href="../../apidocs.html" />
+    <link rel="prev" title="User tweets" href="tweets.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../index.html" class="icon icon-home"> twclient
+          </a>
+              <div class="version">
+                0.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../fetch.html">Getting data from the Twitter API</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../extract.html">Extracting data</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="follow-graph.html">Follow graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mention-graph.html">Mention graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mutual-followers.html">Mutual followers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mutual-friends.html">Mutual friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quote-graph.html">Quote graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="reply-graph.html">Reply graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="retweet-graph.html">Retweet graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tweets.html">User tweets</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">User info</a></li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apidocs.html">API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">twclient</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../extract.html">Extracting data</a> &raquo;</li>
+      <li>User info</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../../_sources/vignettes/extracts/user-info.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="user-info">
+<h1>User info<a class="headerlink" href="#user-info" title="Permalink to this headline"></a></h1>
+<p>– user info</p>
+<p>with tmp_universe as
+(</p>
+<blockquote>
+<div><dl class="simple">
+<dt>select</dt><dd><p>u.user_id</p>
+</dd>
+<dt>from “user” u</dt><dd><p>inner join user_tag ut using(user_id)
+inner join tag ta using(tag_id)</p>
+</dd>
+<dt>where</dt><dd><p>ta.name = ‘universe’</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>),</p>
+<p>tmp_tweet_data as
+(</p>
+<blockquote>
+<div><dl>
+<dt>select</dt><dd><p>tu.user_id,</p>
+<p>count(*) as tweets_all_time,
+min(tw.create_dt) as first_tweet_dt,
+max(tw.create_dt) as last_tweet_dt,</p>
+<p>max((tw.source in (‘Twitter for Android’))::int) as android_user,
+max((tw.source in (‘Twitter for iPhone’, ‘Twitter for iPad’, ‘iOS’,</p>
+<blockquote>
+<div><p>‘Tweetbot for iOS’))::int) as ios_user,</p>
+</div></blockquote>
+<dl class="simple">
+<dt>max((tw.source in (‘Twitter Web App’, ‘Twitter Web Client’,</dt><dd><p>‘TweetDeck’, ‘Twitter for Mac’,
+‘Tweetbot for Mac’))::int) as desktop_user,</p>
+</dd>
+<dt>max((tw.source in (‘SocialFlow’, ‘Hootsuite’, ‘Hootsuite Inc.’,</dt><dd><p>‘Twitter Media Studio’))::int) as business_app_user</p>
+</dd>
+</dl>
+</dd>
+<dt>from tmp_universe tu</dt><dd><p>inner join tweet tw using(user_id)</p>
+</dd>
+</dl>
+<p>group by 1</p>
+</div></blockquote>
+<p>),</p>
+<p>tmp_follower_count as
+(</p>
+<blockquote>
+<div><dl class="simple">
+<dt>select</dt><dd><p>tu.user_id,
+count(*) as followers</p>
+</dd>
+<dt>from tmp_universe tu</dt><dd><p>inner join follow fo on fo.target_user_id = tu.user_id</p>
+</dd>
+<dt>where</dt><dd><p>fo.valid_end_dt is null</p>
+</dd>
+</dl>
+<p>group by 1</p>
+</div></blockquote>
+<p>),</p>
+<p>tmp_friend_count as
+(</p>
+<blockquote>
+<div><dl class="simple">
+<dt>select</dt><dd><p>tu.user_id,
+count(*) as friends</p>
+</dd>
+<dt>from tmp_universe tu</dt><dd><p>inner join follow fo on fo.source_user_id = tu.user_id</p>
+</dd>
+<dt>where</dt><dd><p>fo.valid_end_dt is null</p>
+</dd>
+</dl>
+<p>group by 1</p>
+</div></blockquote>
+<p>),</p>
+<p>tmp_user_data as
+(</p>
+<blockquote>
+<div><dl class="simple">
+<dt>select</dt><dd><p>i.user_id,
+i.screen_name,
+i.location,
+i.protected,
+i.verified,
+i.listed_count,
+i.account_create_dt</p>
+</dd>
+</dl>
+<p>from
+(</p>
+<blockquote>
+<div><dl>
+<dt>select</dt><dd><p>ud.user_id,</p>
+<p>ud.screen_name,
+ud.location,
+ud.protected,
+ud.verified,
+ud.listed_count,
+ud.create_dt as account_create_dt,</p>
+<p>– this table is append-only, one new row for each call to “twitter
+– fetch users”, we only want the most recent one here
+row_number() over (</p>
+<blockquote>
+<div><p>partition by tu.user_id
+order by ud.insert_dt desc</p>
+</div></blockquote>
+<p>) as rn</p>
+</dd>
+<dt>from tmp_universe tu</dt><dd><p>inner join user_data ud using(user_id)</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>) i
+where</p>
+<blockquote>
+<div><p>i.rn = 1</p>
+</div></blockquote>
+</div></blockquote>
+<p>)
+select</p>
+<blockquote>
+<div><p>tu.user_id,</p>
+<p>tud.account_create_dt,
+tud.protected,
+tud.verified,
+tud.listed_count,
+tud.screen_name,
+tud.location,</p>
+<p>coalesce(tfr.friends, 0) as friends,
+coalesce(tfo.followers, 0) as followers,</p>
+<p>coalesce(ttd.tweets_all_time, 0) as tweets_all_time,
+ttd.first_tweet_dt,
+ttd.last_tweet_dt,
+ttd.ios_user,
+ttd.android_user,
+ttd.desktop_user,
+ttd.business_app_user</p>
+</div></blockquote>
+<dl class="simple">
+<dt>from tmp_universe tu</dt><dd><p>left join tmp_user_data tud on tud.user_id = tu.user_id
+left join tmp_friend_count tfr on tfr.user_id = tu.user_id
+left join tmp_follower_count tfo on tfo.user_id = tu.user_id
+left join tmp_tweet_data ttd on ttd.user_id = tu.user_id;</p>
+</dd>
+</dl>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="tweets.html" class="btn btn-neutral float-left" title="User tweets" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../../apidocs.html" class="btn btn-neutral float-right" title="API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019-2021, Massachusetts Institute of Technology.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>
