@@ -2,8 +2,6 @@
   Mutual followers
 ====================
 
--- mutual followers
-
 -- this is just iteration in sql, it's straightforward but very slow if there
 -- are either lots of users or esp users with lots of followers or esp esp both
 -- because it's roughly O(n^2)

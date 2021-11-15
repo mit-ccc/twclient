@@ -2,8 +2,6 @@
   User info
 =============
 
--- user info 
-
 with tmp_universe as
 (
     select

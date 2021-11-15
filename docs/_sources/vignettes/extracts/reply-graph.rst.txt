@@ -2,8 +2,6 @@
   Reply graph
 ===============
 
--- reply graph
-
 with tmp_universe as
 (
     select

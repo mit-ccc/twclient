@@ -2,8 +2,6 @@
   User tweets
 ===============
 
--- tweets
-
 with tmp_universe as
 (
     select
