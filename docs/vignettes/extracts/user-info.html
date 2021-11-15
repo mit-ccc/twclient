@@ -94,147 +94,124 @@
              
   <section id="user-info">
 <h1>User info<a class="headerlink" href="#user-info" title="Permalink to this headline"></a></h1>
-<p>with tmp_universe as
-(</p>
-<blockquote>
-<div><dl class="simple">
-<dt>select</dt><dd><p>u.user_id</p>
-</dd>
-<dt>from “user” u</dt><dd><p>inner join user_tag ut using(user_id)
-inner join tag ta using(tag_id)</p>
-</dd>
-<dt>where</dt><dd><p>ta.name = ‘universe’</p>
-</dd>
-</dl>
-</div></blockquote>
-<p>),</p>
-<p>tmp_tweet_data as
-(</p>
-<blockquote>
-<div><dl>
-<dt>select</dt><dd><p>tu.user_id,</p>
-<p>count(*) as tweets_all_time,
-min(tw.create_dt) as first_tweet_dt,
-max(tw.create_dt) as last_tweet_dt,</p>
-<p>max((tw.source in (‘Twitter for Android’))::int) as android_user,
-max((tw.source in (‘Twitter for iPhone’, ‘Twitter for iPad’, ‘iOS’,</p>
-<blockquote>
-<div><p>‘Tweetbot for iOS’))::int) as ios_user,</p>
-</div></blockquote>
-<dl class="simple">
-<dt>max((tw.source in (‘Twitter Web App’, ‘Twitter Web Client’,</dt><dd><p>‘TweetDeck’, ‘Twitter for Mac’,
-‘Tweetbot for Mac’))::int) as desktop_user,</p>
-</dd>
-<dt>max((tw.source in (‘SocialFlow’, ‘Hootsuite’, ‘Hootsuite Inc.’,</dt><dd><p>‘Twitter Media Studio’))::int) as business_app_user</p>
-</dd>
-</dl>
-</dd>
-<dt>from tmp_universe tu</dt><dd><p>inner join tweet tw using(user_id)</p>
-</dd>
-</dl>
-<p>group by 1</p>
-</div></blockquote>
-<p>),</p>
-<p>tmp_follower_count as
-(</p>
-<blockquote>
-<div><dl class="simple">
-<dt>select</dt><dd><p>tu.user_id,
-count(*) as followers</p>
-</dd>
-<dt>from tmp_universe tu</dt><dd><p>inner join follow fo on fo.target_user_id = tu.user_id</p>
-</dd>
-<dt>where</dt><dd><p>fo.valid_end_dt is null</p>
-</dd>
-</dl>
-<p>group by 1</p>
-</div></blockquote>
-<p>),</p>
-<p>tmp_friend_count as
-(</p>
-<blockquote>
-<div><dl class="simple">
-<dt>select</dt><dd><p>tu.user_id,
-count(*) as friends</p>
-</dd>
-<dt>from tmp_universe tu</dt><dd><p>inner join follow fo on fo.source_user_id = tu.user_id</p>
-</dd>
-<dt>where</dt><dd><p>fo.valid_end_dt is null</p>
-</dd>
-</dl>
-<p>group by 1</p>
-</div></blockquote>
-<p>),</p>
-<p>tmp_user_data as
-(</p>
-<blockquote>
-<div><dl class="simple">
-<dt>select</dt><dd><p>i.user_id,
-i.screen_name,
-i.location,
-i.protected,
-i.verified,
-i.listed_count,
-i.account_create_dt</p>
-</dd>
-</dl>
-<p>from
-(</p>
-<blockquote>
-<div><dl>
-<dt>select</dt><dd><p>ud.user_id,</p>
-<p>ud.screen_name,
-ud.location,
-ud.protected,
-ud.verified,
-ud.listed_count,
-ud.create_dt as account_create_dt,</p>
-<p>– this table is append-only, one new row for each call to “twitter
-– fetch users”, we only want the most recent one here
-row_number() over (</p>
-<blockquote>
-<div><p>partition by tu.user_id
-order by ud.insert_dt desc</p>
-</div></blockquote>
-<p>) as rn</p>
-</dd>
-<dt>from tmp_universe tu</dt><dd><p>inner join user_data ud using(user_id)</p>
-</dd>
-</dl>
-</div></blockquote>
-<p>) i
-where</p>
-<blockquote>
-<div><p>i.rn = 1</p>
-</div></blockquote>
-</div></blockquote>
-<p>)
-select</p>
-<blockquote>
-<div><p>tu.user_id,</p>
-<p>tud.account_create_dt,
-tud.protected,
-tud.verified,
-tud.listed_count,
-tud.screen_name,
-tud.location,</p>
-<p>coalesce(tfr.friends, 0) as friends,
-coalesce(tfo.followers, 0) as followers,</p>
-<p>coalesce(ttd.tweets_all_time, 0) as tweets_all_time,
-ttd.first_tweet_dt,
-ttd.last_tweet_dt,
-ttd.ios_user,
-ttd.android_user,
-ttd.desktop_user,
-ttd.business_app_user</p>
-</div></blockquote>
-<dl class="simple">
-<dt>from tmp_universe tu</dt><dd><p>left join tmp_user_data tud on tud.user_id = tu.user_id
-left join tmp_friend_count tfr on tfr.user_id = tu.user_id
-left join tmp_follower_count tfo on tfo.user_id = tu.user_id
-left join tmp_tweet_data ttd on ttd.user_id = tu.user_id;</p>
-</dd>
-</dl>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tmp_universe</span> <span class="k">as</span>
+<span class="p">(</span>
+    <span class="k">select</span>
+        <span class="n">u</span><span class="p">.</span><span class="n">user_id</span>
+    <span class="k">from</span> <span class="ss">&quot;user&quot;</span> <span class="n">u</span>
+        <span class="k">inner</span> <span class="k">join</span> <span class="n">user_tag</span> <span class="n">ut</span> <span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+        <span class="k">inner</span> <span class="k">join</span> <span class="n">tag</span> <span class="n">ta</span> <span class="k">using</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span>
+    <span class="k">where</span>
+        <span class="n">ta</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;universe&#39;</span>
+<span class="p">),</span>
+
+<span class="n">tmp_tweet_data</span> <span class="k">as</span>
+<span class="p">(</span>
+    <span class="k">select</span>
+        <span class="n">tu</span><span class="p">.</span><span class="n">user_id</span><span class="p">,</span>
+
+        <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">as</span> <span class="n">tweets_all_time</span><span class="p">,</span>
+        <span class="k">min</span><span class="p">(</span><span class="n">tw</span><span class="p">.</span><span class="n">create_dt</span><span class="p">)</span> <span class="k">as</span> <span class="n">first_tweet_dt</span><span class="p">,</span>
+        <span class="k">max</span><span class="p">(</span><span class="n">tw</span><span class="p">.</span><span class="n">create_dt</span><span class="p">)</span> <span class="k">as</span> <span class="n">last_tweet_dt</span><span class="p">,</span>
+
+        <span class="k">max</span><span class="p">((</span><span class="n">tw</span><span class="p">.</span><span class="k">source</span> <span class="k">in</span> <span class="p">(</span><span class="s1">&#39;Twitter for Android&#39;</span><span class="p">))::</span><span class="nb">int</span><span class="p">)</span> <span class="k">as</span> <span class="n">android_user</span><span class="p">,</span>
+        <span class="k">max</span><span class="p">((</span><span class="n">tw</span><span class="p">.</span><span class="k">source</span> <span class="k">in</span> <span class="p">(</span><span class="s1">&#39;Twitter for iPhone&#39;</span><span class="p">,</span> <span class="s1">&#39;Twitter for iPad&#39;</span><span class="p">,</span> <span class="s1">&#39;iOS&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Tweetbot for iOS&#39;</span><span class="p">))::</span><span class="nb">int</span><span class="p">)</span> <span class="k">as</span> <span class="n">ios_user</span><span class="p">,</span>
+        <span class="k">max</span><span class="p">((</span><span class="n">tw</span><span class="p">.</span><span class="k">source</span> <span class="k">in</span> <span class="p">(</span><span class="s1">&#39;Twitter Web App&#39;</span><span class="p">,</span> <span class="s1">&#39;Twitter Web Client&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;TweetDeck&#39;</span><span class="p">,</span> <span class="s1">&#39;Twitter for Mac&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Tweetbot for Mac&#39;</span><span class="p">))::</span><span class="nb">int</span><span class="p">)</span> <span class="k">as</span> <span class="n">desktop_user</span><span class="p">,</span>
+        <span class="k">max</span><span class="p">((</span><span class="n">tw</span><span class="p">.</span><span class="k">source</span> <span class="k">in</span> <span class="p">(</span><span class="s1">&#39;SocialFlow&#39;</span><span class="p">,</span> <span class="s1">&#39;Hootsuite&#39;</span><span class="p">,</span> <span class="s1">&#39;Hootsuite Inc.&#39;</span><span class="p">,</span>
+                        <span class="s1">&#39;Twitter Media Studio&#39;</span><span class="p">))::</span><span class="nb">int</span><span class="p">)</span> <span class="k">as</span> <span class="n">business_app_user</span>
+    <span class="k">from</span> <span class="n">tmp_universe</span> <span class="n">tu</span>
+        <span class="k">inner</span> <span class="k">join</span> <span class="n">tweet</span> <span class="n">tw</span> <span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+    <span class="k">group</span> <span class="k">by</span> <span class="mi">1</span>
+<span class="p">),</span>
+
+<span class="n">tmp_follower_count</span> <span class="k">as</span>
+<span class="p">(</span>
+    <span class="k">select</span>
+        <span class="n">tu</span><span class="p">.</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">as</span> <span class="n">followers</span>
+    <span class="k">from</span> <span class="n">tmp_universe</span> <span class="n">tu</span>
+        <span class="k">inner</span> <span class="k">join</span> <span class="n">follow</span> <span class="n">fo</span> <span class="k">on</span> <span class="n">fo</span><span class="p">.</span><span class="n">target_user_id</span> <span class="o">=</span> <span class="n">tu</span><span class="p">.</span><span class="n">user_id</span>
+    <span class="k">where</span>
+        <span class="n">fo</span><span class="p">.</span><span class="n">valid_end_dt</span> <span class="k">is</span> <span class="k">null</span>
+    <span class="k">group</span> <span class="k">by</span> <span class="mi">1</span>
+<span class="p">),</span>
+
+<span class="n">tmp_friend_count</span> <span class="k">as</span>
+<span class="p">(</span>
+    <span class="k">select</span>
+        <span class="n">tu</span><span class="p">.</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">as</span> <span class="n">friends</span>
+    <span class="k">from</span> <span class="n">tmp_universe</span> <span class="n">tu</span>
+        <span class="k">inner</span> <span class="k">join</span> <span class="n">follow</span> <span class="n">fo</span> <span class="k">on</span> <span class="n">fo</span><span class="p">.</span><span class="n">source_user_id</span> <span class="o">=</span> <span class="n">tu</span><span class="p">.</span><span class="n">user_id</span>
+    <span class="k">where</span>
+        <span class="n">fo</span><span class="p">.</span><span class="n">valid_end_dt</span> <span class="k">is</span> <span class="k">null</span>
+    <span class="k">group</span> <span class="k">by</span> <span class="mi">1</span>
+<span class="p">),</span>
+
+<span class="n">tmp_user_data</span> <span class="k">as</span>
+<span class="p">(</span>
+    <span class="k">select</span>
+        <span class="n">i</span><span class="p">.</span><span class="n">user_id</span><span class="p">,</span>
+        <span class="n">i</span><span class="p">.</span><span class="n">screen_name</span><span class="p">,</span>
+        <span class="n">i</span><span class="p">.</span><span class="k">location</span><span class="p">,</span>
+        <span class="n">i</span><span class="p">.</span><span class="n">protected</span><span class="p">,</span>
+        <span class="n">i</span><span class="p">.</span><span class="n">verified</span><span class="p">,</span>
+        <span class="n">i</span><span class="p">.</span><span class="n">listed_count</span><span class="p">,</span>
+        <span class="n">i</span><span class="p">.</span><span class="n">account_create_dt</span>
+    <span class="k">from</span>
+    <span class="p">(</span>
+        <span class="k">select</span>
+            <span class="n">ud</span><span class="p">.</span><span class="n">user_id</span><span class="p">,</span>
+
+            <span class="n">ud</span><span class="p">.</span><span class="n">screen_name</span><span class="p">,</span>
+            <span class="n">ud</span><span class="p">.</span><span class="k">location</span><span class="p">,</span>
+            <span class="n">ud</span><span class="p">.</span><span class="n">protected</span><span class="p">,</span>
+            <span class="n">ud</span><span class="p">.</span><span class="n">verified</span><span class="p">,</span>
+            <span class="n">ud</span><span class="p">.</span><span class="n">listed_count</span><span class="p">,</span>
+            <span class="n">ud</span><span class="p">.</span><span class="n">create_dt</span> <span class="k">as</span> <span class="n">account_create_dt</span><span class="p">,</span>
+
+            <span class="c1">-- this table is append-only, one new row for each call to &quot;twitter</span>
+            <span class="c1">-- fetch users&quot;, we only want the most recent one here</span>
+            <span class="n">row_number</span><span class="p">()</span> <span class="n">over</span> <span class="p">(</span>
+                <span class="n">partition</span> <span class="k">by</span> <span class="n">tu</span><span class="p">.</span><span class="n">user_id</span>
+                <span class="k">order</span> <span class="k">by</span> <span class="n">ud</span><span class="p">.</span><span class="n">insert_dt</span> <span class="k">desc</span>
+            <span class="p">)</span> <span class="k">as</span> <span class="n">rn</span>
+        <span class="k">from</span> <span class="n">tmp_universe</span> <span class="n">tu</span>
+            <span class="k">inner</span> <span class="k">join</span> <span class="n">user_data</span> <span class="n">ud</span> <span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+    <span class="p">)</span> <span class="n">i</span>
+    <span class="k">where</span>
+        <span class="n">i</span><span class="p">.</span><span class="n">rn</span> <span class="o">=</span> <span class="mi">1</span>
+<span class="p">)</span>
+<span class="k">select</span>
+    <span class="n">tu</span><span class="p">.</span><span class="n">user_id</span><span class="p">,</span>
+
+    <span class="n">tud</span><span class="p">.</span><span class="n">account_create_dt</span><span class="p">,</span>
+    <span class="n">tud</span><span class="p">.</span><span class="n">protected</span><span class="p">,</span>
+    <span class="n">tud</span><span class="p">.</span><span class="n">verified</span><span class="p">,</span>
+    <span class="n">tud</span><span class="p">.</span><span class="n">listed_count</span><span class="p">,</span>
+    <span class="n">tud</span><span class="p">.</span><span class="n">screen_name</span><span class="p">,</span>
+    <span class="n">tud</span><span class="p">.</span><span class="k">location</span><span class="p">,</span>
+
+    <span class="k">coalesce</span><span class="p">(</span><span class="n">tfr</span><span class="p">.</span><span class="n">friends</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">as</span> <span class="n">friends</span><span class="p">,</span>
+    <span class="k">coalesce</span><span class="p">(</span><span class="n">tfo</span><span class="p">.</span><span class="n">followers</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">as</span> <span class="n">followers</span><span class="p">,</span>
+
+    <span class="k">coalesce</span><span class="p">(</span><span class="n">ttd</span><span class="p">.</span><span class="n">tweets_all_time</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> <span class="k">as</span> <span class="n">tweets_all_time</span><span class="p">,</span>
+    <span class="n">ttd</span><span class="p">.</span><span class="n">first_tweet_dt</span><span class="p">,</span>
+    <span class="n">ttd</span><span class="p">.</span><span class="n">last_tweet_dt</span><span class="p">,</span>
+    <span class="n">ttd</span><span class="p">.</span><span class="n">ios_user</span><span class="p">,</span>
+    <span class="n">ttd</span><span class="p">.</span><span class="n">android_user</span><span class="p">,</span>
+    <span class="n">ttd</span><span class="p">.</span><span class="n">desktop_user</span><span class="p">,</span>
+    <span class="n">ttd</span><span class="p">.</span><span class="n">business_app_user</span>
+<span class="k">from</span> <span class="n">tmp_universe</span> <span class="n">tu</span>
+    <span class="k">left</span> <span class="k">join</span> <span class="n">tmp_user_data</span> <span class="n">tud</span> <span class="k">on</span> <span class="n">tud</span><span class="p">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">tu</span><span class="p">.</span><span class="n">user_id</span>
+    <span class="k">left</span> <span class="k">join</span> <span class="n">tmp_friend_count</span> <span class="n">tfr</span> <span class="k">on</span> <span class="n">tfr</span><span class="p">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">tu</span><span class="p">.</span><span class="n">user_id</span>
+    <span class="k">left</span> <span class="k">join</span> <span class="n">tmp_follower_count</span> <span class="n">tfo</span> <span class="k">on</span> <span class="n">tfo</span><span class="p">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">tu</span><span class="p">.</span><span class="n">user_id</span>
+    <span class="k">left</span> <span class="k">join</span> <span class="n">tmp_tweet_data</span> <span class="n">ttd</span> <span class="k">on</span> <span class="n">ttd</span><span class="p">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">tu</span><span class="p">.</span><span class="n">user_id</span><span class="p">;</span>
+</pre></div>
+</div>
 </section>
 
 

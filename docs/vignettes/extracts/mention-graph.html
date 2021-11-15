@@ -94,40 +94,34 @@
              
   <section id="mention-graph">
 <h1>Mention graph<a class="headerlink" href="#mention-graph" title="Permalink to this headline"></a></h1>
-<p>with tmp_universe as
-(</p>
-<blockquote>
-<div><dl class="simple">
-<dt>select</dt><dd><p>u.user_id</p>
-</dd>
-<dt>from “user” u – standard sql reserves this table name, need to quote it</dt><dd><p>inner join user_tag ut using(user_id)
-inner join tag ta using(tag_id)</p>
-</dd>
-<dt>where</dt><dd><p>– just an example of using tagging, a tag
-– with this name is not created automatically
-ta.name = ‘universe’</p>
-</dd>
-</dl>
-</div></blockquote>
-<p>)
-select</p>
-<blockquote>
-<div><p>uts.user_id as source_user_id,
-utt.user_id as target_user_id,</p>
-<p class="attribution">—can also, e.g., group by time
-– extract(year from tw.create_dt) as year,
-– extract(month from tw.create_dt) as month,</p>
-</div></blockquote>
-<blockquote>
-<div><p>count(*) as num_mentions</p>
-</div></blockquote>
-<dl class="simple">
-<dt>from tmp_universe uts</dt><dd><p>inner join tweet tw using(user_id)
-inner join user_mention mt using(tweet_id)
-inner join tmp_universe utt on utt.user_id = mt.mentioned_user_id</p>
-</dd>
-</dl>
-<p>group by 1,2;</p>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tmp_universe</span> <span class="k">as</span>
+<span class="p">(</span>
+    <span class="k">select</span>
+        <span class="n">u</span><span class="p">.</span><span class="n">user_id</span>
+    <span class="k">from</span> <span class="ss">&quot;user&quot;</span> <span class="n">u</span> <span class="c1">-- standard sql reserves this table name, need to quote it</span>
+        <span class="k">inner</span> <span class="k">join</span> <span class="n">user_tag</span> <span class="n">ut</span> <span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+        <span class="k">inner</span> <span class="k">join</span> <span class="n">tag</span> <span class="n">ta</span> <span class="k">using</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span>
+    <span class="k">where</span>
+        <span class="c1">-- just an example of using tagging, a tag</span>
+        <span class="c1">-- with this name is not created automatically</span>
+        <span class="n">ta</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;universe&#39;</span>
+<span class="p">)</span>
+<span class="k">select</span>
+    <span class="n">uts</span><span class="p">.</span><span class="n">user_id</span> <span class="k">as</span> <span class="n">source_user_id</span><span class="p">,</span>
+    <span class="n">utt</span><span class="p">.</span><span class="n">user_id</span> <span class="k">as</span> <span class="n">target_user_id</span><span class="p">,</span>
+
+    <span class="c1">-- can also, e.g., group by time</span>
+    <span class="c1">-- extract(year from tw.create_dt) as year,</span>
+    <span class="c1">-- extract(month from tw.create_dt) as month,</span>
+
+    <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">as</span> <span class="n">num_mentions</span>
+<span class="k">from</span> <span class="n">tmp_universe</span> <span class="n">uts</span>
+    <span class="k">inner</span> <span class="k">join</span> <span class="n">tweet</span> <span class="n">tw</span> <span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+    <span class="k">inner</span> <span class="k">join</span> <span class="n">user_mention</span> <span class="n">mt</span> <span class="k">using</span><span class="p">(</span><span class="n">tweet_id</span><span class="p">)</span>
+    <span class="k">inner</span> <span class="k">join</span> <span class="n">tmp_universe</span> <span class="n">utt</span> <span class="k">on</span> <span class="n">utt</span><span class="p">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">mt</span><span class="p">.</span><span class="n">mentioned_user_id</span>
+<span class="k">group</span> <span class="k">by</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span>
+</pre></div>
+</div>
 </section>
 
 

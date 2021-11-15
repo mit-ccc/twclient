@@ -37,7 +37,8 @@ see the :doc:`other vignette on extracting data </vignettes/extract>`.)
 Note that Twitter has other data sources than the REST API, in particular the
 `PowerTrack
 <https://developer.twitter.com/en/docs/twitter-api/enterprise/historical-powertrack-api/overview>`__
-API, and this package does not support those.
+API, and this package does not support those. It also does not (yet) support
+Twitter's new `v2 API <https://developer.twitter.com/en/docs/twitter-api>`.
 
 Enough talk! How do you get started?
 

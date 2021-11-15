@@ -1,6 +1,6 @@
-=================
- Extracting data
-=================
+=============================
+  Working with fetched data
+=============================
 
 Why go to the trouble of writing this package at all? The fundamental reason is
 that, for analyzing data at least, it's easier to work with a relational
