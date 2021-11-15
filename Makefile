@@ -10,7 +10,8 @@ lint:
 	# mypy src test
 
 tests:
-	coverage run -m tox
+	coverage run --source=src -m tox
+	find src -name '*.py' | xargs coverage xml -o .coverage.xml
 
 check: lint tests
 
