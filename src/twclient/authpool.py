@@ -16,6 +16,13 @@ logger = logging.getLogger(__name__)
 # The dynamic method construction in AuthPoolAPI confuses the linter
 # pylint: disable=protected-access
 
+if tweepy.__version__ >= '4.0.0':
+    RateLimitError = tweepy.errors.TooManyRequests
+    TweepyException = tweepy.errors.TweepyException
+else:
+    RateLimitError = tweepy.error.RateLimitError
+    TweepyException = tweepy.error.TweepError
+
 
 class AuthPoolAPI:  # pylint: disable=too-few-public-methods
     '''
@@ -46,9 +53,10 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
 
     Raises
     ------
-    error.CapacityError
-        If Twitter is over capacity for longer than (approximately)
-        `capacity_retries * capacity_sleep` seconds.
+    error.TwitterServiceError
+        If Twitter is over capacity or encounters other internal problems for
+        longer than (approximately) `capacity_retries * capacity_sleep`
+        seconds.
     '''
 
     # This value is set as an attribute on methods constructed and returned by
@@ -61,8 +69,8 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
 
         'user_timeline': 'list',
 
-        'followers_ids': 'list',
-        'friends_ids': 'list'
+        'get_follower_ids': 'list',
+        'get_friend_ids': 'list'
     }
 
     def __init__(self, **kwargs):
@@ -179,13 +187,13 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
                     cp_retry_cnt = 0
 
                     return ret
-                except tweepy.error.RateLimitError as exc:
+                except RateLimitError as exc:
                     resume_time = exc.response.headers \
                                      .get('x-rate-limit-reset')
                     iself._authpool_mark_api_limited(float(resume_time))
 
                     iself._authpool_switch_api()
-                except tweepy.error.TweepError as exc:
+                except TweepyException as exc:
                     dexc = err.dispatch_tweepy(exc)
 
                     if not isinstance(dexc, err.TwitterServiceError):

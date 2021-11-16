@@ -192,8 +192,12 @@ class TwitterApi:
                     'method': 'lookup_users',
                     'include_entities': True,  # include user sub-objects
                     'tweet_mode': 'extended',  # don't truncate tweet text
-                    'user_ids': grp
                 }
+
+                if tweepy.__version__ >= '4.0.0':
+                    twargs['user_id'] = grp
+                else:
+                    twargs['user_ids'] = grp
 
                 try:
                     ret = list(self.make_api_call(**twargs))
@@ -215,8 +219,12 @@ class TwitterApi:
                     'method': 'lookup_users',
                     'include_entities': True,  # include user sub-objects
                     'tweet_mode': 'extended',  # don't truncate tweet text
-                    'screen_names': grp
                 }
+
+                if tweepy.__version__ >= '4.0.0':
+                    twargs['screen_name'] = grp
+                else:
+                    twargs['screen_names'] = grp
 
                 try:
                     ret = list(self.make_api_call(**twargs))
@@ -390,7 +398,7 @@ class TwitterApi:
         Call Twitter's followers/ids API method.
 
         This method wraps a call to Twitter's followers/ids API method (via the
-        make_api_call method and ultimately via tweepy.API's followers_ids
+        make_api_call method and ultimately via tweepy.API's get_follower_ids
         method). Exactly one of user_id and screen_name must be specified.
 
         Parameters
@@ -422,7 +430,7 @@ class TwitterApi:
         logger.debug(msg)
 
         twargs = {
-            'method': 'followers_ids',
+            'method': 'get_follower_ids',
             'cursor': True,
             user_type: user
         }
@@ -434,7 +442,7 @@ class TwitterApi:
         Call Twitter's friends/ids API method.
 
         This method wraps a call to Twitter's friends/ids API method (via the
-        make_api_call method and ultimately via tweepy.API's friends_ids
+        make_api_call method and ultimately via tweepy.API's get_friend_ids
         method). Exactly one of user_id and screen_name must be specified. Note
         that "friends" is Twitter's term for the opposite of followers: user
         A's friends are the users that A follows.
@@ -467,7 +475,7 @@ class TwitterApi:
         logger.debug(msg)
 
         twargs = {
-            'method': 'friends_ids',
+            'method': 'get_friend_ids',
             'cursor': True,
             user_type: user
         }
