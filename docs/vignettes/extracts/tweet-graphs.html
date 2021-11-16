@@ -52,14 +52,9 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../extract.html">Working with fetched data</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="follow-graph.html">Follow Graph</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Tweet-Derived Graphs: Mention, Reply, Retweet, Quote</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#mention-graph">Mention graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#reply-graph">Reply graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#retweet-graph">Retweet graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#quote-graph">Quote graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tweets.html">Users’ Tweets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user-info.html">User-Level Information: Bio, Location, Etc.</a></li>
 <li class="toctree-l2"><a class="reference internal" href="mutual-followers-friends-counts.html">Mutual Followers and Friends</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mutual-followers-friends-counts.html#mutual-friends">Mutual friends</a></li>
 </ul>
 </li>
 </ul>
@@ -95,9 +90,7 @@
              
   <section id="tweet-derived-graphs-mention-reply-retweet-quote">
 <h1>Tweet-Derived Graphs: Mention, Reply, Retweet, Quote<a class="headerlink" href="#tweet-derived-graphs-mention-reply-retweet-quote" title="Permalink to this headline"></a></h1>
-</section>
-<section id="mention-graph">
-<h1>Mention graph<a class="headerlink" href="#mention-graph" title="Permalink to this headline"></a></h1>
+<p>Mention graph:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tmp_universe</span> <span class="k">as</span>
 <span class="p">(</span>
     <span class="k">select</span>
@@ -126,9 +119,7 @@
 <span class="k">group</span> <span class="k">by</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span>
 </pre></div>
 </div>
-</section>
-<section id="reply-graph">
-<h1>Reply graph<a class="headerlink" href="#reply-graph" title="Permalink to this headline"></a></h1>
+<p>Reply graph:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tmp_universe</span> <span class="k">as</span>
 <span class="p">(</span>
     <span class="k">select</span>
@@ -156,9 +147,7 @@
 <span class="k">group</span> <span class="k">by</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span>
 </pre></div>
 </div>
-</section>
-<section id="retweet-graph">
-<h1>Retweet graph<a class="headerlink" href="#retweet-graph" title="Permalink to this headline"></a></h1>
+<p>Retweet graph:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- this is ultimately from the &quot;retweeted status&quot; fields that come back on</span>
 <span class="c1">-- Twitter API responses; how it overlaps or doesn&#39;t with the quote graph</span>
 <span class="c1">-- from quoted_status_id (i.e. when a quote tweet is or isn&#39;t a retweet)</span>
@@ -192,9 +181,7 @@
 <span class="k">group</span> <span class="k">by</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span>
 </pre></div>
 </div>
-</section>
-<section id="quote-graph">
-<h1>Quote graph<a class="headerlink" href="#quote-graph" title="Permalink to this headline"></a></h1>
+<p>Quote graph:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- this is ultimately from the &quot;quoted status&quot; fields that come back on Twitter</span>
 <span class="c1">-- API responses; how it overlaps or doesn&#39;t with the retweet graph from</span>
 <span class="c1">-- retweeted_status_id (i.e. when a quote tweet is or isn&#39;t a retweet) depends</span>

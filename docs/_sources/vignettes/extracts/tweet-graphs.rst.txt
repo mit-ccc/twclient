@@ -2,9 +2,7 @@
   Tweet-Derived Graphs: Mention, Reply, Retweet, Quote
 ========================================================
 
-=================
-  Mention graph
-=================
+Mention graph:
 
 .. code-block:: sql
 
@@ -35,9 +33,7 @@
         inner join tmp_universe utt on utt.user_id = mt.mentioned_user_id
     group by 1,2;
 
-===============
-  Reply graph
-===============
+Reply graph:
 
 .. code-block:: sql
 
@@ -67,9 +63,7 @@
         inner join tmp_universe utt on utt.user_id = tw.in_reply_to_user_id
     group by 1,2;
 
-=================
-  Retweet graph
-=================
+Retweet graph:
 
 .. code-block:: sql
 
@@ -105,9 +99,7 @@
         inner join tmp_universe utt on utt.user_id = twt.user_id
     group by 1,2;
 
-===============
-  Quote graph
-===============
+Quote graph:
 
 .. code-block:: sql
 

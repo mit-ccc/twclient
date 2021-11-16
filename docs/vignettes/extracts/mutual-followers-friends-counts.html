@@ -52,14 +52,9 @@
 <li class="toctree-l1 current"><a class="reference internal" href="../extract.html">Working with fetched data</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="follow-graph.html">Follow Graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tweet-graphs.html">Tweet-Derived Graphs: Mention, Reply, Retweet, Quote</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tweet-graphs.html#mention-graph">Mention graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tweet-graphs.html#reply-graph">Reply graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tweet-graphs.html#retweet-graph">Retweet graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tweet-graphs.html#quote-graph">Quote graph</a></li>
 <li class="toctree-l2"><a class="reference internal" href="tweets.html">Users’ Tweets</a></li>
 <li class="toctree-l2"><a class="reference internal" href="user-info.html">User-Level Information: Bio, Location, Etc.</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">Mutual Followers and Friends</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#mutual-friends">Mutual friends</a></li>
 </ul>
 </li>
 </ul>
@@ -95,6 +90,7 @@
              
   <section id="mutual-followers-and-friends">
 <h1>Mutual Followers and Friends<a class="headerlink" href="#mutual-followers-and-friends" title="Permalink to this headline"></a></h1>
+<p>Mutual followers:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- this is just iteration in sql, it&#39;s straightforward but very slow if there</span>
 <span class="c1">-- are either lots of users or esp users with lots of followers or esp esp both</span>
 <span class="c1">-- because it&#39;s roughly O(n^2)</span>
@@ -144,9 +140,7 @@
     <span class="k">inner</span> <span class="k">join</span> <span class="n">tmp_universe</span> <span class="n">ut2</span> <span class="k">on</span> <span class="n">ut2</span><span class="p">.</span><span class="n">user_id</span> <span class="o">&gt;</span> <span class="n">ut1</span><span class="p">.</span><span class="n">user_id</span><span class="p">;</span>
 </pre></div>
 </div>
-</section>
-<section id="mutual-friends">
-<h1>Mutual friends<a class="headerlink" href="#mutual-friends" title="Permalink to this headline"></a></h1>
+<p>Mutual friends:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="c1">-- this is just iteration in sql, it&#39;s straightforward but very slow if there</span>
 <span class="c1">-- are either lots of users or esp users with lots of friends or esp esp both</span>
 <span class="c1">-- because it&#39;s roughly O(n^2)</span>

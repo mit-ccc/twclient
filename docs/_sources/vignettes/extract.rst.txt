@@ -27,8 +27,8 @@ using.
    :caption: SQL Examples:
 
    extracts/follow-graph.rst
-   extracts/tweet-graphs.rst
    extracts/tweets.rst
+   extracts/tweet-graphs.rst
    extracts/user-info.rst
    extracts/mutual-followers-friends-counts.rst
 
