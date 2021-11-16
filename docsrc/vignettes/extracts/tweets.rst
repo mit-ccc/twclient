@@ -181,6 +181,6 @@ WHERE-clause filter:
 
 And that's it! Another vignette on :doc:`extracting graph structures from
 tweets </vignettes/extracts/tweet-graphs>` discusses how to work with the
-mention, retweet, quote-tweet and reply networks between users, as reflected in
-their tweets.
+mention, retweet, quote-tweet and reply networks over users that their tweets
+give rise to.
 
