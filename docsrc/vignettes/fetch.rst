@@ -1,5 +1,6 @@
-Getting data from the Twitter API
-=================================
+=====================================
+  Getting data from the Twitter API
+=====================================
 
 So you want to analyze some Twitter data. (That’s why you’re here, right?) This
 vignette walks through how to get set up and how to acquire the data.
@@ -8,8 +9,9 @@ vignette walks through how to get set up and how to acquire the data.
 service and respect user privacy. It’s important to only access data you have a
 right to access.
 
-Introduction
-------------
+----------------
+  Introduction
+----------------
 
 Twclient makes acquiring data easier than directly interacting with the Twitter
 REST API, which you can do through a lightweight client like Twitter’s own
@@ -49,8 +51,9 @@ as in ``twclient fetch users -n wwbrannon``. (We'll use the ``twitter`` alias
 in this vignette.) You need to set up the database, get API credentials, and
 then pull some data.
 
-Database setup
---------------
+------------------
+  Database setup
+------------------
 
 The first step is to set up a database backend. You can use any DB that
 `sqlalchemy supports <https://docs.sqlalchemy.org/en/14/dialects/>`__, which
@@ -117,8 +120,9 @@ example), you’ll see a new database schema installed. The tables, columns and
 other objects are documented, in the form of their sqlalchemy model classes, in
 the API documentation for twclient.models.
 
-API setup
----------
+-------------
+  API setup
+-------------
 
 You can’t get data from the Twitter API without API credentials, so the next
 step is to get at least one set of credentials. If you don’t already have
@@ -148,8 +152,9 @@ added one set of credentials here, but you can add arbitrarily many under
 different names. Twclient will seamlessly switch between them as each one hits
 rate limits.
 
-Actually pulling data
----------------------
+-------------------------
+  Actually pulling data
+-------------------------
 
 Now comes the fun part: actually downloading some data. We’ll assume you’ve
 pulled together sets of Twitter users and `Twitter lists
@@ -182,8 +187,9 @@ And here’s ``lists.csv``:
    185239864
    172409353
 
-A word about identifiers
-~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  A word about identifiers
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 In general, Twitter allows you to refer to a user or list by either a) a
 numeric user ID or list ID, or b) a human-readable name. Readable names for
@@ -210,8 +216,9 @@ but not one file which mixes user IDs and screen names together. This is
 because of the way the underlying Twitter API endpoints are implemented:
 They’ll accept mixed references to lists, but not to users.
 
-Hydrating users
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+  Hydrating users
+~~~~~~~~~~~~~~~~~~~
 
 The first step is to `hydrate
 <https://stackoverflow.com/questions/34191022/what-does-hydrate-mean-on-twitter/34192633>`__
@@ -244,8 +251,9 @@ A noteworthy difference from the case of lists is that you use the ``-n``
 option, for users identified by screen names, rather than the ``-l`` option for
 lists.
 
-Tagging users
-~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~
+  Tagging users
+~~~~~~~~~~~~~~~~~~
 
 Having fetched the users, we may want to give them *tags* for easier reference
 in SQL or later commands. Twclient has a tag table that allows you to associate
@@ -289,8 +297,9 @@ This time, however, you can see that the ``-g`` option allows selecting users
 to operate on---whether that’s tagging, hydrating, or fetching tweets and
 follow edges---according to tags you’ve defined.
 
-Fetching tweets
-~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~
+  Fetching tweets
+~~~~~~~~~~~~~~~~~~~
 
 Now, with fully hydrated users, it’s time to get down to one of our primary
 jobs: fetching the users’ tweets. We can do this with the ``twitter fetch
@@ -312,8 +321,9 @@ sample SQL, see the :doc:`extracting data vignette </vignettes/extract>`.) The
 raw json API responses are also saved so that you can work with data we don’t
 parse.
 
-Fetching the follow graph
-~~~~~~~~~~~~~~~~~~~~~~~~~
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+  Fetching the follow graph
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Finally, we want to get the user IDs of our target users’ followers and
 friends. (A “friend” is Twitter’s term for the opposite of a follower: if A
@@ -354,8 +364,9 @@ without using enormous amounts of disk space. (See the :doc:`extracting data
 vignette </vignettes/extract>` for details of how to get follow graph snapshots
 out of the SCD table.)
 
-Putting it all together
------------------------
+---------------------------
+  Putting it all together
+---------------------------
 
 Here’s all of our hard work in one little script:
 

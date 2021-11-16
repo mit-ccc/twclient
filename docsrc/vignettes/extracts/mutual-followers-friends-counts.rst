@@ -2,6 +2,8 @@
   Mutual Followers and Friends
 ================================
 
+Mutual followers:
+
 .. code-block:: sql
 
     -- this is just iteration in sql, it's straightforward but very slow if there
@@ -52,9 +54,7 @@
         -- query planner isn't very smart about this and it costs twice as much
         inner join tmp_universe ut2 on ut2.user_id > ut1.user_id;
 
-==================
-  Mutual friends
-==================
+Mutual friends:
 
 .. code-block:: sql
 

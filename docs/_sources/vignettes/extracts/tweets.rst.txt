@@ -179,3 +179,8 @@ WHERE-clause filter:
        tw.create_dt >= '2020-01-01' and
        tw.create_dt <= '2020-06-01';
 
+And that's it! Another vignette on :doc:`extracting graph structures from
+tweets </vignettes/extracts/tweet-graphs>` discusses how to work with the
+mention, retweet, quote-tweet and reply networks between users, as reflected in
+their tweets.
+
