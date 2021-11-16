@@ -27,12 +27,8 @@ using.
    :caption: SQL Examples:
 
    extracts/follow-graph.rst
-   extracts/mention-graph.rst
-   extracts/mutual-followers.rst
-   extracts/mutual-friends.rst
-   extracts/quote-graph.rst
-   extracts/reply-graph.rst
-   extracts/retweet-graph.rst
+   extracts/tweet-graphs.rst
    extracts/tweets.rst
    extracts/user-info.rst
+   extracts/mutual-followers-friends-counts.rst
 

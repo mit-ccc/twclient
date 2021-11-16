@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Follow graph &mdash; twclient 0.2.0 documentation</title>
+  <title>Follow Graph &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,7 +18,7 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Mention graph" href="mention-graph.html" />
+    <link rel="next" title="Tweet-Derived Graphs: Mention, Reply, Retweet, Quote" href="tweet-graphs.html" />
     <link rel="prev" title="Working with fetched data" href="../extract.html" /> 
 </head>
 
@@ -50,15 +50,16 @@
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../fetch.html">Getting data from the Twitter API</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../extract.html">Working with fetched data</a><ul class="current">
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Follow graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mention-graph.html">Mention graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mutual-followers.html">Mutual followers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mutual-friends.html">Mutual friends</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quote-graph.html">Quote graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="reply-graph.html">Reply graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="retweet-graph.html">Retweet graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tweets.html">User tweets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user-info.html">User info</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Follow Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tweet-graphs.html">Tweet-Derived Graphs: Mention, Reply, Retweet, Quote</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tweet-graphs.html#mention-graph">Mention graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tweet-graphs.html#reply-graph">Reply graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tweet-graphs.html#retweet-graph">Retweet graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tweet-graphs.html#quote-graph">Quote graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="tweets.html">Users’ Tweets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="user-info.html">User-Level Information: Bio, Location, Etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mutual-followers-friends-counts.html">Mutual Followers and Friends</a></li>
+<li class="toctree-l2"><a class="reference internal" href="mutual-followers-friends-counts.html#mutual-friends">Mutual friends</a></li>
 </ul>
 </li>
 </ul>
@@ -82,7 +83,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../extract.html">Working with fetched data</a> &raquo;</li>
-      <li>Follow graph</li>
+      <li>Follow Graph</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/vignettes/extracts/follow-graph.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -93,7 +94,7 @@
            <div itemprop="articleBody">
              
   <section id="follow-graph">
-<h1>Follow graph<a class="headerlink" href="#follow-graph" title="Permalink to this headline"></a></h1>
+<h1>Follow Graph<a class="headerlink" href="#follow-graph" title="Permalink to this headline"></a></h1>
 <p>One of the most important pieces of Twitter data is the <em>follow graph</em> — the
 network among users where user A has a directed edge to user B if A follows B
 on Twitter. Follow relationships shape which tweets people see, which other
@@ -188,7 +189,7 @@ leverages the tagging feature explained in the <a class="reference internal" hre
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../extract.html" class="btn btn-neutral float-left" title="Working with fetched data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="mention-graph.html" class="btn btn-neutral float-right" title="Mention graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="tweet-graphs.html" class="btn btn-neutral float-right" title="Tweet-Derived Graphs: Mention, Reply, Retweet, Quote" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

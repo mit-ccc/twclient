@@ -1,5 +1,5 @@
 =================
-  Follow graph
+  Follow Graph
 =================
 
 One of the most important pieces of Twitter data is the *follow graph* --- the
