@@ -28,7 +28,6 @@ jobs:
     - name: Install package and dependencies
       run: |
         python -m pip install -U pip
-        python -m pip install .
         python -m pip install .[test,dev,ci]
     - name: Lint, test, coverage
       run: |
