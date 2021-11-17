@@ -399,7 +399,8 @@ class TwitterApi:
 
         This method wraps a call to Twitter's followers/ids API method (via the
         make_api_call method and ultimately via tweepy.API's get_follower_ids
-        method). Exactly one of user_id and screen_name must be specified.
+        method / followers_ids in tweepy < 4.0.0). Exactly one of user_id and
+        screen_name must be specified.
 
         Parameters
         ----------
@@ -430,10 +431,14 @@ class TwitterApi:
         logger.debug(msg)
 
         twargs = {
-            'method': 'get_follower_ids',
             'cursor': True,
             user_type: user
         }
+
+        if tweepy.__version__ >= '4.0.0':
+            twargs['method'] = 'get_follower_ids'
+        else:
+            twargs['method'] = 'followers_ids'
 
         yield from self.make_api_call(**twargs)
 
@@ -443,9 +448,10 @@ class TwitterApi:
 
         This method wraps a call to Twitter's friends/ids API method (via the
         make_api_call method and ultimately via tweepy.API's get_friend_ids
-        method). Exactly one of user_id and screen_name must be specified. Note
-        that "friends" is Twitter's term for the opposite of followers: user
-        A's friends are the users that A follows.
+        method / friends_ids in tweepy < 4.0.0). Exactly one of user_id and
+        screen_name must be specified. Note that "friends" is Twitter's term
+        for the opposite of followers: user A's friends are the users that A
+        follows.
 
         Parameters
         ----------
@@ -475,9 +481,13 @@ class TwitterApi:
         logger.debug(msg)
 
         twargs = {
-            'method': 'get_friend_ids',
             'cursor': True,
             user_type: user
         }
+
+        if tweepy.__version__ >= '4.0.0':
+            twargs['method'] = 'get_friend_ids'
+        else:
+            twargs['method'] = 'friends_ids'
 
         yield from self.make_api_call(**twargs)

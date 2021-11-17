@@ -6,18 +6,20 @@ import logging
 
 import tweepy
 
+TWEEPY4 = tweepy.__version__ >= '4.0.0'
+
+if TWEEPY4:
+    from tweepy.errors import (TweepyException, TwitterServerError, Forbidden,
+                               Unauthorized, NotFound)
+else:
+    from tweepy.error import TweepError
+
 logger = logging.getLogger(__name__)
 
 
 #
 # Base classes
 #
-
-if tweepy.__version__ >= '4.0.0':
-    TweepyException = tweepy.errors.TweepyException
-else:
-    TweepyException = tweepy.error.TweepError
-
 
 class TWClientError(Exception):
     '''
@@ -98,7 +100,7 @@ class TwitterAPIError(TWClientError):
     def __init__(self, **kwargs):
         tweepy_exception = kwargs.pop('tweepy_exception', None)
 
-        if tweepy.__version__ >= '4.0.0':
+        if TWEEPY4:
             message = '\n'.join(tweepy_exception.api_messages)
         else:
             message = tweepy_exception.reason
@@ -134,7 +136,7 @@ class TwitterAPIError(TWClientError):
         Error codes returned by the Twitter API.
         '''
 
-        if tweepy.__version__ >= '4.0.0':
+        if TWEEPY4:
             ret = self.tweepy_exception.api_codes
         else:
             ret = [self.tweepy_exception.api_code]
@@ -197,11 +199,13 @@ class TwitterServiceError(TwitterAPIError):  # pylint: disable=abstract-method
 
     @staticmethod
     def tweepy_is_instance(exc):
-        if tweepy.__version__ >= '4.0.0':
-            if isinstance(exc, tweepy.errors.TwitterServerError):
-                ret = True
-            else:
-                ret = False
+        if TWEEPY4:
+            api_codes = exc.api_codes
+        else:
+            api_codes = [exc.api_code]
+
+        if TWEEPY4 and isinstance(exc, TwitterServerError):
+            ret = True
         elif exc.response is None:  # something went very wrong somewhere
             ret = True
         elif exc.response.status_code >= 500:
@@ -209,9 +213,9 @@ class TwitterServiceError(TwitterAPIError):  # pylint: disable=abstract-method
             # internal server error, 502 = down esp for maintenance, 503 = over
             # capacity, 504 = bad gateway
             ret = True
-        elif 130 in exc.api_codes:
+        elif 130 in api_codes:
             ret = True  # over capacity
-        elif 131 in exc.api_codes:
+        elif 131 in api_codes:
             ret = True  # other internal error
         else:
             ret = False
@@ -244,23 +248,21 @@ class NotFoundError(TwitterLogicError):
 
     @staticmethod
     def tweepy_is_instance(exc):
-        if tweepy.__version__ >= '4.0.0':
-            if isinstance(exc, tweepy.errors.NotFound):
-                ret = True
+        if TWEEPY4:
+            ret = (isinstance(exc, NotFound))
+        else:
+            if exc.response is not None and exc.response.status_code == 404:
+                ret = True  # the HTTP status code
+            elif exc.api_code == 17:  # NOTE api_codes in >= 4.0.0
+                ret = True  # "No user matches for specified terms."
+            elif exc.api_code == 34:
+                ret = True  # "Sorry, that page does not exist."
+            elif exc.api_code == 50:
+                ret = True  # "User not found."
+            elif exc.api_code == 63:
+                ret = True  # "User has been suspended."
             else:
                 ret = False
-        elif exc.response is not None and exc.response.status_code == 404:
-            ret = True  # the HTTP status code
-        elif 17 in exc.api_codes:
-            ret = True  # "No user matches for specified terms."
-        elif 34 in exc.api_codes:
-            ret = True  # "Sorry, that page does not exist."
-        elif 50 in exc.api_codes:
-            ret = True  # "User not found."
-        elif 63 in exc.api_codes:
-            ret = True  # "User has been suspended."
-        else:
-            ret = False
 
         return ret
 
@@ -280,17 +282,10 @@ class ForbiddenError(TwitterLogicError):
 
     @staticmethod
     def tweepy_is_instance(exc):
-        if tweepy.__version__ >= '4.0.0':
-            if isinstance(exc, tweepy.errors.Forbidden):
-                ret = True
-            elif isinstance(exc, tweepy.errors.Unauthorized):
-                ret = True
-            else:
-                ret = False
-        elif exc.response.status_code in (401, 403):
-            ret = True
+        if TWEEPY4:
+            ret = (isinstance(exc, (Forbidden, Unauthorized)))
         else:
-            ret = False
+            ret = (exc.response.status_code in (401, 403))
 
         return ret
 
@@ -316,9 +311,15 @@ def dispatch_tweepy(exc):
         The dispatched (possibly new) exception instance.
     '''
 
-    if not isinstance(exc, TweepyException):
+    if TWEEPY4:
+        tweepy_exc_klass = TweepyException
+    else:
+        tweepy_exc_klass = TweepError
+
+    if not isinstance(exc, tweepy_exc_klass):
         return exc
 
+    # the list of leaf classes to consider instantiating
     klasses = [TwitterServiceError, NotFoundError, ForbiddenError]
 
     for kls in klasses:

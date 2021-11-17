@@ -69,6 +69,11 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
 
         'user_timeline': 'list',
 
+        # the tweepy < 4.0.0 names
+        'followers_ids': 'list',
+        'friends_ids': 'list',
+
+        # the tweepy >= 4.0.0 names
         'get_follower_ids': 'list',
         'get_friend_ids': 'list'
     }
