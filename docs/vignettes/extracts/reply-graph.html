@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Reply graph &mdash; twclient 0.2.0 documentation</title>
+  <title>&lt;no title&gt; &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
-    <link rel="next" title="Retweet graph" href="retweet-graph.html" />
-    <link rel="prev" title="Quote graph" href="quote-graph.html" /> 
+    <link rel="next" title="&lt;no title&gt;" href="retweet-graph.html" />
+    <link rel="prev" title="&lt;no title&gt;" href="quote-graph.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -47,20 +47,9 @@
 <li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">License</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
-<ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="../fetch.html">Getting data from the Twitter API</a></li>
-<li class="toctree-l1 current"><a class="reference internal" href="../extract.html">Extracting data</a><ul class="current">
-<li class="toctree-l2"><a class="reference internal" href="follow-graph.html">Follow graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mention-graph.html">Mention graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mutual-followers.html">Mutual followers</a></li>
-<li class="toctree-l2"><a class="reference internal" href="mutual-friends.html">Mutual friends</a></li>
-<li class="toctree-l2"><a class="reference internal" href="quote-graph.html">Quote graph</a></li>
-<li class="toctree-l2 current"><a class="current reference internal" href="#">Reply graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="retweet-graph.html">Retweet graph</a></li>
-<li class="toctree-l2"><a class="reference internal" href="tweets.html">User tweets</a></li>
-<li class="toctree-l2"><a class="reference internal" href="user-info.html">User info</a></li>
-</ul>
-</li>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../fetch.html">Extracting data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../extract.html">Extracting data</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
 <ul>
@@ -82,7 +71,7 @@
   <ul class="wy-breadcrumbs">
       <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
           <li><a href="../extract.html">Extracting data</a> &raquo;</li>
-      <li>Reply graph</li>
+      <li>&lt;no title&gt;</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/vignettes/extracts/reply-graph.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -92,43 +81,47 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="reply-graph">
-<h1>Reply graph<a class="headerlink" href="#reply-graph" title="Permalink to this headline"></a></h1>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tmp_universe</span> <span class="k">as</span>
-<span class="p">(</span>
-    <span class="k">select</span>
-        <span class="n">u</span><span class="p">.</span><span class="n">user_id</span>
-    <span class="k">from</span> <span class="ss">&quot;user&quot;</span> <span class="n">u</span> <span class="c1">-- standard sql reserves this table name, need to quote it</span>
-        <span class="k">inner</span> <span class="k">join</span> <span class="n">user_tag</span> <span class="n">ut</span> <span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
-        <span class="k">inner</span> <span class="k">join</span> <span class="n">tag</span> <span class="n">ta</span> <span class="k">using</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span>
-    <span class="k">where</span>
-        <span class="c1">-- just an example of using tagging, a tag</span>
-        <span class="c1">-- with this name is not created automatically</span>
-        <span class="n">ta</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;universe&#39;</span>
-<span class="p">)</span>
-<span class="k">select</span>
-    <span class="n">uts</span><span class="p">.</span><span class="n">user_id</span> <span class="k">as</span> <span class="n">source_user_id</span><span class="p">,</span>
-    <span class="n">utt</span><span class="p">.</span><span class="n">user_id</span> <span class="k">as</span> <span class="n">target_user_id</span><span class="p">,</span>
-
-    <span class="c1">-- can also, e.g., group by time</span>
-    <span class="c1">-- extract(year from tw.create_dt) as year,</span>
-    <span class="c1">-- extract(month from tw.create_dt) as month,</span>
-
-    <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">as</span> <span class="n">num_replies</span>
-<span class="k">from</span> <span class="n">tmp_universe</span> <span class="n">uts</span>
-    <span class="k">inner</span> <span class="k">join</span> <span class="n">tweet</span> <span class="n">tw</span> <span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
-    <span class="k">inner</span> <span class="k">join</span> <span class="n">tmp_universe</span> <span class="n">utt</span> <span class="k">on</span> <span class="n">utt</span><span class="p">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">tw</span><span class="p">.</span><span class="n">in_reply_to_user_id</span>
-<span class="k">group</span> <span class="k">by</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span>
-</pre></div>
-</div>
-</section>
+  <p>– reply graph</p>
+<p>with tmp_universe as
+(</p>
+<blockquote>
+<div><dl class="simple">
+<dt>select</dt><dd><p>u.user_id</p>
+</dd>
+<dt>from “user” u – standard sql reserves this table name, need to quote it</dt><dd><p>inner join user_tag ut using(user_id)
+inner join tag ta using(tag_id)</p>
+</dd>
+<dt>where</dt><dd><p>– just an example of using tagging, a tag
+– with this name is not created automatically
+ta.name = ‘universe’</p>
+</dd>
+</dl>
+</div></blockquote>
+<p>)
+select</p>
+<blockquote>
+<div><p>uts.user_id as source_user_id,
+utt.user_id as target_user_id,</p>
+<p class="attribution">—can also, e.g., group by time
+– extract(year from tw.create_dt) as year,
+– extract(month from tw.create_dt) as month,</p>
+</div></blockquote>
+<blockquote>
+<div><p>count(*) as num_replies</p>
+</div></blockquote>
+<dl class="simple">
+<dt>from tmp_universe uts</dt><dd><p>inner join tweet tw using(user_id)
+inner join tmp_universe utt on utt.user_id = tw.in_reply_to_user_id</p>
+</dd>
+</dl>
+<p>group by 1,2;</p>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="quote-graph.html" class="btn btn-neutral float-left" title="Quote graph" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="retweet-graph.html" class="btn btn-neutral float-right" title="Retweet graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="quote-graph.html" class="btn btn-neutral float-left" title="&lt;no title&gt;" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="retweet-graph.html" class="btn btn-neutral float-right" title="&lt;no title&gt;" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
