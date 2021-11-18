@@ -36,9 +36,11 @@ devsetup:
 	$(ENVPATH)/bin/pip install .[test,dev,docs]
 
 clean:
-	rm -rf build/ dist/ twclient.egg-info/ docs/_build/ env/
+	rm -rf build/ dist/ twclient.egg-info/ env/
 	find . -name '__pycache__' -exec rm -rf {} \+
 	find . -name '*.pyc' -exec rm -f {} \+
 	find . -name '*.pyo' -exec rm -f {} \+
 	find . -name '*~'    -exec rm -f {} \+
+	
+	cd docsrc && $(MAKE) clean
 
