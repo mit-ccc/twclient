@@ -39,6 +39,7 @@ clean:
 	find . -name '__pycache__' -exec rm -rf {} \+
 	find . -name '*.pyc' -exec rm -f {} \+
 	find . -name '*.pyo' -exec rm -f {} \+
+	find . -name '*.egg-info' -exec rm -rf {} \+  # directories
 	find . -name '*~'    -exec rm -f {} \+
 	
 	cd docsrc && $(MAKE) clean
