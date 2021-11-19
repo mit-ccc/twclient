@@ -4,7 +4,7 @@
   <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Extracting data &mdash; twclient 0.2.0 documentation</title>
+  <title>Working with fetched data &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
       <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
   <!--[if lt IE 9]>
@@ -18,8 +18,8 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="API Documentation" href="../apidocs.html" />
-    <link rel="prev" title="Fetching data" href="fetch.html" /> 
+    <link rel="next" title="Follow Graph" href="extracts/follow-graph.html" />
+    <link rel="prev" title="Getting data from the Twitter API" href="fetch.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -48,8 +48,15 @@
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul class="current">
-<li class="toctree-l1"><a class="reference internal" href="fetch.html">Fetching data</a></li>
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Extracting data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="fetch.html">Getting data from the Twitter API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with fetched data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="extracts/follow-graph.html">Follow Graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extracts/tweets.html">Users’ Tweets</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extracts/tweet-graphs.html">Tweet-Derived Graphs: Mention, Reply, Retweet, Quote</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extracts/user-info.html">User-Level Information: Bio, Location, Etc.</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extracts/mutual-followers-friends-counts.html">Mutual Followers and Friends</a></li>
+</ul>
+</li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
 <ul>
@@ -70,7 +77,7 @@
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
       <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Extracting data</li>
+      <li>Working with fetched data</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/vignettes/extract.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -80,17 +87,43 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="extracting-data">
-<h1>Extracting data<a class="headerlink" href="#extracting-data" title="Permalink to this headline"></a></h1>
-<p>TODO - integrate example/ directory</p>
+  <section id="working-with-fetched-data">
+<h1>Working with fetched data<a class="headerlink" href="#working-with-fetched-data" title="Permalink to this headline"></a></h1>
+<p>Why go to the trouble of writing this package at all? The fundamental reason is
+that, for analyzing data at least, it’s easier to work with a relational
+database than with a REST API. Local databases don’t have rate limits, they
+don’t make you worry about pagination and cursoring, and they put all data in
+one place for easy cross-referencing. More generally, using a database as this
+package does <em>separates concerns</em>: the content is separate from the
+presentation, and how you acquire and load Twitter data is decoupled from how
+you choose to analyze it.</p>
+<p>This series of vignettes thus discusses how to extract certain commonly used
+pieces of data from the database. These aren’t by any means the only kinds of
+data you may want to extract (there’s nothing here about URLs, for instance),
+but it covers the most common bases. The twclient package doesn’t currently
+provide direct support for extracting this sort of data, but that’s the point
+of using a database: you can just run some SQL.</p>
+<p>We’ll use the PostgreSQL dialect of SQL for examples here, but it isn’t hard
+to adapt the queries to the particular syntax of whatever DBMS you may be
+using.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">SQL Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="extracts/follow-graph.html">Follow Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extracts/tweets.html">Users’ Tweets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extracts/tweet-graphs.html">Tweet-Derived Graphs: Mention, Reply, Retweet, Quote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extracts/user-info.html">User-Level Information: Bio, Location, Etc.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="extracts/mutual-followers-friends-counts.html">Mutual Followers and Friends</a></li>
+</ul>
+</div>
 </section>
 
 
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="fetch.html" class="btn btn-neutral float-left" title="Fetching data" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="../apidocs.html" class="btn btn-neutral float-right" title="API Documentation" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="fetch.html" class="btn btn-neutral float-left" title="Getting data from the Twitter API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="extracts/follow-graph.html" class="btn btn-neutral float-right" title="Follow Graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>
