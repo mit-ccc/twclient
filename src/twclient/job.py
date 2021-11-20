@@ -639,11 +639,14 @@ class TweetsJob(ApiJob):
 
             try:
                 n_items += self._load_tweets_for(user)
-            except (err.ProtectedUserError, err.NotFoundError) as exc:
-                if isinstance(exc, err.ProtectedUserError):
+            except (err.ForbiddenError, err.NotFoundError) as exc:
+                if isinstance(exc, err.ForbiddenError):
                     msg = 'Encountered protected user (user_id {0}) in {1}'
                 else:  # isinstance(e, err.NotFoundError)
-                    msg = 'Encountered nonexistent user (user_id {0}) in {1}'
+                    # Twitter's API docs about errors don't capture all the
+                    # actual behavior, so it's hard to tell what is and what
+                    # isn't a protected user
+                    msg = 'Encountered nonexistent (possibly protected) user (user_id {0}) in {1}'
                 msg = msg.format(user.user_id, self.__class__.__name__)
 
                 if self.allow_api_errors:
@@ -889,8 +892,8 @@ class FollowGraphJob(ApiJob):
 
             try:
                 n_items += self._load_edges_for(user)
-            except (err.ProtectedUserError, err.NotFoundError) as exc:
-                if isinstance(exc, err.ProtectedUserError):
+            except (err.ForbiddenError, err.NotFoundError) as exc:
+                if isinstance(exc, err.ForbiddenError):
                     msg = 'Encountered protected user with user_id {0} in {1}'
                 else:  # isinstance(e, err.NotFoundError)
                     pass

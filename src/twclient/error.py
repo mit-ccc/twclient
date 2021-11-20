@@ -6,13 +6,20 @@ import logging
 
 import tweepy
 
+TWEEPY4 = tweepy.__version__ >= '4.0.0'
+
+if TWEEPY4:
+    from tweepy.errors import (TweepyException, TwitterServerError, Forbidden,
+                               Unauthorized, NotFound)
+else:
+    from tweepy.error import TweepError
+
 logger = logging.getLogger(__name__)
 
 
 #
 # Base classes
 #
-
 
 class TWClientError(Exception):
     '''
@@ -71,36 +78,44 @@ class TwitterAPIError(TWClientError):
 
     Instances of this class correspond to errors returned by the Twitter API,
     but are higher-level and easier to handle in client code than the
-    underlying instances of tweepy.error.TweepError which gave rise to them.
+    underlying instances of tweepy.errors.TweepyException (in tweepy < 4.0.0,
+    it's instead tweepy.error.TweepError) which gave rise to them.
 
     Parameters
     ----------
-    response : requests.Response object
-        The Twitter API response which led to this error being raised.
-
-    api_code : int
-        The API code Twitter returned.
+    tweepy_exception : instance of tweepy.errors.TweepyException
+    (tweepy.error.TweepError in tweepy < 4.0.0)
+        The underlying tweepy exception instance which caused this error to be
+        raised.
 
     Attributes
     ----------
-    response : requests.Response object
-        The parameter passed to __init__.
-
-    api_code : int
+    tweepy_exception : instance of tweepy.errors.TweepyException
+    (tweepy.error.TweepError in tweepy < 4.0.0)
         The parameter passed to __init__.
     '''
 
-    _repr_attrs = ['message', 'exit_status', 'response', 'api_code',
-                   'http_code']
+    _repr_attrs = ['message', 'exit_status', 'tweepy_exception']
 
     def __init__(self, **kwargs):
-        response = kwargs.pop('response', None)
-        api_code = kwargs.pop('api_code', None)
+        tweepy_exception = kwargs.pop('tweepy_exception', None)
 
-        super().__init__(**kwargs)
+        if TWEEPY4:
+            message = '\n'.join(tweepy_exception.api_messages)
+        else:
+            message = tweepy_exception.reason
 
-        self.response = response
-        self.api_code = api_code
+        super().__init__(message=message, **kwargs)
+
+        self.tweepy_exception = tweepy_exception
+
+    @property
+    def response(self):
+        '''
+        The requests.Response object resulting from calling the Twitter API.
+        '''
+
+        return self.tweepy_exception.response
 
     @property
     def http_code(self):
@@ -109,9 +124,24 @@ class TwitterAPIError(TWClientError):
         '''
 
         if self.response is not None:
-            return self.response.status_code
+            ret = self.response.status_code
+        else:
+            ret = None
 
-        return None
+        return ret
+
+    @property
+    def api_codes(self):
+        '''
+        Error codes returned by the Twitter API.
+        '''
+
+        if TWEEPY4:
+            ret = self.tweepy_exception.api_codes
+        else:
+            ret = [self.tweepy_exception.api_code]
+
+        return ret
 
     @classmethod
     def from_tweepy(cls, exc):
@@ -120,7 +150,8 @@ class TwitterAPIError(TWClientError):
 
         Parameters
         ----------
-        exc : instance of tweepy.error.TweepError
+        exc : instance of tweepy.errors.TweepyException (in tweepy < 4.0.0,
+        tweepy.error.TweepError)
             The exception from which to generate a TwitterAPIError instance.
 
         Returns
@@ -128,8 +159,7 @@ class TwitterAPIError(TWClientError):
         Instance of the appropriate subclass of TwitterAPIError.
         '''
 
-        return cls(message=exc.reason, response=exc.response,
-                   api_code=exc.api_code)
+        return cls(tweepy_exception=exc)
 
     # This method is intended to be implemented by subclasses as their core
     # piece of logic, so the implementation here raises NotImplementedError.
@@ -144,7 +174,8 @@ class TwitterAPIError(TWClientError):
 
         Parameters
         ----------
-        exc : instance of tweepy.error.TweepError
+        exc : instance of tweepy.errors.TweepyException (in tweepy < 4.0.0,
+        tweepy.error.TweepError)
             The tweepy exception object to check.
 
         Returns
@@ -161,43 +192,35 @@ class TwitterServiceError(TwitterAPIError):  # pylint: disable=abstract-method
     A problem with the Twitter service.
 
     A request to the Twitter service encountered a problem which was with the
-    service rather than the request itself. Generally requests encountering
-    this error should be retried.
-    '''
-
-    pass
-
-
-class ReadFailureError(TwitterServiceError):
-    '''
-    A low-level network problem occurred in communicating with the Twitter API.
-
-    Something went wrong at a low level during communication with the Twitter
-    API and no sensible response could be retrieved.
+    service rather than the request itself. Examples include low-level network
+    problems, over-capacity errors, and internal Twitter server problems.
+    Generally requests encountering this error should be retried.
     '''
 
     @staticmethod
     def tweepy_is_instance(exc):
-        return exc.response is None
+        if TWEEPY4:
+            api_codes = exc.api_codes
+        else:
+            api_codes = [exc.api_code]
 
+        if TWEEPY4 and isinstance(exc, TwitterServerError):
+            ret = True
+        elif exc.response is None:  # something went very wrong somewhere
+            ret = True
+        elif exc.response.status_code >= 500:
+            # This is the HTTP status code. From Twitter docs: 500 = general
+            # internal server error, 502 = down esp for maintenance, 503 = over
+            # capacity, 504 = bad gateway
+            ret = True
+        elif 130 in api_codes:
+            ret = True  # over capacity
+        elif 131 in api_codes:
+            ret = True  # other internal error
+        else:
+            ret = False
 
-class CapacityError(TwitterServiceError):
-    '''
-    The Twitter API is temporarily over capacity.
-
-    This error is raised when Twitter's API indicates that it's over capacity
-    and cannot fulfill a request. Code catching this exception should generally
-    sleep a reasonable period of time and retry the request.
-    '''
-
-    @staticmethod
-    def tweepy_is_instance(exc):
-        return \
-            exc.api_code in (130, 131) or \
-            (
-                exc.response is not None and
-                exc.response.status_code in (500, 503, 504)
-            )
+        return ret
 
 
 class TwitterLogicError(TwitterAPIError):  # pylint: disable=abstract-method
@@ -225,32 +248,46 @@ class NotFoundError(TwitterLogicError):
 
     @staticmethod
     def tweepy_is_instance(exc):
-        return \
-            exc.api_code in (17, 34, 50, 63) or \
-            (
-                exc.api_code is None and
-                exc.response is not None and
-                exc.response.status_code == 404
-            )
+        if TWEEPY4:
+            ret = (isinstance(exc, NotFound))
+        else:
+            if exc.response is not None and exc.response.status_code == 404:
+                ret = True  # the HTTP status code
+            elif exc.api_code == 17:  # NOTE api_codes in >= 4.0.0
+                ret = True  # "No user matches for specified terms."
+            elif exc.api_code == 34:
+                ret = True  # "Sorry, that page does not exist."
+            elif exc.api_code == 50:
+                ret = True  # "User not found."
+            elif exc.api_code == 63:
+                ret = True  # "User has been suspended."
+            else:
+                ret = False
+
+        return ret
 
 
 # That is, accessing protected users' friends, followers, or tweets returns
 # an HTTP 401 with message "Not authorized." and no Twitter status code.
-class ProtectedUserError(TwitterLogicError):
+class ForbiddenError(TwitterLogicError):
     '''
-    A requested user has protected tweets.
+    A request was forbidden.
 
-    Requesting information about a user with protected tweets is not always an
-    error; certain kinds of information will be returned. But tweets and
-    friends/followers will not be and instead will raise this error.
+    This frequently occurs when trying to request tweets or friends/followers
+    for users with private accounts / protected tweets. Requesting information
+    about a user with protected tweets is not always an error; certain kinds of
+    information will be returned. But tweets and friends/followers will not be
+    and instead will raise this error.
     '''
 
     @staticmethod
     def tweepy_is_instance(exc):
-        return \
-            exc.api_code is None and \
-            exc.response is not None and \
-            exc.response.status_code == 401
+        if TWEEPY4:
+            ret = (isinstance(exc, (Forbidden, Unauthorized)))
+        else:
+            ret = (exc.response.status_code in (401, 403))
+
+        return ret
 
 
 def dispatch_tweepy(exc):
@@ -258,7 +295,8 @@ def dispatch_tweepy(exc):
     Take an exception instance and convert it to a TWClientError if applicable.
 
     This class takes in an arbitrary exception ex and dispatches it in the
-    following way: a) if ex is a tweepy.error.TweepError, convert it to the
+    following way: a) if ex is a tweepy.errors.TweepyException (in tweepy <
+    4.0.0, it's instead tweepy.error.TweepError), convert it to the
     corresponding TWClientError if possible, else b) return ex as-is. It is
     used in wrappers of the Twitter API to simplify exception handling.
 
@@ -273,11 +311,16 @@ def dispatch_tweepy(exc):
         The dispatched (possibly new) exception instance.
     '''
 
-    if not isinstance(exc, tweepy.error.TweepError):
+    if TWEEPY4:
+        tweepy_exc_klass = TweepyException
+    else:
+        tweepy_exc_klass = TweepError
+
+    if not isinstance(exc, tweepy_exc_klass):
         return exc
 
-    klasses = [ReadFailureError, NotFoundError, ProtectedUserError,
-               CapacityError]
+    # the list of leaf classes to consider instantiating
+    klasses = [TwitterServiceError, NotFoundError, ForbiddenError]
 
     for kls in klasses:
         if kls.tweepy_is_instance(exc):
