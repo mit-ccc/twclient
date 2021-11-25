@@ -22,12 +22,10 @@ doc:
 
 devsetup:
 	# for local multi-python testing with tox; assumes pyenv already installed
-	pyenv install -s 3.6.8
-	pyenv install -s 3.7.12
 	pyenv install -s 3.8.12
 	pyenv install -s 3.9.7
 	pyenv install -s 3.10.0
-	pyenv local 3.6.8 3.7.12 3.8.12 3.9.7 3.10.0
+	pyenv local 3.8.12 3.9.7 3.10.0
 	
 	rm -rf $(ENVPATH)
 	$(PYTHON) -m venv $(ENVPATH)
