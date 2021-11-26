@@ -519,6 +519,12 @@ class ApiCommand(DatabaseCommand, TargetCommand):
         else:
             profiles_to_use = self.config_api_profile_names
 
+        try:
+            bad = set(profiles_to_use) - set(self.config_api_profile_names)
+            assert len(bad) == 0
+        except AssertionError as exc:
+            raise ValueError(f'Bad API profile names: {bad}') from exc
+
         auths = []
         for profile in profiles_to_use:
             if 'token' in self.config[profile].keys():
@@ -651,12 +657,19 @@ class RateLimitStatusCommand(ApiCommand):
 
     @property
     def job_args(self):
-        return {
+        ret = {
             'api': self.api,
-            'name': self.name,
-            'consumer_key': self.consumer_key,
             'json': self.json
         }
+
+        # we check abvoe that only one of these is provided
+        consumer_key = self.consumer_key
+        if self.name is not None:
+            ind = self.config_api_profile_names.index(self.name)
+            consumer_key = self.api.auths[ind].consumer_key
+        ret['consumer_key'] = consumer_key
+
+        return ret
 
     def cli_rate_limit_status(self):
         job.RateLimitStatusJob(**self.job_args).run()

@@ -64,10 +64,10 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
     _authpool_return_types = {
         'get_list': 'single',
         'list_members': 'list',
-
         'lookup_users': 'list',
-
         'user_timeline': 'list',
+
+        'rate_limit_status': 'list',
 
         # the tweepy < 4.0.0 names
         'followers_ids': 'list',
@@ -110,6 +110,10 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
             None
             for x in self._authpool_apis
         ]
+
+    @property
+    def _authpool_auths(self):
+        return [api.auth for api in self._authpool_apis]
 
     @property
     def _authpool_current_api(self):
@@ -177,12 +181,26 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
         # we use "iself" to avoid confusing shadowing of the binding of "self"
         # to __getattr__'s first argument. docstring is set dynamically below.
         def func(iself, *args, **kwargs):  # pylint: disable=missing-docstring
+            # NOTE we want to provide the rate limits for all APIs at once; it
+            # doesn't make a lot of sense to ask for only one credential set's
+            # rate limit when the whole point of this class is to pool them
+            if name == 'rate_limit_status':
+                consumer_key = kwargs.pop('consumer_key', None)
+
+                ret = {
+                    api.auth.consumer_key : api.rate_limit_status()
+                    for api in iself._authpool_apis
+                }
+
+                if consumer_key is not None:
+                    ret = { consumer_key : ret[consumer_key] }
+
+                return ret
+
             cp_retry_cnt = 0
-
             while True:
-                method = getattr(iself._authpool_current_api, name)
-
                 try:
+                    method = getattr(iself._authpool_current_api, name)
                     ret = method(*args, **kwargs)
 
                     iself._authpool_mark_api_free()
@@ -224,6 +242,8 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
         The tweepy.API method's docstring follows:
         '''
 
+        # the docstring is the same on all API instances, doesn't matter which
+        # one we use
         tweepy_docstring = getattr(self._authpool_current_api, name).__doc__
         tweepy_docstring = ut.coalesce(tweepy_docstring, '')
 
