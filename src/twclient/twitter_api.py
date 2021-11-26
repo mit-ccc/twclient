@@ -147,9 +147,7 @@ class TwitterApi:
             'consumer_key' : consumer_key
         }
 
-        ret = self.make_api_call(**twargs)
-
-        yield from ret
+        return self.make_api_call(**twargs)
 
     #
     # Direct wraps of Twitter API methods

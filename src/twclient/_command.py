@@ -482,7 +482,7 @@ class TargetCommand(Command):
         self.allow_missing_targets = allow_missing_targets
 
 
-class ApiCommand(TargetCommand):
+class ApiCommand(Command):
     '''
     A command which uses Twitter API resources.
 
@@ -620,12 +620,18 @@ class RateLimitStatusCommand(ApiCommand):
     consumer_key : str or None
         The consumer key of an API profile in the config file.
 
+    full : boolean
+        Whether to return the Twitter API's full response.
+
     Attributes
     ----------
     name : str or None
         The parameter passed to __init__.
 
     consumer_key : str or None
+        The parameter passed to __init__.
+
+    full : boolean
         The parameter passed to __init__.
     '''
 
@@ -636,7 +642,7 @@ class RateLimitStatusCommand(ApiCommand):
     def __init__(self, **kwargs):
         name = kwargs.pop('name', None)
         consumer_key = kwargs.pop('consumer_key', None)
-        json = kwargs.pop('json', False)
+        full = kwargs.pop('full', False)
 
         try:
             assert name is None or consumer_key is None
@@ -652,13 +658,13 @@ class RateLimitStatusCommand(ApiCommand):
 
         self.name = name
         self.consumer_key = consumer_key
-        self.json = json
+        self.full = full
 
     @property
     def job_args(self):
         ret = {
             'api': self.api,
-            'json': self.json
+            'full': self.full
         }
 
         # we check abvoe that only one of these is provided
@@ -674,7 +680,7 @@ class RateLimitStatusCommand(ApiCommand):
         job.RateLimitStatusJob(**self.job_args).run()
 
 
-class FetchCommand(ApiCommand, DatabaseCommand):
+class FetchCommand(ApiCommand, TargetCommand, DatabaseCommand):
     '''
     The command to fetch new data from Twitter.
 

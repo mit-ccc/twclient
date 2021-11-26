@@ -146,7 +146,7 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
 
     rlp = subparsers.add_parser('rate_limit_status',
                                 help='Report API keys'' rate limit status')
-    rlp.add_argument('-j', '--json', action='store_true',
+    rlp.add_argument('-f', '--full', action='store_true',
                      help='Output full json response from the Twitter API')
 
     grp = rlp.add_mutually_exclusive_group(required=False)

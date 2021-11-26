@@ -2,6 +2,7 @@
 Job classes which actually implement command logic.
 '''
 
+import json
 import logging
 import warnings
 import itertools as it
@@ -32,6 +33,22 @@ logger = logging.getLogger(__name__)
 class Job(ABC):
     '''
     A job to be run against the database and possibly also the Twitter API.
+    '''
+
+    # This method is the main entrypoint for the Job class. Subclasses are
+    # expected to override it with their business logic.
+    @abstractmethod
+    def run(self):
+        '''
+        Run the job.
+        '''
+
+        raise NotImplementedError()
+
+
+class DatabaseJob(Job):
+    '''
+    A job to be run against the database.
 
     This class represents a job to be run against the database. Subclasses may
     or may not also support access to the Twitter API.
@@ -144,18 +161,8 @@ class Job(ABC):
 
         return instance
 
-    # This method is the main entrypoint for the Job class. Subclasses are
-    # expected to override it with their business logic.
-    @abstractmethod
-    def run(self):
-        '''
-        Run the job.
-        '''
 
-        raise NotImplementedError()
-
-
-class TagJob(Job):
+class TagJob(DatabaseJob):
     '''
     A job which uses user tags.
 
@@ -186,7 +193,7 @@ class TagJob(Job):
         self.ensure_schema_version()
 
 
-class TargetJob(Job):
+class TargetJob(DatabaseJob):
     '''
     A job which requires targets.
 
@@ -356,13 +363,12 @@ class TargetJob(Job):
                 )
 
 
-class ApiJob(TargetJob):
+class ApiJob(Job):
     '''
-    A job requiring access to the Twitter API.
+    A job requiring acess to the Twitter API.
 
-    This class represents a job which needs access to the Twitter API. It
-    configures API access and user validation logic, and defers other
-    functionality to subclasses.
+    This class represents a job which interacts with the Twitter API. It
+    configures API access, and defers other functionality to subclasses.
 
     Parameters
     ----------
@@ -373,27 +379,12 @@ class ApiJob(TargetJob):
         If the Twitter API returns an error, should we abort (if False,
         default), or ignore and continue (if True)?
 
-    load_batch_size : int
-        Load new rows to the database in batches of this size. The default is
-        None, which loads all data retrieved in one batch. Lower values
-        minimize memory usage at the cost of slower loading speeds, while
-        higher values do the reverse. Target instances in self.targets do not
-        consider this value--it applies only to other rows loaded by the ApiJob
-        instance--because there are generally not enough targets to consume a
-        significant amount of memory. Followers and friends lists in particular
-        can be large enough to cause out-of-memory conditions; setting
-        ``load_batch_size`` to an appropriate value (e.g., 5000) can address
-        this problem.
-
     Attributes
     ----------
     api : instance of twitter_api.TwitterApi
         The parameter passed to __init__.
 
     allow_api_errors : bool
-        The parameter passed to __init__.
-
-    load_batch_size : int
         The parameter passed to __init__.
     '''
 
@@ -404,13 +395,47 @@ class ApiJob(TargetJob):
             raise ValueError('Must provide api object') from exc
 
         allow_api_errors = kwargs.pop('allow_api_errors', False)
-        load_batch_size = kwargs.pop('load_batch_size', None)
 
         super().__init__(**kwargs)
 
         self.api = api
-        self.load_batch_size = load_batch_size
         self.allow_api_errors = allow_api_errors
+
+
+class FetchJob(ApiJob, TargetJob):
+    '''
+    A job fetching data from the Twitter API.
+
+    This class represents a job which fetches data from the Twitter API. It
+    configures API access and user validation logic, and defers other
+    functionality to subclasses.
+
+    Parameters
+    ----------
+    load_batch_size : int
+        Load new rows to the database in batches of this size. The default is
+        None, which loads all data retrieved in one batch. Lower values
+        minimize memory usage at the cost of slower loading speeds, while
+        higher values do the reverse. Target instances in self.targets do not
+        consider this value--it applies only to other rows loaded by the FetchJob
+        instance--because there are generally not enough targets to consume a
+        significant amount of memory. Followers and friends lists in particular
+        can be large enough to cause out-of-memory conditions; setting
+        ``load_batch_size`` to an appropriate value (e.g., 5000) can address
+        this problem.
+
+    Attributes
+    ----------
+    load_batch_size : int
+        The parameter passed to __init__.
+    '''
+
+    def __init__(self, **kwargs):
+        load_batch_size = kwargs.pop('load_batch_size', None)
+
+        super().__init__(**kwargs)
+
+        self.load_batch_size = load_batch_size
 
     def validate_targets(self):
         super().validate_targets()
@@ -423,6 +448,38 @@ class ApiJob(TargetJob):
                 logger.warning(msg)
             else:
                 raise err.BadTargetError(message=msg, targets=self.bad_targets)
+
+
+class RateLimitStatusJob(ApiJob):
+    def __init__(self, **kwargs):
+        full = kwargs.pop('full', False)
+        consumer_key = kwargs.pop('consumer_key', None)
+
+        super().__init__(**kwargs)
+
+        self.full = full
+        self.consumer_key = consumer_key
+
+    def run(self):
+        status = next(self.api.rate_limit_status())
+
+        if not self.full:
+            endpoints = ['/application/rate_limit_status', '/followers/ids',
+                         '/friends/ids', '/users/lookup', '/lists/show',
+                         '/lists/members', '/statuses/user_timeline']
+
+            short = {}
+            for key, resp in status.items():
+                short[key] = {}
+
+                for endpoint in endpoints:
+                    _, pt1, pt2 = endpoint.split('/')
+                    short[key][endpoint] = resp['resources'][pt1][endpoint]
+
+            status = short
+
+        status = json.dumps(status, indent=4)
+        print(status)
 
 
 class CreateTagJob(TagJob):
@@ -496,7 +553,7 @@ class ApplyTagJob(TagJob, TargetJob):
         self.session.commit()
 
 
-class InitializeJob(Job):
+class InitializeJob(DatabaseJob):
     '''
     A job which initializes the selected database and sets up the schema.
 
@@ -514,7 +571,7 @@ class InitializeJob(Job):
         self.session.commit()
 
 
-class UserInfoJob(ApiJob):
+class UserInfoJob(FetchJob):
     '''
     A job which hydrates users.
 
@@ -533,7 +590,7 @@ class UserInfoJob(ApiJob):
         self.session.commit()
 
 
-class TweetsJob(ApiJob):
+class TweetsJob(FetchJob):
     '''
     Fetch user tweets from the Twitter API.
 
@@ -673,7 +730,7 @@ class TweetsJob(ApiJob):
 # self.session.flush() afterward. Note also that this only applies if the
 # _load_edges_for steps don't implicitly commit, which they do on most DBs.
 # (See the comments in that method.)
-class FollowGraphJob(ApiJob):
+class FollowGraphJob(FetchJob):
     '''
     Fetch follow-graph edges from the Twitter API.
 

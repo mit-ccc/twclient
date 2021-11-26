@@ -67,7 +67,7 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
         'lookup_users': 'list',
         'user_timeline': 'list',
 
-        'rate_limit_status': 'list',
+        'rate_limit_status': 'single',
 
         # the tweepy < 4.0.0 names
         'followers_ids': 'list',
