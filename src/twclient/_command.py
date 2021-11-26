@@ -333,11 +333,20 @@ class DatabaseCommand(Command):
         The name of a database profile to use. If None, use the config file's
         current default.
 
+    load_batch_size : int, or None
+        Load data to the database in batches of this size. The default is None,
+        which means load all data in one batch and is fastest. Other values can
+        minimize memory usage for large amounts of data at the cost of slower
+        loading.
+
     Attributes
     ----------
     database : str
         The name of the database profile in use, including the config file
         default if none is given to __init__.
+
+    load_batch_size : int, or None
+        The parameter passed to __init__.
 
     database_url : str
         The connection URL for the requested database profile, read from the
@@ -350,6 +359,7 @@ class DatabaseCommand(Command):
 
     def __init__(self, **kwargs):
         database = kwargs.pop('database', None)
+        load_batch_size = kwargs.pop('load_batch_size', None)
 
         super().__init__(**kwargs)
 
@@ -369,6 +379,7 @@ class DatabaseCommand(Command):
             self.error('No database profiles configured (use add-db)')
 
         self.database = db_to_use
+        self.load_batch_size = load_batch_size
         self.database_url = self.config[self.database]['database_url']
         self.engine = sa.create_engine(self.database_url)
 
@@ -471,8 +482,7 @@ class TargetCommand(Command):
         self.allow_missing_targets = allow_missing_targets
 
 
-# FIXME does this need to subclass _DatabaseCommand
-class ApiCommand(DatabaseCommand, TargetCommand):
+class ApiCommand(TargetCommand):
     '''
     A command which uses Twitter API resources.
 
@@ -489,12 +499,6 @@ class ApiCommand(DatabaseCommand, TargetCommand):
         Should this command continue if it encounters a Twitter API error (if
         True) or abort (if False, default)?
 
-    load_batch_size : int, or None
-        Load data to the database in batches of this size. The default is None,
-        which means load all data in one batch and is fastest. Other values can
-        minimize memory usage for large amounts of data at the cost of slower
-        loading.
-
     Attributes
     ----------
     api : twitter_api.TwitterApi instance
@@ -502,15 +506,11 @@ class ApiCommand(DatabaseCommand, TargetCommand):
 
     allow_api_errors : bool
         The parameter passed to __init__.
-
-    load_batch_size : int, or None
-        The parameter passed to __init__.
     '''
 
     def __init__(self, **kwargs):
         apis = kwargs.pop('apis', None)
         allow_api_errors = kwargs.pop('allow_api_errors', False)
-        load_batch_size = kwargs.pop('load_batch_size', None)
 
         super().__init__(**kwargs)
 
@@ -547,7 +547,6 @@ class ApiCommand(DatabaseCommand, TargetCommand):
             msg = 'No Twitter credentials provided (use `config add-api`)'
             self.error(msg)
 
-        self.load_batch_size = load_batch_size
         self.allow_api_errors = allow_api_errors
         self.api = ta.TwitterApi(auths=auths)
 
@@ -675,7 +674,7 @@ class RateLimitStatusCommand(ApiCommand):
         job.RateLimitStatusJob(**self.job_args).run()
 
 
-class FetchCommand(ApiCommand):
+class FetchCommand(ApiCommand, DatabaseCommand):
     '''
     The command to fetch new data from Twitter.
 
