@@ -96,6 +96,13 @@
 <span class="c1"># The dynamic method construction in AuthPoolAPI confuses the linter</span>
 <span class="c1"># pylint: disable=protected-access</span>
 
+<span class="k">if</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s1">&#39;4.0.0&#39;</span><span class="p">:</span>
+    <span class="n">RateLimitError</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">TooManyRequests</span>
+    <span class="n">TweepyException</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">TweepyException</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="n">RateLimitError</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">RateLimitError</span>
+    <span class="n">TweepyException</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">TweepError</span>
+
 
 <div class="viewcode-block" id="AuthPoolAPI"><a class="viewcode-back" href="../../apidocs.html#twclient.authpool.AuthPoolAPI">[docs]</a><span class="k">class</span> <span class="nc">AuthPoolAPI</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
     <span class="sd">&#39;&#39;&#39;</span>
@@ -126,9 +133,10 @@
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
-<span class="sd">    error.CapacityError</span>
-<span class="sd">        If Twitter is over capacity for longer than (approximately)</span>
-<span class="sd">        `capacity_retries * capacity_sleep` seconds.</span>
+<span class="sd">    error.TwitterServiceError</span>
+<span class="sd">        If Twitter is over capacity or encounters other internal problems for</span>
+<span class="sd">        longer than (approximately) `capacity_retries * capacity_sleep`</span>
+<span class="sd">        seconds.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="c1"># This value is set as an attribute on methods constructed and returned by</span>
@@ -136,13 +144,18 @@
     <span class="n">_authpool_return_types</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;get_list&#39;</span><span class="p">:</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span>
         <span class="s1">&#39;list_members&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
-
         <span class="s1">&#39;lookup_users&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
-
         <span class="s1">&#39;user_timeline&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
 
+        <span class="s1">&#39;rate_limit_status&#39;</span><span class="p">:</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span>
+
+        <span class="c1"># the tweepy &lt; 4.0.0 names</span>
         <span class="s1">&#39;followers_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;friends_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span>
+        <span class="s1">&#39;friends_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+
+        <span class="c1"># the tweepy &gt;= 4.0.0 names</span>
+        <span class="s1">&#39;get_follower_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;get_friend_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span>
     <span class="p">}</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -177,6 +190,10 @@
             <span class="kc">None</span>
             <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_authpool_apis</span>
         <span class="p">]</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_authpool_auths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">api</span><span class="o">.</span><span class="n">auth</span> <span class="k">for</span> <span class="n">api</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_authpool_apis</span><span class="p">]</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_authpool_current_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
@@ -244,12 +261,26 @@
         <span class="c1"># we use &quot;iself&quot; to avoid confusing shadowing of the binding of &quot;self&quot;</span>
         <span class="c1"># to __getattr__&#39;s first argument. docstring is set dynamically below.</span>
         <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">iself</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># pylint: disable=missing-docstring</span>
+            <span class="c1"># NOTE we want to provide the rate limits for all APIs at once; it</span>
+            <span class="c1"># doesn&#39;t make a lot of sense to ask for only one credential set&#39;s</span>
+            <span class="c1"># rate limit when the whole point of this class is to pool them</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;rate_limit_status&#39;</span><span class="p">:</span>
+                <span class="n">consumer_key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;consumer_key&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+                <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">api</span><span class="o">.</span><span class="n">auth</span><span class="o">.</span><span class="n">consumer_key</span> <span class="p">:</span> <span class="n">api</span><span class="o">.</span><span class="n">rate_limit_status</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">api</span> <span class="ow">in</span> <span class="n">iself</span><span class="o">.</span><span class="n">_authpool_apis</span>
+                <span class="p">}</span>
+
+                <span class="k">if</span> <span class="n">consumer_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span> <span class="n">consumer_key</span> <span class="p">:</span> <span class="n">ret</span><span class="p">[</span><span class="n">consumer_key</span><span class="p">]</span> <span class="p">}</span>
+
+                <span class="k">return</span> <span class="n">ret</span>
+
             <span class="n">cp_retry_cnt</span> <span class="o">=</span> <span class="mi">0</span>
-
             <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">iself</span><span class="o">.</span><span class="n">_authpool_current_api</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-
                 <span class="k">try</span><span class="p">:</span>
+                    <span class="n">method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">iself</span><span class="o">.</span><span class="n">_authpool_current_api</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
                     <span class="n">ret</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
                     <span class="n">iself</span><span class="o">.</span><span class="n">_authpool_mark_api_free</span><span class="p">()</span>
@@ -259,13 +290,13 @@
                     <span class="n">cp_retry_cnt</span> <span class="o">=</span> <span class="mi">0</span>
 
                     <span class="k">return</span> <span class="n">ret</span>
-                <span class="k">except</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">RateLimitError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">except</span> <span class="n">RateLimitError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
                     <span class="n">resume_time</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span> \
                                      <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;x-rate-limit-reset&#39;</span><span class="p">)</span>
                     <span class="n">iself</span><span class="o">.</span><span class="n">_authpool_mark_api_limited</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">resume_time</span><span class="p">))</span>
 
                     <span class="n">iself</span><span class="o">.</span><span class="n">_authpool_switch_api</span><span class="p">()</span>
-                <span class="k">except</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">TweepError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">except</span> <span class="n">TweepyException</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
                     <span class="n">dexc</span> <span class="o">=</span> <span class="n">err</span><span class="o">.</span><span class="n">dispatch_tweepy</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
 
                     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dexc</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">TwitterServiceError</span><span class="p">):</span>
@@ -291,6 +322,8 @@
 <span class="s1">        The tweepy.API method&#39;s docstring follows:</span>
 <span class="s1">        &#39;&#39;&#39;</span>
 
+        <span class="c1"># the docstring is the same on all API instances, doesn&#39;t matter which</span>
+        <span class="c1"># one we use</span>
         <span class="n">tweepy_docstring</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_authpool_current_api</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="vm">__doc__</span>
         <span class="n">tweepy_docstring</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">tweepy_docstring</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
 

@@ -217,6 +217,18 @@
 
             <span class="k">raise</span></div>
 
+<div class="viewcode-block" id="TwitterApi.rate_limit_status"><a class="viewcode-back" href="../../apidocs.html#twclient.twitter_api.TwitterApi.rate_limit_status">[docs]</a>    <span class="k">def</span> <span class="nf">rate_limit_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">consumer_key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Getting rate limits for consumer key(s): &#39;</span>
+        <span class="n">msg</span> <span class="o">+=</span> <span class="p">(</span><span class="s1">&#39;all&#39;</span> <span class="k">if</span> <span class="n">consumer_key</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">consumer_key</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">twargs</span> <span class="o">=</span> <span class="p">{</span>
+            <span class="s1">&#39;method&#39;</span> <span class="p">:</span> <span class="s1">&#39;rate_limit_status&#39;</span><span class="p">,</span>
+            <span class="s1">&#39;consumer_key&#39;</span> <span class="p">:</span> <span class="n">consumer_key</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_api_call</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">)</span></div>
+
     <span class="c1">#</span>
     <span class="c1"># Direct wraps of Twitter API methods</span>
     <span class="c1">#</span>
@@ -272,8 +284,12 @@
                     <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;lookup_users&#39;</span><span class="p">,</span>
                     <span class="s1">&#39;include_entities&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># include user sub-objects</span>
                     <span class="s1">&#39;tweet_mode&#39;</span><span class="p">:</span> <span class="s1">&#39;extended&#39;</span><span class="p">,</span>  <span class="c1"># don&#39;t truncate tweet text</span>
-                    <span class="s1">&#39;user_ids&#39;</span><span class="p">:</span> <span class="n">grp</span>
                 <span class="p">}</span>
+
+                <span class="k">if</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s1">&#39;4.0.0&#39;</span><span class="p">:</span>
+                    <span class="n">twargs</span><span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grp</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">twargs</span><span class="p">[</span><span class="s1">&#39;user_ids&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grp</span>
 
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">ret</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">make_api_call</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">))</span>
@@ -295,8 +311,12 @@
                     <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;lookup_users&#39;</span><span class="p">,</span>
                     <span class="s1">&#39;include_entities&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>  <span class="c1"># include user sub-objects</span>
                     <span class="s1">&#39;tweet_mode&#39;</span><span class="p">:</span> <span class="s1">&#39;extended&#39;</span><span class="p">,</span>  <span class="c1"># don&#39;t truncate tweet text</span>
-                    <span class="s1">&#39;screen_names&#39;</span><span class="p">:</span> <span class="n">grp</span>
                 <span class="p">}</span>
+
+                <span class="k">if</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s1">&#39;4.0.0&#39;</span><span class="p">:</span>
+                    <span class="n">twargs</span><span class="p">[</span><span class="s1">&#39;screen_name&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grp</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">twargs</span><span class="p">[</span><span class="s1">&#39;screen_names&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">grp</span>
 
                 <span class="k">try</span><span class="p">:</span>
                     <span class="n">ret</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">make_api_call</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">))</span>
@@ -470,8 +490,9 @@
 <span class="sd">        Call Twitter&#39;s followers/ids API method.</span>
 
 <span class="sd">        This method wraps a call to Twitter&#39;s followers/ids API method (via the</span>
-<span class="sd">        make_api_call method and ultimately via tweepy.API&#39;s followers_ids</span>
-<span class="sd">        method). Exactly one of user_id and screen_name must be specified.</span>
+<span class="sd">        make_api_call method and ultimately via tweepy.API&#39;s get_follower_ids</span>
+<span class="sd">        method / followers_ids in tweepy &lt; 4.0.0). Exactly one of user_id and</span>
+<span class="sd">        screen_name must be specified.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -502,10 +523,14 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="n">twargs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;followers_ids&#39;</span><span class="p">,</span>
             <span class="s1">&#39;cursor&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
             <span class="n">user_type</span><span class="p">:</span> <span class="n">user</span>
         <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s1">&#39;4.0.0&#39;</span><span class="p">:</span>
+            <span class="n">twargs</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;get_follower_ids&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">twargs</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;followers_ids&#39;</span>
 
         <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_api_call</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">)</span></div>
 
@@ -514,10 +539,11 @@
 <span class="sd">        Call Twitter&#39;s friends/ids API method.</span>
 
 <span class="sd">        This method wraps a call to Twitter&#39;s friends/ids API method (via the</span>
-<span class="sd">        make_api_call method and ultimately via tweepy.API&#39;s friends_ids</span>
-<span class="sd">        method). Exactly one of user_id and screen_name must be specified. Note</span>
-<span class="sd">        that &quot;friends&quot; is Twitter&#39;s term for the opposite of followers: user</span>
-<span class="sd">        A&#39;s friends are the users that A follows.</span>
+<span class="sd">        make_api_call method and ultimately via tweepy.API&#39;s get_friend_ids</span>
+<span class="sd">        method / friends_ids in tweepy &lt; 4.0.0). Exactly one of user_id and</span>
+<span class="sd">        screen_name must be specified. Note that &quot;friends&quot; is Twitter&#39;s term</span>
+<span class="sd">        for the opposite of followers: user A&#39;s friends are the users that A</span>
+<span class="sd">        follows.</span>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
@@ -547,10 +573,14 @@
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
 
         <span class="n">twargs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;friends_ids&#39;</span><span class="p">,</span>
             <span class="s1">&#39;cursor&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
             <span class="n">user_type</span><span class="p">:</span> <span class="n">user</span>
         <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s1">&#39;4.0.0&#39;</span><span class="p">:</span>
+            <span class="n">twargs</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;get_friend_ids&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">twargs</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;friends_ids&#39;</span>
 
         <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_api_call</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">)</span></div></div>
 </pre></div>
