@@ -5,16 +5,12 @@ Subcommands which use the Twitter API.
 import logging
 
 from .. import job
-from .. import error as err
-from .. import target as tg
-from .. import twitter_api as ta
-
-from .command import ApiCommand, TargetCommand, DatabaseCommand
+from . import command as cmd
 
 logger = logging.getLogger(__name__)
 
 
-class RateLimitStatusCommand(ApiCommand):
+class RateLimitStatusCommand(cmd.ApiCommand):
     '''
     Print rate-limit status information for API keys.
 
@@ -89,7 +85,7 @@ class RateLimitStatusCommand(ApiCommand):
         job.RateLimitStatusJob(**self.job_args).run()
 
 
-class FetchCommand(ApiCommand, TargetCommand, DatabaseCommand):
+class FetchCommand(cmd.ApiCommand, cmd.TargetCommand, cmd.DatabaseCommand):
     '''
     The command to fetch new data from Twitter.
 

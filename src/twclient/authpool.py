@@ -16,11 +16,20 @@ logger = logging.getLogger(__name__)
 # The dynamic method construction in AuthPoolAPI confuses the linter
 # pylint: disable=protected-access
 
+# Either tweepy.error or tweepy.errors will be missing depending on the
+# version and we want pylint not to freak out when it can't find exactly
+# one of them.
 if tweepy.__version__ >= '4.0.0':
+    # pylint: disable-next=no-member
     RateLimitError = tweepy.errors.TooManyRequests
+
+    # pylint: disable-next=no-member
     TweepyException = tweepy.errors.TweepyException
 else:
+    # pylint: disable-next=no-member
     RateLimitError = tweepy.error.RateLimitError
+
+    # pylint: disable-next=no-member
     TweepyException = tweepy.error.TweepError
 
 

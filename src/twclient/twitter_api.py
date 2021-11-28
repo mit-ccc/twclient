@@ -138,6 +138,31 @@ class TwitterApi:
             raise
 
     def rate_limit_status(self, consumer_key=None):
+        '''
+        Call Twitter's application/rate_limit_status method.
+
+        This method wraps one or more calls to Twitter's API method
+        application/rate_limit_status and returns information on rate limits.
+        The default is to request rate limit info for all credentials given in
+        the ``self.auths`` attribute. See also the method of the same name on
+        ``authpool.AuthPoolAPI``, which this method calls.
+
+        Parameters
+        ----------
+        consumer_key : str or None
+            The consumer key for a particular set of API credentials whose rate
+            limit should be checked. If None, check all credentials in
+            ``self.auths``. If not None, the value must match one of the
+            consumer keys in ``self.auths``.
+
+        Returns
+        -------
+        dict
+            A dictionary whose keys are the OAuth consumer keys and whose
+            values are the Twitter API's json responses describing rate limit
+            information.
+        '''
+
         msg = 'Getting rate limits for consumer key(s): '
         msg += ('all' if consumer_key is None else consumer_key)
         logger.debug(msg)

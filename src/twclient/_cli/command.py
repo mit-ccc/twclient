@@ -13,7 +13,6 @@ from abc import ABC, abstractmethod
 import tweepy
 import sqlalchemy as sa
 
-from .. import job
 from .. import error as err
 from .. import target as tg
 from .. import twitter_api as ta
@@ -303,6 +302,15 @@ class Command(ABC):
         '''
 
         return self.do_cli(self.subcommand)
+
+    @property
+    @abstractmethod
+    def job_args(self):
+        '''
+        Arguments to be passed through to the 
+        '''
+
+        raise NotImplementedError()
 
     @property
     @abstractmethod

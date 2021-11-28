@@ -9,9 +9,15 @@ import tweepy
 TWEEPY4 = tweepy.__version__ >= '4.0.0'
 
 if TWEEPY4:
+    # tweepy.error (< 4.0.0) became tweepy.errors in 4.0.0, so the installed
+    # package will have one or the other but not both. We want pylint to avoid
+    # freaking out when it can't find the missing one.
+
+    # pylint: disable-next=import-error,no-name-in-module
     from tweepy.errors import (TweepyException, TwitterServerError, Forbidden,
                                Unauthorized, NotFound)
 else:
+    # pylint: disable-next=import-error,no-name-in-module
     from tweepy.error import TweepError
 
 logger = logging.getLogger(__name__)

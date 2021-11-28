@@ -2,28 +2,15 @@
 Subcommands which don't interact with the Twitter API
 '''
 
-import os
-import sys
 import logging
-import collections as cl
-import configparser as cp
-
-from abc import ABC, abstractmethod
-
-import tweepy
-import sqlalchemy as sa
 
 from .. import job
-from .. import error as err
-from .. import target as tg
-from .. import twitter_api as ta
-
-from .command import Command, DatabaseCommand, TargetCommand
+from . import command as cmd
 
 logger = logging.getLogger(__name__)
 
 
-class ConfigCommand(Command):
+class ConfigCommand(cmd.Command):
     '''
     A command to manage the config file.
 
@@ -238,7 +225,7 @@ class ConfigCommand(Command):
         self.write_config()
 
 
-class InitializeCommand(DatabaseCommand):
+class InitializeCommand(cmd.DatabaseCommand):
     '''
     The command to (re-)initialize the database schema.
 
@@ -292,7 +279,7 @@ class InitializeCommand(DatabaseCommand):
             job.InitializeJob(**self.job_args).run()
 
 
-class TagCommand(DatabaseCommand, TargetCommand):
+class TagCommand(cmd.DatabaseCommand, cmd.TargetCommand):
     '''
     A command which manages user tags.
 

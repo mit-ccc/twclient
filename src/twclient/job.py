@@ -30,7 +30,7 @@ logger = logging.getLogger(__name__)
 #
 
 
-class Job(ABC):
+class Job(ABC):  # pylint: disable=too-few-public-methods
     '''
     A job to be run against the database and possibly also the Twitter API.
     '''
@@ -363,7 +363,7 @@ class TargetJob(DatabaseJob):
                 )
 
 
-class ApiJob(Job):
+class ApiJob(Job):  # pylint: disable=too-few-public-methods
     '''
     A job requiring acess to the Twitter API.
 
@@ -450,7 +450,15 @@ class FetchJob(ApiJob, TargetJob):
                 raise err.BadTargetError(message=msg, targets=self.bad_targets)
 
 
-class RateLimitStatusJob(ApiJob):
+class RateLimitStatusJob(ApiJob):  # pylint: disable=too-few-public-methods
+    '''
+    Check the rate limits for the API keys in the config file.
+
+    This job pulls the rate limit status for each key in the config file and
+    prints it to stdout in json format. The job filters by default to only the
+    API endpoints we use but can be told to show all of them.
+    '''
+
     def __init__(self, **kwargs):
         full = kwargs.pop('full', False)
         consumer_key = kwargs.pop('consumer_key', None)
@@ -473,8 +481,8 @@ class RateLimitStatusJob(ApiJob):
                 short[key] = {}
 
                 for endpoint in endpoints:
-                    _, pt1, pt2 = endpoint.split('/')
-                    short[key][endpoint] = resp['resources'][pt1][endpoint]
+                    _, grp, _ = endpoint.split('/')
+                    short[key][endpoint] = resp['resources'][grp][endpoint]
 
             status = short
 
