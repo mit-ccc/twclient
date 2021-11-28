@@ -21,7 +21,7 @@ from . import twitter_api as ta
 logger = logging.getLogger(__name__)
 
 
-class _Command(ABC):
+class Command(ABC):
     '''
     A command which can be run from the twclient CLI.
 
@@ -292,7 +292,7 @@ class _Command(ABC):
         '''
         Run this command.
 
-        This function is the main entrypoint for a _Command instance. It
+        This function is the main entrypoint for a Command instance. It
         dispatches the name of the subcommand to do_cli() for further
         processing.
 
@@ -319,7 +319,7 @@ class _Command(ABC):
         raise NotImplementedError()
 
 
-class _DatabaseCommand(_Command):
+class DatabaseCommand(Command):
     '''
     A command which uses database resources.
 
@@ -333,11 +333,20 @@ class _DatabaseCommand(_Command):
         The name of a database profile to use. If None, use the config file's
         current default.
 
+    load_batch_size : int, or None
+        Load data to the database in batches of this size. The default is None,
+        which means load all data in one batch and is fastest. Other values can
+        minimize memory usage for large amounts of data at the cost of slower
+        loading.
+
     Attributes
     ----------
     database : str
         The name of the database profile in use, including the config file
         default if none is given to __init__.
+
+    load_batch_size : int, or None
+        The parameter passed to __init__.
 
     database_url : str
         The connection URL for the requested database profile, read from the
@@ -350,6 +359,7 @@ class _DatabaseCommand(_Command):
 
     def __init__(self, **kwargs):
         database = kwargs.pop('database', None)
+        load_batch_size = kwargs.pop('load_batch_size', None)
 
         super().__init__(**kwargs)
 
@@ -369,11 +379,12 @@ class _DatabaseCommand(_Command):
             self.error('No database profiles configured (use add-db)')
 
         self.database = db_to_use
+        self.load_batch_size = load_batch_size
         self.database_url = self.config[self.database]['database_url']
         self.engine = sa.create_engine(self.database_url)
 
 
-class _TargetCommand(_Command):
+class TargetCommand(Command):
     '''
     A command which takes targets.
 
@@ -471,7 +482,7 @@ class _TargetCommand(_Command):
         self.allow_missing_targets = allow_missing_targets
 
 
-class _ApiCommand(_DatabaseCommand, _TargetCommand):
+class ApiCommand(Command):
     '''
     A command which uses Twitter API resources.
 
@@ -488,12 +499,6 @@ class _ApiCommand(_DatabaseCommand, _TargetCommand):
         Should this command continue if it encounters a Twitter API error (if
         True) or abort (if False, default)?
 
-    load_batch_size : int, or None
-        Load data to the database in batches of this size. The default is None,
-        which means load all data in one batch and is fastest. Other values can
-        minimize memory usage for large amounts of data at the cost of slower
-        loading.
-
     Attributes
     ----------
     api : twitter_api.TwitterApi instance
@@ -501,15 +506,11 @@ class _ApiCommand(_DatabaseCommand, _TargetCommand):
 
     allow_api_errors : bool
         The parameter passed to __init__.
-
-    load_batch_size : int, or None
-        The parameter passed to __init__.
     '''
 
     def __init__(self, **kwargs):
         apis = kwargs.pop('apis', None)
         allow_api_errors = kwargs.pop('allow_api_errors', False)
-        load_batch_size = kwargs.pop('load_batch_size', None)
 
         super().__init__(**kwargs)
 
@@ -517,6 +518,12 @@ class _ApiCommand(_DatabaseCommand, _TargetCommand):
             profiles_to_use = apis
         else:
             profiles_to_use = self.config_api_profile_names
+
+        try:
+            bad = set(profiles_to_use) - set(self.config_api_profile_names)
+            assert len(bad) == 0
+        except AssertionError as exc:
+            raise ValueError(f'Bad API profile names: {bad}') from exc
 
         auths = []
         for profile in profiles_to_use:
@@ -540,12 +547,11 @@ class _ApiCommand(_DatabaseCommand, _TargetCommand):
             msg = 'No Twitter credentials provided (use `config add-api`)'
             self.error(msg)
 
-        self.load_batch_size = load_batch_size
         self.allow_api_errors = allow_api_errors
         self.api = ta.TwitterApi(auths=auths)
 
 
-class _InitializeCommand(_DatabaseCommand):
+class InitializeCommand(DatabaseCommand):
     '''
     The command to (re-)initialize the database schema.
 
@@ -568,7 +574,7 @@ class _InitializeCommand(_DatabaseCommand):
     '''
 
     subcommand_to_method = {
-        'initialize': '_cli_initialize'
+        'initialize': 'cli_initialize'
     }
 
     def __init__(self, **kwargs):
@@ -582,7 +588,13 @@ class _InitializeCommand(_DatabaseCommand):
 
         self.yes = yes
 
-    def _cli_initialize(self):
+    @property
+    def job_args(self):
+        return {
+            'engine': self.engine
+        }
+
+    def cli_initialize(self):
         if not self.yes:
             logger.warning("WARNING: This command will drop the Twitter data "
                            "tables and delete all data! If you want to "
@@ -590,10 +602,85 @@ class _InitializeCommand(_DatabaseCommand):
         else:
             logger.warning('Recreating schema and dropping existing data')
 
-            job.InitializeJob(engine=self.engine).run()
+            job.InitializeJob(**self.job_args).run()
 
 
-class _FetchCommand(_ApiCommand):
+class RateLimitStatusCommand(ApiCommand):
+    '''
+    Print rate-limit status information for API keys.
+
+    This command prints information about rate-limit status for all API keys
+    stored in the config file, or only a particular one.
+
+    Parameters
+    ----------
+    name : str or None
+        The name of an API profile in the config file.
+
+    consumer_key : str or None
+        The consumer key of an API profile in the config file.
+
+    full : boolean
+        Whether to return the Twitter API's full response.
+
+    Attributes
+    ----------
+    name : str or None
+        The parameter passed to __init__.
+
+    consumer_key : str or None
+        The parameter passed to __init__.
+
+    full : boolean
+        The parameter passed to __init__.
+    '''
+
+    subcommand_to_method = {
+        'rate_limit_status': 'cli_rate_limit_status'
+    }
+
+    def __init__(self, **kwargs):
+        name = kwargs.pop('name', None)
+        consumer_key = kwargs.pop('consumer_key', None)
+        full = kwargs.pop('full', False)
+
+        try:
+            assert name is None or consumer_key is None
+        except AssertionError as exc:
+            msg = 'Cannot provide both name and consumer_key'
+            raise ValueError(msg) from exc
+
+        # this doesn't actually take a subcommand, just a hack to
+        # make it work with the same machinery as the others
+        kwargs['subcommand'] = 'rate_limit_status'
+
+        super().__init__(**kwargs)
+
+        self.name = name
+        self.consumer_key = consumer_key
+        self.full = full
+
+    @property
+    def job_args(self):
+        ret = {
+            'api': self.api,
+            'full': self.full
+        }
+
+        # we check abvoe that only one of these is provided
+        consumer_key = self.consumer_key
+        if self.name is not None:
+            ind = self.config_api_profile_names.index(self.name)
+            consumer_key = self.api.auths[ind].consumer_key
+        ret['consumer_key'] = consumer_key
+
+        return ret
+
+    def cli_rate_limit_status(self):
+        job.RateLimitStatusJob(**self.job_args).run()
+
+
+class FetchCommand(ApiCommand, TargetCommand, DatabaseCommand):
     '''
     The command to fetch new data from Twitter.
 
@@ -637,10 +724,10 @@ class _FetchCommand(_ApiCommand):
     '''
 
     subcommand_to_method = {
-        'users': '_cli_users',
-        'friends': '_cli_friends',
-        'followers': '_cli_followers',
-        'tweets': '_cli_tweets'
+        'users': 'cli_users',
+        'friends': 'cli_friends',
+        'followers': 'cli_followers',
+        'tweets': 'cli_tweets'
     }
 
     def __init__(self, **kwargs):
@@ -661,7 +748,7 @@ class _FetchCommand(_ApiCommand):
         self.old_tweets = old_tweets
 
     @property
-    def _job_args(self):
+    def job_args(self):
         args = {
             'engine': self.engine,
             'api': self.api,
@@ -678,20 +765,20 @@ class _FetchCommand(_ApiCommand):
 
         return args
 
-    def _cli_users(self):
-        job.UserInfoJob(**self._job_args).run()
+    def cli_users(self):
+        job.UserInfoJob(**self.job_args).run()
 
-    def _cli_friends(self):
-        job.FriendsJob(**self._job_args).run()
+    def cli_friends(self):
+        job.FriendsJob(**self.job_args).run()
 
-    def _cli_followers(self):
-        job.FollowersJob(**self._job_args).run()
+    def cli_followers(self):
+        job.FollowersJob(**self.job_args).run()
 
-    def _cli_tweets(self):
-        job.TweetsJob(**self._job_args).run()
+    def cli_tweets(self):
+        job.TweetsJob(**self.job_args).run()
 
 
-class _TagCommand(_DatabaseCommand, _TargetCommand):
+class TagCommand(DatabaseCommand, TargetCommand):
     '''
     A command which manages user tags.
 
@@ -705,9 +792,9 @@ class _TagCommand(_DatabaseCommand, _TargetCommand):
     '''
 
     subcommand_to_method = {
-        'create': '_cli_create',
-        'delete': '_cli_delete',
-        'apply': '_cli_apply'
+        'create': 'cli_create',
+        'delete': 'cli_delete',
+        'apply': 'cli_apply'
     }
 
     def __init__(self, **kwargs):
@@ -731,7 +818,7 @@ class _TagCommand(_DatabaseCommand, _TargetCommand):
         return self.subcommand == 'apply'
 
     @property
-    def _job_args(self):
+    def job_args(self):
         args = {
             'tag': self.name,
             'engine': self.engine,
@@ -743,17 +830,17 @@ class _TagCommand(_DatabaseCommand, _TargetCommand):
 
         return args
 
-    def _cli_create(self):
-        job.CreateTagJob(**self._job_args).run()
+    def cli_create(self):
+        job.CreateTagJob(**self.job_args).run()
 
-    def _cli_delete(self):
-        job.DeleteTagJob(**self._job_args).run()
+    def cli_delete(self):
+        job.DeleteTagJob(**self.job_args).run()
 
-    def _cli_apply(self):
-        job.ApplyTagJob(**self._job_args).run()
+    def cli_apply(self):
+        job.ApplyTagJob(**self.job_args).run()
 
 
-class _ConfigCommand(_Command):
+class ConfigCommand(Command):
     '''
     A command to manage the config file.
 
@@ -821,13 +908,13 @@ class _ConfigCommand(_Command):
     '''
 
     subcommand_to_method = {
-        'list-db': '_cli_list_db',
-        'list-api': '_cli_list_api',
-        'rm-db': '_cli_rm_db',
-        'rm-api': '_cli_rm_api',
-        'set-db-default': '_cli_set_db_default',
-        'add-db': '_cli_add_db',
-        'add-api': '_cli_add_api'
+        'list-db': 'cli_list_db',
+        'list-api': 'cli_list_api',
+        'rm-db': 'cli_rm_db',
+        'rm-api': 'cli_rm_api',
+        'set-db-default': 'cli_set_db_default',
+        'add-db': 'cli_add_db',
+        'add-api': 'cli_add_api'
     }
 
     def __init__(self, **kwargs):
@@ -871,7 +958,7 @@ class _ConfigCommand(_Command):
         self.token = token
         self.token_secret = token_secret
 
-    def _cli_list_db(self):
+    def cli_list_db(self):
         for name in self.config_db_profile_names:
             if self.full:
                 print('[' + name + ']')
@@ -881,7 +968,7 @@ class _ConfigCommand(_Command):
             else:
                 print(name)
 
-    def _cli_list_api(self):
+    def cli_list_api(self):
         for name in self.config_api_profile_names:
             if self.full:
                 print('[' + name + ']')
@@ -891,7 +978,7 @@ class _ConfigCommand(_Command):
             else:
                 print(name)
 
-    def _cli_rm_db(self):
+    def cli_rm_db(self):
         if self.name not in self.config_profile_names:
             msg = 'DB profile {0} not found'
             self.error(msg.format(self.name))
@@ -908,7 +995,7 @@ class _ConfigCommand(_Command):
 
         self.write_config()
 
-    def _cli_rm_api(self):
+    def cli_rm_api(self):
         if self.name not in self.config_profile_names:
             msg = 'API profile {0} not found'
             self.error(msg.format(self.name))
@@ -919,7 +1006,7 @@ class _ConfigCommand(_Command):
 
         self.write_config()
 
-    def _cli_set_db_default(self):
+    def cli_set_db_default(self):
         if self.name not in self.config_profile_names:
             msg = 'DB profile {0} not found'
             self.error(msg.format(self.name))
@@ -933,7 +1020,7 @@ class _ConfigCommand(_Command):
 
         self.write_config()
 
-    def _cli_add_db(self):
+    def cli_add_db(self):
         if self.name == 'DEFAULT':
             self.error('Profile name may not be "DEFAULT"')
         elif self.name in self.config_profile_names:
@@ -947,7 +1034,7 @@ class _ConfigCommand(_Command):
 
         self.write_config()
 
-    def _cli_add_api(self):
+    def cli_add_api(self):
         if self.name == 'DEFAULT':
             self.error('Profile name may not be "DEFAULT"')
         elif self.name in self.config_profile_names:

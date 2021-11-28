@@ -7,8 +7,8 @@ The command-line interface script.
 import logging
 import argparse as ap
 
-from .command import _ConfigCommand, _TagCommand, _InitializeCommand, \
-                     _FetchCommand
+from ._command import ConfigCommand, InitializeCommand, FetchCommand, \
+                      RateLimitStatusCommand, TagCommand
 
 logger = logging.getLogger(__name__)
 
@@ -141,6 +141,19 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
                      help='Must specify this option to initialize')
 
     #
+    # Rate limit status
+    #
+
+    rlp = subparsers.add_parser('rate_limit_status',
+                                help='Report API keys'' rate limit status')
+    rlp.add_argument('-f', '--full', action='store_true',
+                     help='Output full json response from the Twitter API')
+
+    grp = rlp.add_mutually_exclusive_group(required=False)
+    grp.add_argument('-n', '--name', help='API profile name')
+    grp.add_argument('-k', '--consumer-key', help='consumer key')
+
+    #
     # Fetching Twitter data
     #
 
@@ -226,10 +239,11 @@ def cli():
     _log_setup(verbosity)
 
     cls = {
-        'config': _ConfigCommand,
-        'tag': _TagCommand,
-        'initialize': _InitializeCommand,
-        'fetch': _FetchCommand
+        'config': ConfigCommand,
+        'initialize': InitializeCommand,
+        'fetch': FetchCommand,
+        'rate_limit_status': RateLimitStatusCommand,
+        'tag': TagCommand
     }[command]
 
     cls(parser=parser, **vars(args)).run()
