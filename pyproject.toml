@@ -11,6 +11,20 @@ jobs = 0
 persistent= "yes"
 suggestion-mode = "yes"
 
+[tool.pylint.messages_control]
+disable = [
+    "raw-checker-failed",
+    "bad-inline-option",
+    "locally-disabled",
+    "file-ignored",
+    "suppressed-message",
+    "useless-suppression",
+    "deprecated-pragma",
+    "use-symbolic-message-instead",
+    "unnecessary-pass",
+    "too-few-public-methods"
+]
+
 [tool.pylint.reports]
 reports = "yes"
 score = "yes"
@@ -20,7 +34,8 @@ logging-format-style = "new"
 logging-modules = "logging"
 
 [tool.pylint.variables]
-allow-global-unused-variables = "no"
+allow-global-unused-variables = "yes"
+init-import = "no"
 
 [tool.pylint.format]
 expected-line-ending-format = "LF"

@@ -158,7 +158,9 @@ class AuthPoolAPI:
 
             # add a little fudge factor to be safe
             wake_time = self._authpool_rate_limit_resets[new_ind] + 0.01
-            logger.info('Sleeping %f seconds for rate limit', wake_time)
+            msg = f'Sleeping {wake_time} seconds for rate limit'
+            logger.info(msg)
+
             time.sleep(wake_time)
 
         self._authpool_current_api_index = new_ind
