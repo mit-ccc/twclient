@@ -26,19 +26,17 @@ class Command(ABC):
 
     This class encapsulates a command as issued to the twclient command-line
     interface. Each instance of this class represents a subcommand ("fetch",
-    "tag", "config" or "initialize") given to the CLI, and all but "initialize"
-    take further (sub-)subcommands.
+    "tag", "config", "initialize", etc) given to the CLI, which may take
+    further (sub-)subcommands.
 
     Parameters
     ----------
     parser : argparse.ArgumentParser instance
         The ArgumentParser which parsed the command-line arguments.
+
     subcommand : str
         The subcommand specifying which operation to perform. (For example,
         "fetch" takes subcommands "tweets", "friends", "followers" and "users.)
-    config_file : str
-        The (possibly relative) path to the config file. Tilde expansion will
-        be performed.
 
     Attributes
     ----------
@@ -47,9 +45,6 @@ class Command(ABC):
 
     subcommand : str
         The subcommand passed to __init__.
-
-    config_file : str
-        The absolute path to the config file, after tilde expansion.
     '''
 
     def __init__(self, **kwargs):
@@ -63,11 +58,6 @@ class Command(ABC):
         except KeyError as exc:
             raise ValueError('Must provide subcommand argument') from exc
 
-        try:
-            config_file = kwargs.pop('config_file')
-        except KeyError as exc:
-            raise ValueError('Must provide config argument') from exc
-
         if subcommand not in self.subcommand_to_method.keys():
             raise ValueError(f'Bad subcommand {subcommand}')
 
@@ -75,11 +65,6 @@ class Command(ABC):
 
         self.parser = parser
         self.subcommand = subcommand
-
-        self.config_file = os.path.abspath(os.path.expanduser(config_file))
-        self.config = self.read_config()
-
-        self.validate_config()
 
     # NOTE using this for some errors and logger.____ for others isn't a bug
     # or problem per se, but it does lead to inconsistent output formatting
@@ -103,163 +88,11 @@ class Command(ABC):
 
         self.parser.error(msg)
 
-    #
-    # Interacting with the config file
-    #
-
-    def read_config(self):
+    def run(self):
         '''
-        Read and return the config file.
+        Run this command.
 
-        This function reads the config file specified to __init__ and returns
-        it as a ConfigParser object.
-
-        Returns
-        -------
-        None
-        '''
-
-        config = cp.ConfigParser(dict_type=cl.OrderedDict)
-        config.read(self.config_file)
-
-        return config
-
-    def write_config(self):
-        '''
-        Write the current state of the config back to the config file.
-
-        This function writes the current state of this _Command's config out to
-        the path given for the config file. The config is validated before
-        being written.
-
-        Returns
-        -------
-        None
-        '''
-
-        self.validate_config()
-
-        with open(self.config_file, 'wt', encoding='utf-8') as fobj:
-            self.config.write(fobj)
-
-    def validate_config(self):
-        '''
-        Validate the current state of this _Command's config.
-
-        This function performs several checks of the validity of this
-        _Command's config, and calls the error() method if any problem is
-        detected.
-
-        Returns
-        -------
-        None
-        '''
-
-        err_string = 'Malformed configuration file: '
-
-        for name in self.config_profile_names:
-            if 'type' not in self.config[name].keys():
-                msg = 'Section {0} missing type declaration field'
-                self.error(err_string + msg.format(name))
-
-            if self.config[name]['type'] not in ('database', 'api'):
-                msg = 'Section {0} must have "type" of either ' \
-                      '"api" or "database"'
-                self.error(err_string + msg.format(name))
-
-        for profile in self.config_api_profile_names:
-            try:
-                assert profile in self.config.keys()
-                assert self.config[profile]['type'] == 'api'
-
-                assert 'consumer_key' in self.config[profile].keys()
-                assert 'consumer_secret' in self.config[profile].keys()
-
-                assert not (
-                    'token' in self.config[profile].keys() and
-                    'token_secret' not in self.config[profile].keys()
-                )
-
-                assert not (
-                    'token_secret' in self.config[profile].keys() and
-                    'token' not in self.config[profile].keys()
-                )
-            except AssertionError:
-                self.error(err_string + f'Bad API profile {profile}')
-
-        for profile in self.config_db_profile_names:
-            try:
-                assert profile in self.config.keys()
-                assert self.config[profile]['type'] == 'database'
-
-                assert 'is_default' in self.config[profile].keys()
-                assert 'database_url' in self.config[profile].keys()
-            except AssertionError:
-                self.error(err_string + f'Bad DB profile {profile}')
-
-        try:
-            assert sum([
-                self.config.getboolean(p, 'is_default')
-                for p in self.config_db_profile_names
-            ]) <= 1
-        except AssertionError:
-            msg = err_string + 'Need at most one DB profile marked default'
-            self.error(msg)
-
-    @property
-    def config_profile_names(self):
-        '''
-        The names of all database and API profiles in the config.
-
-        The config file consists of "profiles" for different databases and
-        Twitter API credential sets. Each has a type (database or API);
-        database profiles have URLs to pass to sqlalchemy and API profiles
-        have OAuth keys, tokens and secrets. One of the database profiles is
-        marked as the default, to use if no database profile is given on the
-        commad line.
-        '''
-
-        return [  # preserve order
-            key
-            for key in self.config.keys()
-            if key != 'DEFAULT'
-        ]
-
-    @property
-    def config_db_profile_names(self):
-        '''
-        The names of all database profiles in the config.
-        '''
-
-        return [
-            key
-            for key in self.config_profile_names
-            if self.config[key]['type'] == 'database'
-        ]
-
-    @property
-    def config_api_profile_names(self):
-        '''
-        The names of all API profiles in the config.
-        '''
-
-        return [
-            key
-            for key in self.config_profile_names
-            if self.config[key]['type'] == 'api'
-        ]
-
-    #
-    # Subclass business logic
-    #
-
-    def do_cli(self, name):
-        '''
-        Execute a subcommand by name.
-
-        This method takes the name of a subcommand, looks up the corresponding
-        method (see the subcommand_to_method dictionary) and executes it. The
-        subcommand method is called with no arguments, and any
+        This function is the main entrypoint for a Command instance. Any
         error.TWClientError exceptions raised are caught. Such exceptions are
         logged, with an amount of logging output determined by the current log
         level, and then sys.exit is called with whatever exit status the
@@ -271,10 +104,11 @@ class Command(ABC):
         subcommand_to_method dictionary).
         '''
 
-        func = getattr(self, self.subcommand_to_method[name])
-
         try:
-            return func()
+            cls = self.subcommand_to_job[self.subcommand]
+            obj = cls(**self.job_args)
+
+            return obj.run()
         except err.TWClientError as exc:
             # Don't catch other exceptions: if things we didn't raise reach the
             # toplevel, it's a bug (or, okay, a network issue, Twitter API
@@ -287,41 +121,25 @@ class Command(ABC):
 
             sys.exit(exc.exit_status)
 
-    def run(self):
-        '''
-        Run this command.
-
-        This function is the main entrypoint for a Command instance. It
-        dispatches the name of the subcommand to do_cli() for further
-        processing.
-
-        Return
-        ------
-        The return value of the subcommand's implementing function (see the
-        subcommand_to_method dictionary).
-        '''
-
-        return self.do_cli(self.subcommand)
-
     @property
     @abstractmethod
     def job_args(self):
         '''
-        Arguments to be passed through to the 
+        Arguments to be passed through to a subcommand's job class.
         '''
 
         raise NotImplementedError()
 
     @property
     @abstractmethod
-    def subcommand_to_method(self):
+    def subcommand_to_job(self):
         '''
-        A mapping of subcommand name to implementing method.
+        A mapping of subcommand name to corresponding job class.
 
-        The subcommand_to_method dictionary maps the names of subcommands as
-        given on the command line to the names of methods called to implement
-        them. The method name will be called with no arguments (see the
-        do_cli() method).
+        The subcommand_to_job dictionary maps the names of subcommands as given
+        on the command line to the names of the jobs that implement them.
+        The job class will be instantiated with kwargs given by the
+        ``job_args`` dict and have its ``run()`` method called.
         '''
 
         raise NotImplementedError()

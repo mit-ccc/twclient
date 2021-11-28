@@ -14,7 +14,7 @@ class ConfigCommand(cmd.Command):
     '''
     A command to manage the config file.
 
-    A _ConfigCommand interacts with the config file. It can list or modify the
+    A ConfigCommand interacts with the config file. It can list or modify the
     contents of the file. Subcommands are roughly divided into two groups: a)
     those which interact with database profiles ("add-db", "rm-db", "list-db",
     "set-db-default") and b) those which interact with API profiles ("add-api",
@@ -88,6 +88,11 @@ class ConfigCommand(cmd.Command):
     }
 
     def __init__(self, **kwargs):
+        try:
+            config_file = kwargs.pop('config_file')
+        except KeyError as exc:
+            raise ValueError('Must provide config argument') from exc
+
         full = kwargs.pop('full', None)
         name = kwargs.pop('name', None)
         fle = kwargs.pop('file', None)
@@ -98,6 +103,11 @@ class ConfigCommand(cmd.Command):
         token_secret = kwargs.pop('token_secret', None)
 
         super().__init__(**kwargs)
+
+        self.config_file = os.path.abspath(os.path.expanduser(config_file))
+        self.config = self.read_config()
+
+        self.validate_config()
 
         if self.subcommand not in ('list-db', 'list-api'):
             if name is None:
@@ -127,6 +137,142 @@ class ConfigCommand(cmd.Command):
         self.consumer_secret = consumer_secret
         self.token = token
         self.token_secret = token_secret
+
+    def read_config(self):
+        '''
+        Read and return the config file.
+        This function reads the config file specified to __init__ and returns
+        it as a ConfigParser object.
+        Returns
+        -------
+        None
+        '''
+
+        config = cp.ConfigParser(dict_type=cl.OrderedDict)
+        config.read(self.config_file)
+
+        return config
+
+    def write_config(self):
+        '''
+        Write the current state of the config back to the config file.
+        This function writes the current state of this _Command's config out to
+        the path given for the config file. The config is validated before
+        being written.
+        Returns
+        -------
+        None
+        '''
+
+        self.validate_config()
+
+        with open(self.config_file, 'wt', encoding='utf-8') as fobj:
+            self.config.write(fobj)
+
+    def validate_config(self):
+        '''
+        Validate the current state of this _Command's config.
+        This function performs several checks of the validity of this
+        _Command's config, and calls the error() method if any problem is
+        detected.
+        Returns
+        -------
+        None
+        '''
+
+        err_string = 'Malformed configuration file: '
+
+        for name in self.config_profile_names:
+            if 'type' not in self.config[name].keys():
+                msg = 'Section {0} missing type declaration field'
+                self.error(err_string + msg.format(name))
+
+            if self.config[name]['type'] not in ('database', 'api'):
+                msg = 'Section {0} must have "type" of either ' \
+                      '"api" or "database"'
+                self.error(err_string + msg.format(name))
+
+        for profile in self.config_api_profile_names:
+            try:
+                assert profile in self.config.keys()
+                assert self.config[profile]['type'] == 'api'
+
+                assert 'consumer_key' in self.config[profile].keys()
+                assert 'consumer_secret' in self.config[profile].keys()
+
+                assert not (
+                    'token' in self.config[profile].keys() and
+                    'token_secret' not in self.config[profile].keys()
+                )
+
+                assert not (
+                    'token_secret' in self.config[profile].keys() and
+                    'token' not in self.config[profile].keys()
+                )
+            except AssertionError:
+                self.error(err_string + f'Bad API profile {profile}')
+
+        for profile in self.config_db_profile_names:
+            try:
+                assert profile in self.config.keys()
+                assert self.config[profile]['type'] == 'database'
+
+                assert 'is_default' in self.config[profile].keys()
+                assert 'database_url' in self.config[profile].keys()
+            except AssertionError:
+                self.error(err_string + f'Bad DB profile {profile}')
+
+        try:
+            assert sum([
+                self.config.getboolean(p, 'is_default')
+                for p in self.config_db_profile_names
+            ]) <= 1
+        except AssertionError:
+            msg = err_string + 'Need at most one DB profile marked default'
+            self.error(msg)
+
+    @property
+    def config_profile_names(self):
+        '''
+        The names of all database and API profiles in the config.
+        The config file consists of "profiles" for different databases and
+        Twitter API credential sets. Each has a type (database or API);
+        database profiles have URLs to pass to sqlalchemy and API profiles
+        have OAuth keys, tokens and secrets. One of the database profiles is
+        marked as the default, to use if no database profile is given on the
+        commad line.
+        '''
+
+        return [  # preserve order
+            key
+            for key in self.config.keys()
+            if key != 'DEFAULT'
+        ]
+
+    @property
+    def config_db_profile_names(self):
+        '''
+        The names of all database profiles in the config.
+        '''
+
+        return [
+            key
+            for key in self.config_profile_names
+            if self.config[key]['type'] == 'database'
+        ]
+
+    @property
+    def config_api_profile_names(self):
+        '''
+        The names of all API profiles in the config.
+        '''
+
+        return [
+            key
+            for key in self.config_profile_names
+            if self.config[key]['type'] == 'api'
+        ]
+
 
     def cli_list_db(self):
         for name in self.config_db_profile_names:
@@ -230,7 +376,7 @@ class InitializeCommand(cmd.DatabaseCommand):
     The command to (re-)initialize the database schema.
 
     WARNING! This command drops all data in the database. If not backed up
-    elsewhere, it will be lost. The _InitializeCommand applies the schema
+    elsewhere, it will be lost. The InitializeCommand applies the schema
     defined in the models module against the selected database profile. Any
     existing data is dropped.
 
