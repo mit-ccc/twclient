@@ -415,3 +415,14 @@ class BadSchemaError(SemanticError):
     '''
 
     pass
+
+class BadConfigError(SemanticError):
+    '''
+    An operation on the config file encountered an error.
+
+    This error is raised when an operation to be performed on the config file
+    is misspecified, impossible, encounters another error, or the config file
+    is malformed.
+    '''
+
+    pass

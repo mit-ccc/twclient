@@ -2,17 +2,15 @@
 Supporting classes for the command-line interface.
 '''
 
-import os
 import sys
 import logging
-import collections as cl
-import configparser as cp
 
 from abc import ABC, abstractmethod
 
 import tweepy
 import sqlalchemy as sa
 
+from .. import config as cfg
 from .. import error as err
 from .. import target as tg
 from .. import twitter_api as ta
@@ -49,22 +47,26 @@ class Command(ABC):
 
     def __init__(self, **kwargs):
         try:
-            parser = kwargs.pop('parser')
-        except KeyError as exc:
-            raise ValueError('Must provide parser argument') from exc
-
-        try:
             subcommand = kwargs.pop('subcommand')
         except KeyError as exc:
             raise ValueError('Must provide subcommand argument') from exc
 
-        if subcommand not in self.subcommand_to_method.keys():
+        if subcommand not in self.subcommand_to_job.keys():
             raise ValueError(f'Bad subcommand {subcommand}')
+
+        try:
+            parser = kwargs.pop('parser')
+        except KeyError as exc:
+            raise ValueError('Must provide parser argument') from exc
+
+        config_file = kwargs.pop('config_file', None)
 
         super().__init__(**kwargs)
 
-        self.parser = parser
         self.subcommand = subcommand
+        self.parser = parser
+
+        self.config = cfg.Config(config_file=config_file)
 
     # NOTE using this for some errors and logger.____ for others isn't a bug
     # or problem per se, but it does lead to inconsistent output formatting
@@ -109,6 +111,11 @@ class Command(ABC):
             obj = cls(**self.job_args)
 
             return obj.run()
+        except err.BadConfigError as exc:
+            # We want to print these in a more sane-looking way
+            self.error(exc.message)
+
+            sys.exit(exc.exit_status)
         except err.TWClientError as exc:
             # Don't catch other exceptions: if things we didn't raise reach the
             # toplevel, it's a bug (or, okay, a network issue, Twitter API
@@ -143,71 +150,6 @@ class Command(ABC):
         '''
 
         raise NotImplementedError()
-
-
-class DatabaseCommand(Command):
-    '''
-    A command which uses database resources.
-
-    This class represents commands which require access to the database,
-    whether to store newly fetched information from Twitter or to modify
-    information already there.
-
-    Parameters
-    ----------
-    database : str, or None
-        The name of a database profile to use. If None, use the config file's
-        current default.
-
-    load_batch_size : int, or None
-        Load data to the database in batches of this size. The default is None,
-        which means load all data in one batch and is fastest. Other values can
-        minimize memory usage for large amounts of data at the cost of slower
-        loading.
-
-    Attributes
-    ----------
-    database : str
-        The name of the database profile in use, including the config file
-        default if none is given to __init__.
-
-    load_batch_size : int, or None
-        The parameter passed to __init__.
-
-    database_url : str
-        The connection URL for the requested database profile, read from the
-        config file. (This URL should be acceptable to sqlalchemy's
-        create_engine function.)
-
-    engine : sqlalchemy.engine.Engine instance
-        The sqlalchemy engine for the selected database profile.
-    '''
-
-    def __init__(self, **kwargs):
-        database = kwargs.pop('database', None)
-        load_batch_size = kwargs.pop('load_batch_size', None)
-
-        super().__init__(**kwargs)
-
-        if database:
-            if database in self.config_api_profile_names:
-                msg = 'Profile {0} is not a DB profile'
-                self.error(msg.format(database))
-            elif database not in self.config_db_profile_names:
-                msg = 'Profile {0} not found'
-                self.error(msg.format(database))
-            else:
-                db_to_use = database
-        elif self.config_db_profile_names:
-            # the order they were added is preserved in the file
-            db_to_use = self.config_db_profile_names[-1]
-        else:
-            self.error('No database profiles configured (use add-db)')
-
-        self.database = db_to_use
-        self.load_batch_size = load_batch_size
-        self.database_url = self.config[self.database]['database_url']
-        self.engine = sa.create_engine(self.database_url)
 
 
 class TargetCommand(Command):
@@ -308,6 +250,71 @@ class TargetCommand(Command):
         self.allow_missing_targets = allow_missing_targets
 
 
+class DatabaseCommand(Command):
+    '''
+    A command which uses database resources.
+
+    This class represents commands which require access to the database,
+    whether to store newly fetched information from Twitter or to modify
+    information already there.
+
+    Parameters
+    ----------
+    database : str, or None
+        The name of a database profile to use. If None, use the config file's
+        current default.
+
+    load_batch_size : int, or None
+        Load data to the database in batches of this size. The default is None,
+        which means load all data in one batch and is fastest. Other values can
+        minimize memory usage for large amounts of data at the cost of slower
+        loading.
+
+    Attributes
+    ----------
+    database : str
+        The name of the database profile in use, including the config file
+        default if none is given to __init__.
+
+    load_batch_size : int, or None
+        The parameter passed to __init__.
+
+    database_url : str
+        The connection URL for the requested database profile, read from the
+        config file. (This URL should be acceptable to sqlalchemy's
+        create_engine function.)
+
+    engine : sqlalchemy.engine.Engine instance
+        The sqlalchemy engine for the selected database profile.
+    '''
+
+    def __init__(self, **kwargs):
+        database = kwargs.pop('database', None)
+        load_batch_size = kwargs.pop('load_batch_size', None)
+
+        super().__init__(**kwargs)
+
+        if database:
+            if database in self.config.api_profile_names:
+                msg = 'Profile {0} is not a DB profile'
+                self.error(msg.format(database))
+            elif database not in self.config.db_profile_names:
+                msg = 'Profile {0} not found'
+                self.error(msg.format(database))
+            else:
+                db_to_use = database
+        elif self.config.db_profile_names:
+            # the order they were added is preserved in the file
+            db_to_use = self.config.db_profile_names[-1]
+        else:
+            self.error('No database profiles configured (use add-db)')
+
+        self.database = db_to_use
+        self.load_batch_size = load_batch_size
+        self.database_url = self.config.config[self.database]['database_url']
+        self.engine = sa.create_engine(self.database_url)
+
+
 class ApiCommand(Command):
     '''
     A command which uses Twitter API resources.
@@ -335,36 +342,38 @@ class ApiCommand(Command):
     '''
 
     def __init__(self, **kwargs):
-        apis = kwargs.pop('apis', None)
         allow_api_errors = kwargs.pop('allow_api_errors', False)
+        apis = kwargs.pop('apis', None)
 
         super().__init__(**kwargs)
+
+        self.allow_api_errors = allow_api_errors
 
         if apis:
             profiles_to_use = apis
         else:
-            profiles_to_use = self.config_api_profile_names
+            profiles_to_use = self.config.api_profile_names
 
         try:
-            bad = set(profiles_to_use) - set(self.config_api_profile_names)
+            bad = set(profiles_to_use) - set(self.config.api_profile_names)
             assert len(bad) == 0
         except AssertionError as exc:
             raise ValueError(f'Bad API profile names: {bad}') from exc
 
         auths = []
         for profile in profiles_to_use:
-            if 'token' in self.config[profile].keys():
+            if 'token' in self.config.config[profile].keys():
                 auth = tweepy.OAuthHandler(
-                    self.config[profile]['consumer_key'],
-                    self.config[profile]['consumer_secret']
+                    self.config.config[profile]['consumer_key'],
+                    self.config.config[profile]['consumer_secret']
                 )
 
-                auth.set_access_token(self.config[profile]['token'],
-                                      self.config[profile]['secret'])
+                auth.set_access_token(self.config.config[profile]['token'],
+                                      self.config.config[profile]['secret'])
             else:
                 auth = tweepy.AppAuthHandler(
-                    self.config[profile]['consumer_key'],
-                    self.config[profile]['consumer_secret']
+                    self.config.config[profile]['consumer_key'],
+                    self.config.config[profile]['consumer_secret']
                 )
 
             auths += [auth]
@@ -373,5 +382,4 @@ class ApiCommand(Command):
             msg = 'No Twitter credentials provided (use `config add-api`)'
             self.error(msg)
 
-        self.allow_api_errors = allow_api_errors
         self.api = ta.TwitterApi(auths=auths)

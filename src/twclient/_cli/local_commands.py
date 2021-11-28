@@ -4,7 +4,7 @@ Subcommands which don't interact with the Twitter API
 
 import logging
 
-from .. import job
+from ..job import config_job as cj, tag_job as tj, initialize_job as ij
 from . import command as cmd
 
 logger = logging.getLogger(__name__)
@@ -27,7 +27,7 @@ class ConfigCommand(cmd.Command):
         False, default), or all information (if True).
 
     name : str
-        For all subcommands but list-api and list-db, he name of a profile to
+        For all subcommands but list-api and list-db, the name of a profile to
         operate on.
 
     fle : str
@@ -77,22 +77,17 @@ class ConfigCommand(cmd.Command):
         The parameter passed to __init__.
     '''
 
-    subcommand_to_method = {
-        'list-db': 'cli_list_db',
-        'list-api': 'cli_list_api',
-        'rm-db': 'cli_rm_db',
-        'rm-api': 'cli_rm_api',
-        'set-db-default': 'cli_set_db_default',
-        'add-db': 'cli_add_db',
-        'add-api': 'cli_add_api'
+    subcommand_to_job = {
+        'list-db': cj.ConfigListDbJob,
+        'list-api': cj.ConfigListApiJob,
+        'rm-db': cj.ConfigRmDbJob,
+        'rm-api': cj.ConfigRmApiJob,
+        'set-db-default': cj.SetDbDefaultJob,
+        'add-db': cj.ConfigAddDbJob,
+        'add-api': cj.ConfigAddApiJob
     }
 
     def __init__(self, **kwargs):
-        try:
-            config_file = kwargs.pop('config_file')
-        except KeyError as exc:
-            raise ValueError('Must provide config argument') from exc
-
         full = kwargs.pop('full', None)
         name = kwargs.pop('name', None)
         fle = kwargs.pop('file', None)
@@ -103,11 +98,6 @@ class ConfigCommand(cmd.Command):
         token_secret = kwargs.pop('token_secret', None)
 
         super().__init__(**kwargs)
-
-        self.config_file = os.path.abspath(os.path.expanduser(config_file))
-        self.config = self.read_config()
-
-        self.validate_config()
 
         if self.subcommand not in ('list-db', 'list-api'):
             if name is None:
@@ -138,237 +128,28 @@ class ConfigCommand(cmd.Command):
         self.token = token
         self.token_secret = token_secret
 
-    def read_config(self):
-        '''
-        Read and return the config file.
-        This function reads the config file specified to __init__ and returns
-        it as a ConfigParser object.
-        Returns
-        -------
-        None
-        '''
-
-        config = cp.ConfigParser(dict_type=cl.OrderedDict)
-        config.read(self.config_file)
-
-        return config
-
-    def write_config(self):
-        '''
-        Write the current state of the config back to the config file.
-        This function writes the current state of this _Command's config out to
-        the path given for the config file. The config is validated before
-        being written.
-        Returns
-        -------
-        None
-        '''
-
-        self.validate_config()
-
-        with open(self.config_file, 'wt', encoding='utf-8') as fobj:
-            self.config.write(fobj)
-
-    def validate_config(self):
-        '''
-        Validate the current state of this _Command's config.
-        This function performs several checks of the validity of this
-        _Command's config, and calls the error() method if any problem is
-        detected.
-        Returns
-        -------
-        None
-        '''
-
-        err_string = 'Malformed configuration file: '
-
-        for name in self.config_profile_names:
-            if 'type' not in self.config[name].keys():
-                msg = 'Section {0} missing type declaration field'
-                self.error(err_string + msg.format(name))
-
-            if self.config[name]['type'] not in ('database', 'api'):
-                msg = 'Section {0} must have "type" of either ' \
-                      '"api" or "database"'
-                self.error(err_string + msg.format(name))
-
-        for profile in self.config_api_profile_names:
-            try:
-                assert profile in self.config.keys()
-                assert self.config[profile]['type'] == 'api'
-
-                assert 'consumer_key' in self.config[profile].keys()
-                assert 'consumer_secret' in self.config[profile].keys()
-
-                assert not (
-                    'token' in self.config[profile].keys() and
-                    'token_secret' not in self.config[profile].keys()
-                )
-
-                assert not (
-                    'token_secret' in self.config[profile].keys() and
-                    'token' not in self.config[profile].keys()
-                )
-            except AssertionError:
-                self.error(err_string + f'Bad API profile {profile}')
-
-        for profile in self.config_db_profile_names:
-            try:
-                assert profile in self.config.keys()
-                assert self.config[profile]['type'] == 'database'
-
-                assert 'is_default' in self.config[profile].keys()
-                assert 'database_url' in self.config[profile].keys()
-            except AssertionError:
-                self.error(err_string + f'Bad DB profile {profile}')
-
-        try:
-            assert sum([
-                self.config.getboolean(p, 'is_default')
-                for p in self.config_db_profile_names
-            ]) <= 1
-        except AssertionError:
-            msg = err_string + 'Need at most one DB profile marked default'
-            self.error(msg)
-
     @property
-    def config_profile_names(self):
-        '''
-        The names of all database and API profiles in the config.
-        The config file consists of "profiles" for different databases and
-        Twitter API credential sets. Each has a type (database or API);
-        database profiles have URLs to pass to sqlalchemy and API profiles
-        have OAuth keys, tokens and secrets. One of the database profiles is
-        marked as the default, to use if no database profile is given on the
-        commad line.
-        '''
-
-        return [  # preserve order
-            key
-            for key in self.config.keys()
-            if key != 'DEFAULT'
-        ]
-
-    @property
-    def config_db_profile_names(self):
-        '''
-        The names of all database profiles in the config.
-        '''
-
-        return [
-            key
-            for key in self.config_profile_names
-            if self.config[key]['type'] == 'database'
-        ]
-
-    @property
-    def config_api_profile_names(self):
-        '''
-        The names of all API profiles in the config.
-        '''
-
-        return [
-            key
-            for key in self.config_profile_names
-            if self.config[key]['type'] == 'api'
-        ]
-
-
-    def cli_list_db(self):
-        for name in self.config_db_profile_names:
-            if self.full:
-                print('[' + name + ']')
-                for key, value in self.config[name].items():
-                    print(key + ' = ' + value)
-                print('\n')
-            else:
-                print(name)
-
-    def cli_list_api(self):
-        for name in self.config_api_profile_names:
-            if self.full:
-                print('[' + name + ']')
-                for key, value in self.config[name].items():
-                    print(key + ' = ' + value)
-                print('\n')
-            else:
-                print(name)
-
-    def cli_rm_db(self):
-        if self.name not in self.config_profile_names:
-            msg = 'DB profile {0} not found'
-            self.error(msg.format(self.name))
-        elif self.name in self.config_api_profile_names:
-            self.error(f'Profile {self.name} is an API profile')
-        else:
-            if self.config.getboolean(self.name, 'is_default'):
-                for name in self.config_db_profile_names:
-                    if name != self.name:
-                        self.config[name]['is_default'] = True
-                        break
-
-            self.config.pop(self.name)
-
-        self.write_config()
-
-    def cli_rm_api(self):
-        if self.name not in self.config_profile_names:
-            msg = 'API profile {0} not found'
-            self.error(msg.format(self.name))
-        elif self.name in self.config_db_profile_names:
-            self.error(f'Profile {self.name} is a DB profile')
-        else:
-            self.config.pop(self.name)
-
-        self.write_config()
-
-    def cli_set_db_default(self):
-        if self.name not in self.config_profile_names:
-            msg = 'DB profile {0} not found'
-            self.error(msg.format(self.name))
-        elif self.name in self.config_api_profile_names:
-            self.error(f'Profile {self.name} is an API profile')
-        else:
-            for name in self.config_db_profile_names:
-                self.config[name]['is_default'] = False
-
-            self.config[self.name]['is_default'] = True
-
-        self.write_config()
-
-    def cli_add_db(self):
-        if self.name == 'DEFAULT':
-            self.error('Profile name may not be "DEFAULT"')
-        elif self.name in self.config_profile_names:
-            self.error(f'Profile {self.name} already exists')
-
-        self.config[self.name] = {
-            'type': 'database',
-            'is_default': len(self.config_db_profile_names) == 0,
-            'database_url': self.database_url
+    def job_args(self):
+        ret = {
+            'config': self.config
         }
 
-        self.write_config()
+        if self.subcommand in ('list-db', 'list-api'):
+            ret['full'] = self.full
 
-    def cli_add_api(self):
-        if self.name == 'DEFAULT':
-            self.error('Profile name may not be "DEFAULT"')
-        elif self.name in self.config_profile_names:
-            self.error(f'Profile {self.name} already exists')
-        else:
-            self.config[self.name] = {
-                'type': 'api',
-                'consumer_key': self.consumer_key,
-                'consumer_secret': self.consumer_secret
-            }
+        if self.subcommand not in ('list-db', 'list-api'):
+            ret['name'] = self.name
 
-            if self.token is not None:
-                self.config[self.name]['token'] = self.token
+        if self.subcommand == 'add-db':
+            ret['database_url'] = self.database_url
 
-            if self.token_secret is not None:
-                self.config[self.name]['token_secret'] = self.token_secret
+        if self.subcommand == 'add-api':
+            ret['consumer_key'] = self.consumer_key
+            ret['consumer_secret'] = self.consumer_secret
+            ret['token'] = self.token
+            ret['token_secret'] = self.token_secret
 
-        self.write_config()
+        return ret
 
 
 class InitializeCommand(cmd.DatabaseCommand):
@@ -393,12 +174,18 @@ class InitializeCommand(cmd.DatabaseCommand):
         The parameter passed to __init__.
     '''
 
-    subcommand_to_method = {
-        'initialize': 'cli_initialize'
+    subcommand_to_job = {
+        'initialize': ij.InitializeJob
     }
 
     def __init__(self, **kwargs):
         yes = kwargs.pop('yes', False)
+        if not yes:
+            self.error("WARNING: This command will drop the Twitter data "
+                       "tables and delete all data! If you want to "
+                       "proceed, rerun with -y / --yes.")
+        else:
+            logger.warning('Recreating schema and dropping existing data')
 
         # this doesn't actually take a subcommand, just a hack to
         # make it work with the same machinery as the others
@@ -406,23 +193,11 @@ class InitializeCommand(cmd.DatabaseCommand):
 
         super().__init__(**kwargs)
 
-        self.yes = yes
-
     @property
     def job_args(self):
         return {
             'engine': self.engine
         }
-
-    def cli_initialize(self):
-        if not self.yes:
-            logger.warning("WARNING: This command will drop the Twitter data "
-                           "tables and delete all data! If you want to "
-                           "proceed, rerun with -y / --yes.")
-        else:
-            logger.warning('Recreating schema and dropping existing data')
-
-            job.InitializeJob(**self.job_args).run()
 
 
 class TagCommand(cmd.DatabaseCommand, cmd.TargetCommand):
@@ -438,10 +213,10 @@ class TagCommand(cmd.DatabaseCommand, cmd.TargetCommand):
     targets_required
     '''
 
-    subcommand_to_method = {
-        'create': 'cli_create',
-        'delete': 'cli_delete',
-        'apply': 'cli_apply'
+    subcommand_to_job = {
+        'create': tj.CreateTagJob,
+        'delete': tj.DeleteTagJob,
+        'apply': tj.ApplyTagJob
     }
 
     def __init__(self, **kwargs):
@@ -457,9 +232,9 @@ class TagCommand(cmd.DatabaseCommand, cmd.TargetCommand):
     @property
     def targets_required(self):
         '''
-        This attribute from the superclass is a property here. Because targets
-        are needed only for the "apply" subcommand, it is True if
-        self.subcommand == 'apply' and False otherwise.
+        This class attribute from the superclass is an instance property here.
+        Because targets are needed only for the "apply" subcommand, it is True
+        if self.subcommand == 'apply' and False otherwise.
         '''
 
         return self.subcommand == 'apply'
@@ -476,12 +251,3 @@ class TagCommand(cmd.DatabaseCommand, cmd.TargetCommand):
             args['allow_missing_targets'] = self.allow_missing_targets
 
         return args
-
-    def cli_create(self):
-        job.CreateTagJob(**self.job_args).run()
-
-    def cli_delete(self):
-        job.DeleteTagJob(**self.job_args).run()
-
-    def cli_apply(self):
-        job.ApplyTagJob(**self.job_args).run()

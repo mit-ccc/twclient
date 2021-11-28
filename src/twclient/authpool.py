@@ -33,7 +33,7 @@ else:
     TweepyException = tweepy.error.TweepError
 
 
-class AuthPoolAPI:  # pylint: disable=too-few-public-methods
+class AuthPoolAPI:
     '''
     A version of tweepy.API with support for multiple sets of credentials.
 

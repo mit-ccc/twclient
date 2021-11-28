@@ -24,9 +24,6 @@ logger = logging.getLogger(__name__)
 # Better to have these all in one file
 # pylint: disable=too-many-lines
 
-# Not applicable: methods all from sqlalchemy, we just define table structure
-# pylint: disable=too-few-public-methods
-
 # Not applicable: database tables have lots of columns
 # pylint: disable=too-many-instance-attributes
 

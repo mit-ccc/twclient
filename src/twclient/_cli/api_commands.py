@@ -4,7 +4,7 @@ Subcommands which use the Twitter API.
 
 import logging
 
-from .. import job
+from ..job import api_job as aj
 from . import command as cmd
 
 logger = logging.getLogger(__name__)
@@ -40,8 +40,8 @@ class RateLimitStatusCommand(cmd.ApiCommand):
         The parameter passed to __init__.
     '''
 
-    subcommand_to_method = {
-        'rate_limit_status': 'cli_rate_limit_status'
+    subcommand_to_job = {
+        'rate_limit_status': aj.RateLimitStatusJob
     }
 
     def __init__(self, **kwargs):
@@ -72,17 +72,14 @@ class RateLimitStatusCommand(cmd.ApiCommand):
             'full': self.full
         }
 
-        # we check abvoe that only one of these is provided
+        # we check above that only one of these is provided
         consumer_key = self.consumer_key
         if self.name is not None:
-            ind = self.config_api_profile_names.index(self.name)
+            ind = self.config.api_profile_names.index(self.name)
             consumer_key = self.api.auths[ind].consumer_key
         ret['consumer_key'] = consumer_key
 
         return ret
-
-    def cli_rate_limit_status(self):
-        job.RateLimitStatusJob(**self.job_args).run()
 
 
 class FetchCommand(cmd.ApiCommand, cmd.TargetCommand, cmd.DatabaseCommand):
@@ -128,11 +125,11 @@ class FetchCommand(cmd.ApiCommand, cmd.TargetCommand, cmd.DatabaseCommand):
         The parameter passed to __init__.
     '''
 
-    subcommand_to_method = {
-        'users': 'cli_users',
-        'friends': 'cli_friends',
-        'followers': 'cli_followers',
-        'tweets': 'cli_tweets'
+    subcommand_to_job = {
+        'users': aj.UserInfoJob,
+        'friends': aj.FriendsJob,
+        'followers': aj.FollowersJob,
+        'tweets': aj.TweetsJob
     }
 
     def __init__(self, **kwargs):
@@ -169,15 +166,3 @@ class FetchCommand(cmd.ApiCommand, cmd.TargetCommand, cmd.DatabaseCommand):
             args['old_tweets'] = self.old_tweets
 
         return args
-
-    def cli_users(self):
-        job.UserInfoJob(**self.job_args).run()
-
-    def cli_friends(self):
-        job.FriendsJob(**self.job_args).run()
-
-    def cli_followers(self):
-        job.FollowersJob(**self.job_args).run()
-
-    def cli_tweets(self):
-        job.TweetsJob(**self.job_args).run()
