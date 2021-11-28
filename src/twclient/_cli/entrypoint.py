@@ -7,8 +7,8 @@ The command-line interface script.
 import logging
 import argparse as ap
 
-from ._command import ConfigCommand, InitializeCommand, FetchCommand, \
-                      RateLimitStatusCommand, TagCommand
+from .local_commands import ConfigCommand, InitializeCommand, TagCommand
+from .api_commands import RateLimitStatusCommand, FetchCommand
 
 logger = logging.getLogger(__name__)
 
