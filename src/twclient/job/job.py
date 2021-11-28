@@ -185,11 +185,7 @@ class TargetJob(DatabaseJob):
     '''
 
     def __init__(self, **kwargs):
-        try:
-            targets = kwargs.pop('targets')
-        except KeyError as exc:
-            raise ValueError('Must provide list of targets') from exc
-
+        targets = kwargs.pop('targets', [])
         allow_missing_targets = kwargs.pop('allow_missing_targets', False)
 
         super().__init__(**kwargs)

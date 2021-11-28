@@ -7,8 +7,9 @@ The command-line interface script.
 import logging
 import argparse as ap
 
-from .local_commands import ConfigCommand, InitializeCommand, TagCommand
-from .api_commands import RateLimitStatusCommand, FetchCommand
+from .local_commands import (ConfigCommand, InitializeCommand, TagCommand,
+                             ExtractCommand)
+from .api_commands import ShowCommand, FetchCommand
 
 logger = logging.getLogger(__name__)
 
@@ -42,6 +43,15 @@ def _add_fetch_arguments(parser):
     parser.add_argument('-b', '--allow-api-errors', action='store_true',
                         help="continue even if an object to be fetched from "
                              "the Twitter API is protected or doesn't exist")
+
+    return parser
+
+
+def _add_extract_arguments(parser):
+    parser.add_argument('-o', '--outfile',
+                        help='write the extract to this file (default stdout)')
+    parser.add_argument('-g', '--select-tags', nargs='+',
+                        help='process loaded users with these tags')
 
     return parser
 
@@ -141,19 +151,6 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
                      help='Must specify this option to initialize')
 
     #
-    # Rate limit status
-    #
-
-    rlp = subparsers.add_parser('rate_limit_status',
-                                help='Report API keys'' rate limit status')
-    rlp.add_argument('-f', '--full', action='store_true',
-                     help='Output full json response from the Twitter API')
-
-    grp = rlp.add_mutually_exclusive_group(required=False)
-    grp.add_argument('-n', '--name', help='API profile name')
-    grp.add_argument('-k', '--consumer-key', help='consumer key')
-
-    #
     # Fetching Twitter data
     #
 
@@ -200,6 +197,60 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
     twp.add_argument('-r', '--max-tweets',
                      help='max number of tweets to collect')
 
+    #
+    # Showing information
+    #
+
+    show_subparser = subparsers.add_parser('show', help='Print information')
+    show = show_subparser.add_subparsers(dest='subcommand')
+    show.required = True
+
+    rlp = show.add_parser('ratelimit',
+                          help='Report API keys'' rate limit status')
+    rlp.add_argument('-f', '--full', action='store_true',
+                     help='Output full json response from the Twitter API')
+
+    grp = rlp.add_mutually_exclusive_group(required=False)
+    grp.add_argument('-n', '--name', help='API profile name')
+    grp.add_argument('-k', '--consumer-key', help='consumer key')
+
+    #
+    # Extracts from the database
+    #
+
+    extract_subparser = subparsers.add_parser('extract', help='Extract data')
+    extract = extract_subparser.add_subparsers(dest='subcommand')
+    extract.required = True
+
+    flg = extract.add_parser('follow-graph', help='Extract follow graph')
+    flg = _add_extract_arguments(flg)
+
+    mng = extract.add_parser('mention-graph', help='Extract mention graph')
+    mng = _add_extract_arguments(mng)
+
+    rtg = extract.add_parser('retweet-graph', help='Extract retweet graph')
+    rtg = _add_extract_arguments(rtg)
+
+    rpg = extract.add_parser('reply-graph', help='Extract reply graph')
+    rpg = _add_extract_arguments(rpg)
+
+    qtg = extract.add_parser('quote-graph', help='Extract quote graph')
+    qtg = _add_extract_arguments(qtg)
+
+    twt = extract.add_parser('tweets', help='Extract user tweets')
+    twt = _add_extract_arguments(twt)
+
+    usi = extract.add_parser('user-info', help='Extract user-level data')
+    usi = _add_extract_arguments(usi)
+
+    mfo = extract.add_parser('mutual-followers',
+                             help='Extract all-pairs mutual follower counts')
+    mfo = _add_extract_arguments(mfo)
+
+    mfr = extract.add_parser('mutual-friends',
+                             help='Extract all-pairs mutual friend counts')
+    mfr = _add_extract_arguments(mfr)
+
     return parser
 
 
@@ -242,8 +293,9 @@ def cli():
         'config': ConfigCommand,
         'initialize': InitializeCommand,
         'fetch': FetchCommand,
-        'rate_limit_status': RateLimitStatusCommand,
-        'tag': TagCommand
+        'show': ShowCommand,
+        'tag': TagCommand,
+        'extract': ExtractCommand
     }[command]
 
     cls(parser=parser, **vars(args)).run()

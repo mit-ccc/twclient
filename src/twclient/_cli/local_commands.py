@@ -4,7 +4,8 @@ Subcommands which don't interact with the Twitter API
 
 import logging
 
-from ..job import config_job as cj, tag_job as tj, initialize_job as ij
+from ..job import (config_job as cj, tag_job as tj, initialize_job as ij,
+                   extract_job as ej)
 from . import command as cmd
 
 logger = logging.getLogger(__name__)
@@ -251,3 +252,37 @@ class TagCommand(cmd.DatabaseCommand, cmd.TargetCommand):
             args['allow_missing_targets'] = self.allow_missing_targets
 
         return args
+
+class ExtractCommand(cmd.DatabaseCommand, cmd.TargetCommand):
+    '''
+    '''
+
+    targets_required = False
+
+    def __init__(self, **kwargs):
+        outfile = kwargs.pop('outfile', '-')
+
+        super().__init__(**kwargs)
+
+        self.outfile = outfile
+
+    subcommand_to_job = {
+        'follow-graph': ej.ExtractFollowGraphJob,
+        'mention-graph': ej.ExtractMentionGraphJob,
+        'retweet-graph': ej.ExtractRetweetGraphJob,
+        'reply-graph': ej.ExtractReplyGraphJob,
+        'quote-graph': ej.ExtractQuoteGraphJob,
+        'tweets': ej.ExtractTweetsJob,
+        'user-info': ej.ExtractUserInfoJob,
+        'mutual-followers': ej.ExtractMutualFollowersJob,
+        'mutual-friends': ej.ExtractMutualFriendsJob
+    }
+
+    @property
+    def job_args(self):
+        return {
+            'engine': self.engine,
+
+            'outfile': self.outfile,
+            'targets': self.targets
+        }

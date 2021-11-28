@@ -3,8 +3,12 @@ Utilities for other parts of twclient.
 '''
 
 import re
+import sys
 import json
+import gzip
 import logging
+import contextlib
+
 
 logger = logging.getLogger(__name__)
 
@@ -153,3 +157,92 @@ def tweepy_to_json(obj):
     '''
 
     return json.dumps(obj._json)  # pylint: disable=protected-access
+
+
+def gzip_safe_open(f, mode='rt'):
+    '''
+    Open a file, handling ``.gz`` files transparently.
+
+    Works like the builtin ``open()`` but will use either ``open()`` or
+    ``gzip.open()`` depending on whether the file has a ``.gz`` extension.
+
+    Parameters
+    ----------
+    f : str
+        The path to a file to open.
+
+    mode : str
+        The open mode (default 'rt').
+
+    Returns
+    -------
+    file-like object
+        The opened file.
+    '''
+
+    if f.lower().endswith('.gz'):
+        func = gzip.open
+    else:
+        func = open
+
+    return func(f, mode)
+
+
+@contextlib.contextmanager
+def smart_open(filename='-', mode='rt', func=gzip_safe_open):
+    '''
+    Open a file, handling gzip and the use of '-' to refer to stdin or stdout.
+
+    This function, which is usable as a context manager, opens a file with
+    special semantics around the use of filename '-' to refer to stdin or
+    stdout. If this special filename is given, either sys.stdin or sys.stdout
+    will be returned depending on the open mode, with no new file handles being
+    opened; if another value is passed, that file will be opened as usual. More
+    specifically, if '-' is passed and ``mode.startswith('r')``, sys.stdin will
+    be returned, while if '-' is passed and mode starts with any character but
+    'r', sys.stdout will be returned. (This is because it doesn't make sense to
+    read from stdout or write to stdin.) Any characters in the open mode after
+    the first will be ignored in this case.
+
+    The ``smart_open`` function allows use of a customizable open function, not
+    just the builtin ``open()``, so that one can, for example, open gzipped
+    files. The default function is ``gzip_safe_open``, which uses
+    ``gzip.open()`` for ``.gz`` files and ``open()`` for other files.
+
+    Parameters
+    ----------
+    filename : str
+        The path to a file to open, or '-'.
+
+    mode : str
+        The open mode.
+
+    func : callable
+        The function to call to open the file.
+
+    Returns
+    -------
+    file-like object
+        The (possibly) opened file, which may be sys.stdin or sys.stdout.
+    '''
+
+    is_read = mode.startswith('r')
+
+    if filename and filename != '-':
+        handle = func(filename, mode)
+    elif is_read:
+        handle = sys.stdin
+    else:
+        # it doesn't make sense to ask for read on stdout or write on
+        # stdin, so '-' can be unambiguously resolved to one or the other
+        # depending on the open mode
+        handle = sys.stdout
+
+    try:
+        yield handle
+    finally:
+        if is_read and handle is not sys.stdin:
+            handle.close()
+        elif not is_read and handle is not sys.stdout:
+            handle.close()
+

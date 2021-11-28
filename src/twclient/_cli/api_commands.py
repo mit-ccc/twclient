@@ -10,12 +10,15 @@ from . import command as cmd
 logger = logging.getLogger(__name__)
 
 
-class RateLimitStatusCommand(cmd.ApiCommand):
+# could easily be extended to show other things, inherit other cmd bases
+class ShowCommand(cmd.ApiCommand):
     '''
     Print rate-limit status information for API keys.
 
-    This command prints information about rate-limit status for all API keys
-    stored in the config file, or only a particular one.
+    This command prints information about users, DBs API keys, etc. Currently
+    the only implemented subcommand is ``rate-limit-status`` to show rate-limit
+    status for all API keys stored in the config file (or only a particular
+    one).
 
     Parameters
     ----------
@@ -41,7 +44,7 @@ class RateLimitStatusCommand(cmd.ApiCommand):
     '''
 
     subcommand_to_job = {
-        'rate_limit_status': aj.RateLimitStatusJob
+        'ratelimit': aj.RateLimitStatusJob
     }
 
     def __init__(self, **kwargs):
@@ -54,10 +57,6 @@ class RateLimitStatusCommand(cmd.ApiCommand):
         except AssertionError as exc:
             msg = 'Cannot provide both name and consumer_key'
             raise ValueError(msg) from exc
-
-        # this doesn't actually take a subcommand, just a hack to
-        # make it work with the same machinery as the others
-        kwargs['subcommand'] = 'rate_limit_status'
 
         super().__init__(**kwargs)
 
