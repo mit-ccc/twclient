@@ -3,6 +3,7 @@ Objects representing twclient configuration.
 '''
 
 import logging
+import collections as cl
 
 import os
 import collections as cl
@@ -12,7 +13,7 @@ from . import error as err
 
 logger = logging.getLogger(__name__)
 
-class Config:
+class Config(cl.abc.MutableMapping):
     '''
     A configuration including database and API profiles.
 
@@ -42,11 +43,63 @@ class Config:
 
         super().__init__(**kwargs)
 
-        self.raw_config_file = config_file
         self.config_file = os.path.abspath(os.path.expanduser(config_file))
 
-        self.config = self.read_config()
+        self.load()
+
+    ## The MutableMapping protocol: Proxy for the ini file object
+    def __getitem__(self, key):
+        return self._config[key]
+
+    def __setitem__(self, key, value):
+        self._config[key] = value
+
+    def __delitem__(self, key):
+        del self._config[key]
+
+    def __iter__(self):
+        return iter(self._config)
+
+    def __len__(self):
+        return len(self._config)
+
+    ## Stuff we've added beyond being dict-like
+    def getboolean(self, *args, **kwargs):
+        return self._config.getboolean(*args, **kwargs)
+
+    def load(self):
+        '''
+        Read and set the config file.
+
+        This function reads the config file specified to __init__ and sets it
+        on self.
+
+        Returns
+        -------
+        None
+        '''
+
+        self._config = cp.ConfigParser(dict_type=cl.OrderedDict)
+        self._config.read(self.config_file)
+        self.validate()  # need self.config set first
+
+    def save(self):
+        '''
+        Write the current state of the Config back to the config file.
+
+        This method writes the current state of this Config out to the path
+        given for the config file. The config is validated before being
+        written.
+
+        Returns
+        -------
+        None
+        '''
+
         self.validate()
+
+        with open(self.config_file, 'wt', encoding='utf-8') as fobj:
+            self._config.write(fobj)
 
     @property
     def profile_names(self):
@@ -63,7 +116,7 @@ class Config:
 
         return [  # preserve order
             key
-            for key in self.config.keys()
+            for key in self.keys()
             if key != 'DEFAULT'
         ]
 
@@ -76,7 +129,7 @@ class Config:
         return [
             key
             for key in self.profile_names
-            if self.config[key]['type'] == 'database'
+            if self[key]['type'] == 'database'
         ]
 
     @property
@@ -88,43 +141,8 @@ class Config:
         return [
             key
             for key in self.profile_names
-            if self.config[key]['type'] == 'api'
+            if self[key]['type'] == 'api'
         ]
-
-    def read_config(self):
-        '''
-        Read and return the config file.
-
-        This function reads the config file specified to __init__ and returns
-        it as a ConfigParser object.
-
-        Returns
-        -------
-        None
-        '''
-
-        config = cp.ConfigParser(dict_type=cl.OrderedDict)
-        config.read(self.config_file)
-
-        return config
-
-    def write_config(self):
-        '''
-        Write the current state of the Config back to the config file.
-
-        This method writes the current state of this Config out to the path
-        given for the config file. The config is validated before being
-        written.
-
-        Returns
-        -------
-        None
-        '''
-
-        self.validate()
-
-        with open(self.config_file, 'wt', encoding='utf-8') as fobj:
-            self.config.write(fobj)
 
     def validate(self):
         '''
@@ -141,13 +159,13 @@ class Config:
         err_string = 'Malformed configuration file: '
 
         for name in self.profile_names:
-            if 'type' not in self.config[name].keys():
+            if 'type' not in self[name].keys():
                 msg = 'Section {0} missing type declaration field'
                 msg = err_string + msg.format(name)
 
                 raise err.BadConfigError(message=msg)
 
-            if self.config[name]['type'] not in ('database', 'api'):
+            if self[name]['type'] not in ('database', 'api'):
                 msg = 'Section {0} must have "type" of either ' \
                       '"api" or "database"'
                 msg = err_string + msg.format(name)
@@ -156,20 +174,20 @@ class Config:
 
         for profile in self.api_profile_names:
             try:
-                assert profile in self.config.keys()
-                assert self.config[profile]['type'] == 'api'
+                assert profile in self.keys()
+                assert self[profile]['type'] == 'api'
 
-                assert 'consumer_key' in self.config[profile].keys()
-                assert 'consumer_secret' in self.config[profile].keys()
+                assert 'consumer_key' in self[profile].keys()
+                assert 'consumer_secret' in self[profile].keys()
 
                 assert not (
-                    'token' in self.config[profile].keys() and
-                    'token_secret' not in self.config[profile].keys()
+                    'token' in self[profile].keys() and
+                    'token_secret' not in self[profile].keys()
                 )
 
                 assert not (
-                    'token_secret' in self.config[profile].keys() and
-                    'token' not in self.config[profile].keys()
+                    'token_secret' in self[profile].keys() and
+                    'token' not in self[profile].keys()
                 )
             except AssertionError as exc:
                 msg = err_string + f'Bad API profile {profile}'
@@ -177,18 +195,18 @@ class Config:
 
         for profile in self.db_profile_names:
             try:
-                assert profile in self.config.keys()
-                assert self.config[profile]['type'] == 'database'
+                assert profile in self.keys()
+                assert self[profile]['type'] == 'database'
 
-                assert 'is_default' in self.config[profile].keys()
-                assert 'database_url' in self.config[profile].keys()
+                assert 'is_default' in self[profile].keys()
+                assert 'database_url' in self[profile].keys()
             except AssertionError as exc:
                 msg = err_string + f'Bad DB profile {profile}'
                 raise err.BadConfigError(message=msg) from exc
 
         try:
             assert sum([
-                self.config.getboolean(p, 'is_default')
+                self.getboolean(p, 'is_default')
                 for p in self.db_profile_names
             ]) <= 1
         except AssertionError as exc:

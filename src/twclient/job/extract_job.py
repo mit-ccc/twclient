@@ -71,7 +71,19 @@ class ExtractFollowGraphJob(ExtractJob):
 
 
 class ExtractMentionGraphJob(ExtractJob):
-    pass
+    columns = ['source_user_id', 'target_user_id', 'count']
+
+    def query(self):
+        yield from self.session \
+            .query(
+                md.Tweet.user_id,
+                md.UserMention.mentioned_user_id,
+                func.count()
+            ) \
+            .join(md.Tweet, md.Tweet.tweet_id == md.UserMention.tweet_id) \
+            .group_by(md.Tweet.user_id, md.UserMention.mentioned_user_id) \
+            .all()
+
 
 
 class ExtractRetweetGraphJob(ExtractJob):
@@ -108,23 +120,4 @@ class ExtractMutualFriendsJob(ExtractJob):
 #     .filter(md.Tag.name == tag) \
 #     .all()
 # print(tagged_users)
-
-# fg = self.session \
-#     .query(md.Follow) \
-#     .filter_by(valid_end_dt=None) \
-#     .all()
-# print(len(fg))
-# print(fg[0])
-#
-# fg = [(r.source_user_id, r.target_user_id) for r in fg]
-# print(len(fg))
-# print(fg[0])
-
-# mg = session \
-#     .query(md.Tweet.user_id, md.UserMention.mentioned_user_id, func.count()) \
-#     .join(md.Tweet, md.Tweet.tweet_id == md.UserMention.tweet_id) \
-#     .group_by(md.Tweet.user_id, md.UserMention.mentioned_user_id) \
-#     .all()
-# print(len(mg))
-# print(mg[0])
 

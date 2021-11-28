@@ -311,7 +311,7 @@ class DatabaseCommand(Command):
 
         self.database = db_to_use
         self.load_batch_size = load_batch_size
-        self.database_url = self.config.config[self.database]['database_url']
+        self.database_url = self.config[self.database]['database_url']
         self.engine = sa.create_engine(self.database_url)
 
 
@@ -362,18 +362,18 @@ class ApiCommand(Command):
 
         auths = []
         for profile in profiles_to_use:
-            if 'token' in self.config.config[profile].keys():
+            if 'token' in self.config[profile].keys():
                 auth = tweepy.OAuthHandler(
-                    self.config.config[profile]['consumer_key'],
-                    self.config.config[profile]['consumer_secret']
+                    self.config[profile]['consumer_key'],
+                    self.config[profile]['consumer_secret']
                 )
 
-                auth.set_access_token(self.config.config[profile]['token'],
-                                      self.config.config[profile]['secret'])
+                auth.set_access_token(self.config[profile]['token'],
+                                      self.config[profile]['secret'])
             else:
                 auth = tweepy.AppAuthHandler(
-                    self.config.config[profile]['consumer_key'],
-                    self.config.config[profile]['consumer_secret']
+                    self.config[profile]['consumer_key'],
+                    self.config[profile]['consumer_secret']
                 )
 
             auths += [auth]

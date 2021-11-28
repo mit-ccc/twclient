@@ -101,7 +101,7 @@ class ConfigListDbJob(ConfigPrintJob):
         for name in self.config.db_profile_names:
             if self.full:
                 print('[' + name + ']')
-                for key, value in self.config.config[name].items():
+                for key, value in selfconfig[name].items():
                     print(key + ' = ' + value)
                 print('\n')
             else:
@@ -117,7 +117,7 @@ class ConfigListApiJob(ConfigPrintJob):
         for name in self.config.api_profile_names:
             if self.full:
                 print('[' + name + ']')
-                for key, value in self.config.config[name].items():
+                for key, value in self.config[name].items():
                     print(key + ' = ' + value)
                 print('\n')
             else:
@@ -137,15 +137,15 @@ class ConfigRmDbJob(ConfigWriteJob):
             msg = f'Profile {self.name} is an API profile'
             raise err.BadConfigError(message=msg)
 
-        if self.config.config.getboolean(self.name, 'is_default'):
+        if self.config.getboolean(self.name, 'is_default'):
             for name in self.config.db_profile_names:
                 if name != self.name:
-                    self.config.config[name]['is_default'] = True
+                    self.config[name]['is_default'] = True
                     break
 
-        self.config.config.pop(self.name)
+        self.config.pop(self.name)
 
-        self.config.write_config()
+        self.config.save()
 
 class ConfigRmApiJob(ConfigWriteJob):
     '''
@@ -161,9 +161,9 @@ class ConfigRmApiJob(ConfigWriteJob):
             msg = f'Profile {self.name} is a DB profile'
             raise err.BadConfigError(message=msg)
 
-        self.config.config.pop(self.name)
+        self.config.pop(self.name)
 
-        self.config.write_config()
+        self.config.save()
 
 class SetDbDefaultJob(ConfigWriteJob):
     '''
@@ -180,11 +180,11 @@ class SetDbDefaultJob(ConfigWriteJob):
             raise err.BadConfigError(message=msg)
 
         for name in self.config.db_profile_names:
-            self.config.config[name]['is_default'] = False
+            self.config[name]['is_default'] = False
 
-        self.config.config[self.name]['is_default'] = True
+        self.config[self.name]['is_default'] = True
 
-        self.config.write_config()
+        self.config.save()
 
 class ConfigAddDbJob(ConfigWriteJob):
     '''
@@ -221,13 +221,13 @@ class ConfigAddDbJob(ConfigWriteJob):
             msg = f'Profile {self.name} already exists'
             raise err.BadConfigError(message=msg)
 
-        self.config.config[self.name] = {
+        self.config[self.name] = {
             'type': 'database',
             'is_default': len(self.config.db_profile_names) == 0,
             'database_url': self.database_url
         }
 
-        self.config.write_config()
+        self.config.save()
 
 class ConfigAddApiJob(ConfigWriteJob):
     '''
@@ -292,16 +292,16 @@ class ConfigAddApiJob(ConfigWriteJob):
             msg = f'Profile {self.name} already exists'
             raise err.BadConfigError(message=msg)
 
-        self.config.config[self.name] = {
+        self.config[self.name] = {
             'type': 'api',
             'consumer_key': self.consumer_key,
             'consumer_secret': self.consumer_secret
         }
 
         if self.token is not None:
-            self.config.config[self.name]['token'] = self.token
+            self.config[self.name]['token'] = self.token
 
         if self.token_secret is not None:
-            self.config.config[self.name]['token_secret'] = self.token_secret
+            self.config[self.name]['token_secret'] = self.token_secret
 
-        self.config.write_config()
+        self.config.save()
