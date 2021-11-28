@@ -137,6 +137,18 @@ class TwitterApi:
 
             raise
 
+    def rate_limit_status(self, consumer_key=None):
+        msg = 'Getting rate limits for consumer key(s): '
+        msg += ('all' if consumer_key is None else consumer_key)
+        logger.debug(msg)
+
+        twargs = {
+            'method' : 'rate_limit_status',
+            'consumer_key' : consumer_key
+        }
+
+        return self.make_api_call(**twargs)
+
     #
     # Direct wraps of Twitter API methods
     #
