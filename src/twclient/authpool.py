@@ -80,7 +80,6 @@ class AuthPoolAPI:
     # __getattr__ to provide advice to code in twitter_api.py.
     _authpool_return_types = {
         'get_list': 'single',
-        'list_members': 'list',
         'lookup_users': 'list',
         'user_timeline': 'list',
 
@@ -89,10 +88,12 @@ class AuthPoolAPI:
         # the tweepy < 4.0.0 names
         'followers_ids': 'list',
         'friends_ids': 'list',
+        'list_members': 'list',
 
         # the tweepy >= 4.0.0 names
         'get_follower_ids': 'list',
-        'get_friend_ids': 'list'
+        'get_friend_ids': 'list',
+        'get_list_members': 'list',
     }
 
     def __init__(self, **kwargs):

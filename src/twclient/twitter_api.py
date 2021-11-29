@@ -364,13 +364,17 @@ class TwitterApi:
             raise ValueError('Bad list specification to list_members') from exc
 
         twargs = {
-            'method': 'list_members',
             'cursor': True,
             'list_id': list_id,
             'slug': slug,
             'owner_screen_name': owner_screen_name,
             'owner_id': owner_id
         }
+
+        if tweepy.__version__ >= '4.0.0':
+            twargs['method'] = 'get_list_members'
+        else:
+            twargs['method'] = 'list_members'
 
         yield from self.make_api_call(**twargs)
 
