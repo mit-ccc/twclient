@@ -7,9 +7,12 @@ The command-line interface script.
 import logging
 import argparse as ap
 
-from .local_commands import (ConfigCommand, InitializeCommand, TagCommand,
-                             ExtractCommand)
-from .api_commands import ShowCommand, FetchCommand
+from .show import ShowCommand
+from .fetch import FetchCommand
+from .config import ConfigCommand
+from .initialize import InitializeCommand
+from .tag import TagCommand
+from .extract import ExtractCommand
 
 logger = logging.getLogger(__name__)
 
