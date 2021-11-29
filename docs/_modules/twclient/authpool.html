@@ -125,13 +125,13 @@
 <span class="sd">    next. User code can treat it as a drop-in replacement for ``tweepy.API``;</span>
 <span class="sd">    see the tweepy documentation for methods.</span>
 
-<span class="sd">    It does, however, handle the ``rate_limit_status`` method differently.</span>
-<span class="sd">    We do this because it&#39;s not useful to see rate limit info for only one set</span>
-<span class="sd">    of credentials when the point of this class is to pool multiple sets.</span>
-<span class="sd">    Rather than return only the Twitter API response for the currently active</span>
-<span class="sd">    set of credentials, ``rate_limit_status`` returns a dictionary whose keys</span>
-<span class="sd">    are the consumer keys of the credentials and whose values are the</span>
-<span class="sd">    ``rate_limit_status`` responses for those keys.</span>
+<span class="sd">    Note that it does, however, handle the ``rate_limit_status`` method</span>
+<span class="sd">    differently. We do this because it&#39;s not useful to see rate limit info for</span>
+<span class="sd">    only one set of credentials when the point of this class is to pool</span>
+<span class="sd">    multiple sets. Rather than return only the Twitter API response for the</span>
+<span class="sd">    currently active set of credentials, ``rate_limit_status`` returns a</span>
+<span class="sd">    dictionary whose keys are the consumer keys of the credentials and whose</span>
+<span class="sd">    values are the ``rate_limit_status`` responses for those keys.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -160,7 +160,6 @@
     <span class="c1"># __getattr__ to provide advice to code in twitter_api.py.</span>
     <span class="n">_authpool_return_types</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;get_list&#39;</span><span class="p">:</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;list_members&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
         <span class="s1">&#39;lookup_users&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
         <span class="s1">&#39;user_timeline&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
 
@@ -169,10 +168,12 @@
         <span class="c1"># the tweepy &lt; 4.0.0 names</span>
         <span class="s1">&#39;followers_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
         <span class="s1">&#39;friends_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;list_members&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
 
         <span class="c1"># the tweepy &gt;= 4.0.0 names</span>
         <span class="s1">&#39;get_follower_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;get_friend_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span>
+        <span class="s1">&#39;get_friend_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;get_list_members&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>

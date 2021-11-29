@@ -24,7 +24,25 @@ logger = logging.getLogger(__name__)
 
 class ExportJob(TargetJob, DatabaseJob):
     '''
-    A job exporting data from the database 
+    A job exporting data from the database.
+
+    This class represents a job which pulls an export of collected Twitter data
+    from the database. Several subclasses are defined for particular kinds of
+    commonly used exports. If targets are given, the exports are restricted to
+    only those targets (but note that how to do this is export-specific and
+    subclasses must implement it). The exports produced are CSV files with
+    columns given by the ``columns`` property, in the order they appear there.
+
+    Parameters
+    ----------
+    outfile : str
+        The path to the file where we should write the export (default '-' for
+        stdout).
+
+    Attributes
+    ----------
+    outfile : str
+        The parameter passed to __init__.
     '''
 
     resolve_mode = 'skip'  # bail out if requested targets are missing
@@ -39,6 +57,12 @@ class ExportJob(TargetJob, DatabaseJob):
     @abstractmethod  # Job inherits from ABC
     def query(self):
         '''
+        The sqlalchemy query returning rows to export.
+
+        This method is the main piece of business logic for subclasses, which
+        must implement it along with the ``columns`` property. It should return
+        an iterable (or be a generator) of tuples, with the elements of each
+        tuple assumed to be in the order specified by the ``columns`` property.
         '''
 
         raise NotImplementedError()
@@ -47,6 +71,11 @@ class ExportJob(TargetJob, DatabaseJob):
     @abstractmethod
     def columns(self):
         '''
+        The list of column names for the resultset returned by the ``query``
+        method.
+
+        Subclasses must implement this property along with the ``query``
+        method.
         '''
 
         raise NotImplementedError()
@@ -88,13 +117,18 @@ class ExportJob(TargetJob, DatabaseJob):
 
 class ExportFollowGraphJob(ExportJob):
     '''
+    Export the follow graph.
+
+    This export is a graph in edgelist format, with an edge from
+    ``source_user_id`` to ``target_user_id`` if the source user follows the
+    target user.
     '''
 
     columns = ['source_user_id', 'target_user_id']
 
     def query(self):
         ret = self.session \
-            .query(md.Follow)
+            .query(md.Follow.source_user_id, md.Follow.target_user_id)
 
         if self.users:
             su1 = sa.orm.aliased(md.StgUser)
@@ -106,10 +140,6 @@ class ExportFollowGraphJob(ExportJob):
 
         ret = ret \
             .filter_by(valid_end_dt=None) \
-            .with_entities(
-                md.Follow.source_user_id,
-                md.Follow.target_user_id
-            ) \
             .all()
 
         yield from ret
@@ -117,6 +147,12 @@ class ExportFollowGraphJob(ExportJob):
 
 class ExportMentionGraphJob(ExportJob):
     '''
+    Export the mention graph.
+
+    This export is a graph in edgelist format, with an edge from
+    ``source_user_id`` to ``target_user_id`` if the source user has mentioned
+    the target user. The third column ``num_mentions`` gives the number of
+    mentions.
     '''
 
     columns = ['source_user_id', 'target_user_id', 'num_mentions']
@@ -147,6 +183,12 @@ class ExportMentionGraphJob(ExportJob):
 
 class ExportReplyGraphJob(ExportJob):
     '''
+    Export the reply graph.
+
+    This export is a graph in edgelist format, with an edge from
+    ``source_user_id`` to ``target_user_id`` if the source user has replied to
+    the target user. The third column ``num_mentions`` gives the number of
+    mentions.
     '''
 
     columns = ['source_user_id', 'target_user_id', 'num_replies']
@@ -177,6 +219,12 @@ class ExportReplyGraphJob(ExportJob):
 
 class ExportRetweetGraphJob(ExportJob):
     '''
+    Export the retweet graph.
+
+    This export is a graph in edgelist format, with an edge from
+    ``source_user_id`` to ``target_user_id`` if the source user has retweeted
+    the target user. The third column ``num_mentions`` gives the number of
+    mentions.
     '''
 
     columns = ['source_user_id', 'target_user_id', 'num_retweets']
@@ -206,6 +254,12 @@ class ExportRetweetGraphJob(ExportJob):
 
 class ExportQuoteGraphJob(ExportJob):
     '''
+    Export the quote graph.
+
+    This export is a graph in edgelist format, with an edge from
+    ``source_user_id`` to ``target_user_id`` if the source user has
+    quote-tweeted the target user. The third column ``num_mentions`` gives the
+    number of mentions.
     '''
 
     columns = ['source_user_id', 'target_user_id', 'num_quotes']
@@ -235,6 +289,12 @@ class ExportQuoteGraphJob(ExportJob):
 
 class ExportTweetsJob(ExportJob):
     '''
+    Export the set of user tweets.
+
+    This export includes all tweets for either all users or a particular set of
+    targets. Various relevant fields are included, including in particular the
+    text of any retweeted/quoted/replied-to status and a recoded version of the
+    client from which the tweet was posted.
     '''
 
     columns = ['tweet_id', 'user_id', 'content', 'retweeted_status_content',

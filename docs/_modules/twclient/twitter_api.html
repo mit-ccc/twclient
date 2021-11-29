@@ -444,13 +444,17 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Bad list specification to list_members&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
 
         <span class="n">twargs</span> <span class="o">=</span> <span class="p">{</span>
-            <span class="s1">&#39;method&#39;</span><span class="p">:</span> <span class="s1">&#39;list_members&#39;</span><span class="p">,</span>
             <span class="s1">&#39;cursor&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
             <span class="s1">&#39;list_id&#39;</span><span class="p">:</span> <span class="n">list_id</span><span class="p">,</span>
             <span class="s1">&#39;slug&#39;</span><span class="p">:</span> <span class="n">slug</span><span class="p">,</span>
             <span class="s1">&#39;owner_screen_name&#39;</span><span class="p">:</span> <span class="n">owner_screen_name</span><span class="p">,</span>
             <span class="s1">&#39;owner_id&#39;</span><span class="p">:</span> <span class="n">owner_id</span>
         <span class="p">}</span>
+
+        <span class="k">if</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s1">&#39;4.0.0&#39;</span><span class="p">:</span>
+            <span class="n">twargs</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;get_list_members&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">twargs</span><span class="p">[</span><span class="s1">&#39;method&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="s1">&#39;list_members&#39;</span>
 
         <span class="k">yield from</span> <span class="bp">self</span><span class="o">.</span><span class="n">make_api_call</span><span class="p">(</span><span class="o">**</span><span class="n">twargs</span><span class="p">)</span></div>
 

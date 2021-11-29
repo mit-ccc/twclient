@@ -109,13 +109,13 @@ instance, handling rate limit and over-capacity errors. When one instance
 hits its rate limit, this implementation transparently switches over to the
 next. User code can treat it as a drop-in replacement for <code class="docutils literal notranslate"><span class="pre">tweepy.API</span></code>;
 see the tweepy documentation for methods.</p>
-<p>It does, however, handle the <code class="docutils literal notranslate"><span class="pre">rate_limit_status</span></code> method differently.
-We do this because it’s not useful to see rate limit info for only one set
-of credentials when the point of this class is to pool multiple sets.
-Rather than return only the Twitter API response for the currently active
-set of credentials, <code class="docutils literal notranslate"><span class="pre">rate_limit_status</span></code> returns a dictionary whose keys
-are the consumer keys of the credentials and whose values are the
-<code class="docutils literal notranslate"><span class="pre">rate_limit_status</span></code> responses for those keys.</p>
+<p>Note that it does, however, handle the <code class="docutils literal notranslate"><span class="pre">rate_limit_status</span></code> method
+differently. We do this because it’s not useful to see rate limit info for
+only one set of credentials when the point of this class is to pool
+multiple sets. Rather than return only the Twitter API response for the
+currently active set of credentials, <code class="docutils literal notranslate"><span class="pre">rate_limit_status</span></code> returns a
+dictionary whose keys are the consumer keys of the credentials and whose
+values are the <code class="docutils literal notranslate"><span class="pre">rate_limit_status</span></code> responses for those keys.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
@@ -690,7 +690,7 @@ application logic rather than a trigger.</p>
 <dt class="sig sig-object py" id="twclient.models.StgUser">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">StgUser</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#StgUser"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.StgUser" title="Permalink to this definition"></a></dt>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
-<p>A staging table for pulling extracts.</p>
+<p>A staging table for pulling exports.</p>
 </dd></dl>
 
 <dl class="py class">
