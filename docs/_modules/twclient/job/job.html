@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>twclient.job.job &mdash; twclient 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../../../" id="documentation_options" src="../../../_static/documentation_options.js"></script>
+        <script src="../../../_static/jquery.js"></script>
+        <script src="../../../_static/underscore.js"></script>
+        <script src="../../../_static/doctools.js"></script>
+    <script src="../../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../../../index.html" class="icon icon-home"> twclient
+          </a>
+              <div class="version">
+                0.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../overview/license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../vignettes/fetch.html">Getting data from the Twitter API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../vignettes/extract.html">Working with fetched data</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../apidocs.html">API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../../index.html">twclient</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../../index.html" class="icon icon-home"></a> &raquo;</li>
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      <li>twclient.job.job</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for twclient.job.job</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Job classes which actually implement command logic.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">logging</span>
+<span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">ABC</span><span class="p">,</span> <span class="n">abstractmethod</span>
+
+<span class="kn">import</span> <span class="nn">sqlalchemy</span> <span class="k">as</span> <span class="nn">sa</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.orm</span> <span class="kn">import</span> <span class="n">sessionmaker</span>
+
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">__version__</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">error</span> <span class="k">as</span> <span class="n">err</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">models</span> <span class="k">as</span> <span class="n">md</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">ut</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1"># This isn&#39;t a great way to handle these warnings, but sqlalchemy is so dynamic</span>
+<span class="c1"># that most attribute accesses aren&#39;t resolved until runtime</span>
+<span class="c1"># pylint: disable=no-member</span>
+
+
+<div class="viewcode-block" id="Job"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.Job">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">Job</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job to be run against the database and possibly also the Twitter API.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># This method is the main entrypoint for the Job class. Subclasses are</span>
+    <span class="c1"># expected to override it with their business logic.</span>
+<div class="viewcode-block" id="Job.run"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.Job.run">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Run the job.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="DatabaseJob"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.DatabaseJob">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">DatabaseJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job to be run against the database.</span>
+
+<span class="sd">    This class represents a job to be run against the database. Subclasses may</span>
+<span class="sd">    or may not also support access to the Twitter API.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    engine : sqlalchemy.engine.Engine instance</span>
+<span class="sd">        The sqlalchemy engine representing the database to connect to.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    engine : sqlalchemy.engine.Engine instance</span>
+<span class="sd">        The parameter passed to __init__.</span>
+
+<span class="sd">    session : sqlalchemy.orm.session.Session instance</span>
+<span class="sd">        The actual database session to use.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">engine</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;engine&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;engine instance is required&quot;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">engine</span> <span class="o">=</span> <span class="n">engine</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sessionfactory</span> <span class="o">=</span> <span class="n">sessionmaker</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_sessionfactory</span><span class="o">.</span><span class="n">configure</span><span class="p">(</span><span class="n">bind</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">engine</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_sessionfactory</span><span class="p">()</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schema_verified</span> <span class="o">=</span> <span class="kc">False</span>
+
+<div class="viewcode-block" id="DatabaseJob.ensure_schema_version"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.DatabaseJob.ensure_schema_version">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_schema_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Ensure that the database schema is a usable version.</span>
+
+<span class="sd">        This method checks that the schema present in the database referred to</span>
+<span class="sd">        by self.engine is a version the Job class knows how to work with. If</span>
+<span class="sd">        the schema is an unsupported version or is missing / corrupt, an</span>
+<span class="sd">        instance of error.BadSchemaError will be raised.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">_schema_verified</span><span class="p">:</span>
+            <span class="k">return</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">schema_version</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">md</span><span class="o">.</span><span class="n">SchemaVersion</span><span class="p">)</span><span class="o">.</span><span class="n">all</span><span class="p">()</span>
+        <span class="k">except</span> <span class="n">sa</span><span class="o">.</span><span class="n">exc</span><span class="o">.</span><span class="n">ProgrammingError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Bad or missing schema version tag in database (have you &#39;</span> \
+                  <span class="s1">&#39;initialized it?)&#39;</span>
+            <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadSchemaError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">schema_version</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Bad or missing schema version tag in database&#39;</span>
+            <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadSchemaError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="n">db_version</span> <span class="o">=</span> <span class="n">schema_version</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">version</span>
+
+        <span class="k">if</span> <span class="n">db_version</span> <span class="o">&gt;</span> <span class="n">__version__</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Package version </span><span class="si">{0}</span><span class="s1"> cannot use future schema version </span><span class="si">{1}</span><span class="s1">&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">__version__</span><span class="p">,</span> <span class="n">db_version</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadSchemaError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">db_version</span> <span class="o">&lt;</span> <span class="n">__version__</span><span class="p">:</span>  <span class="c1"># likely to change in future versions</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Package version </span><span class="si">{0}</span><span class="s1"> cannot migrate old schema version &#39;</span> \
+                  <span class="s1">&#39;</span><span class="si">{1}</span><span class="s1">; consider downgrading the package version&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">__version__</span><span class="p">,</span> <span class="n">db_version</span><span class="p">)</span>
+            <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadSchemaError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_schema_verified</span> <span class="o">=</span> <span class="kc">True</span></div>
+
+<div class="viewcode-block" id="DatabaseJob.get_or_create"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.DatabaseJob.get_or_create">[docs]</a>    <span class="k">def</span> <span class="nf">get_or_create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Get a persistent object or create a pending one.</span>
+
+<span class="sd">        Given a model and a set of kwargs, interpretable as the values of the</span>
+<span class="sd">        model&#39;s attributes, which together should identify one row in the</span>
+<span class="sd">        database, query for it and a) return a persistent object if the</span>
+<span class="sd">        row exists, or otherwise b) create and return a pending object with the</span>
+<span class="sd">        appropriate attribute values.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        model : instance of models.Base</span>
+<span class="sd">            A sqlalchemy model object.</span>
+
+<span class="sd">        **kwargs</span>
+<span class="sd">            Keyword arguments specifying the values of the model&#39;s attributes.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        instance of models.Base</span>
+<span class="sd">            The persistent or pending object.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">instance</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">model</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span><span class="o">.</span><span class="n">one_or_none</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">instance</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">instance</span>
+
+        <span class="n">instance</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">instance</span></div></div>
+
+
+<div class="viewcode-block" id="TargetJob"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.TargetJob">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">TargetJob</span><span class="p">(</span><span class="n">DatabaseJob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job which requires targets.</span>
+
+<span class="sd">    A TargetJob is a job which requires a set of target.Target instances to</span>
+<span class="sd">    specify users. An instance of this class must specify its resolve mode for</span>
+<span class="sd">    the Target classes, and has defaut logic to resolve them and expose their</span>
+<span class="sd">    users.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    targets : list of target.Target</span>
+<span class="sd">        The list of targets for the job.</span>
+
+<span class="sd">    allow_missing_targets : bool</span>
+<span class="sd">        If resolving the targets indicates that some targets should be in the</span>
+<span class="sd">        database but are not (i.e., one of the Target instances in self.targets</span>
+<span class="sd">        has a non-empty missing_targets attribute), should we raise</span>
+<span class="sd">        error.BadTargetError (if False, default) or continue and ignore the</span>
+<span class="sd">        missing targets (if True)?</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    targets : list of target.Target</span>
+<span class="sd">        The parameter passed to __init__.</span>
+
+<span class="sd">    allow_missing_targets : bool</span>
+<span class="sd">        The parameter passed to __init__.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">targets</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;targets&#39;</span><span class="p">,</span> <span class="p">[])</span>
+        <span class="n">allow_missing_targets</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;allow_missing_targets&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allow_missing_targets</span> <span class="o">=</span> <span class="n">allow_missing_targets</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">ensure_schema_version</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">resolve_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The resolve mode attribute to specify behavior of Target instances.</span>
+
+<span class="sd">        This attribute is consumed by the Target instances in self.targets.</span>
+<span class="sd">        Acceptable values include &#39;fetch&#39;, &#39;skip&#39;, &#39;hydrate&#39;. See the</span>
+<span class="sd">        documentation for target.Target for more information.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">resolved</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Have all targets been resolved to users?</span>
+
+<span class="sd">        This attribute is false on instantiation, and is normally set to True</span>
+<span class="sd">        by calling resolve_targets().</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="nb">all</span><span class="p">(</span><span class="n">t</span><span class="o">.</span><span class="n">resolved</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_combine_sub_attrs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolved</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">AttributeError</span><span class="p">(</span><span class="s1">&#39;Must call resolve_targets() first&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">it</span><span class="o">.</span><span class="n">chain</span><span class="p">(</span><span class="o">*</span><span class="p">[</span><span class="nb">getattr</span><span class="p">(</span><span class="n">t</span><span class="p">,</span> <span class="n">attr</span><span class="p">)</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">]))</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">users</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The combined set of users referred to by all targets.</span>
+
+<span class="sd">        This is the union of all the users referred to by the Target instances</span>
+<span class="sd">        in self.targets. If the targets have not been resolved, accessing this</span>
+<span class="sd">        attribute will raise AttributeError.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">bad_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The combined set of bad raw targets referred to by all targets.</span>
+
+<span class="sd">        This is the union of all the bad raw targets in the Target instances in</span>
+<span class="sd">        self.targets. If the targets have not been resolved, accessing this</span>
+<span class="sd">        attribute will raise AttributeError. See the documentation for</span>
+<span class="sd">        target.Target for details of what a target and raw target are and its</span>
+<span class="sd">        bad_targets attribute for what it means for a raw target to be bad.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;bad_targets&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">missing_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The combined set of missing raw targets referred to by all targets.</span>
+
+<span class="sd">        This is the union of all the missing raw targets in the Target</span>
+<span class="sd">        instances in self.targets. If the targets have not been resolved,</span>
+<span class="sd">        accessing this attribute will raise AttributeError. See the</span>
+<span class="sd">        documentation for target.Target for details of what a target and raw</span>
+<span class="sd">        target are and its missing_targets attribute for what it means for a</span>
+<span class="sd">        raw target to be missing.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;missing_targets&#39;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">good_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The combined set of good raw targets referred to by all targets.</span>
+
+<span class="sd">        This is the union of all the good raw targets in the Target instances</span>
+<span class="sd">        in self.targets. If the targets have not been resolved, accessing this</span>
+<span class="sd">        attribute will raise AttributeError. See the documentation for</span>
+<span class="sd">        target.Target for details of what a target and raw target are and its</span>
+<span class="sd">        good_targets attribute for what it means for a raw target to be good.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;good_targets&#39;</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TargetJob.resolve_targets"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.TargetJob.resolve_targets">[docs]</a>    <span class="k">def</span> <span class="nf">resolve_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Resolve all of the targets in self.targets to users.</span>
+
+<span class="sd">        This method resolves all of the targets in self.targets to users (and</span>
+<span class="sd">        bad/missing raw targets, if applicable) and validates them using</span>
+<span class="sd">        whatever logic the subclass has defined for validate_targets().</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">for</span> <span class="n">target</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span><span class="p">:</span>
+            <span class="n">target</span><span class="o">.</span><span class="n">resolve</span><span class="p">(</span><span class="n">context</span><span class="o">=</span><span class="bp">self</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">validate_targets</span><span class="p">()</span></div>
+
+<div class="viewcode-block" id="TargetJob.validate_targets"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.TargetJob.validate_targets">[docs]</a>    <span class="k">def</span> <span class="nf">validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Validate the targets in self.targets.</span>
+
+<span class="sd">        This method is a hook called by resolve_targets to ensure that the</span>
+<span class="sd">        targets in self.targets have resolved into a sane configuration. If any</span>
+<span class="sd">        error is detected, error.BadTargetError should be raised. The default</span>
+<span class="sd">        implementation here checks whether there are missing targets (i.e.,</span>
+<span class="sd">        targets which should have been but were not found in the database), and</span>
+<span class="sd">        raises error.BadTargetError unless self.allow_missing_targets evaluates</span>
+<span class="sd">        to True. Subclasses may override with other configurations.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">==</span> <span class="s1">&#39;skip&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">missing_targets</span><span class="p">:</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Target(s) not in database: </span><span class="si">{0}</span><span class="s1">&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="s1">&#39;, &#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_targets</span><span class="p">))</span>
+
+            <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_missing_targets</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadTargetError</span><span class="p">(</span>
+                    <span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span>
+                    <span class="n">targets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">missing_targets</span>
+                <span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="ApiJob"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.ApiJob">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">ApiJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job requiring acess to the Twitter API.</span>
+
+<span class="sd">    This class represents a job which interacts with the Twitter API. It</span>
+<span class="sd">    configures API access, and defers other functionality to subclasses.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    api : instance of twitter_api.TwitterApi</span>
+<span class="sd">        The TwitterApi instance to use for API access.</span>
+
+<span class="sd">    allow_api_errors : bool</span>
+<span class="sd">        If the Twitter API returns an error, should we abort (if False,</span>
+<span class="sd">        default), or ignore and continue (if True)?</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    api : instance of twitter_api.TwitterApi</span>
+<span class="sd">        The parameter passed to __init__.</span>
+
+<span class="sd">    allow_api_errors : bool</span>
+<span class="sd">        The parameter passed to __init__.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">api</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;api&#39;</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">KeyError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must provide api object&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
+
+        <span class="n">allow_api_errors</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;allow_api_errors&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">api</span> <span class="o">=</span> <span class="n">api</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allow_api_errors</span> <span class="o">=</span> <span class="n">allow_api_errors</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019-2021, Massachusetts Institute of Technology.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

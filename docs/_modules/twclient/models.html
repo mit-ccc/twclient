@@ -152,7 +152,7 @@
 
 <span class="c1"># This is from one of the standard sqlalchemy recipes:</span>
 <span class="c1">#     https://github.com/sqlalchemy/sqlalchemy/wiki/UniqueObject</span>
-<div class="viewcode-block" id="UniqueMixin"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UniqueMixin">[docs]</a><span class="k">class</span> <span class="nc">UniqueMixin</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">UniqueMixin</span><span class="p">:</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Provide a merge-like operation by unique constraint instead of primary key.</span>
 
@@ -188,7 +188,7 @@
 
         <span class="k">return</span> <span class="n">hashlib</span><span class="o">.</span><span class="n">sha1</span><span class="p">(</span><span class="n">txt</span><span class="p">)</span><span class="o">.</span><span class="n">hexdigest</span><span class="p">()</span>
 
-<div class="viewcode-block" id="UniqueMixin.as_unique"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UniqueMixin.as_unique">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">as_unique</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">session</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Return an instance of a model, uniquely with respect to a DB session.</span>
@@ -232,12 +232,12 @@
                 <span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">obj</span><span class="p">)</span>
 
         <span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">obj</span>
-        <span class="k">return</span> <span class="n">obj</span></div></div>
+        <span class="k">return</span> <span class="n">obj</span>
 
 
 <span class="c1"># The @declared_attr is a bit of a hack - it puts the columns at the end in</span>
 <span class="c1"># tables, which declaring them as class attributes doesn&#39;t</span>
-<div class="viewcode-block" id="TimestampsMixin"><a class="viewcode-back" href="../../apidocs.html#twclient.models.TimestampsMixin">[docs]</a><span class="k">class</span> <span class="nc">TimestampsMixin</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">TimestampsMixin</span><span class="p">:</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Add creation and modification timestamps to a model.</span>
 
@@ -263,10 +263,10 @@
 <span class="sd">        &#39;&#39;&#39;</span>
 
         <span class="k">return</span> <span class="n">Column</span><span class="p">(</span><span class="n">TIMESTAMP</span><span class="p">(</span><span class="n">timezone</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span> <span class="n">server_default</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span>
-                      <span class="n">onupdate</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+                      <span class="n">onupdate</span><span class="o">=</span><span class="n">func</span><span class="o">.</span><span class="n">now</span><span class="p">(),</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="FromTweepyInterface"><a class="viewcode-back" href="../../apidocs.html#twclient.models.FromTweepyInterface">[docs]</a><span class="k">class</span> <span class="nc">FromTweepyInterface</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">FromTweepyInterface</span><span class="p">:</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A model class capable of instantiating itself from a tweepy object.</span>
 
@@ -277,7 +277,7 @@
 
     <span class="c1"># Subclasses are expected to provide this logic, and the implementation</span>
     <span class="c1"># here is an abstract stub that raises NotImplementedError.</span>
-<div class="viewcode-block" id="FromTweepyInterface.from_tweepy"><a class="viewcode-back" href="../../apidocs.html#twclient.models.FromTweepyInterface.from_tweepy">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_tweepy</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Instantiate a class instance from a tweepy object.</span>
@@ -300,10 +300,10 @@
 <span class="sd">            The constructed class instance.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
 
-<div class="viewcode-block" id="ListFromTweepyInterface"><a class="viewcode-back" href="../../apidocs.html#twclient.models.ListFromTweepyInterface">[docs]</a><span class="k">class</span> <span class="nc">ListFromTweepyInterface</span><span class="p">:</span>
+<span class="k">class</span> <span class="nc">ListFromTweepyInterface</span><span class="p">:</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A model class capable of instantiating multiple instances of itself from a</span>
 <span class="sd">    tweepy object.</span>
@@ -314,7 +314,7 @@
 <span class="sd">    represents.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-<div class="viewcode-block" id="ListFromTweepyInterface.list_from_tweepy"><a class="viewcode-back" href="../../apidocs.html#twclient.models.ListFromTweepyInterface.list_from_tweepy">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">list_from_tweepy</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Return a list of class instances from a tweepy object.</span>
@@ -339,13 +339,14 @@
 <span class="sd">            The constructed class instances.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
 
 
 <span class="c1"># Store the creating package version in the DB to enable migrations (we don&#39;t</span>
 <span class="c1"># actually do any migrations or have any code to support them yet, but if this</span>
 <span class="c1"># isn&#39;t here to begin with it&#39;ll be a gigantic pain)</span>
-<div class="viewcode-block" id="SchemaVersion"><a class="viewcode-back" href="../../apidocs.html#twclient.models.SchemaVersion">[docs]</a><span class="k">class</span> <span class="nc">SchemaVersion</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="SchemaVersion"><a class="viewcode-back" href="../../apidocs.html#twclient.models.SchemaVersion">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">SchemaVersion</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A stub table to store the schema version.</span>
 
@@ -367,7 +368,8 @@
 <span class="c1">#</span>
 
 
-<div class="viewcode-block" id="User"><a class="viewcode-back" href="../../apidocs.html#twclient.models.User">[docs]</a><span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="User"><a class="viewcode-back" href="../../apidocs.html#twclient.models.User">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">User</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A Twitter user.</span>
 
@@ -400,15 +402,16 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">user_id</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="StgUser"><a class="viewcode-back" href="../../apidocs.html#twclient.models.StgUser">[docs]</a><span class="k">class</span> <span class="nc">StgUser</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">StgUser</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A staging table for pulling exports.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="UserData"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UserData">[docs]</a><span class="k">class</span> <span class="nc">UserData</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="UserData"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UserData">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">UserData</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Mutable attributes of a Twitter user.</span>
 
@@ -558,7 +561,8 @@
         <span class="k">return</span> <span class="n">ret</span></div></div>
 
 
-<div class="viewcode-block" id="Tag"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Tag">[docs]</a><span class="k">class</span> <span class="nc">Tag</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="Tag"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Tag">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">Tag</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A tag that can be given to one or more Twitter users.</span>
 
@@ -582,7 +586,8 @@
                          <span class="n">back_populates</span><span class="o">=</span><span class="s1">&#39;tags&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="List"><a class="viewcode-back" href="../../apidocs.html#twclient.models.List">[docs]</a><span class="k">class</span> <span class="nc">List</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="List"><a class="viewcode-back" href="../../apidocs.html#twclient.models.List">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">List</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A Twitter list of users.</span>
 
@@ -693,7 +698,8 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="UserList"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UserList">[docs]</a><span class="k">class</span> <span class="nc">UserList</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="UserList"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UserList">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">UserList</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    User membership status for Twitter lists.</span>
 
@@ -746,7 +752,8 @@
     <span class="n">user</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;User&#39;</span><span class="p">,</span> <span class="n">back_populates</span><span class="o">=</span><span class="s1">&#39;list_memberships&#39;</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="UserTag"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UserTag">[docs]</a><span class="k">class</span> <span class="nc">UserTag</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="UserTag"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UserTag">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">UserTag</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Users who have been assigned tags.</span>
 
@@ -782,7 +789,8 @@
 <span class="c1">#</span>
 
 
-<div class="viewcode-block" id="Follow"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Follow">[docs]</a><span class="k">class</span> <span class="nc">Follow</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="Follow"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Follow">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">Follow</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    The Twitter follow graph.</span>
 
@@ -847,13 +855,13 @@
     <span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="StgFollow"><a class="viewcode-back" href="../../apidocs.html#twclient.models.StgFollow">[docs]</a><span class="k">class</span> <span class="nc">StgFollow</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+<span class="k">class</span> <span class="nc">StgFollow</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A staging table for the loading of follow-graph edges.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="n">source_user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
-    <span class="n">target_user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
+    <span class="n">target_user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
 
 <span class="c1">#</span>
@@ -861,7 +869,8 @@
 <span class="c1">#</span>
 
 
-<div class="viewcode-block" id="Tweet"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Tweet">[docs]</a><span class="k">class</span> <span class="nc">Tweet</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="Tweet"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Tweet">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">Tweet</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A tweet.</span>
 
@@ -1043,7 +1052,8 @@
         <span class="k">return</span> <span class="n">ret</span></div></div>
 
 
-<div class="viewcode-block" id="Hashtag"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Hashtag">[docs]</a><span class="k">class</span> <span class="nc">Hashtag</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">UniqueMixin</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="Hashtag"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Hashtag">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">Hashtag</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">UniqueMixin</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A hashtag.</span>
 
@@ -1067,7 +1077,8 @@
                             <span class="n">cascade_backrefs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Symbol"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Symbol">[docs]</a><span class="k">class</span> <span class="nc">Symbol</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">UniqueMixin</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="Symbol"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Symbol">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">Symbol</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">UniqueMixin</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A ticker symbol as detected by Twitter.</span>
 
@@ -1094,7 +1105,8 @@
                             <span class="n">cascade_backrefs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="Url"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Url">[docs]</a><span class="k">class</span> <span class="nc">Url</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">UniqueMixin</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="Url"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Url">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">Url</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">UniqueMixin</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A URL.</span>
 
@@ -1125,7 +1137,8 @@
                                   <span class="n">cascade_backrefs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
-<div class="viewcode-block" id="MediaType"><a class="viewcode-back" href="../../apidocs.html#twclient.models.MediaType">[docs]</a><span class="k">class</span> <span class="nc">MediaType</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">UniqueMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="MediaType"><a class="viewcode-back" href="../../apidocs.html#twclient.models.MediaType">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">MediaType</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">UniqueMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    The type of a media object in a tweet.</span>
 
@@ -1159,7 +1172,8 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="o">.</span><span class="n">as_unique</span><span class="p">(</span><span class="n">session</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">media_type</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="Media"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Media">[docs]</a><span class="k">class</span> <span class="nc">Media</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="Media"><a class="viewcode-back" href="../../apidocs.html#twclient.models.Media">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">Media</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A media object on Twitter.</span>
 
@@ -1239,7 +1253,8 @@
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="MediaVariant"><a class="viewcode-back" href="../../apidocs.html#twclient.models.MediaVariant">[docs]</a><span class="k">class</span> <span class="nc">MediaVariant</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">ListFromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="MediaVariant"><a class="viewcode-back" href="../../apidocs.html#twclient.models.MediaVariant">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">MediaVariant</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">ListFromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Specific video files for a Twitter video, which may have more than one.</span>
 
@@ -1306,7 +1321,8 @@
         <span class="k">return</span> <span class="n">ret</span></div></div>
 
 
-<div class="viewcode-block" id="UserMention"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UserMention">[docs]</a><span class="k">class</span> <span class="nc">UserMention</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">ListFromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="UserMention"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UserMention">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">UserMention</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">ListFromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A mention of a user in a tweet.</span>
 
@@ -1368,7 +1384,8 @@
         <span class="k">return</span> <span class="n">lst</span></div></div>
 
 
-<div class="viewcode-block" id="HashtagMention"><a class="viewcode-back" href="../../apidocs.html#twclient.models.HashtagMention">[docs]</a><span class="k">class</span> <span class="nc">HashtagMention</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">ListFromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="HashtagMention"><a class="viewcode-back" href="../../apidocs.html#twclient.models.HashtagMention">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">HashtagMention</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">ListFromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A mention of a hashtag in a tweet.</span>
 
@@ -1431,7 +1448,8 @@
         <span class="k">return</span> <span class="n">lst</span></div></div>
 
 
-<div class="viewcode-block" id="SymbolMention"><a class="viewcode-back" href="../../apidocs.html#twclient.models.SymbolMention">[docs]</a><span class="k">class</span> <span class="nc">SymbolMention</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">ListFromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="SymbolMention"><a class="viewcode-back" href="../../apidocs.html#twclient.models.SymbolMention">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">SymbolMention</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">ListFromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A mention of a ticker symbol (&quot;cashtag&quot;) in a tweet.</span>
 
@@ -1494,7 +1512,8 @@
         <span class="k">return</span> <span class="n">lst</span></div></div>
 
 
-<div class="viewcode-block" id="UrlMention"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UrlMention">[docs]</a><span class="k">class</span> <span class="nc">UrlMention</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">ListFromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="UrlMention"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UrlMention">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">UrlMention</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">ListFromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A mention of a URL in a tweet.</span>
 
@@ -1613,7 +1632,8 @@
         <span class="k">return</span> <span class="n">lst</span></div></div>
 
 
-<div class="viewcode-block" id="MediaMention"><a class="viewcode-back" href="../../apidocs.html#twclient.models.MediaMention">[docs]</a><span class="k">class</span> <span class="nc">MediaMention</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">ListFromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
+<div class="viewcode-block" id="MediaMention"><a class="viewcode-back" href="../../apidocs.html#twclient.models.MediaMention">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">MediaMention</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">ListFromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A mention of a media object in a tweet.</span>
 

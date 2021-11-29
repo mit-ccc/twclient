@@ -13,6 +13,7 @@ from . import authpool as ap
 logger = logging.getLogger(__name__)
 
 
+@ut.export
 class TwitterApi:
     '''
     Wrap calls to the Twitter API with cursoring, common parameters, etc.

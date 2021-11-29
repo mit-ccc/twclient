@@ -13,6 +13,7 @@ from sqlalchemy.orm import sessionmaker
 from .. import __version__
 from .. import error as err
 from .. import models as md
+from .. import _utils as ut
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,7 @@ logger = logging.getLogger(__name__)
 # pylint: disable=no-member
 
 
+@ut.export
 class Job(ABC):
     '''
     A job to be run against the database and possibly also the Twitter API.
@@ -38,6 +40,7 @@ class Job(ABC):
         raise NotImplementedError()
 
 
+@ut.export
 class DatabaseJob(Job):
     '''
     A job to be run against the database.
@@ -154,6 +157,7 @@ class DatabaseJob(Job):
         return instance
 
 
+@ut.export
 class TargetJob(DatabaseJob):
     '''
     A job which requires targets.
@@ -320,6 +324,7 @@ class TargetJob(DatabaseJob):
                 )
 
 
+@ut.export
 class ApiJob(Job):
     '''
     A job requiring acess to the Twitter API.

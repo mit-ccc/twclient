@@ -2,7 +2,6 @@ API Documentation
 =================
 
 .. automodule:: twclient
-   :members:
 
 This documentation focuses on the Python API. For an introduction to
 command-line usage, see the :doc:`fetching-data vignette </vignettes/fetch>`;

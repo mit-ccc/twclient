@@ -15,6 +15,7 @@ from . import _utils as ut
 logger = logging.getLogger(__name__)
 
 
+@ut.export
 class Target(ABC):
     '''
     Encapsulate the notion of a "target" for certain kinds of jobs.
@@ -356,6 +357,7 @@ class Target(ABC):
         return ret
 
 
+@ut.export
 class UserIdTarget(Target):
     '''
     A set of Twitter user IDs to resolve to users.
@@ -399,6 +401,7 @@ class UserIdTarget(Target):
                     logger.warning('Not all requested users are loaded')
 
 
+@ut.export
 class ScreenNameTarget(Target):
     '''
     A set of screen names to resolve to users.
@@ -443,6 +446,7 @@ class ScreenNameTarget(Target):
                     logger.warning('Not all requested users are loaded')
 
 
+@ut.export
 class SelectTagTarget(Target):
     '''
     A set of user tags to resolve to users.
@@ -489,6 +493,7 @@ class SelectTagTarget(Target):
             self._add_users(users)
 
 
+@ut.export
 class TwitterListTarget(Target):
     '''
     A set of Twitter lists to resolve to users.

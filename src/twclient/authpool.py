@@ -33,6 +33,7 @@ else:
     TweepyException = tweepy.error.TweepError
 
 
+@ut.export
 class AuthPoolAPI:
     '''
     A version of ``tweepy.API`` with support for multiple sets of credentials.
@@ -237,7 +238,7 @@ class AuthPoolAPI:
 
                     iself._authpool_switch_api()
                 except TweepyException as exc:
-                    dexc = err.dispatch_tweepy(exc)
+                    dexc = err.dispatch_tweepy_exception(exc)
 
                     if not isinstance(dexc, err.TwitterServiceError):
                         raise dexc from exc

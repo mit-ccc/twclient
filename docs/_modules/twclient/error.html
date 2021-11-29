@@ -86,6 +86,8 @@
 
 <span class="kn">import</span> <span class="nn">tweepy</span>
 
+<span class="kn">from</span> <span class="nn">.</span> <span class="kn">import</span> <span class="n">_utils</span> <span class="k">as</span> <span class="n">ut</span>
+
 <span class="n">TWEEPY4</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s1">&#39;4.0.0&#39;</span>
 
 <span class="k">if</span> <span class="n">TWEEPY4</span><span class="p">:</span>
@@ -107,7 +109,8 @@
 <span class="c1"># Base classes</span>
 <span class="c1">#</span>
 
-<div class="viewcode-block" id="TWClientError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TWClientError">[docs]</a><span class="k">class</span> <span class="nc">TWClientError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
+<div class="viewcode-block" id="TWClientError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TWClientError">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">TWClientError</span><span class="p">(</span><span class="ne">Exception</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    The base class for all errors raised by twclient.</span>
 
@@ -158,7 +161,8 @@
 
 <span class="c1"># See Twitter docs:</span>
 <span class="c1"># https://developer.twitter.com/en/support/twitter-api/error-troubleshooting</span>
-<div class="viewcode-block" id="TwitterAPIError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TwitterAPIError">[docs]</a><span class="k">class</span> <span class="nc">TwitterAPIError</span><span class="p">(</span><span class="n">TWClientError</span><span class="p">):</span>
+<div class="viewcode-block" id="TwitterAPIError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TwitterAPIError">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">TwitterAPIError</span><span class="p">(</span><span class="n">TWClientError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Base class for errors returned by the Twitter API.</span>
 
@@ -273,7 +277,8 @@
         <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="TwitterServiceError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TwitterServiceError">[docs]</a><span class="k">class</span> <span class="nc">TwitterServiceError</span><span class="p">(</span><span class="n">TwitterAPIError</span><span class="p">):</span>  <span class="c1"># pylint: disable=abstract-method</span>
+<div class="viewcode-block" id="TwitterServiceError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TwitterServiceError">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">TwitterServiceError</span><span class="p">(</span><span class="n">TwitterAPIError</span><span class="p">):</span>  <span class="c1"># pylint: disable=abstract-method</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A problem with the Twitter service.</span>
 
@@ -309,7 +314,8 @@
         <span class="k">return</span> <span class="n">ret</span></div></div>
 
 
-<div class="viewcode-block" id="TwitterLogicError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TwitterLogicError">[docs]</a><span class="k">class</span> <span class="nc">TwitterLogicError</span><span class="p">(</span><span class="n">TwitterAPIError</span><span class="p">):</span>  <span class="c1"># pylint: disable=abstract-method</span>
+<div class="viewcode-block" id="TwitterLogicError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.TwitterLogicError">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">TwitterLogicError</span><span class="p">(</span><span class="n">TwitterAPIError</span><span class="p">):</span>  <span class="c1"># pylint: disable=abstract-method</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A request to the Twitter service encountered a logical error condition.</span>
 
@@ -322,7 +328,8 @@
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="NotFoundError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.NotFoundError">[docs]</a><span class="k">class</span> <span class="nc">NotFoundError</span><span class="p">(</span><span class="n">TwitterLogicError</span><span class="p">):</span>
+<div class="viewcode-block" id="NotFoundError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.NotFoundError">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">NotFoundError</span><span class="p">(</span><span class="n">TwitterLogicError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A requested object was not found.</span>
 
@@ -355,7 +362,8 @@
 
 <span class="c1"># That is, accessing protected users&#39; friends, followers, or tweets returns</span>
 <span class="c1"># an HTTP 401 with message &quot;Not authorized.&quot; and no Twitter status code.</span>
-<div class="viewcode-block" id="ForbiddenError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.ForbiddenError">[docs]</a><span class="k">class</span> <span class="nc">ForbiddenError</span><span class="p">(</span><span class="n">TwitterLogicError</span><span class="p">):</span>
+<div class="viewcode-block" id="ForbiddenError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.ForbiddenError">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">ForbiddenError</span><span class="p">(</span><span class="n">TwitterLogicError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A request was forbidden.</span>
 
@@ -376,7 +384,8 @@
         <span class="k">return</span> <span class="n">ret</span></div></div>
 
 
-<div class="viewcode-block" id="dispatch_tweepy"><a class="viewcode-back" href="../../apidocs.html#twclient.error.dispatch_tweepy">[docs]</a><span class="k">def</span> <span class="nf">dispatch_tweepy</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
+<div class="viewcode-block" id="dispatch_tweepy_exception"><a class="viewcode-back" href="../../apidocs.html#twclient.error.dispatch_tweepy_exception">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">def</span> <span class="nf">dispatch_tweepy_exception</span><span class="p">(</span><span class="n">exc</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Take an exception instance and convert it to a TWClientError if applicable.</span>
 
@@ -420,7 +429,8 @@
 <span class="c1">#</span>
 
 
-<div class="viewcode-block" id="SemanticError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.SemanticError">[docs]</a><span class="k">class</span> <span class="nc">SemanticError</span><span class="p">(</span><span class="n">TWClientError</span><span class="p">):</span>
+<div class="viewcode-block" id="SemanticError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.SemanticError">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">SemanticError</span><span class="p">(</span><span class="n">TWClientError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Base class for non-Twitter error conditions.</span>
 
@@ -432,7 +442,8 @@
     <span class="k">pass</span></div>
 
 
-<div class="viewcode-block" id="BadTargetError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.BadTargetError">[docs]</a><span class="k">class</span> <span class="nc">BadTargetError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
+<div class="viewcode-block" id="BadTargetError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.BadTargetError">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">BadTargetError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A specified target user is protected, suspended or otherwise nonexistent.</span>
 
@@ -459,7 +470,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">targets</span> <span class="o">=</span> <span class="n">targets</span></div>
 
 
-<div class="viewcode-block" id="BadTagError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.BadTagError">[docs]</a><span class="k">class</span> <span class="nc">BadTagError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
+<div class="viewcode-block" id="BadTagError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.BadTagError">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">BadTagError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A requested tag does not exist.</span>
 
@@ -485,7 +497,8 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">tag</span> <span class="o">=</span> <span class="n">tag</span></div>
 
 
-<div class="viewcode-block" id="BadSchemaError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.BadSchemaError">[docs]</a><span class="k">class</span> <span class="nc">BadSchemaError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
+<div class="viewcode-block" id="BadSchemaError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.BadSchemaError">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">BadSchemaError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    The database schema is corrupt or the wrong version.</span>
 
@@ -496,7 +509,9 @@
 
     <span class="k">pass</span></div>
 
-<div class="viewcode-block" id="BadConfigError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.BadConfigError">[docs]</a><span class="k">class</span> <span class="nc">BadConfigError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
+
+<div class="viewcode-block" id="BadConfigError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.BadConfigError">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">BadConfigError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    An operation on the config file encountered an error.</span>
 

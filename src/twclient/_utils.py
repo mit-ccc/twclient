@@ -13,6 +13,22 @@ import contextlib
 logger = logging.getLogger(__name__)
 
 
+# c/o https://stackoverflow.com/questions/44834/can-someone-explain-all-in-python
+def export(obj):
+    '''
+    A decorator which adds the decorated object to its module's __all__.
+    '''
+
+    mod = sys.modules[obj.__module__]
+
+    if hasattr(mod, '__all__'):
+        mod.__all__.append(obj.__name__)
+    else:
+        mod.__all__ = [obj.__name__]
+
+    return obj
+
+
 def uniq(iterable):
     '''
     Deduplicate an interable, preserving original order.

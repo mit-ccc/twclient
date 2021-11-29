@@ -95,7 +95,8 @@
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
 
-<div class="viewcode-block" id="Target"><a class="viewcode-back" href="../../apidocs.html#twclient.target.Target">[docs]</a><span class="k">class</span> <span class="nc">Target</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
+<div class="viewcode-block" id="Target"><a class="viewcode-back" href="../../apidocs.html#twclient.target.Target">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">Target</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Encapsulate the notion of a &quot;target&quot; for certain kinds of jobs.</span>
 
@@ -436,7 +437,8 @@
         <span class="k">return</span> <span class="n">ret</span></div>
 
 
-<div class="viewcode-block" id="UserIdTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.UserIdTarget">[docs]</a><span class="k">class</span> <span class="nc">UserIdTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+<div class="viewcode-block" id="UserIdTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.UserIdTarget">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">UserIdTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of Twitter user IDs to resolve to users.</span>
 
@@ -479,7 +481,8 @@
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Not all requested users are loaded&#39;</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="ScreenNameTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.ScreenNameTarget">[docs]</a><span class="k">class</span> <span class="nc">ScreenNameTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+<div class="viewcode-block" id="ScreenNameTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.ScreenNameTarget">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">ScreenNameTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of screen names to resolve to users.</span>
 
@@ -523,7 +526,8 @@
                     <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="s1">&#39;Not all requested users are loaded&#39;</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="SelectTagTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.SelectTagTarget">[docs]</a><span class="k">class</span> <span class="nc">SelectTagTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+<div class="viewcode-block" id="SelectTagTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.SelectTagTarget">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">SelectTagTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of user tags to resolve to users.</span>
 
@@ -569,7 +573,8 @@
             <span class="bp">self</span><span class="o">.</span><span class="n">_add_users</span><span class="p">(</span><span class="n">users</span><span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="TwitterListTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.TwitterListTarget">[docs]</a><span class="k">class</span> <span class="nc">TwitterListTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
+<div class="viewcode-block" id="TwitterListTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.TwitterListTarget">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">TwitterListTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of Twitter lists to resolve to users.</span>
 
