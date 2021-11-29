@@ -322,7 +322,7 @@ class User(TimestampsMixin, FromTweepyInterface, Base):
 
 class StgUser(Base):
     '''
-    A staging table for pulling extracts.
+    A staging table for pulling exports.
     '''
 
     user_id = Column(BigInteger, primary_key=True, autoincrement=False)

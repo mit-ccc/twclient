@@ -1,28 +1,28 @@
 '''
-A command to extract data from the database.
+A command to export data from the database.
 '''
 
 import logging
 
-from ..job import extract as ej
+from ..job import export as ej
 from . import command as cmd
 
 logger = logging.getLogger(__name__)
 
 
-class ExtractCommand(cmd.DatabaseCommand, cmd.TargetCommand):
+class ExportCommand(cmd.DatabaseCommand, cmd.TargetCommand):
     '''
-    A command which extracts data from the database.
+    A command which exports data from the database.
 
     This command and its subcommands run various sql queries against the
-    database to extract useful pieces of data. Examples include the follow
+    database to export useful pieces of data. Examples include the follow
     graph over all loaded users or only certain users, other tweet-derived
     graphs, or all user tweets.
 
     Parameters
     ----------
     outfile : str
-        The file to write the extract to (default stdout).
+        The file to write the export to (default stdout).
 
     Attributes
     ----------
@@ -40,15 +40,15 @@ class ExtractCommand(cmd.DatabaseCommand, cmd.TargetCommand):
         self.outfile = outfile
 
     subcommand_to_job = {
-        'follow-graph': ej.ExtractFollowGraphJob,
-        'mention-graph': ej.ExtractMentionGraphJob,
-        'retweet-graph': ej.ExtractRetweetGraphJob,
-        'reply-graph': ej.ExtractReplyGraphJob,
-        'quote-graph': ej.ExtractQuoteGraphJob,
-        'tweets': ej.ExtractTweetsJob,
-        'user-info': ej.ExtractUserInfoJob,
-        'mutual-followers': ej.ExtractMutualFollowersJob,
-        'mutual-friends': ej.ExtractMutualFriendsJob
+        'follow-graph': ej.ExportFollowGraphJob,
+        'mention-graph': ej.ExportMentionGraphJob,
+        'retweet-graph': ej.ExportRetweetGraphJob,
+        'reply-graph': ej.ExportReplyGraphJob,
+        'quote-graph': ej.ExportQuoteGraphJob,
+        'tweets': ej.ExportTweetsJob,
+        'user-info': ej.ExportUserInfoJob,
+        'mutual-followers': ej.ExportMutualFollowersJob,
+        'mutual-friends': ej.ExportMutualFriendsJob
     }
 
     @property

@@ -1,5 +1,5 @@
 '''
-Jobs which extract data from the database.
+Jobs which export data from the database.
 '''
 
 import csv
@@ -22,8 +22,9 @@ logger = logging.getLogger(__name__)
 # pylint: disable=no-member
 
 
-class ExtractJob(TargetJob, DatabaseJob):
+class ExportJob(TargetJob, DatabaseJob):
     '''
+    A job exporting data from the database 
     '''
 
     resolve_mode = 'skip'  # bail out if requested targets are missing
@@ -73,7 +74,7 @@ class ExtractJob(TargetJob, DatabaseJob):
 
         n_items = 0
         for ind, batch in enumerate(ids):
-            msg = 'Loading extract target IDs batch {0}, cumulative {1}'
+            msg = 'Loading export target IDs batch {0}, cumulative {1}'
             msg = msg.format(ind + 1, n_items)
             logger.debug(msg)
 
@@ -85,7 +86,7 @@ class ExtractJob(TargetJob, DatabaseJob):
         return n_items
 
 
-class ExtractFollowGraphJob(ExtractJob):
+class ExportFollowGraphJob(ExportJob):
     '''
     '''
 
@@ -114,7 +115,7 @@ class ExtractFollowGraphJob(ExtractJob):
         yield from ret
 
 
-class ExtractMentionGraphJob(ExtractJob):
+class ExportMentionGraphJob(ExportJob):
     '''
     '''
 
@@ -144,7 +145,7 @@ class ExtractMentionGraphJob(ExtractJob):
         yield from ret
 
 
-class ExtractReplyGraphJob(ExtractJob):
+class ExportReplyGraphJob(ExportJob):
     '''
     '''
 
@@ -174,7 +175,7 @@ class ExtractReplyGraphJob(ExtractJob):
         yield from ret
 
 
-class ExtractRetweetGraphJob(ExtractJob):
+class ExportRetweetGraphJob(ExportJob):
     '''
     '''
 
@@ -203,7 +204,7 @@ class ExtractRetweetGraphJob(ExtractJob):
         yield from ret
 
 
-class ExtractQuoteGraphJob(ExtractJob):
+class ExportQuoteGraphJob(ExportJob):
     '''
     '''
 
@@ -232,7 +233,7 @@ class ExtractQuoteGraphJob(ExtractJob):
         yield from ret
 
 
-class ExtractTweetsJob(ExtractJob):
+class ExportTweetsJob(ExportJob):
     '''
     '''
 
@@ -285,7 +286,7 @@ class ExtractTweetsJob(ExtractJob):
         yield from ret
 
 
-class ExtractUserInfoJob(ExtractJob):
+class ExportUserInfoJob(ExportJob):
     '''
     '''
 
@@ -295,7 +296,7 @@ class ExtractUserInfoJob(ExtractJob):
         pass
 
 
-class ExtractMutualFollowersJob(ExtractJob):
+class ExportMutualFollowersJob(ExportJob):
     '''
     '''
 
@@ -305,7 +306,7 @@ class ExtractMutualFollowersJob(ExtractJob):
         pass
 
 
-class ExtractMutualFriendsJob(ExtractJob):
+class ExportMutualFriendsJob(ExportJob):
     '''
     '''
 

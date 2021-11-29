@@ -12,7 +12,7 @@ from .fetch import FetchCommand
 from .config import ConfigCommand
 from .initialize import InitializeCommand
 from .tag import TagCommand
-from .extract import ExtractCommand
+from .export import ExportCommand
 
 logger = logging.getLogger(__name__)
 
@@ -50,11 +50,11 @@ def _add_fetch_arguments(parser):
     return parser
 
 
-def _add_extract_arguments(parser):
+def _add_export_arguments(parser):
     parser = _add_target_arguments(parser)
 
     parser.add_argument('-o', '--outfile',
-                        help='write the extract to this file (default stdout)')
+                        help='write the export to this file (default stdout)')
 
     return parser
 
@@ -218,41 +218,41 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
     grp.add_argument('-k', '--consumer-key', help='consumer key')
 
     #
-    # Extracts from the database
+    # Exports from the database
     #
 
-    extract_subparser = subparsers.add_parser('extract', help='Extract data')
-    extract = extract_subparser.add_subparsers(dest='subcommand')
-    extract.required = True
+    export_subparser = subparsers.add_parser('export', help='Export data')
+    export = export_subparser.add_subparsers(dest='subcommand')
+    export.required = True
 
-    flg = extract.add_parser('follow-graph', help='Extract follow graph')
-    flg = _add_extract_arguments(flg)
+    flg = export.add_parser('follow-graph', help='Export follow graph')
+    flg = _add_export_arguments(flg)
 
-    mng = extract.add_parser('mention-graph', help='Extract mention graph')
-    mng = _add_extract_arguments(mng)
+    mng = export.add_parser('mention-graph', help='Export mention graph')
+    mng = _add_export_arguments(mng)
 
-    rtg = extract.add_parser('retweet-graph', help='Extract retweet graph')
-    rtg = _add_extract_arguments(rtg)
+    rtg = export.add_parser('retweet-graph', help='Export retweet graph')
+    rtg = _add_export_arguments(rtg)
 
-    rpg = extract.add_parser('reply-graph', help='Extract reply graph')
-    rpg = _add_extract_arguments(rpg)
+    rpg = export.add_parser('reply-graph', help='Export reply graph')
+    rpg = _add_export_arguments(rpg)
 
-    qtg = extract.add_parser('quote-graph', help='Extract quote graph')
-    qtg = _add_extract_arguments(qtg)
+    qtg = export.add_parser('quote-graph', help='Export quote graph')
+    qtg = _add_export_arguments(qtg)
 
-    twt = extract.add_parser('tweets', help='Extract user tweets')
-    twt = _add_extract_arguments(twt)
+    twt = export.add_parser('tweets', help='Export user tweets')
+    twt = _add_export_arguments(twt)
 
-    usi = extract.add_parser('user-info', help='Extract user-level data')
-    usi = _add_extract_arguments(usi)
+    usi = export.add_parser('user-info', help='Export user-level data')
+    usi = _add_export_arguments(usi)
 
-    mfo = extract.add_parser('mutual-followers',
-                             help='Extract all-pairs mutual follower counts')
-    mfo = _add_extract_arguments(mfo)
+    mfo = export.add_parser('mutual-followers',
+                             help='Export all-pairs mutual follower counts')
+    mfo = _add_export_arguments(mfo)
 
-    mfr = extract.add_parser('mutual-friends',
-                             help='Extract all-pairs mutual friend counts')
-    mfr = _add_extract_arguments(mfr)
+    mfr = export.add_parser('mutual-friends',
+                             help='Export all-pairs mutual friend counts')
+    mfr = _add_export_arguments(mfr)
 
     return parser
 
@@ -298,7 +298,7 @@ def cli():
         'fetch': FetchCommand,
         'show': ShowCommand,
         'tag': TagCommand,
-        'extract': ExtractCommand
+        'export': ExportCommand
     }[command]
 
     cls(parser=parser, **vars(args)).run()
