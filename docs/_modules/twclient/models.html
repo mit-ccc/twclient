@@ -104,9 +104,6 @@
 <span class="c1"># Better to have these all in one file</span>
 <span class="c1"># pylint: disable=too-many-lines</span>
 
-<span class="c1"># Not applicable: methods all from sqlalchemy, we just define table structure</span>
-<span class="c1"># pylint: disable=too-few-public-methods</span>
-
 <span class="c1"># Not applicable: database tables have lots of columns</span>
 <span class="c1"># pylint: disable=too-many-instance-attributes</span>
 
@@ -401,6 +398,14 @@
 <div class="viewcode-block" id="User.from_tweepy"><a class="viewcode-back" href="../../apidocs.html#twclient.models.User.from_tweepy">[docs]</a>    <span class="nd">@classmethod</span>
     <span class="k">def</span> <span class="nf">from_tweepy</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">obj</span><span class="p">,</span> <span class="n">session</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">cls</span><span class="p">(</span><span class="n">user_id</span><span class="o">=</span><span class="n">obj</span><span class="o">.</span><span class="n">id</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="StgUser"><a class="viewcode-back" href="../../apidocs.html#twclient.models.StgUser">[docs]</a><span class="k">class</span> <span class="nc">StgUser</span><span class="p">(</span><span class="n">Base</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A staging table for pulling extracts.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></div>
 
 
 <div class="viewcode-block" id="UserData"><a class="viewcode-back" href="../../apidocs.html#twclient.models.UserData">[docs]</a><span class="k">class</span> <span class="nc">UserData</span><span class="p">(</span><span class="n">TimestampsMixin</span><span class="p">,</span> <span class="n">FromTweepyInterface</span><span class="p">,</span> <span class="n">Base</span><span class="p">):</span>

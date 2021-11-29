@@ -96,25 +96,42 @@
 <span class="c1"># The dynamic method construction in AuthPoolAPI confuses the linter</span>
 <span class="c1"># pylint: disable=protected-access</span>
 
+<span class="c1"># Either tweepy.error or tweepy.errors will be missing depending on the</span>
+<span class="c1"># version and we want pylint not to freak out when it can&#39;t find exactly</span>
+<span class="c1"># one of them.</span>
 <span class="k">if</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s1">&#39;4.0.0&#39;</span><span class="p">:</span>
+    <span class="c1"># pylint: disable-next=no-member</span>
     <span class="n">RateLimitError</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">TooManyRequests</span>
+
+    <span class="c1"># pylint: disable-next=no-member</span>
     <span class="n">TweepyException</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">TweepyException</span>
 <span class="k">else</span><span class="p">:</span>
+    <span class="c1"># pylint: disable-next=no-member</span>
     <span class="n">RateLimitError</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">RateLimitError</span>
+
+    <span class="c1"># pylint: disable-next=no-member</span>
     <span class="n">TweepyException</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">TweepError</span>
 
 
-<div class="viewcode-block" id="AuthPoolAPI"><a class="viewcode-back" href="../../apidocs.html#twclient.authpool.AuthPoolAPI">[docs]</a><span class="k">class</span> <span class="nc">AuthPoolAPI</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
+<div class="viewcode-block" id="AuthPoolAPI"><a class="viewcode-back" href="../../apidocs.html#twclient.authpool.AuthPoolAPI">[docs]</a><span class="k">class</span> <span class="nc">AuthPoolAPI</span><span class="p">:</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    A version of tweepy.API with support for multiple sets of credentials.</span>
+<span class="sd">    A version of ``tweepy.API`` with support for multiple sets of credentials.</span>
 
 <span class="sd">    This class transparently proxies access to multiple sets of Twitter API</span>
-<span class="sd">    credentials. It creates as many tweepy.API instances as it gets sets of API</span>
-<span class="sd">    credentials, and then dispatches method calls to the appropriate instance,</span>
-<span class="sd">    handling rate limit and over-capacity errors. When one instance hits its</span>
-<span class="sd">    rate limit, this implementation transparently switches over to the next.</span>
-<span class="sd">    User code can treat it as a drop-in replacement for tweepy.API; see the</span>
-<span class="sd">    tweepy documentation for methods.</span>
+<span class="sd">    credentials. It creates as many ``tweepy.API`` instances as it gets sets of</span>
+<span class="sd">    API credentials, and then dispatches method calls to the appropriate</span>
+<span class="sd">    instance, handling rate limit and over-capacity errors. When one instance</span>
+<span class="sd">    hits its rate limit, this implementation transparently switches over to the</span>
+<span class="sd">    next. User code can treat it as a drop-in replacement for ``tweepy.API``;</span>
+<span class="sd">    see the tweepy documentation for methods.</span>
+
+<span class="sd">    It does, however, handle the ``rate_limit_status`` method differently.</span>
+<span class="sd">    We do this because it&#39;s not useful to see rate limit info for only one set</span>
+<span class="sd">    of credentials when the point of this class is to pool multiple sets.</span>
+<span class="sd">    Rather than return only the Twitter API response for the currently active</span>
+<span class="sd">    set of credentials, ``rate_limit_status`` returns a dictionary whose keys</span>
+<span class="sd">    are the consumer keys of the credentials and whose values are the</span>
+<span class="sd">    ``rate_limit_status`` responses for those keys.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -229,7 +246,9 @@
 
             <span class="c1"># add a little fudge factor to be safe</span>
             <span class="n">wake_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_authpool_rate_limit_resets</span><span class="p">[</span><span class="n">new_ind</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.01</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Sleeping </span><span class="si">%f</span><span class="s1"> seconds for rate limit&#39;</span><span class="p">,</span> <span class="n">wake_time</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Sleeping </span><span class="si">{</span><span class="n">wake_time</span><span class="si">}</span><span class="s1"> seconds for rate limit&#39;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">wake_time</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_authpool_current_api_index</span> <span class="o">=</span> <span class="n">new_ind</span>

@@ -218,6 +218,31 @@
             <span class="k">raise</span></div>
 
 <div class="viewcode-block" id="TwitterApi.rate_limit_status"><a class="viewcode-back" href="../../apidocs.html#twclient.twitter_api.TwitterApi.rate_limit_status">[docs]</a>    <span class="k">def</span> <span class="nf">rate_limit_status</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">consumer_key</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Call Twitter&#39;s application/rate_limit_status method.</span>
+
+<span class="sd">        This method wraps one or more calls to Twitter&#39;s API method</span>
+<span class="sd">        application/rate_limit_status and returns information on rate limits.</span>
+<span class="sd">        The default is to request rate limit info for all credentials given in</span>
+<span class="sd">        the ``self.auths`` attribute. See also the method of the same name on</span>
+<span class="sd">        ``authpool.AuthPoolAPI``, which this method calls.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        consumer_key : str or None</span>
+<span class="sd">            The consumer key for a particular set of API credentials whose rate</span>
+<span class="sd">            limit should be checked. If None, check all credentials in</span>
+<span class="sd">            ``self.auths``. If not None, the value must match one of the</span>
+<span class="sd">            consumer keys in ``self.auths``.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        dict</span>
+<span class="sd">            A dictionary whose keys are the OAuth consumer keys and whose</span>
+<span class="sd">            values are the Twitter API&#39;s json responses describing rate limit</span>
+<span class="sd">            information.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
         <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Getting rate limits for consumer key(s): &#39;</span>
         <span class="n">msg</span> <span class="o">+=</span> <span class="p">(</span><span class="s1">&#39;all&#39;</span> <span class="k">if</span> <span class="n">consumer_key</span> <span class="ow">is</span> <span class="kc">None</span> <span class="k">else</span> <span class="n">consumer_key</span><span class="p">)</span>
         <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>

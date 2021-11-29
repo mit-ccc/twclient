@@ -89,9 +89,15 @@
 <span class="n">TWEEPY4</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s1">&#39;4.0.0&#39;</span>
 
 <span class="k">if</span> <span class="n">TWEEPY4</span><span class="p">:</span>
+    <span class="c1"># tweepy.error (&lt; 4.0.0) became tweepy.errors in 4.0.0, so the installed</span>
+    <span class="c1"># package will have one or the other but not both. We want pylint to avoid</span>
+    <span class="c1"># freaking out when it can&#39;t find the missing one.</span>
+
+    <span class="c1"># pylint: disable-next=import-error,no-name-in-module</span>
     <span class="kn">from</span> <span class="nn">tweepy.errors</span> <span class="kn">import</span> <span class="p">(</span><span class="n">TweepyException</span><span class="p">,</span> <span class="n">TwitterServerError</span><span class="p">,</span> <span class="n">Forbidden</span><span class="p">,</span>
                                <span class="n">Unauthorized</span><span class="p">,</span> <span class="n">NotFound</span><span class="p">)</span>
 <span class="k">else</span><span class="p">:</span>
+    <span class="c1"># pylint: disable-next=import-error,no-name-in-module</span>
     <span class="kn">from</span> <span class="nn">tweepy.error</span> <span class="kn">import</span> <span class="n">TweepError</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
@@ -486,6 +492,17 @@
 <span class="sd">    This error is raised when a Job detects that the schema present in the</span>
 <span class="sd">    selected database profile is corrupt, an unsupported version, or not a</span>
 <span class="sd">    twclient schema.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">pass</span></div>
+
+<div class="viewcode-block" id="BadConfigError"><a class="viewcode-back" href="../../apidocs.html#twclient.error.BadConfigError">[docs]</a><span class="k">class</span> <span class="nc">BadConfigError</span><span class="p">(</span><span class="n">SemanticError</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    An operation on the config file encountered an error.</span>
+
+<span class="sd">    This error is raised when an operation to be performed on the config file</span>
+<span class="sd">    is misspecified, impossible, encounters another error, or the config file</span>
+<span class="sd">    is malformed.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="k">pass</span></div>
