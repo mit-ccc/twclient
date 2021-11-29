@@ -4,7 +4,7 @@ A command to interact with the config file.
 
 import logging
 
-from ..job import config_job as cj
+from ..job import config as cj
 from . import command as cmd
 
 logger = logging.getLogger(__name__)

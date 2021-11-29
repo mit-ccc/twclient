@@ -2,7 +2,6 @@
 Jobs which interact with the Twitter API.
 '''
 
-import json
 import logging
 import warnings
 
@@ -10,7 +9,7 @@ from abc import abstractmethod
 
 import sqlalchemy as sa
 
-from .job import Job, TargetJob
+from .job import TargetJob, ApiJob
 from .. import error as err
 from .. import _utils as ut
 from .. import models as md
@@ -21,45 +20,6 @@ logger = logging.getLogger(__name__)
 # This isn't a great way to handle these warnings, but sqlalchemy is so dynamic
 # that most attribute accesses aren't resolved until runtime
 # pylint: disable=no-member
-
-
-class ApiJob(Job):
-    '''
-    A job requiring acess to the Twitter API.
-
-    This class represents a job which interacts with the Twitter API. It
-    configures API access, and defers other functionality to subclasses.
-
-    Parameters
-    ----------
-    api : instance of twitter_api.TwitterApi
-        The TwitterApi instance to use for API access.
-
-    allow_api_errors : bool
-        If the Twitter API returns an error, should we abort (if False,
-        default), or ignore and continue (if True)?
-
-    Attributes
-    ----------
-    api : instance of twitter_api.TwitterApi
-        The parameter passed to __init__.
-
-    allow_api_errors : bool
-        The parameter passed to __init__.
-    '''
-
-    def __init__(self, **kwargs):
-        try:
-            api = kwargs.pop('api')
-        except KeyError as exc:
-            raise ValueError('Must provide api object') from exc
-
-        allow_api_errors = kwargs.pop('allow_api_errors', False)
-
-        super().__init__(**kwargs)
-
-        self.api = api
-        self.allow_api_errors = allow_api_errors
 
 
 class FetchJob(ApiJob, TargetJob):
@@ -108,46 +68,6 @@ class FetchJob(ApiJob, TargetJob):
                 logger.warning(msg)
             else:
                 raise err.BadTargetError(message=msg, targets=self.bad_targets)
-
-
-class RateLimitStatusJob(ApiJob):
-    '''
-    Check the rate limits for the API keys in the config file.
-
-    This job pulls the rate limit status for each key in the config file and
-    prints it to stdout in json format. The job filters by default to only the
-    API endpoints we use but can be told to show all of them.
-    '''
-
-    def __init__(self, **kwargs):
-        full = kwargs.pop('full', False)
-        consumer_key = kwargs.pop('consumer_key', None)
-
-        super().__init__(**kwargs)
-
-        self.full = full
-        self.consumer_key = consumer_key
-
-    def run(self):
-        status = next(self.api.rate_limit_status())
-
-        if not self.full:
-            endpoints = ['/application/rate_limit_status', '/followers/ids',
-                         '/friends/ids', '/users/lookup', '/lists/show',
-                         '/lists/members', '/statuses/user_timeline']
-
-            short = {}
-            for key, resp in status.items():
-                short[key] = {}
-
-                for endpoint in endpoints:
-                    _, grp, _ = endpoint.split('/')
-                    short[key][endpoint] = resp['resources'][grp][endpoint]
-
-            status = short
-
-        status = json.dumps(status, indent=4)
-        print(status)
 
 
 class UserInfoJob(FetchJob):

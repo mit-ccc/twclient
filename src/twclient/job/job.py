@@ -318,3 +318,42 @@ class TargetJob(DatabaseJob):
                     message=msg,
                     targets=self.missing_targets
                 )
+
+
+class ApiJob(Job):
+    '''
+    A job requiring acess to the Twitter API.
+
+    This class represents a job which interacts with the Twitter API. It
+    configures API access, and defers other functionality to subclasses.
+
+    Parameters
+    ----------
+    api : instance of twitter_api.TwitterApi
+        The TwitterApi instance to use for API access.
+
+    allow_api_errors : bool
+        If the Twitter API returns an error, should we abort (if False,
+        default), or ignore and continue (if True)?
+
+    Attributes
+    ----------
+    api : instance of twitter_api.TwitterApi
+        The parameter passed to __init__.
+
+    allow_api_errors : bool
+        The parameter passed to __init__.
+    '''
+
+    def __init__(self, **kwargs):
+        try:
+            api = kwargs.pop('api')
+        except KeyError as exc:
+            raise ValueError('Must provide api object') from exc
+
+        allow_api_errors = kwargs.pop('allow_api_errors', False)
+
+        super().__init__(**kwargs)
+
+        self.api = api
+        self.allow_api_errors = allow_api_errors

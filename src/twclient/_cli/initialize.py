@@ -4,7 +4,7 @@ A command to (re-)initialize the database.
 
 import logging
 
-from ..job import initialize_job as ij
+from ..job import initialize as ij
 from . import command as cmd
 
 logger = logging.getLogger(__name__)

@@ -4,7 +4,7 @@ A command to work with user tags.
 
 import logging
 
-from ..job import tag_job as tj
+from ..job import tag as tj
 from . import command as cmd
 
 logger = logging.getLogger(__name__)

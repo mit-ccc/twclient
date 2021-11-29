@@ -4,7 +4,7 @@ A command to print data from the database to the screen.
 
 import logging
 
-from ..job import api_job as aj
+from ..job import show as sj
 from . import command as cmd
 
 logger = logging.getLogger(__name__)
@@ -44,7 +44,7 @@ class ShowCommand(cmd.ApiCommand):
     '''
 
     subcommand_to_job = {
-        'ratelimit': aj.RateLimitStatusJob
+        'ratelimit': sj.RateLimitStatusJob
     }
 
     def __init__(self, **kwargs):

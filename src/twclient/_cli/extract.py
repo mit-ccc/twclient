@@ -4,7 +4,7 @@ A command to extract data from the database.
 
 import logging
 
-from ..job import extract_job as ej
+from ..job import extract as ej
 from . import command as cmd
 
 logger = logging.getLogger(__name__)
