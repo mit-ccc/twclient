@@ -4,10 +4,10 @@ Jobs which extract data from the database.
 
 import csv
 import logging
-import collections as cl
 
 from abc import abstractmethod
 
+import sqlalchemy as sa
 from sqlalchemy.sql.expression import func
 
 from .job import DatabaseJob, TargetJob
@@ -41,23 +41,51 @@ class ExtractJob(TargetJob, DatabaseJob):
     def columns(self):
         raise NotImplementedError()
 
-    def results(self):
-        for row in self.query():
-            yield dict(zip(self.columns, row))
-
     def run(self):
-        self.resolve_targets()  # does nothing if targets == []
+        # both of these are no-ops if targets == []
+        self.resolve_targets()
+        self._load_targets_to_stg()
 
         with ut.smart_open(self.outfile, mode='wt') as fle:
             writer = csv.DictWriter(fle, self.columns)
             writer.writeheader()
 
-            res = self.results()
-            writer.writerows(res)
+            for row in self.query():
+                writer.writerow(dict(zip(self.columns, row)))
+
+    def _load_targets_to_stg(self):
+        ids = list(set(self.users))
+        ids = ut.grouper(self.users, 5000)  # just a default batch size
+
+        # Clear the stg table. This is much, much faster than .delete() /
+        # DELETE FROM <tbl>, but not transactional on many DBs.
+        md.StgUser.__table__.drop(self.session.get_bind())
+        md.StgUser.__table__.create(self.session.get_bind())
+
+        n_items = 0
+        for ind, batch in enumerate(ids):
+            msg = 'Loading extract target IDs batch {1}, cumulative {2}'
+            msg = msg.format(ind + 1, n_items)
+            logger.debug(msg)
+
+            rows = {'user_id': t for t in batch}
+            self.session.bulk_insert_mappings(md.StgFollow, rows)
+
+            n_items += len(batch)
+
+        return n_items
 
 
 class ExtractFollowGraphJob(ExtractJob):
     columns = ['source_user_id', 'target_user_id']
+
+# tag = 'universe'
+# tagged_users = session \
+#     .query(md.UserTag.user_id) \
+#     .join(md.Tag, md.Tag.tag_id == md.UserTag.tag_id) \
+#     .filter(md.Tag.name == tag) \
+#     .all()
+# print(tagged_users)
 
     def query(self):
         yield from self.session \
@@ -87,37 +115,50 @@ class ExtractMentionGraphJob(ExtractJob):
 
 
 class ExtractRetweetGraphJob(ExtractJob):
-    pass
+    columns = ['source_user_id', 'target_user_id', 'count']
+
+    def query(self):
+        pass
 
 
 class ExtractReplyGraphJob(ExtractJob):
-    pass
+    columns = ['source_user_id', 'target_user_id', 'count']
+
+    def query(self):
+        pass
 
 
 class ExtractQuoteGraphJob(ExtractJob):
-    pass
+    columns = ['source_user_id', 'target_user_id', 'count']
+
+    def query(self):
+        pass
 
 
 class ExtractTweetsJob(ExtractJob):
-    pass
+    columns = []
+
+    def query(self):
+        pass
 
 
 class ExtractUserInfoJob(ExtractJob):
-    pass
+    columns = []
+
+    def query(self):
+        pass
 
 
 class ExtractMutualFollowersJob(ExtractJob):
-    pass
+    columns = ['user_id1', 'user_id2', 'mutual_followers']
+
+    def query(self):
+        pass
 
 
 class ExtractMutualFriendsJob(ExtractJob):
-    pass
+    columns = ['user_id1', 'user_id2', 'mutual_friends']
 
-# tag = 'universe'
-# tagged_users = session \
-#     .query(md.UserTag.user_id) \
-#     .join(md.Tag, md.Tag.tag_id == md.UserTag.tag_id) \
-#     .filter(md.Tag.name == tag) \
-#     .all()
-# print(tagged_users)
+    def query(self):
+        pass
 

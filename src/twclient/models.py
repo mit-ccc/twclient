@@ -320,6 +320,14 @@ class User(TimestampsMixin, FromTweepyInterface, Base):
         return cls(user_id=obj.id)
 
 
+class StgUser(Base):
+    '''
+    A staging table for pulling extracts.
+    '''
+
+    user_id = Column(BigInteger, primary_key=True, autoincrement=False)
+
+
 class UserData(TimestampsMixin, FromTweepyInterface, Base):
     '''
     Mutable attributes of a Twitter user.
