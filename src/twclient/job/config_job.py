@@ -101,7 +101,7 @@ class ConfigListDbJob(ConfigPrintJob):
         for name in self.config.db_profile_names:
             if self.full:
                 print('[' + name + ']')
-                for key, value in selfconfig[name].items():
+                for key, value in self.config[name].items():
                     print(key + ' = ' + value)
                 print('\n')
             else:
