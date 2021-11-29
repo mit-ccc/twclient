@@ -51,10 +51,10 @@ def _add_fetch_arguments(parser):
 
 
 def _add_extract_arguments(parser):
+    parser = _add_target_arguments(parser)
+
     parser.add_argument('-o', '--outfile',
                         help='write the extract to this file (default stdout)')
-    parser.add_argument('-g', '--select-tags', nargs='+',
-                        help='process loaded users with these tags')
 
     return parser
 
