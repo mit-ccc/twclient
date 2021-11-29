@@ -35,15 +35,23 @@ else:
 
 class AuthPoolAPI:
     '''
-    A version of tweepy.API with support for multiple sets of credentials.
+    A version of ``tweepy.API`` with support for multiple sets of credentials.
 
     This class transparently proxies access to multiple sets of Twitter API
-    credentials. It creates as many tweepy.API instances as it gets sets of API
-    credentials, and then dispatches method calls to the appropriate instance,
-    handling rate limit and over-capacity errors. When one instance hits its
-    rate limit, this implementation transparently switches over to the next.
-    User code can treat it as a drop-in replacement for tweepy.API; see the
-    tweepy documentation for methods.
+    credentials. It creates as many ``tweepy.API`` instances as it gets sets of
+    API credentials, and then dispatches method calls to the appropriate
+    instance, handling rate limit and over-capacity errors. When one instance
+    hits its rate limit, this implementation transparently switches over to the
+    next. User code can treat it as a drop-in replacement for ``tweepy.API``;
+    see the tweepy documentation for methods.
+
+    Note that it does, however, handle the ``rate_limit_status`` method
+    differently. We do this because it's not useful to see rate limit info for
+    only one set of credentials when the point of this class is to pool
+    multiple sets. Rather than return only the Twitter API response for the
+    currently active set of credentials, ``rate_limit_status`` returns a
+    dictionary whose keys are the consumer keys of the credentials and whose
+    values are the ``rate_limit_status`` responses for those keys.
 
     Parameters
     ----------

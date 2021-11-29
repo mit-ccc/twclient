@@ -2,10 +2,8 @@
 Objects representing twclient configuration.
 '''
 
-import logging
-import collections as cl
-
 import os
+import logging
 import collections as cl
 import configparser as cp
 
@@ -29,7 +27,7 @@ class Config(cl.abc.MutableMapping):
 
     Attributes
     ----------
-    name : str
+    config_file : str
         The tilde-expanded, absolute-path version of the parameter passed to
         __init__.
     '''
@@ -65,6 +63,22 @@ class Config(cl.abc.MutableMapping):
 
     ## Stuff we've added beyond being dict-like
     def getboolean(self, *args, **kwargs):
+        '''
+        Coerce configuration values to boolean.
+
+        Arguments, return values and functionality are as in the standard
+        library's configparser.ConfigParser.getboolean. (This is just a
+        convenience method passing all arguments through to that method.)
+
+        Parameters
+        ----------
+        As in configparser.ConfigParser.getboolean.
+
+        Returns
+        -------
+        As in configparser.ConfigParser.getboolean.
+        '''
+
         return self._config.getboolean(*args, **kwargs)
 
     def load(self):
