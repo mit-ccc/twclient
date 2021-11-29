@@ -159,7 +159,7 @@ def tweepy_to_json(obj):
     return json.dumps(obj._json)  # pylint: disable=protected-access
 
 
-def gzip_safe_open(f, mode='rt'):
+def gzip_safe_open(fle, mode='rt'):
     '''
     Open a file, handling ``.gz`` files transparently.
 
@@ -168,7 +168,7 @@ def gzip_safe_open(f, mode='rt'):
 
     Parameters
     ----------
-    f : str
+    fle : str
         The path to a file to open.
 
     mode : str
@@ -180,12 +180,12 @@ def gzip_safe_open(f, mode='rt'):
         The opened file.
     '''
 
-    if f.lower().endswith('.gz'):
+    if fle.lower().endswith('.gz'):
         func = gzip.open
     else:
         func = open
 
-    return func(f, mode)
+    return func(fle, mode)
 
 
 @contextlib.contextmanager
@@ -245,4 +245,3 @@ def smart_open(filename='-', mode='rt', func=gzip_safe_open):
             handle.close()
         elif not is_read and handle is not sys.stdout:
             handle.close()
-
