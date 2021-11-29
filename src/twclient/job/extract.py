@@ -23,6 +23,9 @@ logger = logging.getLogger(__name__)
 
 
 class ExtractJob(TargetJob, DatabaseJob):
+    '''
+    '''
+
     resolve_mode = 'skip'  # bail out if requested targets are missing
 
     def __init__(self, **kwargs):
@@ -34,11 +37,17 @@ class ExtractJob(TargetJob, DatabaseJob):
 
     @abstractmethod  # Job inherits from ABC
     def query(self):
+        '''
+        '''
+
         raise NotImplementedError()
 
     @property
     @abstractmethod
     def columns(self):
+        '''
+        '''
+
         raise NotImplementedError()
 
     def run(self):
@@ -77,15 +86,10 @@ class ExtractJob(TargetJob, DatabaseJob):
 
 
 class ExtractFollowGraphJob(ExtractJob):
-    columns = ['source_user_id', 'target_user_id']
+    '''
+    '''
 
-# tag = 'universe'
-# tagged_users = session \
-#     .query(md.UserTag.user_id) \
-#     .join(md.Tag, md.Tag.tag_id == md.UserTag.tag_id) \
-#     .filter(md.Tag.name == tag) \
-#     .all()
-# print(tagged_users)
+    columns = ['source_user_id', 'target_user_id']
 
     def query(self):
         ret = self.session \
@@ -114,7 +118,10 @@ class ExtractFollowGraphJob(ExtractJob):
 
 
 class ExtractMentionGraphJob(ExtractJob):
-    columns = ['source_user_id', 'target_user_id', 'count']
+    '''
+    '''
+
+    columns = ['source_user_id', 'target_user_id', 'num_mentions']
 
     def query(self):
         ret = self.session \
@@ -143,35 +150,148 @@ class ExtractMentionGraphJob(ExtractJob):
         yield from ret
 
 
-class ExtractRetweetGraphJob(ExtractJob):
-    columns = ['source_user_id', 'target_user_id', 'count']
-
-    def query(self):
-        pass
-
-
 class ExtractReplyGraphJob(ExtractJob):
-    columns = ['source_user_id', 'target_user_id', 'count']
+    '''
+    '''
+
+    columns = ['source_user_id', 'target_user_id', 'num_replies']
 
     def query(self):
-        pass
+        ret = self.session \
+            .query(
+                md.Tweet.user_id,
+                md.Tweet.in_reply_to_user_id,
+                func.count()
+            )
+
+        if self.users:
+            ret = ret \
+                .join(
+                    md.StgUser,
+                    md.StgUser.user_id == md.Tweet.user_id
+                ) \
+                .join(
+                    md.StgUser,
+                    md.StgUser.user_id == md.Tweet.in_reply_to_user_id
+                )
+
+        ret = ret \
+            .filter(md.Tweet.in_reply_to_user_id.isnot(None)) \
+            .group_by(md.Tweet_user_id, md.Tweet.in_reply_to_user_id) \
+            .all()
+
+        yield from ret
+
+
+class ExtractRetweetGraphJob(ExtractJob):
+    '''
+    '''
+
+    columns = ['source_user_id', 'target_user_id', 'num_retweets']
+
+    def query(self):
+        tws = sa.orm.aliased(md.Tweet)
+        twt = sa.orm.aliased(md.Tweet)
+
+        ret = self.session \
+            .query(tws.user_id, twt.user_id, func.count()) \
+            .join(twt, twt.tweet_id == tws.retweeted_status_id)
+
+        if self.users:
+            ret = ret \
+                .join(md.StgUser, md.StgUser.user_id == twt.user_id) \
+                .join(md.StgUser, md.StgUser.user_id == tws.user_id)
+
+        ret = ret \
+            .group_by(tws.user_id, twt.user_id) \
+            .all()
+
+        yield from ret
 
 
 class ExtractQuoteGraphJob(ExtractJob):
-    columns = ['source_user_id', 'target_user_id', 'count']
+    '''
+    '''
+
+    columns = ['source_user_id', 'target_user_id', 'num_quotes']
 
     def query(self):
-        pass
+        tws = sa.orm.aliased(md.Tweet)
+        twt = sa.orm.aliased(md.Tweet)
+
+        ret = self.session \
+            .query(tws.user_id, twt.user_id, func.count()) \
+            .join(twt, twt.tweet_id == tws.quoted_status_id)
+
+        if self.users:
+            ret = ret \
+                .join(md.StgUser, md.StgUser.user_id == twt.user_id) \
+                .join(md.StgUser, md.StgUser.user_id == tws.user_id)
+
+        ret = ret \
+            .group_by(tws.user_id, twt.user_id) \
+            .all()
+
+        yield from ret
 
 
 class ExtractTweetsJob(ExtractJob):
-    columns = []
+    '''
+    '''
+
+    columns = ['tweet_id', 'user_id', 'content', 'retweeted_status_content',
+               'quoted_status_content', 'in_reply_to_status_content',
+               'is_retweet', 'is_reply', 'is_quote', 'create_dt', 'lang',
+               'retweet_count', 'favorite_count', 'source_collapsed']
 
     def query(self):
-        pass
+        twt = sa.orm.aliased(md.Tweet)
+        twr = sa.orm.aliased(md.Tweet)
+        twq = sa.orm.aliased(md.Tweet)
+        twp = sa.orm.aliased(md.Tweet)
+
+        ret = self.session \
+            .query(
+                twt.tweet_id,
+                twt.user_id,
+
+                twt.content,
+                twr.content,
+                twq.content,
+                twp.content,
+
+                twt.retweeted_status_id.isnot(None),
+                twt.in_reply_to_status_id.isnot(None),
+                twt.quoted_status_id.isnot(None),
+
+                twt.create_dt,
+                twt.lang,
+                twt.retweet_count,
+                twt.favorite_count,
+
+                func.case(value=twt.source, whens={
+                    'Twitter for iPhone': 'iPhone',
+                    'Twitter for Android': 'Android',
+                    'Twitter Web App': 'Web',
+                    'Twitter Web Client': 'Web',
+                    'TweetDeck': 'Desktop'
+                }, else_='Other')
+            ) \
+            .join(twr, twr.tweet_id == twt.retweeted_status_id) \
+            .join(twq, twq.tweet_id == twt.quoted_status_id) \
+            .join(twp, twp.tweet_id == twt.in_reply_to_status_id)
+
+        if self.users:
+            ret = ret \
+                .join(md.StgUser, md.StgUser.user_id == twt.user_id)
+
+        yield from ret
 
 
 class ExtractUserInfoJob(ExtractJob):
+    '''
+    '''
+
     columns = []
 
     def query(self):
@@ -179,6 +299,9 @@ class ExtractUserInfoJob(ExtractJob):
 
 
 class ExtractMutualFollowersJob(ExtractJob):
+    '''
+    '''
+
     columns = ['user_id1', 'user_id2', 'mutual_followers']
 
     def query(self):
@@ -186,6 +309,9 @@ class ExtractMutualFollowersJob(ExtractJob):
 
 
 class ExtractMutualFriendsJob(ExtractJob):
+    '''
+    '''
+
     columns = ['user_id1', 'user_id2', 'mutual_friends']
 
     def query(self):
