@@ -77,8 +77,8 @@ class ExtractJob(TargetJob, DatabaseJob):
             msg = msg.format(ind + 1, n_items)
             logger.debug(msg)
 
-            rows = {'user_id': t for t in batch}
-            self.session.bulk_insert_mappings(md.StgFollow, rows)
+            rows = ({'user_id': t.user_id} for t in batch)
+            self.session.bulk_insert_mappings(md.StgUser, rows)
 
             n_items += len(batch)
 
@@ -96,15 +96,12 @@ class ExtractFollowGraphJob(ExtractJob):
             .query(md.Follow)
 
         if self.users:
+            su1 = sa.orm.aliased(md.StgUser)
+            su2 = sa.orm.aliased(md.StgUser)
+
             ret = ret \
-                .join(
-                    md.StgUser,
-                    md.StgUser.user_id == md.Follow.source_user_id
-                ) \
-                .join(
-                    md.StgUser,
-                    md.StgUser.user_id == md.Follow.target_user_id
-                ) \
+                .join(su1, su1.user_id == md.Follow.source_user_id) \
+                .join(su2, su2.user_id == md.Follow.target_user_id) \
 
         ret = ret \
             .filter_by(valid_end_dt=None) \
@@ -133,15 +130,12 @@ class ExtractMentionGraphJob(ExtractJob):
             .join(md.Tweet, md.Tweet.tweet_id == md.UserMention.tweet_id)
 
         if self.users:
+            su1 = sa.orm.aliased(md.StgUser)
+            su2 = sa.orm.aliased(md.StgUser)
+
             ret = ret \
-                .join(
-                    md.StgUser,
-                    md.StgUser.user_id == md.Tweet.user_id
-                ) \
-                .join(
-                    md.StgUser,
-                    md.StgUser.user_id == md.UserMention.mentioned_user_id
-                ) \
+                .join(su1, su1.user_id == md.Tweet.user_id) \
+                .join(su2, su2.user_id == md.UserMention.mentioned_user_id) \
 
         ret = ret \
             .group_by(md.Tweet.user_id, md.UserMention.mentioned_user_id) \
@@ -165,15 +159,12 @@ class ExtractReplyGraphJob(ExtractJob):
             )
 
         if self.users:
+            su1 = sa.orm.aliased(md.StgUser)
+            su2 = sa.orm.aliased(md.StgUser)
+
             ret = ret \
-                .join(
-                    md.StgUser,
-                    md.StgUser.user_id == md.Tweet.user_id
-                ) \
-                .join(
-                    md.StgUser,
-                    md.StgUser.user_id == md.Tweet.in_reply_to_user_id
-                )
+                .join(su1, su1.user_id == md.Tweet.user_id) \
+                .join(su2, su2.user_id == md.Tweet.in_reply_to_user_id)
 
         ret = ret \
             .filter(md.Tweet.in_reply_to_user_id.isnot(None)) \
@@ -198,9 +189,12 @@ class ExtractRetweetGraphJob(ExtractJob):
             .join(twt, twt.tweet_id == tws.retweeted_status_id)
 
         if self.users:
+            su1 = sa.orm.aliased(md.StgUser)
+            su2 = sa.orm.aliased(md.StgUser)
+
             ret = ret \
-                .join(md.StgUser, md.StgUser.user_id == twt.user_id) \
-                .join(md.StgUser, md.StgUser.user_id == tws.user_id)
+                .join(su1, su1.user_id == twt.user_id) \
+                .join(su2, su2.user_id == tws.user_id)
 
         ret = ret \
             .group_by(tws.user_id, twt.user_id) \
@@ -224,9 +218,12 @@ class ExtractQuoteGraphJob(ExtractJob):
             .join(twt, twt.tweet_id == tws.quoted_status_id)
 
         if self.users:
+            su1 = sa.orm.aliased(md.StgUser)
+            su2 = sa.orm.aliased(md.StgUser)
+
             ret = ret \
-                .join(md.StgUser, md.StgUser.user_id == twt.user_id) \
-                .join(md.StgUser, md.StgUser.user_id == tws.user_id)
+                .join(su1, su1.user_id == twt.user_id) \
+                .join(su2, su2.user_id == tws.user_id)
 
         ret = ret \
             .group_by(tws.user_id, twt.user_id) \
