@@ -73,7 +73,7 @@ class ExtractJob(TargetJob, DatabaseJob):
 
         n_items = 0
         for ind, batch in enumerate(ids):
-            msg = 'Loading extract target IDs batch {1}, cumulative {2}'
+            msg = 'Loading extract target IDs batch {0}, cumulative {1}'
             msg = msg.format(ind + 1, n_items)
             logger.debug(msg)
 
@@ -177,7 +177,7 @@ class ExtractReplyGraphJob(ExtractJob):
 
         ret = ret \
             .filter(md.Tweet.in_reply_to_user_id.isnot(None)) \
-            .group_by(md.Tweet_user_id, md.Tweet.in_reply_to_user_id) \
+            .group_by(md.Tweet.user_id, md.Tweet.in_reply_to_user_id) \
             .all()
 
         yield from ret
