@@ -57,5 +57,6 @@ class ExportCommand(cmd.DatabaseCommand, cmd.TargetCommand):
             'engine': self.engine,
 
             'outfile': self.outfile,
-            'targets': self.targets
+            'targets': self.targets,
+            'allow_missing_targets': self.allow_missing_targets
         }
