@@ -121,7 +121,11 @@ class ExportFollowGraphJob(ExportJob):
 
     This export is a graph in edgelist format, with an edge from
     ``source_user_id`` to ``target_user_id`` if the source user follows the
-    target user.
+    target user. There is one row per edge (i.e., per pair of users with a
+    following relationship).
+
+    If targets are specified, return only the follow graph on the users they
+    describe; otherwise, return the entire graph.
     '''
 
     columns = ['source_user_id', 'target_user_id']
@@ -152,7 +156,11 @@ class ExportMentionGraphJob(ExportJob):
     This export is a graph in edgelist format, with an edge from
     ``source_user_id`` to ``target_user_id`` if the source user has mentioned
     the target user. The third column ``num_mentions`` gives the number of
-    mentions.
+    mentions. There is one row per edge (i.e., per pair of users with a mention
+    relationship).
+
+    If targets are specified, return the mention graph only on the users they
+    specify; otherwise, return the entire graph.
     '''
 
     columns = ['source_user_id', 'target_user_id', 'num_mentions']
@@ -188,7 +196,11 @@ class ExportReplyGraphJob(ExportJob):
     This export is a graph in edgelist format, with an edge from
     ``source_user_id`` to ``target_user_id`` if the source user has replied to
     the target user. The third column ``num_mentions`` gives the number of
-    mentions.
+    mentions. There is one row per edge (i.e., per pair of users with a reply
+    relationship).
+
+    If targets are specified, return the reply graph only on the users they
+    specify; otherwise, return the entire graph.
     '''
 
     columns = ['source_user_id', 'target_user_id', 'num_replies']
@@ -224,7 +236,11 @@ class ExportRetweetGraphJob(ExportJob):
     This export is a graph in edgelist format, with an edge from
     ``source_user_id`` to ``target_user_id`` if the source user has retweeted
     the target user. The third column ``num_mentions`` gives the number of
-    mentions.
+    mentions. There is one row per edge (i.e., per pair of users with a retweet
+    relationship).
+
+    If targets are specified, return the retweet graph only on the users they
+    specify; otherwise, return the entire graph.
     '''
 
     columns = ['source_user_id', 'target_user_id', 'num_retweets']
@@ -259,7 +275,11 @@ class ExportQuoteGraphJob(ExportJob):
     This export is a graph in edgelist format, with an edge from
     ``source_user_id`` to ``target_user_id`` if the source user has
     quote-tweeted the target user. The third column ``num_mentions`` gives the
-    number of mentions.
+    number of mentions. There is one row per edge (i.e., per pair of users with
+    a quote-tweet relationship).
+
+    If targets are specified, return the quote graph only on the users they
+    specify; otherwise, return the entire graph.
     '''
 
     columns = ['source_user_id', 'target_user_id', 'num_quotes']
@@ -294,7 +314,13 @@ class ExportTweetsJob(ExportJob):
     This export includes all tweets for either all users or a particular set of
     targets. Various relevant fields are included, including in particular the
     text of any retweeted/quoted/replied-to status and a recoded version of the
-    client from which the tweet was posted.
+    client from which the tweet was posted. There is one row per tweet.
+
+    If targets are specified, return only tweets by the users they specify;
+    otherwise, return all tweets. Note that because we receive and store full
+    tweet objects for quote tweets and retweets, and users can RT or QT any
+    other user, not just ones whose tweets were fetched, "all tweets" may
+    include some tweets by users whose tweets weren't explicitly fetched.
     '''
 
     columns = ['tweet_id', 'user_id', 'content', 'retweeted_status_content',
@@ -348,29 +374,74 @@ class ExportTweetsJob(ExportJob):
 
 class ExportUserInfoJob(ExportJob):
     '''
+    Export user-level information.
+
+    This export includes user-level information. Besides the Twitter-assigned
+    user ID, fields include such things as the profile URL and self-reported
+    location, counts of friends, followers and list memberships, verified
+    status, and other such user-specific fields. There is one row per user.
+
+    If targets are specified, only those users will be included in the export.
+    If no targets are specified, the default is to return rows for all users
+    who have been fetched with ``twitter fetch users`` (i.e., those with rows
+    in the ``user_data`` table).
     '''
 
-    columns = []
+    columns = ['user_id', 'profile_url', 'friends_count', 'followers_count',
+               'listed_count', 'screen_name', 'location', 'display_name',
+               'description', 'protected', 'verified', 'account_create_dt',
+               'tweets_all_time', 'first_tweet_dt', 'last_tweet_dt',
+               'ios_user', 'android_user', 'desktop_user', 'business_app_user']
 
     def query(self):
-        pass
+        pass  # FIXME
 
 
 class ExportMutualFollowersJob(ExportJob):
     '''
+    Export counts of mutual followers.
+
+    This export includes counts of mutual followers between all pairs of users
+    from a certain set of eligible users (exactly which set is discussed
+    below). That is, if user A and user B are both included, there will be one
+    row with a count of the number of users who follow both A and B. Note that
+    you must have fetched followers of both A and B for the counts to be
+    accurate: if either has not had followers fetched, there will be a row for
+    the (A, B) pair but it will record 0 mutual followers. There is one row per
+    pair of users in the set of eligible users (for all pairs).
+
+    If targets are specified, the set of eligible users is restricted to only
+    the users they describe. Otherwise, the default set of users is those who
+    have been fetched with ``twitter fetch users`` (i.e., those with rows in
+    the ``user_data`` table).
     '''
 
     columns = ['user_id1', 'user_id2', 'mutual_followers']
 
     def query(self):
-        pass
+        pass  # FIXME
 
 
 class ExportMutualFriendsJob(ExportJob):
     '''
+    Export counts of mutual friends.
+
+    This export includes counts of mutual friends between all pairs of users
+    from a certain set of eligible users (exactly which set is discussed
+    below). That is, if user A and user B are both included, there will be one
+    row with a count of the number of users who are followed by both A and B.
+    Note that you must have fetched friends of both A and B for the counts to
+    be accurate: if either has not had friends fetched, there will be a row for
+    the (A, B) pair but it will record 0 mutual friends. There is one row per
+    pair of users in the set of eligible users (for all pairs).
+
+    If targets are specified, the set of eligible users is restricted to only
+    the users they describe. Otherwise, the default set of users is those who
+    have been fetched with ``twitter fetch users`` (i.e., those with rows in
+    the ``user_data`` table).
     '''
 
     columns = ['user_id1', 'user_id2', 'mutual_friends']
 
     def query(self):
-        pass
+        pass  # FIXME
