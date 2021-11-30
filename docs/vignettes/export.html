@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Working with fetched data &mdash; twclient 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    <script src="../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Follow Graph" href="sql-exports/follow-graph.html" />
+    <link rel="prev" title="Getting data from the Twitter API" href="fetch.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+            <a href="../index.html" class="icon icon-home"> twclient
+          </a>
+              <div class="version">
+                0.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/readme.html">README</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/license.html">License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="fetch.html">Getting data from the Twitter API</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="#">Working with fetched data</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#built-in-exports">Built-in exports</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#custom-sql">Custom SQL</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="sql-exports/follow-graph.html">Follow Graph</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sql-exports/tweets.html">Users’ Tweets</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sql-exports/tweet-graphs.html">Tweet-Derived Graphs: Mention, Reply, Retweet, Quote</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sql-exports/user-info.html">User-Level Information: Bio, Location, Etc.</a></li>
+<li class="toctree-l3"><a class="reference internal" href="sql-exports/mutual-followers-friends-counts.html">Mutual Followers and Friends</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../apidocs.html">API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">twclient</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+      <li>Working with fetched data</li>
+      <li class="wy-breadcrumbs-aside">
+            <a href="../_sources/vignettes/export.rst.txt" rel="nofollow"> View page source</a>
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <section id="working-with-fetched-data">
+<h1>Working with fetched data<a class="headerlink" href="#working-with-fetched-data" title="Permalink to this headline"></a></h1>
+<p>Why go to the trouble of writing this package at all? The fundamental reason is
+that, for analyzing data at least, it’s easier to work with a relational
+database than with a REST API. Local databases don’t have rate limits, they
+don’t make you worry about pagination and cursoring, and they put all data in
+one place for easy cross-referencing. More generally, using a database as this
+package does <em>separates concerns</em>: the content is separate from the
+presentation, and how you acquire and load Twitter data is decoupled from how
+you choose to analyze it.</p>
+<p>This series of vignettes thus discusses how to export certain commonly used
+pieces of data from the database. These aren’t by any means the only kinds of
+data you may want to export (there’s nothing here about URLs, for instance),
+but it covers the most common bases.</p>
+<p>There are two ways to get data out of the database: the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">export</span></code>
+command, and writing your own SQL.</p>
+<section id="built-in-exports">
+<h2>Built-in exports<a class="headerlink" href="#built-in-exports" title="Permalink to this headline"></a></h2>
+<p>You can export certain predefined bulk datasets with the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">export</span></code>
+command. The built-in exports cover the same datasets we present SQL for below:
+the follow graph, tweets, tweet-derived graphs like the mention and reply
+graphs, user-level information like location/bio/etc, and counts of mutual
+followers or friends for user pairs. For more detail on exactly how these
+datasets are defined, see the SQL examples and the included discussion of each
+dataset.</p>
+<p>Exporting data is simple: <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">export</span> <span class="pre">follow-graph</span></code> will write the
+follow graph to stdout; to specify an output file, use shell redirection or the
+<code class="docutils literal notranslate"><span class="pre">-o</span></code> flag. If you want to restrict the export to only certain users, you can
+use the full set of user specification flags: <code class="docutils literal notranslate"><span class="pre">-n</span></code> to include certain screen
+names, <code class="docutils literal notranslate"><span class="pre">-i</span></code> to include certain user IDs, <code class="docutils literal notranslate"><span class="pre">-l</span></code> to include one or more
+Twitter lists, and <code class="docutils literal notranslate"><span class="pre">-g</span></code> to include one or more <a class="reference internal" href="fetch.html"><span class="doc">tags you’ve created for
+users</span></a>.</p>
+<p>Here’s a realistic example:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient <span class="nb">export</span> mention-graph -o mention-graph.csv -g survey_respondents
+</pre></div>
+</div>
+<p>For the full list of exportable datasets, run <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">export</span> <span class="pre">--help</span></code>.</p>
+</section>
+<section id="custom-sql">
+<h2>Custom SQL<a class="headerlink" href="#custom-sql" title="Permalink to this headline"></a></h2>
+<p>Going the SQL route is more flexible if also somewhat more work. You’ll need to
+do this if you want to do much customization of the built-in exports. (Allowing
+this sort of flexibility is the point of using a database backend to store the
+Twitter data.) We’ll use the PostgreSQL dialect of SQL for examples here, but
+it isn’t hard to adapt the queries to the particular syntax of whatever DBMS
+you may be using.</p>
+<div class="toctree-wrapper compound">
+<p class="caption" role="heading"><span class="caption-text">SQL Examples:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="sql-exports/follow-graph.html">Follow Graph</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sql-exports/tweets.html">Users’ Tweets</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sql-exports/tweet-graphs.html">Tweet-Derived Graphs: Mention, Reply, Retweet, Quote</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sql-exports/user-info.html">User-Level Information: Bio, Location, Etc.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sql-exports/mutual-followers-friends-counts.html">Mutual Followers and Friends</a></li>
+</ul>
+</div>
+</section>
+</section>
+
+
+           </div>
+          </div>
+          <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
+        <a href="fetch.html" class="btn btn-neutral float-left" title="Getting data from the Twitter API" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="sql-exports/follow-graph.html" class="btn btn-neutral float-right" title="Follow Graph" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019-2021, Massachusetts Institute of Technology.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

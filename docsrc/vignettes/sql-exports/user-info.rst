@@ -54,8 +54,8 @@ Because user-provided URLs are normalized out, you need to join for them:
 We can also add counts of the number of friends [1]_ and followers a user has,
 as well as how many Twitter lists they've been placed on. Be aware, though that
 these numbers are current only as of when the data was fetched. In particular,
-they may not agree with :doc:`follow graph </vignettes/extracts/follow-graph>`
-data.
+they may not agree with:doc:`follow graph
+</vignettes/sql-exports/follow-graph>` data.
 
 .. code-block:: sql
 
@@ -120,8 +120,8 @@ user, we need to use SQL's `window functions
             ud.verified,
             ud.create_dt as account_create_dt,
 
-            -- this table is append-only, one new row for each call to "twitter
-            -- fetch users", we only want the most recent one here
+            -- this table is append-only, one new row for each call to
+            -- "twclient fetch users", we only want the most recent one here
             row_number() over (
                 partition by tu.user_id
                 order by ud.insert_dt desc
@@ -201,8 +201,6 @@ or a ``WITH`` statement and joining to it:
             ud.verified,
             ud.create_dt as account_create_dt,
 
-            -- this table is append-only, one new row for each call to "twitter
-            -- fetch users", we only want the most recent one here
             row_number() over (
                 partition by tu.user_id
                 order by ud.insert_dt desc
@@ -362,8 +360,6 @@ all these queries together and produce one user-level output file:
                 ud.verified,
                 ud.create_dt as account_create_dt,
 
-                -- this table is append-only, one new row for each call to "twitter
-                -- fetch users", we only want the most recent one here
                 row_number() over (
                     partition by tu.user_id
                     order by ud.insert_dt desc

@@ -14,7 +14,7 @@ Twclient Documentation
    :caption: Vignettes:
 
    vignettes/fetch
-   vignettes/extract
+   vignettes/export
 
 .. toctree::
    :maxdepth: 1

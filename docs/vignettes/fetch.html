@@ -18,7 +18,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Working with fetched data" href="extract.html" />
+    <link rel="next" title="Working with fetched data" href="export.html" />
     <link rel="prev" title="License" href="../overview/license.html" /> 
 </head>
 
@@ -63,7 +63,7 @@
 <li class="toctree-l2"><a class="reference internal" href="#putting-it-all-together">Putting it all together</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="extract.html">Working with fetched data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="export.html">Working with fetched data</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
 <ul>
@@ -121,8 +121,8 @@ objects it produces to a format you can work with.</p>
 application like a Twitter client, which people can use to view their feeds,
 post tweets, and whatever else, you need the API in its full complexity. But
 here we have a simpler task—read-only scraping of data—and so we can make a
-simpler tool. (For formatting that data and extracting it from the database,
-see the <a class="reference internal" href="extract.html"><span class="doc">other vignette on extracting data</span></a>.)</p>
+simpler tool. (For formatting that data and exporting it from the database,
+see the <a class="reference internal" href="export.html"><span class="doc">other vignette on exporting data</span></a>.)</p>
 <p>Note that Twitter has other data sources than the REST API, in particular the
 <a class="reference external" href="https://developer.twitter.com/en/docs/twitter-api/enterprise/historical-powertrack-api/overview">PowerTrack</a>
 API, and this package does not support those. It also does not (yet) support
@@ -131,7 +131,7 @@ Twitter’s new <cite>v2 API &lt;https://developer.twitter.com/en/docs/twitter-a
 <p>In brief: This package provides a command-line interface for loading data from
 the Twitter REST API into the database of your choice. You can invoke it as
 either <code class="docutils literal notranslate"><span class="pre">twitter</span></code>, as in <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-n</span> <span class="pre">wwbrannon</span></code> or <code class="docutils literal notranslate"><span class="pre">twclient</span></code>,
-as in <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-n</span> <span class="pre">wwbrannon</span></code>. (We’ll use the <code class="docutils literal notranslate"><span class="pre">twitter</span></code> alias
+as in <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-n</span> <span class="pre">wwbrannon</span></code>. (We’ll use the <code class="docutils literal notranslate"><span class="pre">twclient</span></code> alias
 in this vignette.) You need to set up the database, get API credentials, and
 then pull some data.</p>
 </section>
@@ -141,7 +141,7 @@ then pull some data.</p>
 <a class="reference external" href="https://docs.sqlalchemy.org/en/14/dialects/">sqlalchemy supports</a>, which
 with plugins is quite a few to choose from. This is less intimidating than it
 may sound—in fact it’s positively easy. Two good choices are <a class="reference external" href="https://www.postgresql.org/">Postgres</a>, which we’ve used for the SQL examples in the
-<a class="reference internal" href="extract.html"><span class="doc">extraction vignette</span></a>, and the extremely lightweight
+<a class="reference internal" href="export.html"><span class="doc">data export vignette</span></a>, and the extremely lightweight
 <a class="reference external" href="https://www.sqlite.org/index.html">SQLite</a>. Note that while you can use any
 database engine with sqlalchemy support, twclient has been tested only with
 Postgres and to a lesser degree SQLite.</p>
@@ -163,8 +163,8 @@ or Oracle, may also work but, again, have not been tested.</p>
 <p>We’ll use Postgres for the rest of this vignette.</p>
 <p>Having set up our database system, we need to do two more things to make it
 usable: tell twclient how to use it, and install the data model. First, we’ll
-use a <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">config</span></code> subcommand to set up the database:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twitter config add-db -u <span class="s2">&quot;postgresql:///&quot;</span> postgres
+use a <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">config</span></code> subcommand to set up the database:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient config add-db -u <span class="s2">&quot;postgresql:///&quot;</span> postgres
 </pre></div>
 </div>
 <p>This command tells twclient to create a persistent profile for a database and
@@ -179,11 +179,11 @@ by default <code class="docutils literal notranslate"><span class="pre">~/.twcli
 database URL for each command.</p>
 <p>Next up, we have to install the data model: create the tables, columns, keys
 and other DB objects the twclient package uses. Be aware that doing this will
-<strong>drop all existing twclient data in your database</strong>. The <code class="docutils literal notranslate"><span class="pre">twitter</span>
+<strong>drop all existing twclient data in your database</strong>. The <code class="docutils literal notranslate"><span class="pre">twclient</span>
 <span class="pre">initialize</span></code> command will do the trick, but to confirm that you understand
 running it will <strong>drop all existing twclient data in your database</strong> you have
 to specify the <code class="docutils literal notranslate"><span class="pre">-y</span></code> flag:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twitter initialize -y
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient initialize -y
 </pre></div>
 </div>
 <p>And that’s it! If you fire up a database client (psql in the case of this
@@ -203,7 +203,7 @@ bearer tokens</a> you may receive only a
 consumer key and consumer secret. Regardless, you can add them to twclient as
 follows (replacing the “XXXXX” with your values, and omitting token and token
 secret if using a bearer token):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twitter config add-api -n twitter1 <span class="se">\</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient config add-api -n twitter1 <span class="se">\</span>
     --consumer-key XXXXX <span class="se">\</span>
     --consumer-secret XXXXX <span class="se">\</span>
     --token XXXXX <span class="se">\</span>
@@ -272,22 +272,22 @@ They’ll accept mixed references to lists, but not to users.</p>
 <p>The first step is to <a class="reference external" href="https://stackoverflow.com/questions/34191022/what-does-hydrate-mean-on-twitter/34192633">hydrate</a>
 the target users, which confirms with the Twitter API that they exist,
 retrieves some summary information about them and creates records for them in
-the database. You can do this with the <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">fetch</span></code> family of commands,
-and specifically <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">fetch</span> <span class="pre">users</span></code>. We’ll start by fetching the users in
+the database. You can do this with the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span></code> family of commands,
+and specifically <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span></code>. We’ll start by fetching the users in
 the lists of <code class="docutils literal notranslate"><span class="pre">lists.csv</span></code>, though you could do the individual users first:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 lists.csv <span class="p">|</span> xargs twitter -v fetch users -b -l
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 lists.csv <span class="p">|</span> xargs twclient -v fetch users -b -l
 </pre></div>
 </div>
 <p>This command skips the CSV header line (via <code class="docutils literal notranslate"><span class="pre">tail</span> <span class="pre">-n</span> <span class="pre">+2</span> <span class="pre">lists.csv</span></code>), which
-twclient doesn’t actually use, and pipes the rest of it to <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">-v</span> <span class="pre">fetch</span>
+twclient doesn’t actually use, and pipes the rest of it to <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">-v</span> <span class="pre">fetch</span>
 <span class="pre">users</span> <span class="pre">-b</span> <span class="pre">-l</span></code> via <code class="docutils literal notranslate"><span class="pre">xargs</span></code>. The <code class="docutils literal notranslate"><span class="pre">-v</span></code> flag requests verbose output, <code class="docutils literal notranslate"><span class="pre">-b</span></code>
 says to continue even if the Twitter API says some of the lists requested are
 protected or don’t exist, and <code class="docutils literal notranslate"><span class="pre">-l</span></code> says that the users to hydrate are given
 in the form of Twitter lists. (If you’d left the header line out of the CSV
 file and wanted to avoid using xargs, note that you could instead write
-something like <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">-v</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-b</span> <span class="pre">-l</span> <span class="pre">$(cat</span> <span class="pre">lists.csv)</span></code>.)</p>
+something like <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">-v</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-b</span> <span class="pre">-l</span> <span class="pre">$(cat</span> <span class="pre">lists.csv)</span></code>.)</p>
 <p>Similarly, you can hydrate the individual users as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 users.csv <span class="p">|</span> xargs twitter -v fetch users -b -n
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 users.csv <span class="p">|</span> xargs twclient -v fetch users -b -n
 </pre></div>
 </div>
 <p>A noteworthy difference from the case of lists is that you use the <code class="docutils literal notranslate"><span class="pre">-n</span></code>
@@ -302,16 +302,16 @@ arbitrary tag names with user IDs, to keep track of relevant groups of users in
 your analysis. Let’s say we want to track all individually fetched users
 together, and all users retrieved from lists together, as two groups.</p>
 <p>First, we need to create a tag:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twitter tag create twitter_lists
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient tag create twitter_lists
 </pre></div>
 </div>
 <p>Next, we associate the new tag with the users it should apply to:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 lists.csv <span class="p">|</span> xargs twitter tag apply twitter_lists -l
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 lists.csv <span class="p">|</span> xargs twclient tag apply twitter_lists -l
 </pre></div>
 </div>
 <p>Similarly, we can tag the individually fetched users:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twitter tag create twitter_users
-tail -n +2 users.csv <span class="p">|</span> xargs twitter tag apply twitter_users -l
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient tag create twitter_users
+tail -n +2 users.csv <span class="p">|</span> xargs twclient tag apply twitter_users -l
 </pre></div>
 </div>
 <p>Users fetched from Twitter lists will be associated with the lists they are
@@ -320,8 +320,8 @@ lists individually.</p>
 <p>Finally, we might want to create one tag referring to both sets of users (for
 example, to run a regular job for fetching everyone’s tweets). We do the same
 two-step as above:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twitter tag create universe
-twitter tag apply universe -g twitter_users twitter_lists
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient tag create universe
+twclient tag apply universe -g twitter_users twitter_lists
 </pre></div>
 </div>
 <p>This time, however, you can see that the <code class="docutils literal notranslate"><span class="pre">-g</span></code> option allows selecting users
@@ -331,9 +331,9 @@ follow edges—according to tags you’ve defined.</p>
 <section id="fetching-tweets">
 <h3>Fetching tweets<a class="headerlink" href="#fetching-tweets" title="Permalink to this headline"></a></h3>
 <p>Now, with fully hydrated users, it’s time to get down to one of our primary
-jobs: fetching the users’ tweets. We can do this with the <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">fetch</span>
+jobs: fetching the users’ tweets. We can do this with the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span>
 <span class="pre">tweets</span></code> command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twitter -v fetch tweets -b -g universe
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient -v fetch tweets -b -g universe
 </pre></div>
 </div>
 <p>As before, <code class="docutils literal notranslate"><span class="pre">-v</span></code> asks for verbose output, <code class="docutils literal notranslate"><span class="pre">-b</span></code> says to ignore nonexistent or
@@ -343,7 +343,7 @@ tweets for those users tagged <code class="docutils literal notranslate"><span c
 Twitter. In addition to the tweet text, we pull out urls, hashtags, “cashtags”,
 user mentions and other things so that it’s easy to compute derived datasets
 like the mention / quote / etc graphs over users. (For how to do this and
-sample SQL, see the <a class="reference internal" href="extract.html"><span class="doc">extracting data vignette</span></a>.) The
+sample SQL, see the vignette on <a class="reference internal" href="export.html"><span class="doc">exporting data</span></a>.) The
 raw json API responses are also saved so that you can work with data we don’t
 parse.</p>
 </section>
@@ -351,17 +351,17 @@ parse.</p>
 <h3>Fetching the follow graph<a class="headerlink" href="#fetching-the-follow-graph" title="Permalink to this headline"></a></h3>
 <p>Finally, we want to get the user IDs of our target users’ followers and
 friends. (A “friend” is Twitter’s term for the opposite of a follower: if A
-follows B, B is A’s friend and A is B’s follower.) There are two more <code class="docutils literal notranslate"><span class="pre">twitter</span>
-<span class="pre">fetch</span></code> subcommands for this: <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">fetch</span> <span class="pre">friends</span></code> and <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">fetch</span>
-<span class="pre">followers</span></code>. Neither command hydrates users, because the underlying Twitter API
-endpoints don’t, so the <code class="docutils literal notranslate"><span class="pre">follow</span></code> table will end up being populated with bare
-numeric user IDs.</p>
+follows B, B is A’s friend and A is B’s follower.) There are two more
+<code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span></code> subcommands for this: <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">friends</span></code> and
+<code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">followers</span></code>. Neither command hydrates users, because the
+underlying Twitter API endpoints don’t, so the <code class="docutils literal notranslate"><span class="pre">follow</span></code> table will end up
+being populated with bare numeric user IDs.</p>
 <p>Here’s fetching friends, using options you’ve seen all of by now:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twitter -v fetch friends -b -g universe
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient -v fetch friends -b -g universe
 </pre></div>
 </div>
 <p>And here’s followers:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twitter -v fetch followers -b -p -j <span class="m">5000</span> -g universe
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient -v fetch followers -b -p -j <span class="m">5000</span> -g universe
 </pre></div>
 </div>
 <p>The one new flag used here, <code class="docutils literal notranslate"><span class="pre">-j</span> <span class="pre">5000</span></code>, indicates the size of the batch used
@@ -376,7 +376,7 @@ to help monitor the job.</p>
 <p>The fetched follow graph data itself is stored in a <a class="reference external" href="https://en.wikipedia.org/wiki/Slowly_changing_dimension#Type_2:_add_new_row">type-2 SCD</a>
 format, which (without getting into the details) means that you can just keep
 running these commands and storing multiple snapshots at different times,
-without using enormous amounts of disk space. (See the <a class="reference internal" href="extract.html"><span class="doc">extracting data
+without using enormous amounts of disk space. (See the <a class="reference internal" href="export.html"><span class="doc">exporting data
 vignette</span></a> for details of how to get follow graph snapshots
 out of the SCD table.)</p>
 </section>
@@ -392,42 +392,42 @@ out of the SCD table.)</p>
 <span class="c1"># set up the database, and gotten API keys, so we won&#39;t show any of that</span>
 <span class="c1"># here. See also the command-line -h/--help option for more info.</span>
 
-twitter config add-db -u <span class="s2">&quot;postgresql:///&quot;</span> postgres
-twitter initialize -y
+twclient config add-db -u <span class="s2">&quot;postgresql:///&quot;</span> postgres
+twclient initialize -y
 
-twitter config add-api -n twitter1 <span class="se">\</span>
+twclient config add-api -n twitter1 <span class="se">\</span>
     --consumer-key XXXXX <span class="se">\</span>
     --consumer-secret XXXXXX <span class="se">\</span>
     --token XXXXXX <span class="se">\</span>
     --token-secret XXXXXX
 
-twitter config add-api -n twitter2 <span class="se">\</span>
+twclient config add-api -n twitter2 <span class="se">\</span>
     --consumer-key XXXXX <span class="se">\</span>
     --consumer-secret XXXXXX <span class="se">\</span>
     --token XXXXXX <span class="se">\</span>
     --token-secret XXXXXX
 
-tail -n +2 lists.csv <span class="p">|</span> xargs twitter -v fetch users -b -l
+tail -n +2 lists.csv <span class="p">|</span> xargs twclient -v fetch users -b -l
 
-twitter tag create twitter_lists
-tail -n +2 lists.csv <span class="p">|</span> xargs twitter tag apply twitter_lists -l
+twclient tag create twitter_lists
+tail -n +2 lists.csv <span class="p">|</span> xargs twclient tag apply twitter_lists -l
 
-tail -n +2 users.csv <span class="p">|</span> xargs twitter -v fetch users -b -n
+tail -n +2 users.csv <span class="p">|</span> xargs twclient -v fetch users -b -n
 
-twitter tag create twitter_users
-tail -n +2 users.csv <span class="p">|</span> xargs twitter tag apply twitter_users -l
+twclient tag create twitter_users
+tail -n +2 users.csv <span class="p">|</span> xargs twclient tag apply twitter_users -l
 
-twitter tag create universe
-twitter tag apply universe -g twitter_users twitter_lists
+twclient tag create universe
+twclient tag apply universe -g twitter_users twitter_lists
 
-twitter -v fetch tweets -b -g universe
+twclient -v fetch tweets -b -g universe
 
-twitter -v fetch friends -b -g universe
-twitter -v fetch followers -b -j <span class="m">5000</span> -g universe
+twclient -v fetch friends -b -g universe
+twclient -v fetch followers -b -j <span class="m">5000</span> -g universe
 </pre></div>
 </div>
 <p>Tada! Now you have data in a DB. You can use canned SQL queries, like those in
-the <a class="reference internal" href="extract.html"><span class="doc">extracting data vignette</span></a>, to get whatever piece
+the <a class="reference internal" href="export.html"><span class="doc">exporting data vignette</span></a>, to get whatever piece
 of data you want out of it: the follow graph, a user’s tweets, mention / quote
 / reply / retweet graphs, etc. Your creativity in SQL is the limit.</p>
 <p>Wasn’t that easier than you’re used to?</p>
@@ -439,7 +439,7 @@ of data you want out of it: the follow graph, a user’s tweets, mention / quote
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="../overview/license.html" class="btn btn-neutral float-left" title="License" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="extract.html" class="btn btn-neutral float-right" title="Working with fetched data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="export.html" class="btn btn-neutral float-right" title="Working with fetched data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

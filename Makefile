@@ -1,4 +1,4 @@
-ENVPATH := env
+ENVPATH := .env
 PYTHON  := python3
 
 .PHONY: lint tests check doc devsetup clean

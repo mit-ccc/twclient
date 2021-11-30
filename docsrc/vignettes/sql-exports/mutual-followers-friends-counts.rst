@@ -28,7 +28,7 @@ this vignette, we'll consider only currently valid followers, not previously
 valid follow edges which expired when one user unfollowed another. To implement
 this restriction, various WHERE clauses will require that ``valid_end_dt is
 null`` --- see the vignette on the :doc:`follow graph
-</vignettes/extracts/follow-graph>` for more information.
+</vignettes/sql-exports/follow-graph>` for more information.
 
 But how do we get the subset of this group which also follows, say, user 456?
 One way is to rely on SQL's ``INTERSECT`` feature, which calculates the set
