@@ -583,7 +583,11 @@ class ExportMutualsJob(ExportJob):
                 getattr(fo2, filter_col) == access(el2, 'user_id')
             ).correlate(el2)
 
-        mutuals = mutuals1.intersect_all(mutuals2).subquery()
+        if self.session.bind.dialect.name == 'sqlite':
+            # sqlite doesn't support INTERSECT ALL
+            mutuals = mutuals1.intersect(mutuals2).subquery()
+        else:
+            mutuals = mutuals1.intersect_all(mutuals2).subquery()
         mutuals_count = sql.select(func.count()).select_from(mutuals).scalar_subquery()
 
         ret = self.session \
