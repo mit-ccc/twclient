@@ -1053,7 +1053,18 @@ class Url(TimestampsMixin, UniqueMixin, Base):
     url_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
                     primary_key=True, autoincrement=True)
 
-    url = Column(UnicodeText, nullable=False, unique=True)
+    # NOTE there's no unique index here because URLs can be very long, too long
+    # for many index implementations to handle. The URLs are semantically
+    # unique and are kept unique at the application layer by the logic in
+    # UniqueMixin. (That is, there's a unique_hash column which is the SHA-1
+    # hash of the url value and is under a unique constraint. Application code
+    # fetching URLs deduplicates them according to the unique_hash.) It would
+    # also be good to have a CHECK constraint that the url column hashes to the
+    # appropriate value, but we can't even consider doing that because standard
+    # SQL doesn't provide SHA-1.
+    url = Column(UnicodeText, nullable=False, unique=False,
+                 comment='Kept unique at the application layer, too large to '
+                         'index; see unique_hash column')
 
     mentions = relationship('UrlMention', back_populates='url',
                             cascade_backrefs=False)
