@@ -2,7 +2,6 @@
 Classes encapsulating the "targets" of certain jobs.
 '''
 
-import random
 import logging
 
 from abc import ABC, abstractmethod
@@ -40,20 +39,12 @@ class Target(ABC):
             needed to resolve raw targets to users. If not passed on
             initialization, a context object must be passed to ``resolve()``.
 
-        randomize : bool
-            Whether to process raw targets in a randomized order. This may
-            allow loads which are interrupted partway through to retain some
-            useful statistical properties.
-
     Attributes
     ----------
         targets : list of str or int
             The list of raw targets passed in as the targets parameter, but
             deduplicated (without changing the relative order of any retained
             targets).
-
-        randomize : bool
-            The parameter passed to __init__.
     '''
 
     def __init__(self, **kwargs):
@@ -63,11 +54,9 @@ class Target(ABC):
             raise ValueError('Must specify targets') from exc
 
         context = kwargs.pop('context', None)
-        randomize = kwargs.pop('randomize', False)
 
         super().__init__(**kwargs)
 
-        self.randomize = randomize
         self._context = context
 
         self._users = []
@@ -83,10 +72,6 @@ class Target(ABC):
             logger.warning(msg)
 
         self.targets = deduped
-
-        if self.randomize:
-            # make partial / failed loads more statistically useful
-            random.shuffle(self.targets)
 
         if self.resolved:
             self._validate_context(context)

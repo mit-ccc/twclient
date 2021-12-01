@@ -17,9 +17,6 @@ from .export import ExportCommand
 logger = logging.getLogger(__name__)
 
 
-# FIXME the randomize bit doesn't really work right, should randomize over all
-# users not within a target
-
 def _add_tag_arguments(parser):
     parser.add_argument('name', help='the name of the tag')
     parser.add_argument('-d', '--database',

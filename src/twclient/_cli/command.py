@@ -177,10 +177,6 @@ class TargetCommand(Command):
         passed element is str, it will be identified as list-ID or owner/slug
         format by the presence of a slash.
 
-    randomize : bool
-        Shoul the targets be processd in a randomized order? Passed through to
-        the Target classes.
-
     allow_missing_targets : bool
         Should the Job class continue on encountering targets which should be
         present in the database but aren't (if True) or raise an exception (if
@@ -188,9 +184,6 @@ class TargetCommand(Command):
 
     Attributes
     ----------
-    randomize : bool
-        The parameter passed to __init__.
-
     allow_missing_targets : bool
         The parameter passed to __init__.
 
@@ -214,7 +207,6 @@ class TargetCommand(Command):
         select_tags = kwargs.pop('select_tags', None)
         twitter_lists = kwargs.pop('twitter_lists', None)
 
-        randomize = kwargs.pop('randomize', False)
         allow_missing_targets = kwargs.pop('allow_missing_targets', False)
 
         super().__init__(**kwargs)
@@ -222,31 +214,21 @@ class TargetCommand(Command):
         targets = []
 
         if user_ids is not None:
-            targets += [
-                tg.UserIdTarget(targets=user_ids, randomize=randomize)
-            ]
+            targets += [tg.UserIdTarget(targets=user_ids)]
 
         if screen_names is not None:
-            targets += [
-                tg.ScreenNameTarget(targets=screen_names, randomize=randomize)
-            ]
+            targets += [tg.ScreenNameTarget(targets=screen_names)]
 
         if select_tags is not None:
-            targets += [
-                tg.SelectTagTarget(targets=select_tags, randomize=randomize)
-            ]
+            targets += [tg.SelectTagTarget(targets=select_tags)]
 
         if twitter_lists is not None:
-            targets += [
-                tg.TwitterListTarget(targets=twitter_lists,
-                                     randomize=randomize)
-            ]
+            targets += [tg.TwitterListTarget(targets=twitter_lists)]
 
         if self.targets_required and not targets:
             self.error('No target users provided')
 
         self.targets = targets
-        self.randomize = randomize
         self.allow_missing_targets = allow_missing_targets
 
 

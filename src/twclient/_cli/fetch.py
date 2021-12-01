@@ -23,6 +23,10 @@ class FetchCommand(cmd.ApiCommand, cmd.TargetCommand, cmd.DatabaseCommand):
 
     Parameters
     ----------
+    randomize : bool
+        Shoul the targets be processd in a randomized order? Passed through to
+        the Job classes.
+
     since_timestamp : float
         Used only for loading tweets. Ignore (i.e., don't load) any tweets
         older than the time indicated by this Unix timestamp.
@@ -43,6 +47,9 @@ class FetchCommand(cmd.ApiCommand, cmd.TargetCommand, cmd.DatabaseCommand):
 
     Attributes
     ----------
+    randomize : bool
+        The parameter passed to __init__.
+
     since_timestamp : float
         The parameter passed to __init__.
 
@@ -61,6 +68,8 @@ class FetchCommand(cmd.ApiCommand, cmd.TargetCommand, cmd.DatabaseCommand):
     }
 
     def __init__(self, **kwargs):
+        randomize = kwargs.pop('randomize', False)
+
         # tweet-specific arguments
         since_timestamp = kwargs.pop('since_timestamp', None)
         max_tweets = kwargs.pop('max_tweets', None)
@@ -73,6 +82,7 @@ class FetchCommand(cmd.ApiCommand, cmd.TargetCommand, cmd.DatabaseCommand):
                 raise ValueError('since_timestamp, max_tweets and old_tweets '
                                  'are only valid with subcommand = "tweets"')
 
+        self.randomize = randomize
         self.since_timestamp = since_timestamp
         self.max_tweets = max_tweets
         self.old_tweets = old_tweets
@@ -85,7 +95,8 @@ class FetchCommand(cmd.ApiCommand, cmd.TargetCommand, cmd.DatabaseCommand):
             'targets': self.targets,
             'allow_missing_targets': self.allow_missing_targets,
             'allow_api_errors': self.allow_api_errors,
-            'load_batch_size': self.load_batch_size
+            'load_batch_size': self.load_batch_size,
+            'randomize': self.randomize
         }
 
         if self.subcommand == 'tweets':

@@ -2,6 +2,7 @@
 Jobs which interact with the Twitter API.
 '''
 
+import random
 import logging
 import warnings
 
@@ -32,30 +33,53 @@ class FetchJob(ApiJob, TargetJob):
 
     Parameters
     ----------
-    load_batch_size : int
-        Load new rows to the database in batches of this size. The default is
-        None, which loads all data retrieved in one batch. Lower values
-        minimize memory usage at the cost of slower loading speeds, while
-        higher values do the reverse. Target instances in self.targets do not
-        consider this value--it applies only to other rows loaded by the FetchJob
-        instance--because there are generally not enough targets to consume a
-        significant amount of memory. Followers and friends lists in particular
-        can be large enough to cause out-of-memory conditions; setting
-        ``load_batch_size`` to an appropriate value (e.g., 5000) can address
-        this problem.
+        load_batch_size : int
+            Load new rows to the database in batches of this size. The default
+            is None, which loads all data retrieved in one batch. Lower values
+            minimize memory usage at the cost of slower loading speeds, while
+            higher values do the reverse. Target instances in self.targets do
+            not consider this value--it applies only to other rows loaded by
+            the FetchJob instance--because there are generally not enough
+            targets to consume a significant amount of memory. Followers and
+            friends lists in particular can be large enough to cause
+            out-of-memory conditions; setting ``load_batch_size`` to an
+            appropriate value (e.g., 5000) can address this problem.
+
+        randomize : bool
+            Whether to process raw targets in a randomized order. This may
+            allow loads which are interrupted partway through to retain some
+            useful statistical properties.
 
     Attributes
     ----------
-    load_batch_size : int
-        The parameter passed to __init__.
+        load_batch_size : int
+            The parameter passed to __init__.
+
+        randomize : bool
+            The parameter passed to __init__.
     '''
 
     def __init__(self, **kwargs):
         load_batch_size = kwargs.pop('load_batch_size', None)
+        randomize = kwargs.pop('randomize', False)
 
         super().__init__(**kwargs)
 
         self.load_batch_size = load_batch_size
+        self.randomize = randomize
+
+        self._users = None
+
+    @property
+    def users(self):
+        if not self.randomize:
+            return super().users
+
+        if self._users is None:
+            self._users = super().users
+            random.shuffle(self._users)
+
+        return self._users
 
     def validate_targets(self):
         super().validate_targets()
