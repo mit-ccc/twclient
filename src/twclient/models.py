@@ -145,7 +145,7 @@ class UniqueMixin:
             return cache[key]
 
         with session.no_autoflush:
-            obj = session.query(cls).filter_by(unique_hash=uhash).first()
+            obj = session.query(cls).filter_by(unique_hash=uhash).one_or_none()
 
             if not obj:
                 obj = cls(unique_hash=uhash, **kwargs)
