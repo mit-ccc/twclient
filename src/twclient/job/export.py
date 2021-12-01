@@ -23,6 +23,8 @@ logger = logging.getLogger(__name__)
 # pylint: disable=no-member
 
 
+# FIXME? func.case
+
 class ExportJob(TargetJob, DatabaseJob):
     '''
     A job exporting data from the database.
@@ -375,7 +377,9 @@ class ExportUserInfoJob(ExportJob):
     This export includes user-level information. Besides the Twitter-assigned
     user ID, fields include such things as the profile URL and self-reported
     location, counts of friends, followers and list memberships, verified
-    status, and other such user-specific fields. There is one row per user.
+    status, and other such user-specific fields. If a given user's data has
+    been fetched more than once, only the most recent fetch will be used. There
+    is one row per user.
 
     If targets are specified, only those users will be included in the export.
     If no targets are specified, the default is to return rows for all users
@@ -386,11 +390,133 @@ class ExportUserInfoJob(ExportJob):
     columns = ['user_id', 'profile_url', 'friends_count', 'followers_count',
                'listed_count', 'screen_name', 'location', 'display_name',
                'description', 'protected', 'verified', 'account_create_dt',
-               'tweets_all_time', 'first_tweet_dt', 'last_tweet_dt',
-               'ios_user', 'android_user', 'desktop_user', 'business_app_user']
+               'recorded_tweets_all_time', 'first_tweet_dt', 'last_tweet_dt',
+               'android_user', 'ios_user', 'desktop_user', 'business_app_user']
 
     def query(self):
-        pass  # FIXME
+        if self.users:
+            eligibles = md.StgUser
+
+            # we have to refer to subquery columns with subquery.c.column
+            # rather than table.column as for tables, so this function
+            # abstracts away which to use (rather than wrapping md.StgUser in a
+            # subquery which might have performance implications on e.g. MySQL)
+            def access(obj, name):
+                return getattr(obj, name)
+        else:
+            eligibles = self.session \
+                .query(md.UserData.user_id) \
+                .group_by(md.UserData.user_id) \
+                .subquery()
+
+            def access(obj, name):
+                return getattr(getattr(obj, 'c'), name)
+
+        elt = sa.orm.aliased(eligibles)
+        twt = sa.orm.aliased(md.Tweet)
+        tweet_data = self.session \
+            .query(
+                access(elt, 'user_id').label('user_id'),
+                func.count(twt.tweet_id).label('recorded_tweets_all_time'),
+                func.min(twt.create_dt).label('first_tweet_dt'),
+                func.max(twt.create_dt).label('last_tweet_dt'),
+                func.max(
+                    sa.case([
+                        (twt.source.in_(['Twitter for Android']), 1)
+                    ], else_=0)
+                ).label('android_user'),
+                func.max(
+                    sa.case([
+                        (twt.source.in_([
+                            'Twitter for iPhone', 'Twitter for iPad', 'iOS',
+                            'Tweetbot for iOS'
+                        ]), 1)
+                    ], else_=0)
+                ).label('ios_user'),
+                func.max(
+                    sa.case([
+                        (twt.source.in_([
+                            'Twitter Web App', 'Twitter Web Client',
+                            'TweetDeck', 'Twitter for Mac', 'Tweetbot for Mac'
+                        ]), 1)
+                    ], else_=0)
+                ).label('desktop_user'),
+                func.max(
+                    sa.case([
+                        (twt.source.in_([
+                            'SocialFlow', 'Hootsuite', 'Hootsuite Inc.',
+                            'Twitter Media Studio'
+                        ]), 1)
+                    ], else_=0)
+                ).label('business_app_user')
+            ) \
+            .join(twt, access(elt, 'user_id') == twt.user_id) \
+            .group_by(access(elt, 'user_id')) \
+            .subquery()
+
+        elu = sa.orm.aliased(eligibles)
+        uda = sa.orm.aliased(md.UserData)
+        url = sa.orm.aliased(md.Url)
+        user_data_inner = self.session \
+            .query(
+                uda.user_id.label('user_id'),
+                url.url.label('profile_url'),
+                uda.friends_count.label('friends_count'),
+                uda.followers_count.label('followers_count'),
+                uda.listed_count.label('listed_count'),
+                uda.screen_name.label('screen_name'),
+                uda.location.label('location'),
+                uda.display_name.label('display_name'),
+                uda.description.label('description'),
+                uda.protected.label('protected'),
+                uda.verified.label('verified'),
+                uda.create_dt.label('account_create_dt'),
+                func.row_number().over(
+                    partition_by=uda.user_id,
+                    order_by=uda.insert_dt.desc()
+                ).label('rn')
+            ) \
+            .join(elu, uda.user_id == access(elu, 'user_id')) \
+            .join(url, url.url_id == uda.url_id) \
+            .subquery()
+
+        udi = sa.orm.aliased(user_data_inner)
+        user_data = self.session \
+            .query(udi) \
+            .filter(udi.c.rn == 1) \
+            .subquery()
+
+        tda = sa.orm.aliased(tweet_data)
+        uds = sa.orm.aliased(user_data)
+        eli = sa.orm.aliased(eligibles)
+        ret = self.session \
+            .query(
+                access(eli, 'user_id'),
+                uds.c.profile_url.label('profile_url'),
+                uds.c.friends_count.label('friends_count'),
+                uds.c.followers_count.label('followers_count'),
+                uds.c.listed_count.label('listed_count'),
+                uds.c.screen_name.label('screen_name'),
+                uds.c.location.label('location'),
+                uds.c.display_name.label('display_name'),
+                uds.c.description.label('description'),
+                uds.c.protected.label('protected'),
+                uds.c.verified.label('verified'),
+                uds.c.account_create_dt.label('account_create_dt'),
+
+                func.coalesce(tda.c.recorded_tweets_all_time, 0) \
+                    .label('recorded_tweets_all_time'),
+                tda.c.first_tweet_dt.label('first_tweet_dt'),
+                tda.c.last_tweet_dt.label('last_tweet_dt'),
+                tda.c.android_user.label('android_user'),
+                tda.c.ios_user.label('ios_user'),
+                tda.c.desktop_user.label('desktop_user'),
+                tda.c.business_app_user.label('business_app_user')
+            ) \
+            .join(uds, uds.c.user_id == access(eli, 'user_id'), isouter=True) \
+            .join(tda, tda.c.user_id == access(eli, 'user_id'), isouter=True)
+
+        yield from ret
 
 
 class ExportMutualsJob(ExportJob):
@@ -429,10 +555,6 @@ class ExportMutualsJob(ExportJob):
         if self.users:
             eligibles = md.StgUser
 
-            # we have to refer to subquery columns with subquery.c.column
-            # rather than table.column as for tables, so this function
-            # abstracts away which to use (rather than wrapping md.StgUser in a
-            # subquery which might have performance implications on e.g. MySQL)
             def access(obj, name):
                 return getattr(obj, name)
         else:
