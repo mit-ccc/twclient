@@ -23,8 +23,6 @@ logger = logging.getLogger(__name__)
 # pylint: disable=no-member
 
 
-# FIXME? func.case
-
 class ExportJob(TargetJob, DatabaseJob):
     '''
     A job exporting data from the database.
@@ -351,7 +349,7 @@ class ExportTweetsJob(ExportJob):
                 twt.retweet_count,
                 twt.favorite_count,
 
-                func.case(value=twt.source, whens={
+                sa.case(value=twt.source, whens={
                     'Twitter for iPhone': 'iPhone',
                     'Twitter for Android': 'Android',
                     'Twitter Web App': 'Web',
