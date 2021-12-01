@@ -17,10 +17,22 @@ from .export import ExportCommand
 logger = logging.getLogger(__name__)
 
 
+def _add_common_arguments(parser):
+    parser.add_argument('-v', '--verbose', action='count', default=0,
+        help='verbos output (use repeatedly for more verbosity)')
+    parser.add_argument('-c', '--config-file', default='~/.twclientrc',
+        help='path to config file (default ~/.twclientrc)')
+
+    return parser
+
+
 def _add_tag_arguments(parser):
     parser.add_argument('name', help='the name of the tag')
     parser.add_argument('-d', '--database',
                         help='use this stored DB profile instead of default')
+
+    return parser
+
 
 def _add_user_selection_arguments(parser):
     parser.add_argument('-g', '--select-tags', nargs='+',
@@ -175,17 +187,11 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
     #
 
     ## everything has these args
+    _add_common_arguments(cps['initialize'])
+
     for cmd in ssps.keys():
         for subcmd in ssps[cmd].keys():
-            ssps[cmd][subcmd].add_argument(
-                '-v', '--verbose', action='count', default=0,
-                help='verbos output (use repeatedly for more verbosity)'
-            )
-
-            ssps[cmd][subcmd].add_argument(
-                '-c', '--config-file', default='~/.twclientrc',
-                help='path to config file (default ~/.twclientrc)'
-            )
+            _add_common_arguments(ssps[cmd][subcmd])
 
     ## initialize
     cps['initialize'].add_argument('-d', '--database',
