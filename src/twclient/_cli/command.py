@@ -285,11 +285,13 @@ class DatabaseCommand(Command):
                 self.error(msg.format(database))
             else:
                 db_to_use = database
-        elif self.config.db_profile_names:
-            # the order they were added is preserved in the file
-            db_to_use = self.config.db_profile_names[-1]
+        elif self.config.db_default_profile_name:
+            db_to_use = self.config.db_default_profile_name
         else:
-            self.error('No database profiles configured (use add-db)')
+            self.error('No database profile specified and no default profile '
+                       'configured (use list-db to see profiles, add-db to '
+                       'create a new one, or set-db-default to set an '
+                       'existing one as default)')
 
         self.database = db_to_use
         self.load_batch_size = load_batch_size

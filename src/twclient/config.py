@@ -147,6 +147,25 @@ class Config(cl.abc.MutableMapping):
         ]
 
     @property
+    def db_default_profile_name(self):
+        '''
+        The name of the database profile set as default, or None if no profile
+        is set as default.
+        '''
+
+        default_status = [
+            self.getboolean(p, 'is_default')
+            for p in self.db_profile_names
+        ]
+
+        if sum(default_status) == 1:
+            # validate() checks that there's <= 1 default profile
+            ind = default_status.index(1)
+            return self.db_profile_names[ind]
+
+        return None
+
+    @property
     def api_profile_names(self):
         '''
         The names of all API profiles in the config.
