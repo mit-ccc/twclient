@@ -387,12 +387,14 @@ class UserData(TimestampsMixin, FromTweepyInterface, Base):
         The number of lists the user appears on.
     '''
 
-    user_data_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_data_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                          primary_key=True, autoincrement=True)
+
     user_id = Column(BigInteger,
                      ForeignKey('user.user_id', deferrable=True),
                      nullable=False, index=True)
 
-    url_id = Column(BigInteger,
+    url_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
                     ForeignKey('url.url_id', deferrable=True),
                     nullable=True, index=True)
 
@@ -649,7 +651,8 @@ class UserList(Base):
         The SCD validity end date (None / NULL if the row is current).
     '''
 
-    user_list_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_list_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                          primary_key=True, autoincrement=True)
 
     user_id = Column(BigInteger,
                      ForeignKey('user.user_id', deferrable=True),
@@ -691,7 +694,8 @@ class UserTag(TimestampsMixin, Base):
         The ID of the tag the user is assigned.
     '''
 
-    user_tag_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_tag_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                         primary_key=True, autoincrement=True)
 
     user_id = Column(BigInteger,
                      ForeignKey('user.user_id', deferrable=True),
@@ -742,7 +746,8 @@ class Follow(Base):
         The SCD validity end date (None / NULL if the row is current).
     '''
 
-    follow_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    follow_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                       primary_key=True, autoincrement=True)
 
     source_user_id = Column(BigInteger,
                             ForeignKey('user.user_id', deferrable=True),
@@ -989,7 +994,8 @@ class Hashtag(TimestampsMixin, UniqueMixin, Base):
         The text of the hashtag.
     '''
 
-    hashtag_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    hashtag_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                        primary_key=True, autoincrement=True)
 
     name = Column(UnicodeText, nullable=False, unique=True)
 
@@ -1017,7 +1023,8 @@ class Symbol(TimestampsMixin, UniqueMixin, Base):
         The text of the symbol / cashtag.
     '''
 
-    symbol_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    symbol_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                       primary_key=True, autoincrement=True)
 
     name = Column(UnicodeText, nullable=False, unique=True)
 
@@ -1043,7 +1050,8 @@ class Url(TimestampsMixin, UniqueMixin, Base):
         The URL itself.
     '''
 
-    url_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    url_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                    primary_key=True, autoincrement=True)
 
     url = Column(UnicodeText, nullable=False, unique=True)
 
@@ -1129,7 +1137,8 @@ class Media(TimestampsMixin, FromTweepyInterface, Base):
 
     # Twitter gives these IDs, so unlike with the other entities we don't have
     # to make one up
-    media_id = Column(BigInteger, primary_key=True, autoincrement=False)
+    media_id = Column(BigInteger,
+                      primary_key=True, autoincrement=False)
 
     media_type_id = Column(Integer,
                            ForeignKey('media_type.media_type_id',
@@ -1201,7 +1210,7 @@ class MediaVariant(TimestampsMixin, ListFromTweepyInterface, Base):
                       ForeignKey('media.media_id', deferrable=True),
                       primary_key=True, autoincrement=False)
 
-    url_id = Column(BigInteger,
+    url_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
                     ForeignKey('url.url_id', deferrable=True),
                     primary_key=True, autoincrement=False)
 
@@ -1335,7 +1344,7 @@ class HashtagMention(TimestampsMixin, ListFromTweepyInterface, Base):
     start_index = Column(Integer, primary_key=True, autoincrement=False)
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
-    hashtag_id = Column(BigInteger,
+    hashtag_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
                         ForeignKey('hashtag.hashtag_id', deferrable=True),
                         nullable=False, index=True)
 
@@ -1399,7 +1408,7 @@ class SymbolMention(TimestampsMixin, ListFromTweepyInterface, Base):
     start_index = Column(Integer, primary_key=True, autoincrement=False)
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
-    symbol_id = Column(BigInteger,
+    symbol_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
                        ForeignKey('symbol.symbol_id', deferrable=True),
                        nullable=False, index=True)
 
@@ -1490,7 +1499,7 @@ class UrlMention(TimestampsMixin, ListFromTweepyInterface, Base):
     start_index = Column(Integer, primary_key=True, autoincrement=False)
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
-    url_id = Column(BigInteger,
+    url_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
                     ForeignKey('url.url_id', deferrable=True),
                     nullable=False, index=True)
 
