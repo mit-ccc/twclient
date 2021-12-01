@@ -8,6 +8,7 @@ import logging
 from abc import abstractmethod
 
 import sqlalchemy as sa
+from sqlalchemy import sql
 from sqlalchemy.sql.expression import func
 
 from .job import DatabaseJob, TargetJob
@@ -143,8 +144,7 @@ class ExportFollowGraphJob(ExportJob):
                 .join(su2, su2.user_id == md.Follow.target_user_id) \
 
         ret = ret \
-            .filter_by(valid_end_dt=None) \
-            .all()
+            .filter(md.Follow.valid_end_dt.is_(None))
 
         yield from ret
 
@@ -183,8 +183,7 @@ class ExportMentionGraphJob(ExportJob):
                 .join(su2, su2.user_id == md.UserMention.mentioned_user_id) \
 
         ret = ret \
-            .group_by(md.Tweet.user_id, md.UserMention.mentioned_user_id) \
-            .all()
+            .group_by(md.Tweet.user_id, md.UserMention.mentioned_user_id)
 
         yield from ret
 
@@ -223,8 +222,7 @@ class ExportReplyGraphJob(ExportJob):
 
         ret = ret \
             .filter(md.Tweet.in_reply_to_user_id.isnot(None)) \
-            .group_by(md.Tweet.user_id, md.Tweet.in_reply_to_user_id) \
-            .all()
+            .group_by(md.Tweet.user_id, md.Tweet.in_reply_to_user_id)
 
         yield from ret
 
@@ -262,8 +260,7 @@ class ExportRetweetGraphJob(ExportJob):
                 .join(su2, su2.user_id == tws.user_id)
 
         ret = ret \
-            .group_by(tws.user_id, twt.user_id) \
-            .all()
+            .group_by(tws.user_id, twt.user_id)
 
         yield from ret
 
@@ -301,8 +298,7 @@ class ExportQuoteGraphJob(ExportJob):
                 .join(su2, su2.user_id == tws.user_id)
 
         ret = ret \
-            .group_by(tws.user_id, twt.user_id) \
-            .all()
+            .group_by(tws.user_id, twt.user_id)
 
         yield from ret
 
@@ -397,7 +393,95 @@ class ExportUserInfoJob(ExportJob):
         pass  # FIXME
 
 
-class ExportMutualFollowersJob(ExportJob):
+class ExportMutualsJob(ExportJob):
+    '''
+    Compute mutual friends or followers counts for pairs of some set of users.
+    '''
+
+    @property
+    def columns(self):
+        columns = ['user_id1', 'user_id2']
+
+        if self.direction == 'followers':
+            columns += ['mutual_followers']
+        else:
+            columns += ['mutual_friends']
+
+        return columns
+
+    @property
+    @abstractmethod
+    def direction(self):
+        '''
+        The direction (friends or followers) of mutual counts to compute.
+        '''
+
+        raise NotImplementedError()
+
+    def query(self):
+        if self.direction == 'followers':
+            select_col = 'source_user_id'
+            filter_col = 'target_user_id'
+        else:
+            select_col = 'target_user_id'
+            filter_col = 'source_user_id'
+
+        if self.users:
+            eligibles = md.StgUser
+
+            # we have to refer to subquery columns with subquery.c.column
+            # rather than table.column as for tables, so this function
+            # abstracts away which to use (rather than wrapping md.StgUser in a
+            # subquery which might have performance implications on e.g. MySQL)
+            def access(obj, name):
+                return getattr(obj, name)
+        else:
+            eligibles = self.session \
+                .query(md.UserData.user_id) \
+                .group_by(md.UserData.user_id) \
+                .subquery()
+
+            def access(obj, name):
+                return getattr(getattr(obj, 'c'), name)
+
+        el1 = sa.orm.aliased(eligibles)
+        el2 = sa.orm.aliased(eligibles)
+
+        fo1 = sa.orm.aliased(md.Follow)
+        mutuals1 = self.session \
+            .query(getattr(fo1, select_col).label('source_user_id')) \
+            .filter(
+                fo1.valid_end_dt.is_(None),
+                getattr(fo1, filter_col) == access(el1, 'user_id')
+            ).correlate(el1)
+
+        fo2 = sa.orm.aliased(md.Follow)
+        mutuals2 = self.session \
+            .query(getattr(fo2, select_col).label('source_user_id')) \
+            .filter(
+                fo2.valid_end_dt.is_(None),
+                getattr(fo2, filter_col) == access(el2, 'user_id')
+            ).correlate(el2)
+
+        mutuals = mutuals1.intersect_all(mutuals2).subquery()
+        mutuals_count = sql.select(func.count()).select_from(mutuals).scalar_subquery()
+
+        ret = self.session \
+            .query(
+                access(el1, 'user_id').label('user_id1'),
+                access(el2, 'user_id').label('user_id2'),
+                mutuals_count.label('mutual_followers')
+            ) \
+            .join(el1, access(el1, 'user_id') > access(el2, 'user_id')) \
+            .group_by(
+                access(el1, 'user_id'),
+                access(el2, 'user_id')
+            )
+
+        yield from ret
+
+
+class ExportMutualFollowersJob(ExportMutualsJob):
     '''
     Export counts of mutual followers.
 
@@ -416,13 +500,9 @@ class ExportMutualFollowersJob(ExportJob):
     the ``user_data`` table).
     '''
 
-    columns = ['user_id1', 'user_id2', 'mutual_followers']
+    direction = 'followers'
 
-    def query(self):
-        pass  # FIXME
-
-
-class ExportMutualFriendsJob(ExportJob):
+class ExportMutualFriendsJob(ExportMutualsJob):
     '''
     Export counts of mutual friends.
 
@@ -441,7 +521,5 @@ class ExportMutualFriendsJob(ExportJob):
     the ``user_data`` table).
     '''
 
-    columns = ['user_id1', 'user_id2', 'mutual_friends']
+    direction = 'friends'
 
-    def query(self):
-        pass  # FIXME
