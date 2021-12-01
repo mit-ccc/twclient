@@ -38,18 +38,19 @@ class InitializeCommand(cmd.DatabaseCommand):
 
     def __init__(self, **kwargs):
         yes = kwargs.pop('yes', False)
-        if not yes:
-            self.error("WARNING: This command will drop the Twitter data "
-                       "tables and delete all data! If you want to "
-                       "proceed, rerun with -y / --yes.")
-        else:
-            logger.warning('Recreating schema and dropping existing data')
 
         # this doesn't actually take a subcommand, just a hack to
         # make it work with the same machinery as the others
         kwargs['subcommand'] = 'initialize'
 
         super().__init__(**kwargs)
+
+        if not yes:
+            self.error("WARNING: This command will drop the Twitter data "
+                       "tables and delete all data! If you want to "
+                       "proceed, rerun with -y / --yes.")
+        else:
+            logger.warning('Recreating schema and dropping existing data')
 
     @property
     def job_args(self):
