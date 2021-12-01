@@ -359,9 +359,9 @@ class ExportTweetsJob(ExportJob):
                     'TweetDeck': 'Desktop'
                 }, else_='Other')
             ) \
-            .join(twr, twr.tweet_id == twt.retweeted_status_id) \
-            .join(twq, twq.tweet_id == twt.quoted_status_id) \
-            .join(twp, twp.tweet_id == twt.in_reply_to_status_id)
+            .join(twr, twr.tweet_id == twt.retweeted_status_id, isouter=True) \
+            .join(twq, twq.tweet_id == twt.quoted_status_id, isouter=True) \
+            .join(twp, twp.tweet_id == twt.in_reply_to_status_id, isouter=True)
 
         if self.users:
             ret = ret \
@@ -477,7 +477,7 @@ class ExportUserInfoJob(ExportJob):
                 ).label('rn')
             ) \
             .join(elu, uda.user_id == access(elu, 'user_id')) \
-            .join(url, url.url_id == uda.url_id) \
+            .join(url, url.url_id == uda.url_id, isouter=True) \
             .subquery()
 
         udi = sa.orm.aliased(user_data_inner)
