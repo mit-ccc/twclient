@@ -389,8 +389,8 @@ all these queries together and produce one user-level output file:
         coalesce(ttd.tweets_all_time, 0) as tweets_all_time,
         ttd.first_tweet_dt,
         ttd.last_tweet_dt,
-        ttd.ios_user,
         ttd.android_user,
+        ttd.ios_user,
         ttd.desktop_user,
         ttd.business_app_user
     from tmp_universe tu

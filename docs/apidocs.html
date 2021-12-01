@@ -2193,9 +2193,6 @@ in a way that preserves order.</p></li>
 <li><p><strong>context</strong> (<em>instance of job.Job</em><em>, or </em><em>None</em>) – The Job instance’s database and API connections will be used as
 needed to resolve raw targets to users. If not passed on
 initialization, a context object must be passed to <code class="docutils literal notranslate"><span class="pre">resolve()</span></code>.</p></li>
-<li><p><strong>randomize</strong> (<em>bool</em>) – Whether to process raw targets in a randomized order. This may
-allow loads which are interrupted partway through to retain some
-useful statistical properties.</p></li>
 </ul>
 </dd>
 </dl>
@@ -2208,17 +2205,6 @@ targets).</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
 <dd class="field-odd"><p>list of str or int</p>
-</dd>
-</dl>
-</dd></dl>
-
-<dl class="py attribute">
-<dt class="sig sig-object py" id="twclient.target.Target.randomize">
-<span class="sig-name descname"><span class="pre">randomize</span></span><a class="headerlink" href="#twclient.target.Target.randomize" title="Permalink to this definition"></a></dt>
-<dd><p>The parameter passed to __init__.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
 </dd></dl>
