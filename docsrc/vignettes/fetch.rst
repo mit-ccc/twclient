@@ -230,22 +230,22 @@ the lists of ``lists.csv``, though you could do the individual users first:
 
 .. code-block:: bash
 
-   tail -n +2 lists.csv | xargs twclient -v fetch users -b -l
+   tail -n +2 lists.csv | xargs twclient fetch users -v -b -l
 
 This command skips the CSV header line (via ``tail -n +2 lists.csv``), which
-twclient doesn’t actually use, and pipes the rest of it to ``twclient -v fetch
+twclient doesn’t actually use, and pipes the rest of it to ``twclient fetch -v
 users -b -l`` via ``xargs``. The ``-v`` flag requests verbose output, ``-b``
 says to continue even if the Twitter API says some of the lists requested are
 protected or don’t exist, and ``-l`` says that the users to hydrate are given
 in the form of Twitter lists. (If you’d left the header line out of the CSV
 file and wanted to avoid using xargs, note that you could instead write
-something like ``twclient -v fetch users -b -l $(cat lists.csv)``.)
+something like ``twclient fetch users -v -b -l $(cat lists.csv)``.)
 
 Similarly, you can hydrate the individual users as follows:
 
 .. code-block:: bash
 
-   tail -n +2 users.csv | xargs twclient -v fetch users -b -n
+   tail -n +2 users.csv | xargs twclient fetch users -v -b -n
 
 A noteworthy difference from the case of lists is that you use the ``-n``
 option, for users identified by screen names, rather than the ``-l`` option for
@@ -307,7 +307,7 @@ tweets`` command:
 
 .. code-block:: bash
 
-   twclient -v fetch tweets -b -g universe
+   twclient fetch tweets -v -b -g universe
 
 As before, ``-v`` asks for verbose output, ``-b`` says to ignore nonexistent or
 protected users rather than aborting the job, and ``-g universe`` says to fetch
@@ -337,13 +337,13 @@ Here’s fetching friends, using options you’ve seen all of by now:
 
 .. code-block:: bash
 
-   twclient -v fetch friends -b -g universe
+   twclient fetch friends -v -b -g universe
 
 And here’s followers:
 
 .. code-block:: bash
 
-   twclient -v fetch followers -b -p -j 5000 -g universe
+   twclient fetch followers -v -b -p -j 5000 -g universe
 
 The one new flag used here, ``-j 5000``, indicates the size of the batch used
 for loading follow edges. The default if you don’t use ``-j`` is to accumulate
@@ -395,12 +395,12 @@ Here’s all of our hard work in one little script:
        --token XXXXXX \
        --token-secret XXXXXX
 
-   tail -n +2 lists.csv | xargs twclient -v fetch users -b -l
+   tail -n +2 lists.csv | xargs twclient fetch users -v -b -l
 
    twclient tag create twitter_lists
    tail -n +2 lists.csv | xargs twclient tag apply twitter_lists -l
 
-   tail -n +2 users.csv | xargs twclient -v fetch users -b -n
+   tail -n +2 users.csv | xargs twclient fetch users -v -b -n
 
    twclient tag create twitter_users
    tail -n +2 users.csv | xargs twclient tag apply twitter_users -l
@@ -408,10 +408,10 @@ Here’s all of our hard work in one little script:
    twclient tag create universe
    twclient tag apply universe -g twitter_users twitter_lists
 
-   twclient -v fetch tweets -b -g universe
+   twclient fetch tweets -v -b -g universe
 
-   twclient -v fetch friends -b -g universe
-   twclient -v fetch followers -b -j 5000 -g universe
+   twclient fetch friends -v -b -g universe
+   twclient fetch followers -v -b -j 5000 -g universe
 
 Tada! Now you have data in a DB. You can use canned SQL queries, like those in
 the :doc:`exporting data vignette </vignettes/export>`, to get whatever piece

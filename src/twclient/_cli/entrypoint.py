@@ -84,11 +84,6 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
     desc = 'Fetch Twitter data and store in a DB schema'
     parser = ap.ArgumentParser(description=desc)
 
-    parser.add_argument('-v', '--verbose', action='count', default=0,
-                        help='verbosity level (repeat for more)')
-    parser.add_argument('-c', '--config-file', default='~/.twclientrc',
-                        help='path to config file (default ~/.twclientrc)')
-
     #
     # Commands
     #
@@ -181,6 +176,19 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
     #
     # Arguments
     #
+
+    ## everything has these args
+    for cmd in ssps.keys():
+        for subcmd in ssps[cmd].keys():
+            ssps[cmd][subcmd].add_argument(
+                '-v', '--verbose', action='count', default=0,
+                help='verbos output (use repeatedly for more verbosity)'
+            )
+
+            ssps[cmd][subcmd].add_argument(
+                '-c', '--config-file', default='~/.twclientrc',
+                help='path to config file (default ~/.twclientrc)'
+            )
 
     ## initialize
     cps['initialize'].add_argument('-d', '--database',

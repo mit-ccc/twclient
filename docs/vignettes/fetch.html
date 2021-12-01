@@ -275,19 +275,19 @@ retrieves some summary information about them and creates records for them in
 the database. You can do this with the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span></code> family of commands,
 and specifically <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span></code>. We’ll start by fetching the users in
 the lists of <code class="docutils literal notranslate"><span class="pre">lists.csv</span></code>, though you could do the individual users first:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 lists.csv <span class="p">|</span> xargs twclient -v fetch users -b -l
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 lists.csv <span class="p">|</span> xargs twclient fetch users -v -b -l
 </pre></div>
 </div>
 <p>This command skips the CSV header line (via <code class="docutils literal notranslate"><span class="pre">tail</span> <span class="pre">-n</span> <span class="pre">+2</span> <span class="pre">lists.csv</span></code>), which
-twclient doesn’t actually use, and pipes the rest of it to <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">-v</span> <span class="pre">fetch</span>
+twclient doesn’t actually use, and pipes the rest of it to <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">-v</span>
 <span class="pre">users</span> <span class="pre">-b</span> <span class="pre">-l</span></code> via <code class="docutils literal notranslate"><span class="pre">xargs</span></code>. The <code class="docutils literal notranslate"><span class="pre">-v</span></code> flag requests verbose output, <code class="docutils literal notranslate"><span class="pre">-b</span></code>
 says to continue even if the Twitter API says some of the lists requested are
 protected or don’t exist, and <code class="docutils literal notranslate"><span class="pre">-l</span></code> says that the users to hydrate are given
 in the form of Twitter lists. (If you’d left the header line out of the CSV
 file and wanted to avoid using xargs, note that you could instead write
-something like <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">-v</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-b</span> <span class="pre">-l</span> <span class="pre">$(cat</span> <span class="pre">lists.csv)</span></code>.)</p>
+something like <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-v</span> <span class="pre">-b</span> <span class="pre">-l</span> <span class="pre">$(cat</span> <span class="pre">lists.csv)</span></code>.)</p>
 <p>Similarly, you can hydrate the individual users as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 users.csv <span class="p">|</span> xargs twclient -v fetch users -b -n
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 users.csv <span class="p">|</span> xargs twclient fetch users -v -b -n
 </pre></div>
 </div>
 <p>A noteworthy difference from the case of lists is that you use the <code class="docutils literal notranslate"><span class="pre">-n</span></code>
@@ -333,7 +333,7 @@ follow edges—according to tags you’ve defined.</p>
 <p>Now, with fully hydrated users, it’s time to get down to one of our primary
 jobs: fetching the users’ tweets. We can do this with the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span>
 <span class="pre">tweets</span></code> command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient -v fetch tweets -b -g universe
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient fetch tweets -v -b -g universe
 </pre></div>
 </div>
 <p>As before, <code class="docutils literal notranslate"><span class="pre">-v</span></code> asks for verbose output, <code class="docutils literal notranslate"><span class="pre">-b</span></code> says to ignore nonexistent or
@@ -357,11 +357,11 @@ follows B, B is A’s friend and A is B’s follower.) There are two more
 underlying Twitter API endpoints don’t, so the <code class="docutils literal notranslate"><span class="pre">follow</span></code> table will end up
 being populated with bare numeric user IDs.</p>
 <p>Here’s fetching friends, using options you’ve seen all of by now:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient -v fetch friends -b -g universe
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient fetch friends -v -b -g universe
 </pre></div>
 </div>
 <p>And here’s followers:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient -v fetch followers -b -p -j <span class="m">5000</span> -g universe
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient fetch followers -v -b -p -j <span class="m">5000</span> -g universe
 </pre></div>
 </div>
 <p>The one new flag used here, <code class="docutils literal notranslate"><span class="pre">-j</span> <span class="pre">5000</span></code>, indicates the size of the batch used
@@ -407,12 +407,12 @@ twclient config add-api -n twitter2 <span class="se">\</span>
     --token XXXXXX <span class="se">\</span>
     --token-secret XXXXXX
 
-tail -n +2 lists.csv <span class="p">|</span> xargs twclient -v fetch users -b -l
+tail -n +2 lists.csv <span class="p">|</span> xargs twclient fetch users -v -b -l
 
 twclient tag create twitter_lists
 tail -n +2 lists.csv <span class="p">|</span> xargs twclient tag apply twitter_lists -l
 
-tail -n +2 users.csv <span class="p">|</span> xargs twclient -v fetch users -b -n
+tail -n +2 users.csv <span class="p">|</span> xargs twclient fetch users -v -b -n
 
 twclient tag create twitter_users
 tail -n +2 users.csv <span class="p">|</span> xargs twclient tag apply twitter_users -l
@@ -420,10 +420,10 @@ tail -n +2 users.csv <span class="p">|</span> xargs twclient tag apply twitter_u
 twclient tag create universe
 twclient tag apply universe -g twitter_users twitter_lists
 
-twclient -v fetch tweets -b -g universe
+twclient fetch tweets -v -b -g universe
 
-twclient -v fetch friends -b -g universe
-twclient -v fetch followers -b -j <span class="m">5000</span> -g universe
+twclient fetch friends -v -b -g universe
+twclient fetch followers -v -b -j <span class="m">5000</span> -g universe
 </pre></div>
 </div>
 <p>Tada! Now you have data in a DB. You can use canned SQL queries, like those in
