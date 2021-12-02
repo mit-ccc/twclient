@@ -18,11 +18,6 @@ from .. import models as md
 logger = logging.getLogger(__name__)
 
 
-# This isn't a great way to handle these warnings, but sqlalchemy is so dynamic
-# that most attribute accesses aren't resolved until runtime
-# pylint: disable=no-member
-
-
 class ExportJob(TargetJob, DatabaseJob):
     '''
     A job exporting data from the database.
@@ -97,10 +92,7 @@ class ExportJob(TargetJob, DatabaseJob):
         ids = list(set(self.users))
         ids = ut.grouper(self.users, 5000)  # just a default batch size
 
-        # Clear the stg table. This is much, much faster than .delete() /
-        # DELETE FROM <tbl>, but not transactional on many DBs.
-        md.StgUser.__table__.drop(self.session.get_bind())
-        md.StgUser.__table__.create(self.session.get_bind())
+        md.StgUser.clear_fast(self.session)
 
         n_items = 0
         for ind, batch in enumerate(ids):
@@ -391,7 +383,7 @@ class ExportUserInfoJob(ExportJob):
                'recorded_tweets_all_time', 'first_tweet_dt', 'last_tweet_dt',
                'android_user', 'ios_user', 'desktop_user', 'business_app_user']
 
-    def query(self):
+    def query(self):  # pylint: disable=too-many-locals
         if self.users:
             eligibles = md.StgUser
 
@@ -646,4 +638,3 @@ class ExportMutualFriendsJob(ExportMutualsJob):
     '''
 
     direction = 'friends'
-

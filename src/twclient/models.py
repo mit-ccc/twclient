@@ -35,6 +35,23 @@ logger = logging.getLogger(__name__)
 # Base classes and infra
 #
 
+def reinitialize(engine):
+    '''
+    Rebuild / reinitialize the database, dropping and recreating all tables.
+
+    Parameters
+    ----------
+    engine : instance of sqlalchemy.engine.Engine
+        The engine on which to rebuild the database.
+
+    Returns
+    -------
+    None
+    '''
+
+    Base.metadata.drop_all(engine)
+    Base.metadata.create_all(engine)
+
 
 @as_declarative()
 class Base:
@@ -68,6 +85,27 @@ class Base:
         fields = {n: getattr(self, n) for n in fieldnames}
 
         return self._repr(**fields)
+
+    @classmethod
+    def clear_fast(cls, session):
+        '''
+        Clear the table by dropping and recreating it.
+
+        This is much, much faster than .delete() / DELETE FROM <tbl>, but not
+        transactional on many DBs.
+
+        Parameters
+        ----------
+        session : instance of sqlalchemy.orm.Session
+            The session in which to clear the table.
+
+        Returns
+        -------
+        None
+        '''
+
+        cls.__table__.drop(session.get_bind())
+        cls.__table__.create(session.get_bind())
 
 
 # This is from one of the standard sqlalchemy recipes:

@@ -17,7 +17,6 @@ from .. import models as md
 
 logger = logging.getLogger(__name__)
 
-
 # This isn't a great way to handle these warnings, but sqlalchemy is so dynamic
 # that most attribute accesses aren't resolved until runtime
 # pylint: disable=no-member
@@ -324,7 +323,7 @@ class FollowGraphJob(FetchJob):
         ids = api_method(user_id=user.user_id)
         ids = ut.grouper(ids, self.load_batch_size)
 
-        self._clear_stg_table()
+        md.StgFollow.clear_fast(self.session)
 
         n_items = 0
         for ind, batch in enumerate(ids):
@@ -337,12 +336,6 @@ class FollowGraphJob(FetchJob):
         self._process_stg_data_for(user)
 
         return n_items
-
-    # this is much, much faster than .delete() / DELETE FROM <tbl>, but not
-    # transactional on many DBs
-    def _clear_stg_table(self):
-        md.StgFollow.__table__.drop(self.session.get_bind())
-        md.StgFollow.__table__.create(self.session.get_bind())
 
     def _insert_stg_batch(self, user, api_user_ids):
         api_user_ids = set(api_user_ids)

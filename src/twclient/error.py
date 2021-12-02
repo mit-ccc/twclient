@@ -198,7 +198,7 @@ class TwitterAPIError(TWClientError):
 
 
 @ut.export
-class TwitterServiceError(TwitterAPIError):  # pylint: disable=abstract-method
+class TwitterServiceError(TwitterAPIError):
     '''
     A problem with the Twitter service.
 

@@ -9,6 +9,7 @@ from .. import error as err
 
 logger = logging.getLogger(__name__)
 
+
 class ConfigJob(Job):
     '''
     A job which interacts with the config file.

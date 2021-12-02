@@ -10,10 +10,6 @@ from .. import models as md
 
 logger = logging.getLogger(__name__)
 
-# This isn't a great way to handle these warnings, but sqlalchemy is so dynamic
-# that most attribute accesses aren't resolved until runtime
-# pylint: disable=no-member
-
 
 class TagJob(DatabaseJob):
     '''

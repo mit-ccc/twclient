@@ -89,7 +89,7 @@ def _add_fetch_arguments(parser, extra=False):
     return parser
 
 
-def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
+def _make_parser():
     desc = 'Fetch Twitter data and store in a DB schema'
     parser = ap.ArgumentParser(description=desc)
 
@@ -126,61 +126,70 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
         val.required = True
 
     # parsers for the command subparsers: subcommand parsers
-    ssps = { key : {} for key in sps }
+    ssps = {}
 
-    ssps['config']['list-db']          = sps['config'].add_parser('list-db',
-                                       help='list database profiles')
-    ssps['config']['add-db']           = sps['config'].add_parser('add-db',
-                                       help='add DB profile')
-    ssps['config']['rm-db']            = sps['config'].add_parser('rm-db',
-                                       help='remove DB profile')
-    ssps['config']['set-db-default']  = sps['config'].add_parser('set-db-default',
-                                       help='make DB profile default')
+    ssps['config'] = {
+        'list-db':          sps['config'].add_parser('list-db',
+                            help='list database profiles'),
+        'add-db':           sps['config'].add_parser('add-db',
+                            help='add DB profile'),
+        'rm-db':            sps['config'].add_parser('rm-db',
+                            help='remove DB profile'),
+        'set-db-default':   sps['config'].add_parser('set-db-default',
+                            help='make DB profile default'),
+        'list-api':         sps['config'].add_parser('list-api',
+                            help='list Twitter API profiles'),
+        'add-api':          sps['config'].add_parser('add-api',
+                            help='add Twitter API profile'),
+        'rm-api':           sps['config'].add_parser('rm-api',
+                            help='remove Twitter API profile')
+    }
 
-    ssps['config']['list-api']         = sps['config'].add_parser('list-api',
-                                       help='list Twitter API profiles')
-    ssps['config']['add-api']          = sps['config'].add_parser('add-api',
-                                       help='add Twitter API profile')
-    ssps['config']['rm-api']           = sps['config'].add_parser('rm-api',
-                                       help='remove Twitter API profile')
+    ssps['tag'] = {
+        'create':           sps['tag'].add_parser('create',
+                            help='create a user tag'),
+        'delete':           sps['tag'].add_parser('delete',
+                            help='delete a user tag'),
+        'apply':            sps['tag'].add_parser('apply',
+                            help='apply a tag to users')
+    }
 
-    ssps['tag']['create']              = sps['tag'].add_parser('create',
-                                       help='create a user tag')
-    ssps['tag']['delete']              = sps['tag'].add_parser('delete',
-                                       help='delete a user tag')
-    ssps['tag']['apply']               = sps['tag'].add_parser('apply',
-                                       help='apply a tag to users')
+    ssps['fetch'] = {
+        'users':            sps['fetch'].add_parser('users',
+                            help='Get user info / "hydrate" users'),
+        'friends':          sps['fetch'].add_parser('friends',
+                            help="Get user friends"),
+        'followers':        sps['fetch'].add_parser('followers',
+                            help="Get user followers"),
+        'tweets':           sps['fetch'].add_parser('tweets',
+                            help="Get user tweets")
+    }
 
-    ssps['fetch']['users']             = sps['fetch'].add_parser('users',
-                                       help='Get user info / "hydrate" users')
-    ssps['fetch']['friends']           = sps['fetch'].add_parser('friends',
-                                       help="Get user friends")
-    ssps['fetch']['followers']         = sps['fetch'].add_parser('followers',
-                                       help="Get user followers")
-    ssps['fetch']['tweets']            = sps['fetch'].add_parser('tweets',
-                                       help="Get user tweets")
+    ssps['show'] = {
+        'ratelimit':        sps['show'].add_parser('ratelimit',
+                            help='Report API keys'' rate limit status')
+    }
 
-    ssps['show']['ratelimit']          = sps['show'].add_parser('ratelimit',
-                                       help='Report API keys'' rate limit status')
-
-    ssps['export']['follow-graph']     = sps['export'].add_parser('follow-graph',
-                                       help='Export follow graph')
-    ssps['export']['mention-graph']    = sps['export'].add_parser('mention-graph',
-                                       help='Export mention graph')
-    ssps['export']['retweet-graph']    = sps['export'].add_parser('retweet-graph',
-                                       help='Export retweet graph')
-    ssps['export']['reply-graph']      = sps['export'].add_parser('reply-graph',
-                                       help='Export reply graph')
-    ssps['export']['quote-graph']      = sps['export'].add_parser('quote-graph',
-                                       help='Export quote graph')
-    ssps['export']['tweets']           = sps['export'].add_parser('tweets',
-                                       help='Export user tweets')
-    ssps['export']['user-info']        = sps['export'].add_parser('user-info',
-                                       help='Export user-level data')
-    ssps['export']['mutual-followers'] = sps['export'].add_parser('mutual-followers',
-                                       help='Export all-pairs mutual follower counts')
-    ssps['export']['mutual-friends']   = sps['export'].add_parser('mutual-friends',
-                                       help='Export all-pairs mutual friend counts')
+    ssps['export'] = {
+        'follow-graph':     sps['export'].add_parser('follow-graph',
+                            help='Export follow graph'),
+        'mention-graph':    sps['export'].add_parser('mention-graph',
+                            help='Export mention graph'),
+        'retweet-graph':    sps['export'].add_parser('retweet-graph',
+                            help='Export retweet graph'),
+        'reply-graph':      sps['export'].add_parser('reply-graph',
+                            help='Export reply graph'),
+        'quote-graph':      sps['export'].add_parser('quote-graph',
+                            help='Export quote graph'),
+        'tweets':           sps['export'].add_parser('tweets',
+                            help='Export user tweets'),
+        'user-info':        sps['export'].add_parser('user-info',
+                            help='Export user-level data'),
+        'mutual-followers': sps['export'].add_parser('mutual-followers',
+                            help='Export all-pairs mutual follower counts'),
+        'mutual-friends':   sps['export'].add_parser('mutual-friends',
+                            help='Export all-pairs mutual friend counts')
+    }
 
     #
     # Arguments
@@ -189,9 +198,9 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
     ## everything has these args
     _add_common_arguments(cps['initialize'])
 
-    for cmd in ssps.keys():
-        for subcmd in ssps[cmd].keys():
-            _add_common_arguments(ssps[cmd][subcmd])
+    for subcmds in ssps.values():
+        for subcmd in subcmds.values():
+            _add_common_arguments(subcmd)
 
     ## initialize
     cps['initialize'].add_argument('-d', '--database',
@@ -200,15 +209,10 @@ def _make_parser():  # pylint: disable=too-many-statements,too-many-locals
                       help='Must specify this option to initialize')
 
     ## export
-    _add_export_arguments(ssps['export']['follow-graph'])
-    _add_export_arguments(ssps['export']['mention-graph'])
-    _add_export_arguments(ssps['export']['retweet-graph'])
-    _add_export_arguments(ssps['export']['reply-graph'])
-    _add_export_arguments(ssps['export']['quote-graph'])
-    _add_export_arguments(ssps['export']['tweets'])
-    _add_export_arguments(ssps['export']['user-info'])
-    _add_export_arguments(ssps['export']['mutual-followers'])
-    _add_export_arguments(ssps['export']['mutual-friends'])
+    for subcmd in ['follow-graph', 'mention-graph', 'retweet-graph',
+                   'reply-graph', 'quote-graph', 'tweets', 'user-info',
+                   'mutual-followers', 'mutual-friends']:
+        _add_export_arguments(ssps['export'][subcmd])
 
     ## fetch
     _add_fetch_arguments(ssps['fetch']['users'])
