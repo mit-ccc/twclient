@@ -2,20 +2,16 @@ API Documentation
 =================
 
 .. automodule:: twclient
-   :members:
+
+This documentation focuses on the Python API. For an introduction to
+command-line usage, see the :doc:`fetching-data vignette </vignettes/fetch>`;
+for detailed command-line help, see the ``--help`` flag to the ``twclient`` (or
+``twitter``) command.
 
 twclient.authpool
 -----------------
 
 .. automodule:: twclient.authpool
-   :members:
-   :undoc-members:
-   :show-inheritance:
-
-twclient.cli
-------------
-
-.. automodule:: twclient.cli
    :members:
    :undoc-members:
    :show-inheritance:

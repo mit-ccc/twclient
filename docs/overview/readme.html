@@ -43,7 +43,13 @@
               <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">README</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#twclient">twclient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#twclient">twclient</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setup">Setup</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pulling-data">Pulling data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exporting-data">Exporting data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#feedback-or-contributions">Feedback or Contributions</a></li>
+</ul>
+</li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
@@ -52,7 +58,7 @@
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../vignettes/fetch.html">Getting data from the Twitter API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../vignettes/extract.html">Extracting data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../vignettes/export.html">Working with fetched data</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
 <ul>
@@ -92,57 +98,85 @@ with a focus on loading data into a database. The goal is to be higher-level
 than twurl or tweepy and offer useful primitives for researchers who want to
 get data out of Twitter, without worrying about the details. The client can
 handle multiple sets of API credentials seamlessly, helping avoid rate limit
-issues.</p>
-<p>An example of usage:</p>
-<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1">#</span>
-<span class="c1"># Setup</span>
-<span class="c1">#</span>
+issues. There’s also support for exporting bulk datasets from the fetched raw
+data.</p>
+<section id="setup">
+<h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline"></a></h3>
+<p>Install the package from pypi, or by cloning this repo and using <code class="docutils literal notranslate"><span class="pre">pip</span>
+<span class="pre">install</span></code> if you want to use the development version. After that, you need to
+tell twclient about your database backend and Twitter credentials:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set up the database. This creates a persistent profile in a config file, no</span>
+<span class="c1"># need to type the URL repeatedly. You specify a database via a sqlalchemy</span>
+<span class="c1"># connection url, which can be sqlite (as here) for a zero-configuration</span>
+<span class="c1"># setup, and can also be something like &quot;postgresql:///&quot; to use a</span>
+<span class="c1"># traditional full-fledged database you&#39;ve set up separately.</span>
+twclient config add-db -u <span class="s2">&quot;sqlite:///home/user/twitter.db&quot;</span> sqlite
 
-<span class="c1"># Set up the database. This creates a persistent profile in a config file, no</span>
-<span class="c1"># need to type the URL repeatedly.</span>
-<span class="n">twitter</span> <span class="n">config</span> <span class="n">add</span><span class="o">-</span><span class="n">db</span> <span class="o">-</span><span class="n">u</span> <span class="s2">&quot;postgresql:///&quot;</span> <span class="n">postgres</span>
+<span class="c1"># Set up the Twitter credentials. As with the database setup, this stores</span>
+<span class="c1"># the credentials in a config file for ease of use. Only two sets of</span>
+<span class="c1"># credentials are shown, but arbitrarily many can be added.</span>
+twclient config add-api -n twitter1 <span class="se">\</span>
+    --consumer-key XXXXX <span class="se">\</span>
+    --consumer-secret XXXXXX <span class="se">\</span>
+    --token XXXXXX <span class="se">\</span>
+    --token-secret XXXXXX
 
-<span class="c1"># Set up the Twitter credentials. Similarly, this stores the credentials in a</span>
-<span class="c1"># config file for ease of use. Only two sets of credentials are shown, but</span>
-<span class="c1"># arbitrarily many can be added.</span>
-<span class="n">twitter</span> <span class="n">config</span> <span class="n">add</span><span class="o">-</span><span class="n">api</span> <span class="o">-</span><span class="n">n</span> <span class="n">twitter1</span> \
-    <span class="o">--</span><span class="n">consumer</span><span class="o">-</span><span class="n">key</span> <span class="n">XXXXX</span> \
-    <span class="o">--</span><span class="n">consumer</span><span class="o">-</span><span class="n">secret</span> <span class="n">XXXXXX</span> \
-    <span class="o">--</span><span class="n">token</span> <span class="n">XXXXXX</span> \
-    <span class="o">--</span><span class="n">token</span><span class="o">-</span><span class="n">secret</span> <span class="n">XXXXXX</span>
+twclient config add-api -n twitter2 <span class="se">\</span>
+    --consumer-key XXXXX <span class="se">\</span>
+    --consumer-secret XXXXXX <span class="se">\</span>
+    --token XXXXXX <span class="se">\</span>
+    --token-secret XXXXXX
 
-<span class="n">twitter</span> <span class="n">config</span> <span class="n">add</span><span class="o">-</span><span class="n">api</span> <span class="o">-</span><span class="n">n</span> <span class="n">twitter2</span> \
-    <span class="o">--</span><span class="n">consumer</span><span class="o">-</span><span class="n">key</span> <span class="n">XXXXX</span> \
-    <span class="o">--</span><span class="n">consumer</span><span class="o">-</span><span class="n">secret</span> <span class="n">XXXXXX</span> \
-    <span class="o">--</span><span class="n">token</span> <span class="n">XXXXXX</span> \
-    <span class="o">--</span><span class="n">token</span><span class="o">-</span><span class="n">secret</span> <span class="n">XXXXXX</span>
-
-<span class="c1"># Initialize the DB schema, dropping any existing data.</span>
-<span class="n">twitter</span> <span class="n">initialize</span> <span class="o">-</span><span class="n">y</span>
-
-<span class="c1">#</span>
-<span class="c1"># Pull data</span>
-<span class="c1">#</span>
-
-<span class="c1"># Load some users and their basic info</span>
-<span class="n">twitter</span> <span class="n">fetch</span> <span class="n">users</span> <span class="o">-</span><span class="n">n</span> <span class="n">wwbrannon</span> <span class="n">socialmachines</span> <span class="n">mit</span> <span class="o">-</span><span class="n">l</span> <span class="n">mit</span><span class="o">/</span><span class="n">a</span><span class="o">-</span><span class="n">twitter</span><span class="o">-</span><span class="nb">list</span>
-
-<span class="c1"># Tag them for ease of analysis</span>
-<span class="n">twitter</span> <span class="n">tag</span> <span class="n">create</span> <span class="n">subjects</span>
-<span class="n">twitter</span> <span class="n">tag</span> <span class="n">apply</span> <span class="n">subjects</span> <span class="o">-</span><span class="n">n</span> <span class="n">wwbrannon</span> <span class="n">socialmachines</span> <span class="n">mit</span> <span class="o">-</span><span class="n">l</span> <span class="n">mit</span><span class="o">/</span><span class="n">a</span><span class="o">-</span><span class="n">twitter</span><span class="o">-</span><span class="nb">list</span>
-
-<span class="c1"># Get their friends and followers</span>
-<span class="n">twitter</span> <span class="n">fetch</span> <span class="n">friends</span> <span class="o">-</span><span class="n">g</span> <span class="n">subjects</span>
-<span class="n">twitter</span> <span class="n">fetch</span> <span class="n">followers</span> <span class="o">-</span><span class="n">g</span> <span class="n">subjects</span>
-
-<span class="c1"># Get their tweets</span>
-<span class="n">twitter</span> <span class="n">fetch</span> <span class="n">tweets</span> <span class="o">-</span><span class="n">g</span> <span class="n">subjects</span>
+<span class="c1"># Initialize or re-initialize the DB schema, **dropping any existing data**.</span>
+twclient initialize -y
 </pre></div>
 </div>
-<p>After all of this, the loaded data is in the database configured with
-<code class="docutils literal notranslate"><span class="pre">config</span> <span class="pre">add-db</span></code>. You can query it with the usual tools, and useful
-features have been normalized out to save processing time. The raw API
-responses are also saved for later analysis.</p>
+</section>
+<section id="pulling-data">
+<h3>Pulling data<a class="headerlink" href="#pulling-data" title="Permalink to this headline"></a></h3>
+<p>To actually pull data, use the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span></code> command. The <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">tag</span></code>
+command can help keep track of users and datasets. We’ll pull information about
+two specific users and a Twitter list here:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Load some users and their basic info</span>
+twclient fetch users -n wwbrannon socialmachines mit -l mit/a-twitter-list
+
+<span class="c1"># Tag them for ease of analysis</span>
+twclient tag create subjects
+twclient tag apply subjects -n wwbrannon socialmachines mit -l mit/a-twitter-list
+
+<span class="c1"># Get their friends and followers</span>
+twclient fetch friends -g subjects
+twclient fetch followers -g subjects
+
+<span class="c1"># Get their tweets</span>
+twclient fetch tweets -g subjects
+</pre></div>
+</div>
+<p>At this point, the loaded data is in the database configured with <code class="docutils literal notranslate"><span class="pre">config</span>
+<span class="pre">add-db</span></code>. Useful features have been normalized out to save processing time. The
+raw API responses are also saved for later analysis.</p>
+</section>
+<section id="exporting-data">
+<h3>Exporting data<a class="headerlink" href="#exporting-data" title="Permalink to this headline"></a></h3>
+<p>You can query the data with the usual database tools (<code class="docutils literal notranslate"><span class="pre">psql</span></code> for postgres,
+<code class="docutils literal notranslate"><span class="pre">sqlite3</span></code> for sqlite, ODBC clients, etc.) or export certain pre-defined bulk
+datasets with the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">export</span></code> command. For example, here’s getting the
+follow graph and mention graph:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient <span class="nb">export</span> follow-graph -o follow-graph.csv
+twclient <span class="nb">export</span> mention-graph -o mention-graph.csv
+</pre></div>
+</div>
+<p>If you want to restrict the export to only the users specified above:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient <span class="nb">export</span> follow-graph -g subjects -o follow-graph.csv
+twclient <span class="nb">export</span> mention-graph -g subjects -o mention-graph.csv
+</pre></div>
+</div>
+</section>
+<section id="feedback-or-contributions">
+<h3>Feedback or Contributions<a class="headerlink" href="#feedback-or-contributions" title="Permalink to this headline"></a></h3>
+<p>If you come across a bug, please report it on the Github issue tracker. If you
+want to contribute, reach out! Extensions and improvements are welcome.</p>
+</section>
 </section>
 </section>
 

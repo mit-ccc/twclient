@@ -82,6 +82,7 @@
 <span class="sd">Job classes which actually implement command logic.</span>
 <span class="sd">&#39;&#39;&#39;</span>
 
+<span class="kn">import</span> <span class="nn">json</span>
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">warnings</span>
 <span class="kn">import</span> <span class="nn">itertools</span> <span class="k">as</span> <span class="nn">it</span>
@@ -112,6 +113,22 @@
 <div class="viewcode-block" id="Job"><a class="viewcode-back" href="../../apidocs.html#twclient.job.Job">[docs]</a><span class="k">class</span> <span class="nc">Job</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job to be run against the database and possibly also the Twitter API.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="c1"># This method is the main entrypoint for the Job class. Subclasses are</span>
+    <span class="c1"># expected to override it with their business logic.</span>
+<div class="viewcode-block" id="Job.run"><a class="viewcode-back" href="../../apidocs.html#twclient.job.Job.run">[docs]</a>    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Run the job.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+
+
+<div class="viewcode-block" id="DatabaseJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.DatabaseJob">[docs]</a><span class="k">class</span> <span class="nc">DatabaseJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job to be run against the database.</span>
 
 <span class="sd">    This class represents a job to be run against the database. Subclasses may</span>
 <span class="sd">    or may not also support access to the Twitter API.</span>
@@ -147,7 +164,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_schema_verified</span> <span class="o">=</span> <span class="kc">False</span>
 
-<div class="viewcode-block" id="Job.ensure_schema_version"><a class="viewcode-back" href="../../apidocs.html#twclient.job.Job.ensure_schema_version">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_schema_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<div class="viewcode-block" id="DatabaseJob.ensure_schema_version"><a class="viewcode-back" href="../../apidocs.html#twclient.job.DatabaseJob.ensure_schema_version">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_schema_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Ensure that the database schema is a usable version.</span>
 
@@ -190,7 +207,7 @@
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_schema_verified</span> <span class="o">=</span> <span class="kc">True</span></div>
 
-<div class="viewcode-block" id="Job.get_or_create"><a class="viewcode-back" href="../../apidocs.html#twclient.job.Job.get_or_create">[docs]</a>    <span class="k">def</span> <span class="nf">get_or_create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<div class="viewcode-block" id="DatabaseJob.get_or_create"><a class="viewcode-back" href="../../apidocs.html#twclient.job.DatabaseJob.get_or_create">[docs]</a>    <span class="k">def</span> <span class="nf">get_or_create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
         <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Get a persistent object or create a pending one.</span>
 
@@ -222,20 +239,10 @@
         <span class="n">instance</span> <span class="o">=</span> <span class="n">model</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">instance</span><span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">instance</span></div>
-
-    <span class="c1"># This method is the main entrypoint for the Job class. Subclasses are</span>
-    <span class="c1"># expected to override it with their business logic.</span>
-<div class="viewcode-block" id="Job.run"><a class="viewcode-back" href="../../apidocs.html#twclient.job.Job.run">[docs]</a>    <span class="nd">@abstractmethod</span>
-    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">        Run the job.</span>
-<span class="sd">        &#39;&#39;&#39;</span>
-
-        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div></div>
+        <span class="k">return</span> <span class="n">instance</span></div></div>
 
 
-<div class="viewcode-block" id="TagJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.TagJob">[docs]</a><span class="k">class</span> <span class="nc">TagJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
+<div class="viewcode-block" id="TagJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.TagJob">[docs]</a><span class="k">class</span> <span class="nc">TagJob</span><span class="p">(</span><span class="n">DatabaseJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job which uses user tags.</span>
 
@@ -266,7 +273,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">ensure_schema_version</span><span class="p">()</span></div>
 
 
-<div class="viewcode-block" id="TargetJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.TargetJob">[docs]</a><span class="k">class</span> <span class="nc">TargetJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
+<div class="viewcode-block" id="TargetJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.TargetJob">[docs]</a><span class="k">class</span> <span class="nc">TargetJob</span><span class="p">(</span><span class="n">DatabaseJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job which requires targets.</span>
 
@@ -436,13 +443,12 @@
                 <span class="p">)</span></div></div>
 
 
-<div class="viewcode-block" id="ApiJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ApiJob">[docs]</a><span class="k">class</span> <span class="nc">ApiJob</span><span class="p">(</span><span class="n">TargetJob</span><span class="p">):</span>
+<div class="viewcode-block" id="ApiJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ApiJob">[docs]</a><span class="k">class</span> <span class="nc">ApiJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    A job requiring access to the Twitter API.</span>
+<span class="sd">    A job requiring acess to the Twitter API.</span>
 
-<span class="sd">    This class represents a job which needs access to the Twitter API. It</span>
-<span class="sd">    configures API access and user validation logic, and defers other</span>
-<span class="sd">    functionality to subclasses.</span>
+<span class="sd">    This class represents a job which interacts with the Twitter API. It</span>
+<span class="sd">    configures API access, and defers other functionality to subclasses.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -453,27 +459,12 @@
 <span class="sd">        If the Twitter API returns an error, should we abort (if False,</span>
 <span class="sd">        default), or ignore and continue (if True)?</span>
 
-<span class="sd">    load_batch_size : int</span>
-<span class="sd">        Load new rows to the database in batches of this size. The default is</span>
-<span class="sd">        None, which loads all data retrieved in one batch. Lower values</span>
-<span class="sd">        minimize memory usage at the cost of slower loading speeds, while</span>
-<span class="sd">        higher values do the reverse. Target instances in self.targets do not</span>
-<span class="sd">        consider this value--it applies only to other rows loaded by the ApiJob</span>
-<span class="sd">        instance--because there are generally not enough targets to consume a</span>
-<span class="sd">        significant amount of memory. Followers and friends lists in particular</span>
-<span class="sd">        can be large enough to cause out-of-memory conditions; setting</span>
-<span class="sd">        ``load_batch_size`` to an appropriate value (e.g., 5000) can address</span>
-<span class="sd">        this problem.</span>
-
 <span class="sd">    Attributes</span>
 <span class="sd">    ----------</span>
 <span class="sd">    api : instance of twitter_api.TwitterApi</span>
 <span class="sd">        The parameter passed to __init__.</span>
 
 <span class="sd">    allow_api_errors : bool</span>
-<span class="sd">        The parameter passed to __init__.</span>
-
-<span class="sd">    load_batch_size : int</span>
 <span class="sd">        The parameter passed to __init__.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
@@ -484,15 +475,49 @@
             <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Must provide api object&#39;</span><span class="p">)</span> <span class="kn">from</span> <span class="nn">exc</span>
 
         <span class="n">allow_api_errors</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;allow_api_errors&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
-        <span class="n">load_batch_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;load_batch_size&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">api</span> <span class="o">=</span> <span class="n">api</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">load_batch_size</span> <span class="o">=</span> <span class="n">load_batch_size</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">allow_api_errors</span> <span class="o">=</span> <span class="n">allow_api_errors</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">allow_api_errors</span> <span class="o">=</span> <span class="n">allow_api_errors</span></div>
 
-<div class="viewcode-block" id="ApiJob.validate_targets"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ApiJob.validate_targets">[docs]</a>    <span class="k">def</span> <span class="nf">validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+<div class="viewcode-block" id="FetchJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.FetchJob">[docs]</a><span class="k">class</span> <span class="nc">FetchJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">,</span> <span class="n">TargetJob</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job fetching data from the Twitter API.</span>
+
+<span class="sd">    This class represents a job which fetches data from the Twitter API. It</span>
+<span class="sd">    configures API access and user validation logic, and defers other</span>
+<span class="sd">    functionality to subclasses.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    load_batch_size : int</span>
+<span class="sd">        Load new rows to the database in batches of this size. The default is</span>
+<span class="sd">        None, which loads all data retrieved in one batch. Lower values</span>
+<span class="sd">        minimize memory usage at the cost of slower loading speeds, while</span>
+<span class="sd">        higher values do the reverse. Target instances in self.targets do not</span>
+<span class="sd">        consider this value--it applies only to other rows loaded by the FetchJob</span>
+<span class="sd">        instance--because there are generally not enough targets to consume a</span>
+<span class="sd">        significant amount of memory. Followers and friends lists in particular</span>
+<span class="sd">        can be large enough to cause out-of-memory conditions; setting</span>
+<span class="sd">        ``load_batch_size`` to an appropriate value (e.g., 5000) can address</span>
+<span class="sd">        this problem.</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    load_batch_size : int</span>
+<span class="sd">        The parameter passed to __init__.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">load_batch_size</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;load_batch_size&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">load_batch_size</span> <span class="o">=</span> <span class="n">load_batch_size</span>
+
+<div class="viewcode-block" id="FetchJob.validate_targets"><a class="viewcode-back" href="../../apidocs.html#twclient.job.FetchJob.validate_targets">[docs]</a>    <span class="k">def</span> <span class="nf">validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">validate_targets</span><span class="p">()</span>
 
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">resolve_mode</span> <span class="o">!=</span> <span class="s1">&#39;skip&#39;</span> <span class="ow">and</span> <span class="bp">self</span><span class="o">.</span><span class="n">bad_targets</span><span class="p">:</span>
@@ -503,6 +528,38 @@
                 <span class="n">logger</span><span class="o">.</span><span class="n">warning</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
             <span class="k">else</span><span class="p">:</span>
                 <span class="k">raise</span> <span class="n">err</span><span class="o">.</span><span class="n">BadTargetError</span><span class="p">(</span><span class="n">message</span><span class="o">=</span><span class="n">msg</span><span class="p">,</span> <span class="n">targets</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">bad_targets</span><span class="p">)</span></div></div>
+
+
+<div class="viewcode-block" id="RateLimitStatusJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.RateLimitStatusJob">[docs]</a><span class="k">class</span> <span class="nc">RateLimitStatusJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">full</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;full&#39;</span><span class="p">,</span> <span class="kc">False</span><span class="p">)</span>
+        <span class="n">consumer_key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;consumer_key&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">full</span> <span class="o">=</span> <span class="n">full</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">consumer_key</span> <span class="o">=</span> <span class="n">consumer_key</span>
+
+<div class="viewcode-block" id="RateLimitStatusJob.run"><a class="viewcode-back" href="../../apidocs.html#twclient.job.RateLimitStatusJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">status</span> <span class="o">=</span> <span class="nb">next</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">rate_limit_status</span><span class="p">())</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">full</span><span class="p">:</span>
+            <span class="n">endpoints</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;/application/rate_limit_status&#39;</span><span class="p">,</span> <span class="s1">&#39;/followers/ids&#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;/friends/ids&#39;</span><span class="p">,</span> <span class="s1">&#39;/users/lookup&#39;</span><span class="p">,</span> <span class="s1">&#39;/lists/show&#39;</span><span class="p">,</span>
+                         <span class="s1">&#39;/lists/members&#39;</span><span class="p">,</span> <span class="s1">&#39;/statuses/user_timeline&#39;</span><span class="p">]</span>
+
+            <span class="n">short</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">resp</span> <span class="ow">in</span> <span class="n">status</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">short</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+
+                <span class="k">for</span> <span class="n">endpoint</span> <span class="ow">in</span> <span class="n">endpoints</span><span class="p">:</span>
+                    <span class="n">_</span><span class="p">,</span> <span class="n">pt1</span><span class="p">,</span> <span class="n">pt2</span> <span class="o">=</span> <span class="n">endpoint</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;/&#39;</span><span class="p">)</span>
+                    <span class="n">short</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="n">endpoint</span><span class="p">]</span> <span class="o">=</span> <span class="n">resp</span><span class="p">[</span><span class="s1">&#39;resources&#39;</span><span class="p">][</span><span class="n">pt1</span><span class="p">][</span><span class="n">endpoint</span><span class="p">]</span>
+
+            <span class="n">status</span> <span class="o">=</span> <span class="n">short</span>
+
+        <span class="n">status</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">status</span><span class="p">,</span> <span class="n">indent</span><span class="o">=</span><span class="mi">4</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">status</span><span class="p">)</span></div></div>
 
 
 <div class="viewcode-block" id="CreateTagJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.CreateTagJob">[docs]</a><span class="k">class</span> <span class="nc">CreateTagJob</span><span class="p">(</span><span class="n">TagJob</span><span class="p">):</span>
@@ -576,7 +633,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="InitializeJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.InitializeJob">[docs]</a><span class="k">class</span> <span class="nc">InitializeJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
+<div class="viewcode-block" id="InitializeJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.InitializeJob">[docs]</a><span class="k">class</span> <span class="nc">InitializeJob</span><span class="p">(</span><span class="n">DatabaseJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job which initializes the selected database and sets up the schema.</span>
 
@@ -594,7 +651,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="UserInfoJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.UserInfoJob">[docs]</a><span class="k">class</span> <span class="nc">UserInfoJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
+<div class="viewcode-block" id="UserInfoJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.UserInfoJob">[docs]</a><span class="k">class</span> <span class="nc">UserInfoJob</span><span class="p">(</span><span class="n">FetchJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job which hydrates users.</span>
 
@@ -613,7 +670,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">commit</span><span class="p">()</span></div></div>
 
 
-<div class="viewcode-block" id="TweetsJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.TweetsJob">[docs]</a><span class="k">class</span> <span class="nc">TweetsJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
+<div class="viewcode-block" id="TweetsJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.TweetsJob">[docs]</a><span class="k">class</span> <span class="nc">TweetsJob</span><span class="p">(</span><span class="n">FetchJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Fetch user tweets from the Twitter API.</span>
 
@@ -719,11 +776,14 @@
 
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">n_items</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_tweets_for</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
-            <span class="k">except</span> <span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">ProtectedUserError</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">NotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">ProtectedUserError</span><span class="p">):</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">ForbiddenError</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">NotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">ForbiddenError</span><span class="p">):</span>
                     <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Encountered protected user (user_id </span><span class="si">{0}</span><span class="s1">) in </span><span class="si">{1}</span><span class="s1">&#39;</span>
                 <span class="k">else</span><span class="p">:</span>  <span class="c1"># isinstance(e, err.NotFoundError)</span>
-                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Encountered nonexistent user (user_id </span><span class="si">{0}</span><span class="s1">) in </span><span class="si">{1}</span><span class="s1">&#39;</span>
+                    <span class="c1"># Twitter&#39;s API docs about errors don&#39;t capture all the</span>
+                    <span class="c1"># actual behavior, so it&#39;s hard to tell what is and what</span>
+                    <span class="c1"># isn&#39;t a protected user</span>
+                    <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Encountered nonexistent (possibly protected) user (user_id </span><span class="si">{0}</span><span class="s1">) in </span><span class="si">{1}</span><span class="s1">&#39;</span>
                 <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">user</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
 
                 <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">allow_api_errors</span><span class="p">:</span>
@@ -750,7 +810,7 @@
 <span class="c1"># self.session.flush() afterward. Note also that this only applies if the</span>
 <span class="c1"># _load_edges_for steps don&#39;t implicitly commit, which they do on most DBs.</span>
 <span class="c1"># (See the comments in that method.)</span>
-<div class="viewcode-block" id="FollowGraphJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.FollowGraphJob">[docs]</a><span class="k">class</span> <span class="nc">FollowGraphJob</span><span class="p">(</span><span class="n">ApiJob</span><span class="p">):</span>
+<div class="viewcode-block" id="FollowGraphJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.FollowGraphJob">[docs]</a><span class="k">class</span> <span class="nc">FollowGraphJob</span><span class="p">(</span><span class="n">FetchJob</span><span class="p">):</span>
     <span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Fetch follow-graph edges from the Twitter API.</span>
 
@@ -969,8 +1029,8 @@
 
             <span class="k">try</span><span class="p">:</span>
                 <span class="n">n_items</span> <span class="o">+=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_edges_for</span><span class="p">(</span><span class="n">user</span><span class="p">)</span>
-            <span class="k">except</span> <span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">ProtectedUserError</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">NotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">ProtectedUserError</span><span class="p">):</span>
+            <span class="k">except</span> <span class="p">(</span><span class="n">err</span><span class="o">.</span><span class="n">ForbiddenError</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">NotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">exc</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">ForbiddenError</span><span class="p">):</span>
                     <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Encountered protected user with user_id </span><span class="si">{0}</span><span class="s1"> in </span><span class="si">{1}</span><span class="s1">&#39;</span>
                 <span class="k">else</span><span class="p">:</span>  <span class="c1"># isinstance(e, err.NotFoundError)</span>
                     <span class="k">pass</span>

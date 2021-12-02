@@ -33,8 +33,8 @@ In general, of course, there’s no way around this: if you want to write an
 application like a Twitter client, which people can use to view their feeds,
 post tweets, and whatever else, you need the API in its full complexity. But
 here we have a simpler task---read-only scraping of data---and so we can make a
-simpler tool. (For formatting that data and extracting it from the database,
-see the :doc:`other vignette on extracting data </vignettes/extract>`.)
+simpler tool. (For formatting that data and exporting it from the database,
+see the :doc:`other vignette on exporting data </vignettes/export>`.)
 
 Note that Twitter has other data sources than the REST API, in particular the
 `PowerTrack
@@ -47,7 +47,7 @@ Enough talk! How do you get started?
 In brief: This package provides a command-line interface for loading data from
 the Twitter REST API into the database of your choice. You can invoke it as
 either ``twitter``, as in ``twitter fetch users -n wwbrannon`` or ``twclient``,
-as in ``twclient fetch users -n wwbrannon``. (We'll use the ``twitter`` alias
+as in ``twclient fetch users -n wwbrannon``. (We'll use the ``twclient`` alias
 in this vignette.) You need to set up the database, get API credentials, and
 then pull some data.
 
@@ -60,7 +60,7 @@ The first step is to set up a database backend. You can use any DB that
 with plugins is quite a few to choose from. This is less intimidating than it
 may sound---in fact it’s positively easy. Two good choices are `Postgres
 <https://www.postgresql.org/>`__, which we’ve used for the SQL examples in the
-:doc:`extraction vignette </vignettes/extract>`, and the extremely lightweight
+:doc:`data export vignette </vignettes/export>`, and the extremely lightweight
 `SQLite <https://www.sqlite.org/index.html>`__. Note that while you can use any
 database engine with sqlalchemy support, twclient has been tested only with
 Postgres and to a lesser degree SQLite.
@@ -86,11 +86,11 @@ We’ll use Postgres for the rest of this vignette.
 
 Having set up our database system, we need to do two more things to make it
 usable: tell twclient how to use it, and install the data model. First, we’ll
-use a ``twitter config`` subcommand to set up the database:
+use a ``twclient config`` subcommand to set up the database:
 
 .. code-block:: bash
 
-   twitter config add-db -u "postgresql:///" postgres
+   twclient config add-db -u "postgresql:///" postgres
 
 This command tells twclient to create a persistent profile for a database and
 call it “postgres”, with the database itself identified by a `sqlalchemy
@@ -106,14 +106,14 @@ database URL for each command.
 
 Next up, we have to install the data model: create the tables, columns, keys
 and other DB objects the twclient package uses. Be aware that doing this will
-**drop all existing twclient data in your database**. The ``twitter
+**drop all existing twclient data in your database**. The ``twclient
 initialize`` command will do the trick, but to confirm that you understand
 running it will **drop all existing twclient data in your database** you have
 to specify the ``-y`` flag:
 
 .. code-block:: bash
 
-   twitter initialize -y
+   twclient initialize -y
 
 And that’s it! If you fire up a database client (psql in the case of this
 example), you’ll see a new database schema installed. The tables, columns and
@@ -140,7 +140,7 @@ secret if using a bearer token):
 
 .. code-block:: bash
 
-   twitter config add-api -n twitter1 \
+   twclient config add-api -n twitter1 \
        --consumer-key XXXXX \
        --consumer-secret XXXXX \
        --token XXXXX \
@@ -224,28 +224,28 @@ The first step is to `hydrate
 <https://stackoverflow.com/questions/34191022/what-does-hydrate-mean-on-twitter/34192633>`__
 the target users, which confirms with the Twitter API that they exist,
 retrieves some summary information about them and creates records for them in
-the database. You can do this with the ``twitter fetch`` family of commands,
-and specifically ``twitter fetch users``. We’ll start by fetching the users in
+the database. You can do this with the ``twclient fetch`` family of commands,
+and specifically ``twclient fetch users``. We’ll start by fetching the users in
 the lists of ``lists.csv``, though you could do the individual users first:
 
 .. code-block:: bash
 
-   tail -n +2 lists.csv | xargs twitter -v fetch users -b -l
+   tail -n +2 lists.csv | xargs twclient fetch users -v -b -l
 
 This command skips the CSV header line (via ``tail -n +2 lists.csv``), which
-twclient doesn’t actually use, and pipes the rest of it to ``twitter -v fetch
+twclient doesn’t actually use, and pipes the rest of it to ``twclient fetch -v
 users -b -l`` via ``xargs``. The ``-v`` flag requests verbose output, ``-b``
 says to continue even if the Twitter API says some of the lists requested are
 protected or don’t exist, and ``-l`` says that the users to hydrate are given
 in the form of Twitter lists. (If you’d left the header line out of the CSV
 file and wanted to avoid using xargs, note that you could instead write
-something like ``twitter -v fetch users -b -l $(cat lists.csv)``.)
+something like ``twclient fetch users -v -b -l $(cat lists.csv)``.)
 
 Similarly, you can hydrate the individual users as follows:
 
 .. code-block:: bash
 
-   tail -n +2 users.csv | xargs twitter -v fetch users -b -n
+   tail -n +2 users.csv | xargs twclient fetch users -v -b -n
 
 A noteworthy difference from the case of lists is that you use the ``-n``
 option, for users identified by screen names, rather than the ``-l`` option for
@@ -265,20 +265,20 @@ First, we need to create a tag:
 
 .. code-block:: bash
 
-   twitter tag create twitter_lists
+   twclient tag create twitter_lists
 
 Next, we associate the new tag with the users it should apply to:
 
 .. code-block:: bash
 
-   tail -n +2 lists.csv | xargs twitter tag apply twitter_lists -l
+   tail -n +2 lists.csv | xargs twclient tag apply twitter_lists -l
 
 Similarly, we can tag the individually fetched users:
 
 .. code-block:: bash
 
-   twitter tag create twitter_users
-   tail -n +2 users.csv | xargs twitter tag apply twitter_users -l
+   twclient tag create twitter_users
+   tail -n +2 users.csv | xargs twclient tag apply twitter_users -l
 
 Users fetched from Twitter lists will be associated with the lists they are
 members of in the ``list`` and ``user_list`` tables, so there’s no need to tag
@@ -290,8 +290,8 @@ two-step as above:
 
 .. code-block:: bash
 
-   twitter tag create universe
-   twitter tag apply universe -g twitter_users twitter_lists
+   twclient tag create universe
+   twclient tag apply universe -g twitter_users twitter_lists
 
 This time, however, you can see that the ``-g`` option allows selecting users
 to operate on---whether that’s tagging, hydrating, or fetching tweets and
@@ -302,12 +302,12 @@ follow edges---according to tags you’ve defined.
 ~~~~~~~~~~~~~~~~~~~
 
 Now, with fully hydrated users, it’s time to get down to one of our primary
-jobs: fetching the users’ tweets. We can do this with the ``twitter fetch
+jobs: fetching the users’ tweets. We can do this with the ``twclient fetch
 tweets`` command:
 
 .. code-block:: bash
 
-   twitter -v fetch tweets -b -g universe
+   twclient fetch tweets -v -b -g universe
 
 As before, ``-v`` asks for verbose output, ``-b`` says to ignore nonexistent or
 protected users rather than aborting the job, and ``-g universe`` says to fetch
@@ -317,7 +317,7 @@ Note that twclient also extensively normalizes the tweet objects returned by
 Twitter. In addition to the tweet text, we pull out urls, hashtags, “cashtags”,
 user mentions and other things so that it’s easy to compute derived datasets
 like the mention / quote / etc graphs over users. (For how to do this and
-sample SQL, see the :doc:`extracting data vignette </vignettes/extract>`.) The
+sample SQL, see the vignette on :doc:`exporting data </vignettes/export>`.) The
 raw json API responses are also saved so that you can work with data we don’t
 parse.
 
@@ -327,23 +327,23 @@ parse.
 
 Finally, we want to get the user IDs of our target users’ followers and
 friends. (A “friend” is Twitter’s term for the opposite of a follower: if A
-follows B, B is A’s friend and A is B’s follower.) There are two more ``twitter
-fetch`` subcommands for this: ``twitter fetch friends`` and ``twitter fetch
-followers``. Neither command hydrates users, because the underlying Twitter API
-endpoints don’t, so the ``follow`` table will end up being populated with bare
-numeric user IDs.
+follows B, B is A’s friend and A is B’s follower.) There are two more
+``twclient fetch`` subcommands for this: ``twclient fetch friends`` and
+``twclient fetch followers``. Neither command hydrates users, because the
+underlying Twitter API endpoints don’t, so the ``follow`` table will end up
+being populated with bare numeric user IDs.
 
 Here’s fetching friends, using options you’ve seen all of by now:
 
 .. code-block:: bash
 
-   twitter -v fetch friends -b -g universe
+   twclient fetch friends -v -b -g universe
 
 And here’s followers:
 
 .. code-block:: bash
 
-   twitter -v fetch followers -b -p -j 5000 -g universe
+   twclient fetch followers -v -b -p -j 5000 -g universe
 
 The one new flag used here, ``-j 5000``, indicates the size of the batch used
 for loading follow edges. The default if you don’t use ``-j`` is to accumulate
@@ -360,8 +360,8 @@ The fetched follow graph data itself is stored in a `type-2 SCD
 <https://en.wikipedia.org/wiki/Slowly_changing_dimension#Type_2:_add_new_row>`__
 format, which (without getting into the details) means that you can just keep
 running these commands and storing multiple snapshots at different times,
-without using enormous amounts of disk space. (See the :doc:`extracting data
-vignette </vignettes/extract>` for details of how to get follow graph snapshots
+without using enormous amounts of disk space. (See the :doc:`exporting data
+vignette </vignettes/export>` for details of how to get follow graph snapshots
 out of the SCD table.)
 
 ---------------------------
@@ -380,41 +380,41 @@ Here’s all of our hard work in one little script:
    # set up the database, and gotten API keys, so we won't show any of that
    # here. See also the command-line -h/--help option for more info.
 
-   twitter config add-db -u "postgresql:///" postgres
-   twitter initialize -y
+   twclient config add-db -u "postgresql:///" postgres
+   twclient initialize -y
 
-   twitter config add-api -n twitter1 \
+   twclient config add-api -n twitter1 \
        --consumer-key XXXXX \
        --consumer-secret XXXXXX \
        --token XXXXXX \
        --token-secret XXXXXX
 
-   twitter config add-api -n twitter2 \
+   twclient config add-api -n twitter2 \
        --consumer-key XXXXX \
        --consumer-secret XXXXXX \
        --token XXXXXX \
        --token-secret XXXXXX
 
-   tail -n +2 lists.csv | xargs twitter -v fetch users -b -l
+   tail -n +2 lists.csv | xargs twclient fetch users -v -b -l
 
-   twitter tag create twitter_lists
-   tail -n +2 lists.csv | xargs twitter tag apply twitter_lists -l
+   twclient tag create twitter_lists
+   tail -n +2 lists.csv | xargs twclient tag apply twitter_lists -l
 
-   tail -n +2 users.csv | xargs twitter -v fetch users -b -n
+   tail -n +2 users.csv | xargs twclient fetch users -v -b -n
 
-   twitter tag create twitter_users
-   tail -n +2 users.csv | xargs twitter tag apply twitter_users -l
+   twclient tag create twitter_users
+   tail -n +2 users.csv | xargs twclient tag apply twitter_users -l
 
-   twitter tag create universe
-   twitter tag apply universe -g twitter_users twitter_lists
+   twclient tag create universe
+   twclient tag apply universe -g twitter_users twitter_lists
 
-   twitter -v fetch tweets -b -g universe
+   twclient fetch tweets -v -b -g universe
 
-   twitter -v fetch friends -b -g universe
-   twitter -v fetch followers -b -j 5000 -g universe
+   twclient fetch friends -v -b -g universe
+   twclient fetch followers -v -b -j 5000 -g universe
 
 Tada! Now you have data in a DB. You can use canned SQL queries, like those in
-the :doc:`extracting data vignette </vignettes/extract>`, to get whatever piece
+the :doc:`exporting data vignette </vignettes/export>`, to get whatever piece
 of data you want out of it: the follow graph, a user’s tweets, mention / quote
 / reply / retweet graphs, etc. Your creativity in SQL is the limit.
 

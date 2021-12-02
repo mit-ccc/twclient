@@ -30,7 +30,6 @@ interested in, we can instead list out columns:
         description,
         protected,
         verified,
-        listed_count,
         create_dt as account_create_dt
     from user_data;
 
@@ -48,7 +47,6 @@ Because user-provided URLs are normalized out, you need to join for them:
         ud.description,
         ud.protected,
         ud.verified,
-        ud.listed_count,
         ud.create_dt as account_create_dt
     from user_data ud
         inner join url u using(url_id);
@@ -56,8 +54,8 @@ Because user-provided URLs are normalized out, you need to join for them:
 We can also add counts of the number of friends [1]_ and followers a user has,
 as well as how many Twitter lists they've been placed on. Be aware, though that
 these numbers are current only as of when the data was fetched. In particular,
-they may not agree with :doc:`follow graph </vignettes/extracts/follow-graph>`
-data.
+they may not agree with:doc:`follow graph
+</vignettes/sql-exports/follow-graph>` data.
 
 .. code-block:: sql
 
@@ -76,7 +74,6 @@ data.
         ud.description,
         ud.protected,
         ud.verified,
-        ud.listed_count,
         ud.create_dt as account_create_dt
     from user_data ud
         inner join url u using(url_id);
@@ -103,7 +100,6 @@ user, we need to use SQL's `window functions
         x.description,
         x.protected,
         x.verified,
-        x.listed_count,
         x.account_create_dt
     from
     (
@@ -122,11 +118,10 @@ user, we need to use SQL's `window functions
             ud.description,
             ud.protected,
             ud.verified,
-            ud.listed_count,
             ud.create_dt as account_create_dt,
 
-            -- this table is append-only, one new row for each call to "twitter
-            -- fetch users", we only want the most recent one here
+            -- this table is append-only, one new row for each call to
+            -- "twclient fetch users", we only want the most recent one here
             row_number() over (
                 partition by tu.user_id
                 order by ud.insert_dt desc
@@ -186,7 +181,6 @@ or a ``WITH`` statement and joining to it:
         x.description,
         x.protected,
         x.verified,
-        x.listed_count,
         x.account_create_dt
     from
     (
@@ -205,11 +199,8 @@ or a ``WITH`` statement and joining to it:
             ud.description,
             ud.protected,
             ud.verified,
-            ud.listed_count,
             ud.create_dt as account_create_dt,
 
-            -- this table is append-only, one new row for each call to "twitter
-            -- fetch users", we only want the most recent one here
             row_number() over (
                 partition by tu.user_id
                 order by ud.insert_dt desc
@@ -349,7 +340,6 @@ all these queries together and produce one user-level output file:
             x.description,
             x.protected,
             x.verified,
-            x.listed_count,
             x.account_create_dt
         from
         (
@@ -368,11 +358,8 @@ all these queries together and produce one user-level output file:
                 ud.description,
                 ud.protected,
                 ud.verified,
-                ud.listed_count,
                 ud.create_dt as account_create_dt,
 
-                -- this table is append-only, one new row for each call to "twitter
-                -- fetch users", we only want the most recent one here
                 row_number() over (
                     partition by tu.user_id
                     order by ud.insert_dt desc
@@ -397,14 +384,13 @@ all these queries together and produce one user-level output file:
         tud.description,
         tud.protected,
         tud.verified,
-        tud.listed_count,
         tud.account_create_dt
 
         coalesce(ttd.tweets_all_time, 0) as tweets_all_time,
         ttd.first_tweet_dt,
         ttd.last_tweet_dt,
-        ttd.ios_user,
         ttd.android_user,
+        ttd.ios_user,
         ttd.desktop_user,
         ttd.business_app_user
     from tmp_universe tu

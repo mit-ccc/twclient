@@ -120,7 +120,6 @@ trying to get the graphs out, that means simpler SQL.</p>
     <span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span> <span class="k">as</span> <span class="n">num_mentions</span>
 <span class="k">from</span> <span class="n">tweet</span> <span class="n">tw</span>
     <span class="k">inner</span> <span class="k">join</span> <span class="n">user_mention</span> <span class="n">mt</span> <span class="k">using</span><span class="p">(</span><span class="n">tweet_id</span><span class="p">)</span>
-    <span class="k">inner</span> <span class="k">join</span> <span class="n">tmp_universe</span> <span class="n">utt</span> <span class="k">on</span> <span class="n">utt</span><span class="p">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">mt</span><span class="p">.</span><span class="n">mentioned_user_id</span>
 <span class="k">group</span> <span class="k">by</span> <span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span>
 </pre></div>
 </div>

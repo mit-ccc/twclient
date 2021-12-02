@@ -2,13 +2,13 @@
   Tweet-Derived Graphs: Mention, Reply, Retweet, Quote
 ========================================================
 
-The :doc:`follow graph </vignettes/extracts/follow-graph>` isn't the only
+The :doc:`follow graph </vignettes/sql-exports/follow-graph>` isn't the only
 useful graph structure in Twitter. There are several other graphs that connect
 users, defined by their tweeting behavior. For example, the *mention graph* has
 a (directed) edge from user A to user B if user A mentions user B in a tweet.
 We'll look at four such graphs in total: mention, reply, retweet and quote.
 
-Twclient preprocesses tweets on load into the database to make extracting these
+Twclient preprocesses tweets on load into the database to make exporting these
 graphs easier. User mentions as well as reply, retweet and quote relationships
 between tweets are extracted into link tables or tweet attributes. For you,
 trying to get the graphs out, that means simpler SQL.
@@ -32,7 +32,6 @@ Without further ado, the mention graph:
         count(*) as num_mentions
     from tweet tw
         inner join user_mention mt using(tweet_id)
-        inner join tmp_universe utt on utt.user_id = mt.mentioned_user_id
     group by 1,2;
 
 The ``user_mention`` table represents mentions of users in tweets. There's a
@@ -50,7 +49,7 @@ by values of the tweet's ``create_dt`` in the WHERE clause, and so on.
 ---------------
 
 The *reply graph* has a directed edge from user A to user B if A replies to B's
-tweet. It's even simpler to extract than the mention graph:
+tweet. It's even simpler to retrieve than the mention graph:
 
 .. code-block:: sql
 
@@ -110,8 +109,9 @@ user's ID.
 ---------------
 
 The *quote graph* has a directed edge from user A to user B if A quote-tweets
-B's tweet. Similarly to how we can extract the retweet graph, getting the quote
-graph out of the database relies on the ``tweet.quoted_status_id`` column:
+B's tweet. As with the use of the ``retweeted_status_id`` column to construct
+the retweet graph, getting the quote graph out of the database relies on the
+``tweet.quoted_status_id`` column:
 
 .. code-block:: sql
 

@@ -13,6 +13,7 @@ from . import authpool as ap
 logger = logging.getLogger(__name__)
 
 
+@ut.export
 class TwitterApi:
     '''
     Wrap calls to the Twitter API with cursoring, common parameters, etc.
@@ -136,6 +137,43 @@ class TwitterApi:
             logger.debug(msg, exc_info=True)
 
             raise
+
+    def rate_limit_status(self, consumer_key=None):
+        '''
+        Call Twitter's application/rate_limit_status method.
+
+        This method wraps one or more calls to Twitter's API method
+        application/rate_limit_status and returns information on rate limits.
+        The default is to request rate limit info for all credentials given in
+        the ``self.auths`` attribute. See also the method of the same name on
+        ``authpool.AuthPoolAPI``, which this method calls.
+
+        Parameters
+        ----------
+        consumer_key : str or None
+            The consumer key for a particular set of API credentials whose rate
+            limit should be checked. If None, check all credentials in
+            ``self.auths``. If not None, the value must match one of the
+            consumer keys in ``self.auths``.
+
+        Returns
+        -------
+        dict
+            A dictionary whose keys are the OAuth consumer keys and whose
+            values are the Twitter API's json responses describing rate limit
+            information.
+        '''
+
+        msg = 'Getting rate limits for consumer key(s): '
+        msg += ('all' if consumer_key is None else consumer_key)
+        logger.debug(msg)
+
+        twargs = {
+            'method' : 'rate_limit_status',
+            'consumer_key' : consumer_key
+        }
+
+        return self.make_api_call(**twargs)
 
     #
     # Direct wraps of Twitter API methods
@@ -327,13 +365,17 @@ class TwitterApi:
             raise ValueError('Bad list specification to list_members') from exc
 
         twargs = {
-            'method': 'list_members',
             'cursor': True,
             'list_id': list_id,
             'slug': slug,
             'owner_screen_name': owner_screen_name,
             'owner_id': owner_id
         }
+
+        if tweepy.__version__ >= '4.0.0':
+            twargs['method'] = 'get_list_members'
+        else:
+            twargs['method'] = 'list_members'
 
         yield from self.make_api_call(**twargs)
 

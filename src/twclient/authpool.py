@@ -16,25 +16,43 @@ logger = logging.getLogger(__name__)
 # The dynamic method construction in AuthPoolAPI confuses the linter
 # pylint: disable=protected-access
 
+# Either tweepy.error or tweepy.errors will be missing depending on the
+# version and we want pylint not to freak out when it can't find exactly
+# one of them.
 if tweepy.__version__ >= '4.0.0':
+    # pylint: disable-next=no-member
     RateLimitError = tweepy.errors.TooManyRequests
+
+    # pylint: disable-next=no-member
     TweepyException = tweepy.errors.TweepyException
 else:
+    # pylint: disable-next=no-member
     RateLimitError = tweepy.error.RateLimitError
+
+    # pylint: disable-next=no-member
     TweepyException = tweepy.error.TweepError
 
 
-class AuthPoolAPI:  # pylint: disable=too-few-public-methods
+@ut.export
+class AuthPoolAPI:
     '''
-    A version of tweepy.API with support for multiple sets of credentials.
+    A version of ``tweepy.API`` with support for multiple sets of credentials.
 
     This class transparently proxies access to multiple sets of Twitter API
-    credentials. It creates as many tweepy.API instances as it gets sets of API
-    credentials, and then dispatches method calls to the appropriate instance,
-    handling rate limit and over-capacity errors. When one instance hits its
-    rate limit, this implementation transparently switches over to the next.
-    User code can treat it as a drop-in replacement for tweepy.API; see the
-    tweepy documentation for methods.
+    credentials. It creates as many ``tweepy.API`` instances as it gets sets of
+    API credentials, and then dispatches method calls to the appropriate
+    instance, handling rate limit and over-capacity errors. When one instance
+    hits its rate limit, this implementation transparently switches over to the
+    next. User code can treat it as a drop-in replacement for ``tweepy.API``;
+    see the tweepy documentation for methods.
+
+    Note that it does, however, handle the ``rate_limit_status`` method
+    differently. We do this because it's not useful to see rate limit info for
+    only one set of credentials when the point of this class is to pool
+    multiple sets. Rather than return only the Twitter API response for the
+    currently active set of credentials, ``rate_limit_status`` returns a
+    dictionary whose keys are the consumer keys of the credentials and whose
+    values are the ``rate_limit_status`` responses for those keys.
 
     Parameters
     ----------
@@ -63,19 +81,20 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
     # __getattr__ to provide advice to code in twitter_api.py.
     _authpool_return_types = {
         'get_list': 'single',
-        'list_members': 'list',
-
         'lookup_users': 'list',
-
         'user_timeline': 'list',
+
+        'rate_limit_status': 'single',
 
         # the tweepy < 4.0.0 names
         'followers_ids': 'list',
         'friends_ids': 'list',
+        'list_members': 'list',
 
         # the tweepy >= 4.0.0 names
         'get_follower_ids': 'list',
-        'get_friend_ids': 'list'
+        'get_friend_ids': 'list',
+        'get_list_members': 'list',
     }
 
     def __init__(self, **kwargs):
@@ -112,6 +131,10 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
         ]
 
     @property
+    def _authpool_auths(self):
+        return [api.auth for api in self._authpool_apis]
+
+    @property
     def _authpool_current_api(self):
         return self._authpool_apis[self._authpool_current_api_index]
 
@@ -145,7 +168,9 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
 
             # add a little fudge factor to be safe
             wake_time = self._authpool_rate_limit_resets[new_ind] + 0.01
-            logger.info('Sleeping %f seconds for rate limit', wake_time)
+            msg = f'Sleeping {wake_time} seconds for rate limit'
+            logger.info(msg)
+
             time.sleep(wake_time)
 
         self._authpool_current_api_index = new_ind
@@ -177,12 +202,26 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
         # we use "iself" to avoid confusing shadowing of the binding of "self"
         # to __getattr__'s first argument. docstring is set dynamically below.
         def func(iself, *args, **kwargs):  # pylint: disable=missing-docstring
+            # NOTE we want to provide the rate limits for all APIs at once; it
+            # doesn't make a lot of sense to ask for only one credential set's
+            # rate limit when the whole point of this class is to pool them
+            if name == 'rate_limit_status':
+                consumer_key = kwargs.pop('consumer_key', None)
+
+                ret = {
+                    api.auth.consumer_key : api.rate_limit_status()
+                    for api in iself._authpool_apis
+                }
+
+                if consumer_key is not None:
+                    ret = { consumer_key : ret[consumer_key] }
+
+                return ret
+
             cp_retry_cnt = 0
-
             while True:
-                method = getattr(iself._authpool_current_api, name)
-
                 try:
+                    method = getattr(iself._authpool_current_api, name)
                     ret = method(*args, **kwargs)
 
                     iself._authpool_mark_api_free()
@@ -199,7 +238,7 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
 
                     iself._authpool_switch_api()
                 except TweepyException as exc:
-                    dexc = err.dispatch_tweepy(exc)
+                    dexc = err.dispatch_tweepy_exception(exc)
 
                     if not isinstance(dexc, err.TwitterServiceError):
                         raise dexc from exc
@@ -224,6 +263,8 @@ class AuthPoolAPI:  # pylint: disable=too-few-public-methods
         The tweepy.API method's docstring follows:
         '''
 
+        # the docstring is the same on all API instances, doesn't matter which
+        # one we use
         tweepy_docstring = getattr(self._authpool_current_api, name).__doc__
         tweepy_docstring = ut.coalesce(tweepy_docstring, '')
 

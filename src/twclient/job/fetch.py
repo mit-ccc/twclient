@@ -1,416 +1,85 @@
 '''
-Job classes which actually implement command logic.
+Jobs which interact with the Twitter API.
 '''
 
+import random
 import logging
 import warnings
-import itertools as it
 
-from abc import ABC, abstractmethod
+from abc import abstractmethod
 
 import sqlalchemy as sa
-from sqlalchemy.orm import sessionmaker
 
-from . import __version__
-from . import error as err
-from . import _utils as ut
-from . import models as md
+from .job import TargetJob, ApiJob
+from .. import error as err
+from .. import _utils as ut
+from .. import models as md
 
 logger = logging.getLogger(__name__)
+
 
 # This isn't a great way to handle these warnings, but sqlalchemy is so dynamic
 # that most attribute accesses aren't resolved until runtime
 # pylint: disable=no-member
 
-#
-# Job classes
-# These encapsulate different types of loading jobs, including
-# the details of interacting with the database and Twitter API
-#
 
-
-class Job(ABC):
+class FetchJob(ApiJob, TargetJob):
     '''
-    A job to be run against the database and possibly also the Twitter API.
+    A job fetching data from the Twitter API.
 
-    This class represents a job to be run against the database. Subclasses may
-    or may not also support access to the Twitter API.
-
-    Parameters
-    ----------
-    engine : sqlalchemy.engine.Engine instance
-        The sqlalchemy engine representing the database to connect to.
-
-    Attributes
-    ----------
-    engine : sqlalchemy.engine.Engine instance
-        The parameter passed to __init__.
-
-    session : sqlalchemy.orm.session.Session instance
-        The actual database session to use.
-    '''
-
-    def __init__(self, **kwargs):
-        try:
-            engine = kwargs.pop('engine')
-        except KeyError as exc:
-            raise ValueError("engine instance is required") from exc
-
-        super().__init__(**kwargs)
-
-        self.engine = engine
-
-        self._sessionfactory = sessionmaker()
-        self._sessionfactory.configure(bind=self.engine)
-
-        self.session = self._sessionfactory()
-
-        self._schema_verified = False
-
-    def ensure_schema_version(self):
-        '''
-        Ensure that the database schema is a usable version.
-
-        This method checks that the schema present in the database referred to
-        by self.engine is a version the Job class knows how to work with. If
-        the schema is an unsupported version or is missing / corrupt, an
-        instance of error.BadSchemaError will be raised.
-
-        Returns
-        -------
-        None
-        '''
-
-        if self._schema_verified:
-            return
-
-        try:
-            schema_version = self.session.query(md.SchemaVersion).all()
-        except sa.exc.ProgrammingError as exc:
-            msg = 'Bad or missing schema version tag in database (have you ' \
-                  'initialized it?)'
-            raise err.BadSchemaError(message=msg) from exc
-
-        if len(schema_version) != 1:
-            msg = 'Bad or missing schema version tag in database'
-            raise err.BadSchemaError(message=msg)
-
-        db_version = schema_version[0].version
-
-        if db_version > __version__:
-            msg = 'Package version {0} cannot use future schema version {1}'
-            msg = msg.format(__version__, db_version)
-            raise err.BadSchemaError(message=msg)
-
-        if db_version < __version__:  # likely to change in future versions
-            msg = 'Package version {0} cannot migrate old schema version ' \
-                  '{1}; consider downgrading the package version'
-            msg = msg.format(__version__, db_version)
-            raise err.BadSchemaError(message=msg)
-
-        self._schema_verified = True
-
-    def get_or_create(self, model, **kwargs):
-        '''
-        Get a persistent object or create a pending one.
-
-        Given a model and a set of kwargs, interpretable as the values of the
-        model's attributes, which together should identify one row in the
-        database, query for it and a) return a persistent object if the
-        row exists, or otherwise b) create and return a pending object with the
-        appropriate attribute values.
-
-        Parameters
-        ----------
-        model : instance of models.Base
-            A sqlalchemy model object.
-
-        **kwargs
-            Keyword arguments specifying the values of the model's attributes.
-
-        Returns
-        -------
-        instance of models.Base
-            The persistent or pending object.
-        '''
-
-        instance = self.session.query(model).filter_by(**kwargs).one_or_none()
-
-        if instance:
-            return instance
-
-        instance = model(**kwargs)
-        self.session.add(instance)
-
-        return instance
-
-    # This method is the main entrypoint for the Job class. Subclasses are
-    # expected to override it with their business logic.
-    @abstractmethod
-    def run(self):
-        '''
-        Run the job.
-        '''
-
-        raise NotImplementedError()
-
-
-class TagJob(Job):
-    '''
-    A job which uses user tags.
-
-    A TagJob is a class which requires a user tag. It ensures that the database
-    schema version is correct, and leaves other logic for subclasses.
-
-    Parameters
-    ----------
-    tag : str
-        The name of a user tag.
-
-    Attributes
-    ----------
-    tag : str
-        The parameter passed to __init__.
-    '''
-
-    def __init__(self, **kwargs):
-        try:
-            tag = kwargs.pop('tag')
-        except KeyError as exc:
-            raise ValueError('Must provide tag argument') from exc
-
-        super().__init__(**kwargs)
-
-        self.tag = tag
-
-        self.ensure_schema_version()
-
-
-class TargetJob(Job):
-    '''
-    A job which requires targets.
-
-    A TargetJob is a job which requires a set of target.Target instances to
-    specify users. An instance of this class must specify its resolve mode for
-    the Target classes, and has defaut logic to resolve them and expose their
-    users.
-
-    Parameters
-    ----------
-    targets : list of target.Target
-        The list of targets for the job.
-
-    allow_missing_targets : bool
-        If resolving the targets indicates that some targets should be in the
-        database but are not (i.e., one of the Target instances in self.targets
-        has a non-empty missing_targets attribute), should we raise
-        error.BadTargetError (if False, default) or continue and ignore the
-        missing targets (if True)?
-
-    Attributes
-    ----------
-    targets : list of target.Target
-        The parameter passed to __init__.
-
-    allow_missing_targets : bool
-        The parameter passed to __init__.
-    '''
-
-    def __init__(self, **kwargs):
-        try:
-            targets = kwargs.pop('targets')
-        except KeyError as exc:
-            raise ValueError('Must provide list of targets') from exc
-
-        allow_missing_targets = kwargs.pop('allow_missing_targets', False)
-
-        super().__init__(**kwargs)
-
-        self.targets = targets
-        self.allow_missing_targets = allow_missing_targets
-
-        self.ensure_schema_version()
-
-    @property
-    @abstractmethod
-    def resolve_mode(self):
-        '''
-        The resolve mode attribute to specify behavior of Target instances.
-
-        This attribute is consumed by the Target instances in self.targets.
-        Acceptable values include 'fetch', 'skip', 'hydrate'. See the
-        documentation for target.Target for more information.
-        '''
-
-        raise NotImplementedError()
-
-    @property
-    def resolved(self):
-        '''
-        Have all targets been resolved to users?
-
-        This attribute is false on instantiation, and is normally set to True
-        by calling resolve_targets().
-        '''
-
-        return all(t.resolved for t in self.targets)
-
-    def _combine_sub_attrs(self, attr):
-        if not self.resolved:
-            raise AttributeError('Must call resolve_targets() first')
-
-        return list(it.chain(*[getattr(t, attr) for t in self.targets]))
-
-    @property
-    def users(self):
-        '''
-        The combined set of users referred to by all targets.
-
-        This is the union of all the users referred to by the Target instances
-        in self.targets. If the targets have not been resolved, accessing this
-        attribute will raise AttributeError.
-        '''
-
-        return self._combine_sub_attrs('users')
-
-    @property
-    def bad_targets(self):
-        '''
-        The combined set of bad raw targets referred to by all targets.
-
-        This is the union of all the bad raw targets in the Target instances in
-        self.targets. If the targets have not been resolved, accessing this
-        attribute will raise AttributeError. See the documentation for
-        target.Target for details of what a target and raw target are and its
-        bad_targets attribute for what it means for a raw target to be bad.
-        '''
-
-        return self._combine_sub_attrs('bad_targets')
-
-    @property
-    def missing_targets(self):
-        '''
-        The combined set of missing raw targets referred to by all targets.
-
-        This is the union of all the missing raw targets in the Target
-        instances in self.targets. If the targets have not been resolved,
-        accessing this attribute will raise AttributeError. See the
-        documentation for target.Target for details of what a target and raw
-        target are and its missing_targets attribute for what it means for a
-        raw target to be missing.
-        '''
-
-        return self._combine_sub_attrs('missing_targets')
-
-    @property
-    def good_targets(self):
-        '''
-        The combined set of good raw targets referred to by all targets.
-
-        This is the union of all the good raw targets in the Target instances
-        in self.targets. If the targets have not been resolved, accessing this
-        attribute will raise AttributeError. See the documentation for
-        target.Target for details of what a target and raw target are and its
-        good_targets attribute for what it means for a raw target to be good.
-        '''
-
-        return self._combine_sub_attrs('good_targets')
-
-    def resolve_targets(self):
-        '''
-        Resolve all of the targets in self.targets to users.
-
-        This method resolves all of the targets in self.targets to users (and
-        bad/missing raw targets, if applicable) and validates them using
-        whatever logic the subclass has defined for validate_targets().
-        '''
-
-        for target in self.targets:
-            target.resolve(context=self)
-
-        self.validate_targets()
-
-    def validate_targets(self):
-        '''
-        Validate the targets in self.targets.
-
-        This method is a hook called by resolve_targets to ensure that the
-        targets in self.targets have resolved into a sane configuration. If any
-        error is detected, error.BadTargetError should be raised. The default
-        implementation here checks whether there are missing targets (i.e.,
-        targets which should have been but were not found in the database), and
-        raises error.BadTargetError unless self.allow_missing_targets evaluates
-        to True. Subclasses may override with other configurations.
-        '''
-
-        if self.resolve_mode == 'skip' and self.missing_targets:
-            msg = 'Target(s) not in database: {0}'
-            msg = msg.format(', '.join(self.missing_targets))
-
-            if self.allow_missing_targets:
-                logger.warning(msg)
-            else:
-                raise err.BadTargetError(
-                    message=msg,
-                    targets=self.missing_targets
-                )
-
-
-class ApiJob(TargetJob):
-    '''
-    A job requiring access to the Twitter API.
-
-    This class represents a job which needs access to the Twitter API. It
+    This class represents a job which fetches data from the Twitter API. It
     configures API access and user validation logic, and defers other
     functionality to subclasses.
 
     Parameters
     ----------
-    api : instance of twitter_api.TwitterApi
-        The TwitterApi instance to use for API access.
+        load_batch_size : int
+            Load new rows to the database in batches of this size. The default
+            is None, which loads all data retrieved in one batch. Lower values
+            minimize memory usage at the cost of slower loading speeds, while
+            higher values do the reverse. Target instances in self.targets do
+            not consider this value--it applies only to other rows loaded by
+            the FetchJob instance--because there are generally not enough
+            targets to consume a significant amount of memory. Followers and
+            friends lists in particular can be large enough to cause
+            out-of-memory conditions; setting ``load_batch_size`` to an
+            appropriate value (e.g., 5000) can address this problem.
 
-    allow_api_errors : bool
-        If the Twitter API returns an error, should we abort (if False,
-        default), or ignore and continue (if True)?
-
-    load_batch_size : int
-        Load new rows to the database in batches of this size. The default is
-        None, which loads all data retrieved in one batch. Lower values
-        minimize memory usage at the cost of slower loading speeds, while
-        higher values do the reverse. Target instances in self.targets do not
-        consider this value--it applies only to other rows loaded by the ApiJob
-        instance--because there are generally not enough targets to consume a
-        significant amount of memory. Followers and friends lists in particular
-        can be large enough to cause out-of-memory conditions; setting
-        ``load_batch_size`` to an appropriate value (e.g., 5000) can address
-        this problem.
+        randomize : bool
+            Whether to process raw targets in a randomized order. This may
+            allow loads which are interrupted partway through to retain some
+            useful statistical properties.
 
     Attributes
     ----------
-    api : instance of twitter_api.TwitterApi
-        The parameter passed to __init__.
+        load_batch_size : int
+            The parameter passed to __init__.
 
-    allow_api_errors : bool
-        The parameter passed to __init__.
-
-    load_batch_size : int
-        The parameter passed to __init__.
+        randomize : bool
+            The parameter passed to __init__.
     '''
 
     def __init__(self, **kwargs):
-        try:
-            api = kwargs.pop('api')
-        except KeyError as exc:
-            raise ValueError('Must provide api object') from exc
-
-        allow_api_errors = kwargs.pop('allow_api_errors', False)
         load_batch_size = kwargs.pop('load_batch_size', None)
+        randomize = kwargs.pop('randomize', False)
 
         super().__init__(**kwargs)
 
-        self.api = api
         self.load_batch_size = load_batch_size
-        self.allow_api_errors = allow_api_errors
+        self.randomize = randomize
+
+        self._users = None
+
+    @property
+    def users(self):
+        if not self.randomize:
+            return super().users
+
+        if self._users is None:
+            self._users = super().users
+            random.shuffle(self._users)
+
+        return self._users
 
     def validate_targets(self):
         super().validate_targets()
@@ -425,96 +94,7 @@ class ApiJob(TargetJob):
                 raise err.BadTargetError(message=msg, targets=self.bad_targets)
 
 
-class CreateTagJob(TagJob):
-    '''
-    Create a user tag.
-
-    This job creates a new user tag. If the tag already exists, nothing is done
-    and no error is raised. The tag is not applied to any users. (See
-    ApplyTagJob for that.)
-    '''
-
-    def run(self):
-        self.get_or_create(md.Tag, name=self.tag)
-
-        self.session.commit()
-
-
-class DeleteTagJob(TagJob):
-    '''
-    Delete a user tag.
-
-    This job deletes a user tag. If the tag does not exist, nothing is done and
-    no error is raised. Any existing assignments of the tag to users are also
-    deleted.
-    '''
-
-    def run(self):
-        tag = self.session.query(md.Tag).filter_by(name=self.tag).one_or_none()
-
-        if tag:
-            # DELETE is slow on many databases, but we're assuming none of
-            # these lists are especially large - a few thousand rows, tops.
-            # follow graph jobs have at least potentially really large data
-            # and need to rely on DROP TABLE / CREATE TABLE (see below).
-            self.session.delete(tag)
-
-            self.session.commit()
-
-
-class ApplyTagJob(TagJob, TargetJob):
-    '''
-    Apply a user tag to a set of users.
-
-    This job applies an existing user tag to a set of users. If the tag does
-    not exist, error.BadTagError is raised. (Use CreateTagJob to create a new
-    tag.) The targets are resolved to users with ``resolve_mode == 'skip'``
-    (i.e., any requested users which do not exist in the database are not
-    looked up from the Twitter API). If any users were not successfully
-    resolved, error.BadTargetError is raised unless the allow_missing_targets
-    parameter is True. Otherwise, any users which were successfully resolved
-    from the targets are given the tag. In particular, if no users were
-    successfully resolved and allow_missing_users is True, nothing is done and
-    no error is raised. The entire job is run as one transaction; if anything
-    goes wrong, no tags are applied.
-    '''
-
-    resolve_mode = 'skip'
-
-    def run(self):
-        self.resolve_targets()
-
-        tag = self.session.query(md.Tag).filter_by(name=self.tag).one_or_none()
-
-        if not tag:
-            msg = f'Tag {self.tag} does not exist'
-            raise err.BadTagError(message=msg, tag=tag)
-
-        for user in self.users:
-            user.tags.append(tag)
-
-        self.session.commit()
-
-
-class InitializeJob(Job):
-    '''
-    A job which initializes the selected database and sets up the schema.
-
-    WARNING! This job will drop all data in the selected database! This job
-    (re-)initializes the selected database and applies the schema to it. The
-    version of the creating package will also be stored to help future versions
-    with migrations and compatibility checks.
-    '''
-
-    def run(self):
-        md.Base.metadata.drop_all(self.engine)
-        md.Base.metadata.create_all(self.engine)
-
-        self.session.add(md.SchemaVersion(version=__version__))
-        self.session.commit()
-
-
-class UserInfoJob(ApiJob):
+class UserInfoJob(FetchJob):
     '''
     A job which hydrates users.
 
@@ -533,7 +113,7 @@ class UserInfoJob(ApiJob):
         self.session.commit()
 
 
-class TweetsJob(ApiJob):
+class TweetsJob(FetchJob):
     '''
     Fetch user tweets from the Twitter API.
 
@@ -673,7 +253,7 @@ class TweetsJob(ApiJob):
 # self.session.flush() afterward. Note also that this only applies if the
 # _load_edges_for steps don't implicitly commit, which they do on most DBs.
 # (See the comments in that method.)
-class FollowGraphJob(ApiJob):
+class FollowGraphJob(FetchJob):
     '''
     Fetch follow-graph edges from the Twitter API.
 

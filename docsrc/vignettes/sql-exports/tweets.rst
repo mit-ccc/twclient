@@ -6,9 +6,9 @@ One of the more obvious things to want to get out of the database is the tweets
 users have posted. Tweets are the stuff of Twitter and usually an important
 component of an analysis.
 
-As with the :doc:`follow graph </vignettes/extracts/follow-graph>`, retrieving
-tweets can be quick and simple or have some more bells and whistles. Here's the
-simplest version:
+As with the :doc:`follow graph </vignettes/sql-exports/follow-graph>`,
+retrieving tweets can be quick and simple or have some more bells and whistles.
+Here's the simplest version:
 
 
 .. code-block:: sql
@@ -125,8 +125,8 @@ self-referencing foreign key back to the ``tweet`` table, but the
 
 Finally, let's say we wanted to filter to only tweets posted by a certain
 tagged set of users and within a certain period of time. As in the :doc:`follow
-graph </vignettes/extracts/follow-graph>` vignette, you can achieve the first
-with a join to a temporary table or `CTE
+graph </vignettes/sql-exports/follow-graph>` vignette, you can achieve the
+first with a join to a temporary table or `CTE
 <https://www.postgresql.org/docs/14/queries-with.html>`__ and the second with a
 WHERE-clause filter:
 
@@ -179,8 +179,8 @@ WHERE-clause filter:
        tw.create_dt >= '2020-01-01' and
        tw.create_dt <= '2020-06-01';
 
-And that's it! Another vignette on :doc:`extracting graph structures from
-tweets </vignettes/extracts/tweet-graphs>` discusses how to work with the
-mention, retweet, quote-tweet and reply networks over users that their tweets
-give rise to.
+And that's it! Another vignette on :doc:`exporting graph structures extracted
+from tweets </vignettes/sql-exports/tweet-graphs>` discusses how to work with
+the mention, retweet, quote-tweet and reply networks over users that their
+tweets give rise to.
 

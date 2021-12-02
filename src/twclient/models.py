@@ -24,9 +24,6 @@ logger = logging.getLogger(__name__)
 # Better to have these all in one file
 # pylint: disable=too-many-lines
 
-# Not applicable: methods all from sqlalchemy, we just define table structure
-# pylint: disable=too-few-public-methods
-
 # Not applicable: database tables have lots of columns
 # pylint: disable=too-many-instance-attributes
 
@@ -148,7 +145,7 @@ class UniqueMixin:
             return cache[key]
 
         with session.no_autoflush:
-            obj = session.query(cls).filter_by(unique_hash=uhash).first()
+            obj = session.query(cls).filter_by(unique_hash=uhash).one_or_none()
 
             if not obj:
                 obj = cls(unique_hash=uhash, **kwargs)
@@ -268,6 +265,7 @@ class ListFromTweepyInterface:
 # Store the creating package version in the DB to enable migrations (we don't
 # actually do any migrations or have any code to support them yet, but if this
 # isn't here to begin with it'll be a gigantic pain)
+@ut.export
 class SchemaVersion(TimestampsMixin, Base):
     '''
     A stub table to store the schema version.
@@ -290,6 +288,7 @@ class SchemaVersion(TimestampsMixin, Base):
 #
 
 
+@ut.export
 class User(TimestampsMixin, FromTweepyInterface, Base):
     '''
     A Twitter user.
@@ -323,6 +322,15 @@ class User(TimestampsMixin, FromTweepyInterface, Base):
         return cls(user_id=obj.id)
 
 
+class StgUser(Base):
+    '''
+    A staging table for pulling exports.
+    '''
+
+    user_id = Column(BigInteger, primary_key=True, autoincrement=False)
+
+
+@ut.export
 class UserData(TimestampsMixin, FromTweepyInterface, Base):
     '''
     Mutable attributes of a Twitter user.
@@ -379,12 +387,14 @@ class UserData(TimestampsMixin, FromTweepyInterface, Base):
         The number of lists the user appears on.
     '''
 
-    user_data_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_data_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                          primary_key=True, autoincrement=True)
+
     user_id = Column(BigInteger,
                      ForeignKey('user.user_id', deferrable=True),
                      nullable=False, index=True)
 
-    url_id = Column(BigInteger,
+    url_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
                     ForeignKey('url.url_id', deferrable=True),
                     nullable=True, index=True)
 
@@ -473,6 +483,7 @@ class UserData(TimestampsMixin, FromTweepyInterface, Base):
         return ret
 
 
+@ut.export
 class Tag(TimestampsMixin, Base):
     '''
     A tag that can be given to one or more Twitter users.
@@ -497,6 +508,7 @@ class Tag(TimestampsMixin, Base):
                          back_populates='tags')
 
 
+@ut.export
 class List(TimestampsMixin, FromTweepyInterface, Base):
     '''
     A Twitter list of users.
@@ -608,6 +620,7 @@ class List(TimestampsMixin, FromTweepyInterface, Base):
         return cls(**args)
 
 
+@ut.export
 class UserList(Base):
     '''
     User membership status for Twitter lists.
@@ -638,7 +651,8 @@ class UserList(Base):
         The SCD validity end date (None / NULL if the row is current).
     '''
 
-    user_list_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_list_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                          primary_key=True, autoincrement=True)
 
     user_id = Column(BigInteger,
                      ForeignKey('user.user_id', deferrable=True),
@@ -661,6 +675,7 @@ class UserList(Base):
     user = relationship('User', back_populates='list_memberships')
 
 
+@ut.export
 class UserTag(TimestampsMixin, Base):
     '''
     Users who have been assigned tags.
@@ -679,7 +694,8 @@ class UserTag(TimestampsMixin, Base):
         The ID of the tag the user is assigned.
     '''
 
-    user_tag_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    user_tag_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                         primary_key=True, autoincrement=True)
 
     user_id = Column(BigInteger,
                      ForeignKey('user.user_id', deferrable=True),
@@ -697,6 +713,7 @@ class UserTag(TimestampsMixin, Base):
 #
 
 
+@ut.export
 class Follow(Base):
     '''
     The Twitter follow graph.
@@ -729,7 +746,8 @@ class Follow(Base):
         The SCD validity end date (None / NULL if the row is current).
     '''
 
-    follow_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    follow_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                       primary_key=True, autoincrement=True)
 
     source_user_id = Column(BigInteger,
                             ForeignKey('user.user_id', deferrable=True),
@@ -776,6 +794,7 @@ class StgFollow(Base):
 #
 
 
+@ut.export
 class Tweet(TimestampsMixin, FromTweepyInterface, Base):
     '''
     A tweet.
@@ -958,6 +977,7 @@ class Tweet(TimestampsMixin, FromTweepyInterface, Base):
         return ret
 
 
+@ut.export
 class Hashtag(TimestampsMixin, UniqueMixin, Base):
     '''
     A hashtag.
@@ -974,7 +994,8 @@ class Hashtag(TimestampsMixin, UniqueMixin, Base):
         The text of the hashtag.
     '''
 
-    hashtag_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    hashtag_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                        primary_key=True, autoincrement=True)
 
     name = Column(UnicodeText, nullable=False, unique=True)
 
@@ -982,6 +1003,7 @@ class Hashtag(TimestampsMixin, UniqueMixin, Base):
                             cascade_backrefs=False)
 
 
+@ut.export
 class Symbol(TimestampsMixin, UniqueMixin, Base):
     '''
     A ticker symbol as detected by Twitter.
@@ -1001,7 +1023,8 @@ class Symbol(TimestampsMixin, UniqueMixin, Base):
         The text of the symbol / cashtag.
     '''
 
-    symbol_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    symbol_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                       primary_key=True, autoincrement=True)
 
     name = Column(UnicodeText, nullable=False, unique=True)
 
@@ -1009,6 +1032,7 @@ class Symbol(TimestampsMixin, UniqueMixin, Base):
                             cascade_backrefs=False)
 
 
+@ut.export
 class Url(TimestampsMixin, UniqueMixin, Base):
     '''
     A URL.
@@ -1026,9 +1050,19 @@ class Url(TimestampsMixin, UniqueMixin, Base):
         The URL itself.
     '''
 
-    url_id = Column(BigInteger, primary_key=True, autoincrement=True)
+    url_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
+                    primary_key=True, autoincrement=True)
 
-    url = Column(UnicodeText, nullable=False, unique=True)
+    # NOTE there's no unique index here because URLs can be very long, too long
+    # for many index implementations to handle. The URLs are semantically
+    # unique and are kept unique at the application layer by the logic in
+    # UniqueMixin. (That is, there's a unique_hash column which is the SHA-1
+    # hash of the url value and is under a unique constraint. Application code
+    # fetching URLs deduplicates them according to the unique_hash.) It would
+    # also be good to have a CHECK constraint that the url column hashes to the
+    # appropriate value, but we can't even consider doing that because standard
+    # SQL doesn't provide SHA-1.
+    url = Column(UnicodeText, nullable=False, unique=False)
 
     mentions = relationship('UrlMention', back_populates='url',
                             cascade_backrefs=False)
@@ -1040,6 +1074,7 @@ class Url(TimestampsMixin, UniqueMixin, Base):
                                   cascade_backrefs=False)
 
 
+@ut.export
 class MediaType(TimestampsMixin, UniqueMixin, FromTweepyInterface, Base):
     '''
     The type of a media object in a tweet.
@@ -1074,6 +1109,7 @@ class MediaType(TimestampsMixin, UniqueMixin, FromTweepyInterface, Base):
         return cls.as_unique(session, name=media_type)
 
 
+@ut.export
 class Media(TimestampsMixin, FromTweepyInterface, Base):
     '''
     A media object on Twitter.
@@ -1110,7 +1146,8 @@ class Media(TimestampsMixin, FromTweepyInterface, Base):
 
     # Twitter gives these IDs, so unlike with the other entities we don't have
     # to make one up
-    media_id = Column(BigInteger, primary_key=True, autoincrement=False)
+    media_id = Column(BigInteger,
+                      primary_key=True, autoincrement=False)
 
     media_type_id = Column(Integer,
                            ForeignKey('media_type.media_type_id',
@@ -1154,6 +1191,7 @@ class Media(TimestampsMixin, FromTweepyInterface, Base):
         return cls(**kwargs)
 
 
+@ut.export
 class MediaVariant(TimestampsMixin, ListFromTweepyInterface, Base):
     '''
     Specific video files for a Twitter video, which may have more than one.
@@ -1181,7 +1219,7 @@ class MediaVariant(TimestampsMixin, ListFromTweepyInterface, Base):
                       ForeignKey('media.media_id', deferrable=True),
                       primary_key=True, autoincrement=False)
 
-    url_id = Column(BigInteger,
+    url_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
                     ForeignKey('url.url_id', deferrable=True),
                     primary_key=True, autoincrement=False)
 
@@ -1221,6 +1259,7 @@ class MediaVariant(TimestampsMixin, ListFromTweepyInterface, Base):
         return ret
 
 
+@ut.export
 class UserMention(TimestampsMixin, ListFromTweepyInterface, Base):
     '''
     A mention of a user in a tweet.
@@ -1283,6 +1322,7 @@ class UserMention(TimestampsMixin, ListFromTweepyInterface, Base):
         return lst
 
 
+@ut.export
 class HashtagMention(TimestampsMixin, ListFromTweepyInterface, Base):
     '''
     A mention of a hashtag in a tweet.
@@ -1313,7 +1353,7 @@ class HashtagMention(TimestampsMixin, ListFromTweepyInterface, Base):
     start_index = Column(Integer, primary_key=True, autoincrement=False)
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
-    hashtag_id = Column(BigInteger,
+    hashtag_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
                         ForeignKey('hashtag.hashtag_id', deferrable=True),
                         nullable=False, index=True)
 
@@ -1346,6 +1386,7 @@ class HashtagMention(TimestampsMixin, ListFromTweepyInterface, Base):
         return lst
 
 
+@ut.export
 class SymbolMention(TimestampsMixin, ListFromTweepyInterface, Base):
     '''
     A mention of a ticker symbol ("cashtag") in a tweet.
@@ -1376,7 +1417,7 @@ class SymbolMention(TimestampsMixin, ListFromTweepyInterface, Base):
     start_index = Column(Integer, primary_key=True, autoincrement=False)
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
-    symbol_id = Column(BigInteger,
+    symbol_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
                        ForeignKey('symbol.symbol_id', deferrable=True),
                        nullable=False, index=True)
 
@@ -1409,6 +1450,7 @@ class SymbolMention(TimestampsMixin, ListFromTweepyInterface, Base):
         return lst
 
 
+@ut.export
 class UrlMention(TimestampsMixin, ListFromTweepyInterface, Base):
     '''
     A mention of a URL in a tweet.
@@ -1466,7 +1508,7 @@ class UrlMention(TimestampsMixin, ListFromTweepyInterface, Base):
     start_index = Column(Integer, primary_key=True, autoincrement=False)
     end_index = Column(Integer, primary_key=True, autoincrement=False)
 
-    url_id = Column(BigInteger,
+    url_id = Column(BigInteger().with_variant(Integer, 'sqlite'),
                     ForeignKey('url.url_id', deferrable=True),
                     nullable=False, index=True)
 
@@ -1528,6 +1570,7 @@ class UrlMention(TimestampsMixin, ListFromTweepyInterface, Base):
         return lst
 
 
+@ut.export
 class MediaMention(TimestampsMixin, ListFromTweepyInterface, Base):
     '''
     A mention of a media object in a tweet.

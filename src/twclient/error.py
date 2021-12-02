@@ -6,12 +6,20 @@ import logging
 
 import tweepy
 
+from . import _utils as ut
+
 TWEEPY4 = tweepy.__version__ >= '4.0.0'
 
 if TWEEPY4:
+    # tweepy.error (< 4.0.0) became tweepy.errors in 4.0.0, so the installed
+    # package will have one or the other but not both. We want pylint to avoid
+    # freaking out when it can't find the missing one.
+
+    # pylint: disable-next=import-error,no-name-in-module
     from tweepy.errors import (TweepyException, TwitterServerError, Forbidden,
                                Unauthorized, NotFound)
 else:
+    # pylint: disable-next=import-error,no-name-in-module
     from tweepy.error import TweepError
 
 logger = logging.getLogger(__name__)
@@ -21,6 +29,7 @@ logger = logging.getLogger(__name__)
 # Base classes
 #
 
+@ut.export
 class TWClientError(Exception):
     '''
     The base class for all errors raised by twclient.
@@ -72,6 +81,7 @@ class TWClientError(Exception):
 
 # See Twitter docs:
 # https://developer.twitter.com/en/support/twitter-api/error-troubleshooting
+@ut.export
 class TwitterAPIError(TWClientError):
     '''
     Base class for errors returned by the Twitter API.
@@ -187,6 +197,7 @@ class TwitterAPIError(TWClientError):
         raise NotImplementedError()
 
 
+@ut.export
 class TwitterServiceError(TwitterAPIError):  # pylint: disable=abstract-method
     '''
     A problem with the Twitter service.
@@ -223,6 +234,7 @@ class TwitterServiceError(TwitterAPIError):  # pylint: disable=abstract-method
         return ret
 
 
+@ut.export
 class TwitterLogicError(TwitterAPIError):  # pylint: disable=abstract-method
     '''
     A request to the Twitter service encountered a logical error condition.
@@ -236,6 +248,7 @@ class TwitterLogicError(TwitterAPIError):  # pylint: disable=abstract-method
     pass
 
 
+@ut.export
 class NotFoundError(TwitterLogicError):
     '''
     A requested object was not found.
@@ -269,6 +282,7 @@ class NotFoundError(TwitterLogicError):
 
 # That is, accessing protected users' friends, followers, or tweets returns
 # an HTTP 401 with message "Not authorized." and no Twitter status code.
+@ut.export
 class ForbiddenError(TwitterLogicError):
     '''
     A request was forbidden.
@@ -290,7 +304,8 @@ class ForbiddenError(TwitterLogicError):
         return ret
 
 
-def dispatch_tweepy(exc):
+@ut.export
+def dispatch_tweepy_exception(exc):
     '''
     Take an exception instance and convert it to a TWClientError if applicable.
 
@@ -334,6 +349,7 @@ def dispatch_tweepy(exc):
 #
 
 
+@ut.export
 class SemanticError(TWClientError):
     '''
     Base class for non-Twitter error conditions.
@@ -346,6 +362,7 @@ class SemanticError(TWClientError):
     pass
 
 
+@ut.export
 class BadTargetError(SemanticError):
     '''
     A specified target user is protected, suspended or otherwise nonexistent.
@@ -373,6 +390,7 @@ class BadTargetError(SemanticError):
         self.targets = targets
 
 
+@ut.export
 class BadTagError(SemanticError):
     '''
     A requested tag does not exist.
@@ -399,6 +417,7 @@ class BadTagError(SemanticError):
         self.tag = tag
 
 
+@ut.export
 class BadSchemaError(SemanticError):
     '''
     The database schema is corrupt or the wrong version.
@@ -406,6 +425,19 @@ class BadSchemaError(SemanticError):
     This error is raised when a Job detects that the schema present in the
     selected database profile is corrupt, an unsupported version, or not a
     twclient schema.
+    '''
+
+    pass
+
+
+@ut.export
+class BadConfigError(SemanticError):
+    '''
+    An operation on the config file encountered an error.
+
+    This error is raised when an operation to be performed on the config file
+    is misspecified, impossible, encounters another error, or the config file
+    is malformed.
     '''
 
     pass

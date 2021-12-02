@@ -2,7 +2,6 @@
 Classes encapsulating the "targets" of certain jobs.
 '''
 
-import random
 import logging
 
 from abc import ABC, abstractmethod
@@ -15,6 +14,7 @@ from . import _utils as ut
 logger = logging.getLogger(__name__)
 
 
+@ut.export
 class Target(ABC):
     '''
     Encapsulate the notion of a "target" for certain kinds of jobs.
@@ -39,20 +39,12 @@ class Target(ABC):
             needed to resolve raw targets to users. If not passed on
             initialization, a context object must be passed to ``resolve()``.
 
-        randomize : bool
-            Whether to process raw targets in a randomized order. This may
-            allow loads which are interrupted partway through to retain some
-            useful statistical properties.
-
     Attributes
     ----------
         targets : list of str or int
             The list of raw targets passed in as the targets parameter, but
             deduplicated (without changing the relative order of any retained
             targets).
-
-        randomize : bool
-            The parameter passed to __init__.
     '''
 
     def __init__(self, **kwargs):
@@ -62,11 +54,9 @@ class Target(ABC):
             raise ValueError('Must specify targets') from exc
 
         context = kwargs.pop('context', None)
-        randomize = kwargs.pop('randomize', False)
 
         super().__init__(**kwargs)
 
-        self.randomize = randomize
         self._context = context
 
         self._users = []
@@ -82,10 +72,6 @@ class Target(ABC):
             logger.warning(msg)
 
         self.targets = deduped
-
-        if self.randomize:
-            # make partial / failed loads more statistically useful
-            random.shuffle(self.targets)
 
         if self.resolved:
             self._validate_context(context)
@@ -356,6 +342,7 @@ class Target(ABC):
         return ret
 
 
+@ut.export
 class UserIdTarget(Target):
     '''
     A set of Twitter user IDs to resolve to users.
@@ -399,6 +386,7 @@ class UserIdTarget(Target):
                     logger.warning('Not all requested users are loaded')
 
 
+@ut.export
 class ScreenNameTarget(Target):
     '''
     A set of screen names to resolve to users.
@@ -443,6 +431,7 @@ class ScreenNameTarget(Target):
                     logger.warning('Not all requested users are loaded')
 
 
+@ut.export
 class SelectTagTarget(Target):
     '''
     A set of user tags to resolve to users.
@@ -489,6 +478,7 @@ class SelectTagTarget(Target):
             self._add_users(users)
 
 
+@ut.export
 class TwitterListTarget(Target):
     '''
     A set of Twitter lists to resolve to users.

@@ -32,7 +32,6 @@ Without further ado, the mention graph:
         count(*) as num_mentions
     from tweet tw
         inner join user_mention mt using(tweet_id)
-        inner join tmp_universe utt on utt.user_id = mt.mentioned_user_id
     group by 1,2;
 
 The ``user_mention`` table represents mentions of users in tweets. There's a

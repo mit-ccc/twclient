@@ -46,7 +46,7 @@
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../vignettes/fetch.html">Getting data from the Twitter API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../vignettes/extract.html">Extracting data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../vignettes/extract.html">Working with fetched data</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
 <ul>
@@ -87,8 +87,8 @@
 <span class="kn">import</span> <span class="nn">logging</span>
 <span class="kn">import</span> <span class="nn">argparse</span> <span class="k">as</span> <span class="nn">ap</span>
 
-<span class="kn">from</span> <span class="nn">.command</span> <span class="kn">import</span> <span class="n">_ConfigCommand</span><span class="p">,</span> <span class="n">_TagCommand</span><span class="p">,</span> <span class="n">_InitializeCommand</span><span class="p">,</span> \
-                     <span class="n">_FetchCommand</span>
+<span class="kn">from</span> <span class="nn">._command</span> <span class="kn">import</span> <span class="n">ConfigCommand</span><span class="p">,</span> <span class="n">InitializeCommand</span><span class="p">,</span> <span class="n">FetchCommand</span><span class="p">,</span> \
+                      <span class="n">RateLimitStatusCommand</span><span class="p">,</span> <span class="n">TagCommand</span>
 
 <span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
 
@@ -221,6 +221,19 @@
                      <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Must specify this option to initialize&#39;</span><span class="p">)</span>
 
     <span class="c1">#</span>
+    <span class="c1"># Rate limit status</span>
+    <span class="c1">#</span>
+
+    <span class="n">rlp</span> <span class="o">=</span> <span class="n">subparsers</span><span class="o">.</span><span class="n">add_parser</span><span class="p">(</span><span class="s1">&#39;rate_limit_status&#39;</span><span class="p">,</span>
+                                <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Report API keys&#39;&#39; rate limit status&#39;</span><span class="p">)</span>
+    <span class="n">rlp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-f&#39;</span><span class="p">,</span> <span class="s1">&#39;--full&#39;</span><span class="p">,</span> <span class="n">action</span><span class="o">=</span><span class="s1">&#39;store_true&#39;</span><span class="p">,</span>
+                     <span class="n">help</span><span class="o">=</span><span class="s1">&#39;Output full json response from the Twitter API&#39;</span><span class="p">)</span>
+
+    <span class="n">grp</span> <span class="o">=</span> <span class="n">rlp</span><span class="o">.</span><span class="n">add_mutually_exclusive_group</span><span class="p">(</span><span class="n">required</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-n&#39;</span><span class="p">,</span> <span class="s1">&#39;--name&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;API profile name&#39;</span><span class="p">)</span>
+    <span class="n">grp</span><span class="o">.</span><span class="n">add_argument</span><span class="p">(</span><span class="s1">&#39;-k&#39;</span><span class="p">,</span> <span class="s1">&#39;--consumer-key&#39;</span><span class="p">,</span> <span class="n">help</span><span class="o">=</span><span class="s1">&#39;consumer key&#39;</span><span class="p">)</span>
+
+    <span class="c1">#</span>
     <span class="c1"># Fetching Twitter data</span>
     <span class="c1">#</span>
 
@@ -306,10 +319,11 @@
     <span class="n">_log_setup</span><span class="p">(</span><span class="n">verbosity</span><span class="p">)</span>
 
     <span class="bp">cls</span> <span class="o">=</span> <span class="p">{</span>
-        <span class="s1">&#39;config&#39;</span><span class="p">:</span> <span class="n">_ConfigCommand</span><span class="p">,</span>
-        <span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="n">_TagCommand</span><span class="p">,</span>
-        <span class="s1">&#39;initialize&#39;</span><span class="p">:</span> <span class="n">_InitializeCommand</span><span class="p">,</span>
-        <span class="s1">&#39;fetch&#39;</span><span class="p">:</span> <span class="n">_FetchCommand</span>
+        <span class="s1">&#39;config&#39;</span><span class="p">:</span> <span class="n">ConfigCommand</span><span class="p">,</span>
+        <span class="s1">&#39;initialize&#39;</span><span class="p">:</span> <span class="n">InitializeCommand</span><span class="p">,</span>
+        <span class="s1">&#39;fetch&#39;</span><span class="p">:</span> <span class="n">FetchCommand</span><span class="p">,</span>
+        <span class="s1">&#39;rate_limit_status&#39;</span><span class="p">:</span> <span class="n">RateLimitStatusCommand</span><span class="p">,</span>
+        <span class="s1">&#39;tag&#39;</span><span class="p">:</span> <span class="n">TagCommand</span>
     <span class="p">}[</span><span class="n">command</span><span class="p">]</span>
 
     <span class="bp">cls</span><span class="p">(</span><span class="n">parser</span><span class="o">=</span><span class="n">parser</span><span class="p">,</span> <span class="o">**</span><span class="nb">vars</span><span class="p">(</span><span class="n">args</span><span class="p">))</span><span class="o">.</span><span class="n">run</span><span class="p">()</span></div>

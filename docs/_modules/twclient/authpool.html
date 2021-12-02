@@ -46,7 +46,7 @@
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../vignettes/fetch.html">Getting data from the Twitter API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../vignettes/extract.html">Working with fetched data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../vignettes/export.html">Working with fetched data</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
 <ul>
@@ -96,18 +96,43 @@
 <span class="c1"># The dynamic method construction in AuthPoolAPI confuses the linter</span>
 <span class="c1"># pylint: disable=protected-access</span>
 
+<span class="c1"># Either tweepy.error or tweepy.errors will be missing depending on the</span>
+<span class="c1"># version and we want pylint not to freak out when it can&#39;t find exactly</span>
+<span class="c1"># one of them.</span>
+<span class="k">if</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s1">&#39;4.0.0&#39;</span><span class="p">:</span>
+    <span class="c1"># pylint: disable-next=no-member</span>
+    <span class="n">RateLimitError</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">TooManyRequests</span>
 
-<div class="viewcode-block" id="AuthPoolAPI"><a class="viewcode-back" href="../../apidocs.html#twclient.authpool.AuthPoolAPI">[docs]</a><span class="k">class</span> <span class="nc">AuthPoolAPI</span><span class="p">:</span>  <span class="c1"># pylint: disable=too-few-public-methods</span>
+    <span class="c1"># pylint: disable-next=no-member</span>
+    <span class="n">TweepyException</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">TweepyException</span>
+<span class="k">else</span><span class="p">:</span>
+    <span class="c1"># pylint: disable-next=no-member</span>
+    <span class="n">RateLimitError</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">RateLimitError</span>
+
+    <span class="c1"># pylint: disable-next=no-member</span>
+    <span class="n">TweepyException</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">TweepError</span>
+
+
+<div class="viewcode-block" id="AuthPoolAPI"><a class="viewcode-back" href="../../apidocs.html#twclient.authpool.AuthPoolAPI">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
+<span class="k">class</span> <span class="nc">AuthPoolAPI</span><span class="p">:</span>
     <span class="sd">&#39;&#39;&#39;</span>
-<span class="sd">    A version of tweepy.API with support for multiple sets of credentials.</span>
+<span class="sd">    A version of ``tweepy.API`` with support for multiple sets of credentials.</span>
 
 <span class="sd">    This class transparently proxies access to multiple sets of Twitter API</span>
-<span class="sd">    credentials. It creates as many tweepy.API instances as it gets sets of API</span>
-<span class="sd">    credentials, and then dispatches method calls to the appropriate instance,</span>
-<span class="sd">    handling rate limit and over-capacity errors. When one instance hits its</span>
-<span class="sd">    rate limit, this implementation transparently switches over to the next.</span>
-<span class="sd">    User code can treat it as a drop-in replacement for tweepy.API; see the</span>
-<span class="sd">    tweepy documentation for methods.</span>
+<span class="sd">    credentials. It creates as many ``tweepy.API`` instances as it gets sets of</span>
+<span class="sd">    API credentials, and then dispatches method calls to the appropriate</span>
+<span class="sd">    instance, handling rate limit and over-capacity errors. When one instance</span>
+<span class="sd">    hits its rate limit, this implementation transparently switches over to the</span>
+<span class="sd">    next. User code can treat it as a drop-in replacement for ``tweepy.API``;</span>
+<span class="sd">    see the tweepy documentation for methods.</span>
+
+<span class="sd">    Note that it does, however, handle the ``rate_limit_status`` method</span>
+<span class="sd">    differently. We do this because it&#39;s not useful to see rate limit info for</span>
+<span class="sd">    only one set of credentials when the point of this class is to pool</span>
+<span class="sd">    multiple sets. Rather than return only the Twitter API response for the</span>
+<span class="sd">    currently active set of credentials, ``rate_limit_status`` returns a</span>
+<span class="sd">    dictionary whose keys are the consumer keys of the credentials and whose</span>
+<span class="sd">    values are the ``rate_limit_status`` responses for those keys.</span>
 
 <span class="sd">    Parameters</span>
 <span class="sd">    ----------</span>
@@ -126,23 +151,30 @@
 
 <span class="sd">    Raises</span>
 <span class="sd">    ------</span>
-<span class="sd">    error.CapacityError</span>
-<span class="sd">        If Twitter is over capacity for longer than (approximately)</span>
-<span class="sd">        `capacity_retries * capacity_sleep` seconds.</span>
+<span class="sd">    error.TwitterServiceError</span>
+<span class="sd">        If Twitter is over capacity or encounters other internal problems for</span>
+<span class="sd">        longer than (approximately) `capacity_retries * capacity_sleep`</span>
+<span class="sd">        seconds.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
     <span class="c1"># This value is set as an attribute on methods constructed and returned by</span>
     <span class="c1"># __getattr__ to provide advice to code in twitter_api.py.</span>
     <span class="n">_authpool_return_types</span> <span class="o">=</span> <span class="p">{</span>
         <span class="s1">&#39;get_list&#39;</span><span class="p">:</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;list_members&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
-
         <span class="s1">&#39;lookup_users&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
-
         <span class="s1">&#39;user_timeline&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
 
+        <span class="s1">&#39;rate_limit_status&#39;</span><span class="p">:</span> <span class="s1">&#39;single&#39;</span><span class="p">,</span>
+
+        <span class="c1"># the tweepy &lt; 4.0.0 names</span>
         <span class="s1">&#39;followers_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;friends_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span>
+        <span class="s1">&#39;friends_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;list_members&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+
+        <span class="c1"># the tweepy &gt;= 4.0.0 names</span>
+        <span class="s1">&#39;get_follower_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;get_friend_ids&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
+        <span class="s1">&#39;get_list_members&#39;</span><span class="p">:</span> <span class="s1">&#39;list&#39;</span><span class="p">,</span>
     <span class="p">}</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
@@ -179,6 +211,10 @@
         <span class="p">]</span>
 
     <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_authpool_auths</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">[</span><span class="n">api</span><span class="o">.</span><span class="n">auth</span> <span class="k">for</span> <span class="n">api</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">_authpool_apis</span><span class="p">]</span>
+
+    <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">_authpool_current_api</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_authpool_apis</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">_authpool_current_api_index</span><span class="p">]</span>
 
@@ -212,7 +248,9 @@
 
             <span class="c1"># add a little fudge factor to be safe</span>
             <span class="n">wake_time</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_authpool_rate_limit_resets</span><span class="p">[</span><span class="n">new_ind</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.01</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Sleeping </span><span class="si">%f</span><span class="s1"> seconds for rate limit&#39;</span><span class="p">,</span> <span class="n">wake_time</span><span class="p">)</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="sa">f</span><span class="s1">&#39;Sleeping </span><span class="si">{</span><span class="n">wake_time</span><span class="si">}</span><span class="s1"> seconds for rate limit&#39;</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
             <span class="n">time</span><span class="o">.</span><span class="n">sleep</span><span class="p">(</span><span class="n">wake_time</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_authpool_current_api_index</span> <span class="o">=</span> <span class="n">new_ind</span>
@@ -244,12 +282,26 @@
         <span class="c1"># we use &quot;iself&quot; to avoid confusing shadowing of the binding of &quot;self&quot;</span>
         <span class="c1"># to __getattr__&#39;s first argument. docstring is set dynamically below.</span>
         <span class="k">def</span> <span class="nf">func</span><span class="p">(</span><span class="n">iself</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>  <span class="c1"># pylint: disable=missing-docstring</span>
+            <span class="c1"># NOTE we want to provide the rate limits for all APIs at once; it</span>
+            <span class="c1"># doesn&#39;t make a lot of sense to ask for only one credential set&#39;s</span>
+            <span class="c1"># rate limit when the whole point of this class is to pool them</span>
+            <span class="k">if</span> <span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;rate_limit_status&#39;</span><span class="p">:</span>
+                <span class="n">consumer_key</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;consumer_key&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+
+                <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span>
+                    <span class="n">api</span><span class="o">.</span><span class="n">auth</span><span class="o">.</span><span class="n">consumer_key</span> <span class="p">:</span> <span class="n">api</span><span class="o">.</span><span class="n">rate_limit_status</span><span class="p">()</span>
+                    <span class="k">for</span> <span class="n">api</span> <span class="ow">in</span> <span class="n">iself</span><span class="o">.</span><span class="n">_authpool_apis</span>
+                <span class="p">}</span>
+
+                <span class="k">if</span> <span class="n">consumer_key</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+                    <span class="n">ret</span> <span class="o">=</span> <span class="p">{</span> <span class="n">consumer_key</span> <span class="p">:</span> <span class="n">ret</span><span class="p">[</span><span class="n">consumer_key</span><span class="p">]</span> <span class="p">}</span>
+
+                <span class="k">return</span> <span class="n">ret</span>
+
             <span class="n">cp_retry_cnt</span> <span class="o">=</span> <span class="mi">0</span>
-
             <span class="k">while</span> <span class="kc">True</span><span class="p">:</span>
-                <span class="n">method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">iself</span><span class="o">.</span><span class="n">_authpool_current_api</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
-
                 <span class="k">try</span><span class="p">:</span>
+                    <span class="n">method</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">iself</span><span class="o">.</span><span class="n">_authpool_current_api</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
                     <span class="n">ret</span> <span class="o">=</span> <span class="n">method</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
                     <span class="n">iself</span><span class="o">.</span><span class="n">_authpool_mark_api_free</span><span class="p">()</span>
@@ -259,14 +311,14 @@
                     <span class="n">cp_retry_cnt</span> <span class="o">=</span> <span class="mi">0</span>
 
                     <span class="k">return</span> <span class="n">ret</span>
-                <span class="k">except</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">RateLimitError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                <span class="k">except</span> <span class="n">RateLimitError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
                     <span class="n">resume_time</span> <span class="o">=</span> <span class="n">exc</span><span class="o">.</span><span class="n">response</span><span class="o">.</span><span class="n">headers</span> \
                                      <span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;x-rate-limit-reset&#39;</span><span class="p">)</span>
                     <span class="n">iself</span><span class="o">.</span><span class="n">_authpool_mark_api_limited</span><span class="p">(</span><span class="nb">float</span><span class="p">(</span><span class="n">resume_time</span><span class="p">))</span>
 
                     <span class="n">iself</span><span class="o">.</span><span class="n">_authpool_switch_api</span><span class="p">()</span>
-                <span class="k">except</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">error</span><span class="o">.</span><span class="n">TweepError</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
-                    <span class="n">dexc</span> <span class="o">=</span> <span class="n">err</span><span class="o">.</span><span class="n">dispatch_tweepy</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">TweepyException</span> <span class="k">as</span> <span class="n">exc</span><span class="p">:</span>
+                    <span class="n">dexc</span> <span class="o">=</span> <span class="n">err</span><span class="o">.</span><span class="n">dispatch_tweepy_exception</span><span class="p">(</span><span class="n">exc</span><span class="p">)</span>
 
                     <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">dexc</span><span class="p">,</span> <span class="n">err</span><span class="o">.</span><span class="n">TwitterServiceError</span><span class="p">):</span>
                         <span class="k">raise</span> <span class="n">dexc</span> <span class="kn">from</span> <span class="nn">exc</span>
@@ -291,6 +343,8 @@
 <span class="s1">        The tweepy.API method&#39;s docstring follows:</span>
 <span class="s1">        &#39;&#39;&#39;</span>
 
+        <span class="c1"># the docstring is the same on all API instances, doesn&#39;t matter which</span>
+        <span class="c1"># one we use</span>
         <span class="n">tweepy_docstring</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_authpool_current_api</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="vm">__doc__</span>
         <span class="n">tweepy_docstring</span> <span class="o">=</span> <span class="n">ut</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">tweepy_docstring</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)</span>
 

@@ -46,7 +46,7 @@
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="vignettes/fetch.html">Getting data from the Twitter API</a></li>
-<li class="toctree-l1"><a class="reference internal" href="vignettes/extract.html">Working with fetched data</a></li>
+<li class="toctree-l1"><a class="reference internal" href="vignettes/export.html">Working with fetched data</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
 <ul>
@@ -93,7 +93,6 @@
  | <a href="#L"><strong>L</strong></a>
  | <a href="#M"><strong>M</strong></a>
  | <a href="#N"><strong>N</strong></a>
- | <a href="#O"><strong>O</strong></a>
  | <a href="#P"><strong>P</strong></a>
  | <a href="#Q"><strong>Q</strong></a>
  | <a href="#R"><strong>R</strong></a>
@@ -124,10 +123,10 @@
       </ul></li>
       <li><a href="apidocs.html#twclient.job.ApiJob.api">api (twclient.job.ApiJob attribute)</a>
 </li>
-      <li><a href="apidocs.html#twclient.error.TwitterAPIError.api_code">api_code (twclient.error.TwitterAPIError attribute)</a>
-</li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidocs.html#twclient.error.TwitterAPIError.api_codes">api_codes (twclient.error.TwitterAPIError property)</a>
+</li>
       <li><a href="apidocs.html#twclient.models.List.api_response">api_response (twclient.models.List attribute)</a>
 
       <ul>
@@ -137,10 +136,6 @@
 </li>
       </ul></li>
       <li><a href="apidocs.html#twclient.job.ApiJob">ApiJob (class in twclient.job)</a>
-</li>
-      <li><a href="apidocs.html#twclient.job.ApplyTagJob">ApplyTagJob (class in twclient.job)</a>
-</li>
-      <li><a href="apidocs.html#twclient.models.UniqueMixin.as_unique">as_unique() (twclient.models.UniqueMixin class method)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.Media.aspect_ratio_height">aspect_ratio_height (twclient.models.Media attribute)</a>
 </li>
@@ -162,10 +157,12 @@
         <li><a href="apidocs.html#twclient.target.Target.bad_targets">(twclient.target.Target property)</a>
 </li>
       </ul></li>
-      <li><a href="apidocs.html#twclient.error.BadSchemaError">BadSchemaError</a>
+      <li><a href="apidocs.html#twclient.error.BadConfigError">BadConfigError</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidocs.html#twclient.error.BadSchemaError">BadSchemaError</a>
+</li>
       <li><a href="apidocs.html#twclient.error.BadTagError">BadTagError</a>
 </li>
       <li><a href="apidocs.html#twclient.error.BadTargetError">BadTargetError</a>
@@ -178,18 +175,14 @@
 <h2 id="C">C</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidocs.html#twclient.error.CapacityError">CapacityError</a>
-</li>
-      <li><a href="apidocs.html#twclient.cli.cli">cli() (in module twclient.cli)</a>
-</li>
       <li><a href="apidocs.html#twclient.models.Tweet.content">content (twclient.models.Tweet attribute)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.MediaVariant.content_type">content_type (twclient.models.MediaVariant attribute)</a>
 </li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidocs.html#twclient.target.Target.context">context (twclient.target.Target property)</a>
 </li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidocs.html#twclient.models.List.create_dt">create_dt (twclient.models.List attribute)</a>
 
       <ul>
@@ -198,15 +191,13 @@
         <li><a href="apidocs.html#twclient.models.UserData.create_dt">(twclient.models.UserData attribute)</a>
 </li>
       </ul></li>
-      <li><a href="apidocs.html#twclient.job.CreateTagJob">CreateTagJob (class in twclient.job)</a>
-</li>
   </ul></td>
 </tr></table>
 
 <h2 id="D">D</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidocs.html#twclient.job.DeleteTagJob">DeleteTagJob (class in twclient.job)</a>
+      <li><a href="apidocs.html#twclient.job.DatabaseJob">DatabaseJob (class in twclient.job)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.List.description">description (twclient.models.List attribute)</a>
 
@@ -216,17 +207,9 @@
         <li><a href="apidocs.html#twclient.models.UserData.description">(twclient.models.UserData attribute)</a>
 </li>
       </ul></li>
-      <li><a href="apidocs.html#twclient.job.FollowersJob.direction">direction (twclient.job.FollowersJob attribute)</a>
-
-      <ul>
-        <li><a href="apidocs.html#twclient.job.FollowGraphJob.direction">(twclient.job.FollowGraphJob property)</a>
-</li>
-        <li><a href="apidocs.html#twclient.job.FriendsJob.direction">(twclient.job.FriendsJob attribute)</a>
-</li>
-      </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidocs.html#twclient.error.dispatch_tweepy">dispatch_tweepy() (in module twclient.error)</a>
+      <li><a href="apidocs.html#twclient.error.dispatch_tweepy_exception">dispatch_tweepy_exception() (in module twclient.error)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.List.display_name">display_name (twclient.models.List attribute)</a>
 
@@ -256,9 +239,9 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidocs.html#twclient.job.Job.engine">engine (twclient.job.Job attribute)</a>
+      <li><a href="apidocs.html#twclient.job.DatabaseJob.engine">engine (twclient.job.DatabaseJob attribute)</a>
 </li>
-      <li><a href="apidocs.html#twclient.job.Job.ensure_schema_version">ensure_schema_version() (twclient.job.Job method)</a>
+      <li><a href="apidocs.html#twclient.job.DatabaseJob.ensure_schema_version">ensure_schema_version() (twclient.job.DatabaseJob method)</a>
 </li>
       <li><a href="apidocs.html#twclient.error.TWClientError.exit_status">exit_status (twclient.error.TWClientError attribute)</a>
 </li>
@@ -280,23 +263,17 @@
 </li>
       <li><a href="apidocs.html#twclient.twitter_api.TwitterApi.followers_ids">followers_ids() (twclient.twitter_api.TwitterApi method)</a>
 </li>
-      <li><a href="apidocs.html#twclient.job.FollowersJob">FollowersJob (class in twclient.job)</a>
-</li>
-      <li><a href="apidocs.html#twclient.job.FollowGraphJob">FollowGraphJob (class in twclient.job)</a>
+      <li><a href="apidocs.html#twclient.error.ForbiddenError">ForbiddenError</a>
 </li>
       <li><a href="apidocs.html#twclient.models.UserData.friends_count">friends_count (twclient.models.UserData attribute)</a>
 </li>
       <li><a href="apidocs.html#twclient.twitter_api.TwitterApi.friends_ids">friends_ids() (twclient.twitter_api.TwitterApi method)</a>
-</li>
-      <li><a href="apidocs.html#twclient.job.FriendsJob">FriendsJob (class in twclient.job)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidocs.html#twclient.error.TwitterAPIError.from_tweepy">from_tweepy() (twclient.error.TwitterAPIError class method)</a>
 
       <ul>
-        <li><a href="apidocs.html#twclient.models.FromTweepyInterface.from_tweepy">(twclient.models.FromTweepyInterface class method)</a>
-</li>
         <li><a href="apidocs.html#twclient.models.List.from_tweepy">(twclient.models.List class method)</a>
 </li>
         <li><a href="apidocs.html#twclient.models.Media.from_tweepy">(twclient.models.Media class method)</a>
@@ -310,8 +287,6 @@
         <li><a href="apidocs.html#twclient.models.UserData.from_tweepy">(twclient.models.UserData class method)</a>
 </li>
       </ul></li>
-      <li><a href="apidocs.html#twclient.models.FromTweepyInterface">FromTweepyInterface (class in twclient.models)</a>
-</li>
       <li><a href="apidocs.html#twclient.models.List.full_name">full_name (twclient.models.List attribute)</a>
 </li>
   </ul></td>
@@ -322,7 +297,7 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidocs.html#twclient.twitter_api.TwitterApi.get_list">get_list() (twclient.twitter_api.TwitterApi method)</a>
 </li>
-      <li><a href="apidocs.html#twclient.job.Job.get_or_create">get_or_create() (twclient.job.Job method)</a>
+      <li><a href="apidocs.html#twclient.job.DatabaseJob.get_or_create">get_or_create() (twclient.job.DatabaseJob method)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -361,8 +336,6 @@
       <li><a href="apidocs.html#twclient.models.Tweet.in_reply_to_status_id">in_reply_to_status_id (twclient.models.Tweet attribute)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.Tweet.in_reply_to_user_id">in_reply_to_user_id (twclient.models.Tweet attribute)</a>
-</li>
-      <li><a href="apidocs.html#twclient.job.InitializeJob">InitializeJob (class in twclient.job)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.Hashtag.insert_dt">insert_dt (twclient.models.Hashtag attribute)</a>
 
@@ -423,8 +396,6 @@
       <li><a href="apidocs.html#twclient.models.HashtagMention.list_from_tweepy">list_from_tweepy() (twclient.models.HashtagMention class method)</a>
 
       <ul>
-        <li><a href="apidocs.html#twclient.models.ListFromTweepyInterface.list_from_tweepy">(twclient.models.ListFromTweepyInterface class method)</a>
-</li>
         <li><a href="apidocs.html#twclient.models.MediaMention.list_from_tweepy">(twclient.models.MediaMention class method)</a>
 </li>
         <li><a href="apidocs.html#twclient.models.MediaVariant.list_from_tweepy">(twclient.models.MediaVariant class method)</a>
@@ -448,10 +419,6 @@
 </li>
       <li><a href="apidocs.html#twclient.models.UserData.listed_count">listed_count (twclient.models.UserData attribute)</a>
 </li>
-      <li><a href="apidocs.html#twclient.models.ListFromTweepyInterface">ListFromTweepyInterface (class in twclient.models)</a>
-</li>
-      <li><a href="apidocs.html#twclient.job.ApiJob.load_batch_size">load_batch_size (twclient.job.ApiJob attribute)</a>
-</li>
       <li><a href="apidocs.html#twclient.models.UserData.location">location (twclient.models.UserData attribute)</a>
 </li>
       <li><a href="apidocs.html#twclient.twitter_api.TwitterApi.lookup_users">lookup_users() (twclient.twitter_api.TwitterApi method)</a>
@@ -463,8 +430,6 @@
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidocs.html#twclient.twitter_api.TwitterApi.make_api_call">make_api_call() (twclient.twitter_api.TwitterApi method)</a>
-</li>
-      <li><a href="apidocs.html#twclient.job.TweetsJob.max_tweets">max_tweets (twclient.job.TweetsJob attribute)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.Media">Media (class in twclient.models)</a>
 </li>
@@ -552,8 +517,6 @@
 </li>
         <li><a href="apidocs.html#module-twclient.authpool">twclient.authpool</a>
 </li>
-        <li><a href="apidocs.html#module-twclient.cli">twclient.cli</a>
-</li>
         <li><a href="apidocs.html#module-twclient.error">twclient.error</a>
 </li>
         <li><a href="apidocs.html#module-twclient.job">twclient.job</a>
@@ -588,14 +551,6 @@
   </ul></td>
 </tr></table>
 
-<h2 id="O">O</h2>
-<table style="width: 100%" class="indextable genindextable"><tr>
-  <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidocs.html#twclient.job.TweetsJob.old_tweets">old_tweets (twclient.job.TweetsJob attribute)</a>
-</li>
-  </ul></td>
-</tr></table>
-
 <h2 id="P">P</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
@@ -604,8 +559,6 @@
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidocs.html#twclient.models.UserData.protected">protected (twclient.models.UserData attribute)</a>
-</li>
-      <li><a href="apidocs.html#twclient.error.ProtectedUserError">ProtectedUserError</a>
 </li>
   </ul></td>
 </tr></table>
@@ -621,9 +574,7 @@
 <h2 id="R">R</h2>
 <table style="width: 100%" class="indextable genindextable"><tr>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidocs.html#twclient.target.Target.randomize">randomize (twclient.target.Target attribute)</a>
-</li>
-      <li><a href="apidocs.html#twclient.error.ReadFailureError">ReadFailureError</a>
+      <li><a href="apidocs.html#twclient.twitter_api.TwitterApi.rate_limit_status">rate_limit_status() (twclient.twitter_api.TwitterApi method)</a>
 </li>
       <li><a href="apidocs.html#twclient.target.ScreenNameTarget.resolve">resolve() (twclient.target.ScreenNameTarget method)</a>
 
@@ -637,52 +588,26 @@
         <li><a href="apidocs.html#twclient.target.UserIdTarget.resolve">(twclient.target.UserIdTarget method)</a>
 </li>
       </ul></li>
-      <li><a href="apidocs.html#twclient.job.ApplyTagJob.resolve_mode">resolve_mode (twclient.job.ApplyTagJob attribute)</a>
-
-      <ul>
-        <li><a href="apidocs.html#twclient.job.FollowGraphJob.resolve_mode">(twclient.job.FollowGraphJob attribute)</a>
-</li>
-        <li><a href="apidocs.html#twclient.job.TargetJob.resolve_mode">(twclient.job.TargetJob property)</a>
-</li>
-        <li><a href="apidocs.html#twclient.job.TweetsJob.resolve_mode">(twclient.job.TweetsJob attribute)</a>
-</li>
-        <li><a href="apidocs.html#twclient.job.UserInfoJob.resolve_mode">(twclient.job.UserInfoJob attribute)</a>
-</li>
-      </ul></li>
-      <li><a href="apidocs.html#twclient.job.TargetJob.resolve_targets">resolve_targets() (twclient.job.TargetJob method)</a>
+      <li><a href="apidocs.html#twclient.job.TargetJob.resolve_mode">resolve_mode (twclient.job.TargetJob property)</a>
 </li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
+      <li><a href="apidocs.html#twclient.job.TargetJob.resolve_targets">resolve_targets() (twclient.job.TargetJob method)</a>
+</li>
       <li><a href="apidocs.html#twclient.job.TargetJob.resolved">resolved (twclient.job.TargetJob property)</a>
 
       <ul>
         <li><a href="apidocs.html#twclient.target.Target.resolved">(twclient.target.Target property)</a>
 </li>
       </ul></li>
-      <li><a href="apidocs.html#twclient.error.TwitterAPIError.response">response (twclient.error.TwitterAPIError attribute)</a>
+      <li><a href="apidocs.html#twclient.error.TwitterAPIError.response">response (twclient.error.TwitterAPIError property)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.Tweet.retweet_count">retweet_count (twclient.models.Tweet attribute)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.Tweet.retweeted_status_id">retweeted_status_id (twclient.models.Tweet attribute)</a>
 </li>
-      <li><a href="apidocs.html#twclient.job.ApplyTagJob.run">run() (twclient.job.ApplyTagJob method)</a>
-
-      <ul>
-        <li><a href="apidocs.html#twclient.job.CreateTagJob.run">(twclient.job.CreateTagJob method)</a>
+      <li><a href="apidocs.html#twclient.job.Job.run">run() (twclient.job.Job method)</a>
 </li>
-        <li><a href="apidocs.html#twclient.job.DeleteTagJob.run">(twclient.job.DeleteTagJob method)</a>
-</li>
-        <li><a href="apidocs.html#twclient.job.FollowGraphJob.run">(twclient.job.FollowGraphJob method)</a>
-</li>
-        <li><a href="apidocs.html#twclient.job.InitializeJob.run">(twclient.job.InitializeJob method)</a>
-</li>
-        <li><a href="apidocs.html#twclient.job.Job.run">(twclient.job.Job method)</a>
-</li>
-        <li><a href="apidocs.html#twclient.job.TweetsJob.run">(twclient.job.TweetsJob method)</a>
-</li>
-        <li><a href="apidocs.html#twclient.job.UserInfoJob.run">(twclient.job.UserInfoJob method)</a>
-</li>
-      </ul></li>
   </ul></td>
 </tr></table>
 
@@ -699,9 +624,7 @@
 </li>
       <li><a href="apidocs.html#twclient.error.SemanticError">SemanticError</a>
 </li>
-      <li><a href="apidocs.html#twclient.job.Job.session">session (twclient.job.Job attribute)</a>
-</li>
-      <li><a href="apidocs.html#twclient.job.TweetsJob.since_timestamp">since_timestamp (twclient.job.TweetsJob attribute)</a>
+      <li><a href="apidocs.html#twclient.job.DatabaseJob.session">session (twclient.job.DatabaseJob attribute)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.List.slug">slug (twclient.models.List attribute)</a>
 </li>
@@ -725,8 +648,6 @@
   <td style="width: 33%; vertical-align: top;"><ul>
       <li><a href="apidocs.html#twclient.models.UrlMention.status">status (twclient.models.UrlMention attribute)</a>
 </li>
-      <li><a href="apidocs.html#twclient.models.StgFollow">StgFollow (class in twclient.models)</a>
-</li>
       <li><a href="apidocs.html#twclient.models.List.subscriber_count">subscriber_count (twclient.models.List attribute)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.Symbol">Symbol (class in twclient.models)</a>
@@ -748,19 +669,13 @@
       <li><a href="apidocs.html#twclient.models.Tag">Tag (class in twclient.models)</a>
 </li>
       <li><a href="apidocs.html#twclient.error.BadTagError.tag">tag (twclient.error.BadTagError attribute)</a>
-
-      <ul>
-        <li><a href="apidocs.html#twclient.job.TagJob.tag">(twclient.job.TagJob attribute)</a>
 </li>
-      </ul></li>
       <li><a href="apidocs.html#twclient.models.Tag.tag_id">tag_id (twclient.models.Tag attribute)</a>
 
       <ul>
         <li><a href="apidocs.html#twclient.models.UserTag.tag_id">(twclient.models.UserTag attribute)</a>
 </li>
       </ul></li>
-      <li><a href="apidocs.html#twclient.job.TagJob">TagJob (class in twclient.job)</a>
-</li>
       <li><a href="apidocs.html#twclient.target.Target">Target (class in twclient.target)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.Follow.target_user_id">target_user_id (twclient.models.Follow attribute)</a>
@@ -775,8 +690,6 @@
         <li><a href="apidocs.html#twclient.target.Target.targets">(twclient.target.Target attribute)</a>
 </li>
       </ul></li>
-      <li><a href="apidocs.html#twclient.models.TimestampsMixin">TimestampsMixin (class in twclient.models)</a>
-</li>
       <li><a href="apidocs.html#twclient.models.UrlMention.title">title (twclient.models.UrlMention attribute)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.Tweet.truncated">truncated (twclient.models.Tweet attribute)</a>
@@ -793,13 +706,6 @@
 
       <ul>
         <li><a href="apidocs.html#module-twclient.authpool">module</a>
-</li>
-      </ul></li>
-      <li>
-    twclient.cli
-
-      <ul>
-        <li><a href="apidocs.html#module-twclient.cli">module</a>
 </li>
       </ul></li>
       <li>
@@ -823,8 +729,6 @@
         <li><a href="apidocs.html#module-twclient.models">module</a>
 </li>
       </ul></li>
-  </ul></td>
-  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     twclient.target
 
@@ -832,6 +736,8 @@
         <li><a href="apidocs.html#module-twclient.target">module</a>
 </li>
       </ul></li>
+  </ul></td>
+  <td style="width: 33%; vertical-align: top;"><ul>
       <li>
     twclient.twitter_api
 
@@ -841,16 +747,16 @@
       </ul></li>
       <li><a href="apidocs.html#twclient.error.TWClientError">TWClientError</a>
 </li>
-      <li><a href="apidocs.html#twclient.error.CapacityError.tweepy_is_instance">tweepy_is_instance() (twclient.error.CapacityError static method)</a>
+      <li><a href="apidocs.html#twclient.error.TwitterAPIError.tweepy_exception">tweepy_exception (twclient.error.TwitterAPIError attribute)</a>
+</li>
+      <li><a href="apidocs.html#twclient.error.ForbiddenError.tweepy_is_instance">tweepy_is_instance() (twclient.error.ForbiddenError static method)</a>
 
       <ul>
         <li><a href="apidocs.html#twclient.error.NotFoundError.tweepy_is_instance">(twclient.error.NotFoundError static method)</a>
 </li>
-        <li><a href="apidocs.html#twclient.error.ProtectedUserError.tweepy_is_instance">(twclient.error.ProtectedUserError static method)</a>
-</li>
-        <li><a href="apidocs.html#twclient.error.ReadFailureError.tweepy_is_instance">(twclient.error.ReadFailureError static method)</a>
-</li>
         <li><a href="apidocs.html#twclient.error.TwitterAPIError.tweepy_is_instance">(twclient.error.TwitterAPIError static method)</a>
+</li>
+        <li><a href="apidocs.html#twclient.error.TwitterServiceError.tweepy_is_instance">(twclient.error.TwitterServiceError static method)</a>
 </li>
       </ul></li>
       <li><a href="apidocs.html#twclient.models.Tweet">Tweet (class in twclient.models)</a>
@@ -869,8 +775,6 @@
         <li><a href="apidocs.html#twclient.models.UserMention.tweet_id">(twclient.models.UserMention attribute)</a>
 </li>
       </ul></li>
-      <li><a href="apidocs.html#twclient.job.TweetsJob">TweetsJob (class in twclient.job)</a>
-</li>
       <li><a href="apidocs.html#twclient.models.MediaMention.twitter_display_url">twitter_display_url (twclient.models.MediaMention attribute)</a>
 
       <ul>
@@ -911,8 +815,6 @@
         <li><a href="apidocs.html#twclient.models.Url.unique_hash">(twclient.models.Url attribute)</a>
 </li>
       </ul></li>
-      <li><a href="apidocs.html#twclient.models.UniqueMixin">UniqueMixin (class in twclient.models)</a>
-</li>
       <li><a href="apidocs.html#twclient.models.List.uri">uri (twclient.models.List attribute)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.Url">Url (class in twclient.models)</a>
@@ -961,8 +863,6 @@
 </li>
       <li><a href="apidocs.html#twclient.target.UserIdTarget">UserIdTarget (class in twclient.target)</a>
 </li>
-      <li><a href="apidocs.html#twclient.job.UserInfoJob">UserInfoJob (class in twclient.job)</a>
-</li>
       <li><a href="apidocs.html#twclient.models.UserList">UserList (class in twclient.models)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.UserMention">UserMention (class in twclient.models)</a>
@@ -995,12 +895,8 @@
       </ul></li>
   </ul></td>
   <td style="width: 33%; vertical-align: top;"><ul>
-      <li><a href="apidocs.html#twclient.job.ApiJob.validate_targets">validate_targets() (twclient.job.ApiJob method)</a>
-
-      <ul>
-        <li><a href="apidocs.html#twclient.job.TargetJob.validate_targets">(twclient.job.TargetJob method)</a>
+      <li><a href="apidocs.html#twclient.job.TargetJob.validate_targets">validate_targets() (twclient.job.TargetJob method)</a>
 </li>
-      </ul></li>
       <li><a href="apidocs.html#twclient.models.UserData.verified">verified (twclient.models.UserData attribute)</a>
 </li>
       <li><a href="apidocs.html#twclient.models.SchemaVersion.version">version (twclient.models.SchemaVersion attribute)</a>
