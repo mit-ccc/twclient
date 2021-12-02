@@ -1,6 +1,26 @@
 [build-system]
-requires = ["setuptools >= 46.4.0", "wheel"]  # 46.4.0 - attr: access to vesion
+requires = ["setuptools >= 46.4.0", "wheel"]  # 46.4.0 - attr: for version
 build-backend = "setuptools.build_meta"
+
+##
+## Tox
+##
+
+[tool.tox]
+legacy_tox_ini = """
+[tox]
+envlist = py38, py39, py310
+
+[gh-actions]
+python =
+    3.8: py38
+    3.9: py39
+    3.10: py310
+
+[testenv]
+deps = .[test]
+commands = pytest []
+"""
 
 ##
 ## Pylint
