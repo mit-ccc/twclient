@@ -1062,9 +1062,7 @@ class Url(TimestampsMixin, UniqueMixin, Base):
     # also be good to have a CHECK constraint that the url column hashes to the
     # appropriate value, but we can't even consider doing that because standard
     # SQL doesn't provide SHA-1.
-    url = Column(UnicodeText, nullable=False, unique=False,
-                 comment='Kept unique at the application layer, too large to '
-                         'index; see unique_hash column')
+    url = Column(UnicodeText, nullable=False, unique=False)
 
     mentions = relationship('UrlMention', back_populates='url',
                             cascade_backrefs=False)
