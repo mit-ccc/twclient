@@ -247,7 +247,8 @@ def _make_parser():
                                  'Twitter API')
 
     grp = ssps['show']['ratelimit'].add_mutually_exclusive_group(required=False)
-    grp.add_argument('-n', '--api-profile-name', help='API profile name')
+    grp.add_argument('-n', '--api-profile-name', dest='name',
+                     help='API profile name')
     grp.add_argument('-k', '--consumer-key', help='consumer key')
 
     ## config db-*
