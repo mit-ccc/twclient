@@ -141,7 +141,7 @@ class ConfigRmDbJob(ConfigWriteJob):
         if self.config.getboolean(self.name, 'is_default'):
             for name in self.config.db_profile_names:
                 if name != self.name:
-                    self.config[name]['is_default'] = True
+                    self.config[name]['is_default'] = str(True)
                     break
 
         self.config.pop(self.name)
@@ -181,9 +181,9 @@ class SetDbDefaultJob(ConfigWriteJob):
             raise err.BadConfigError(message=msg)
 
         for name in self.config.db_profile_names:
-            self.config[name]['is_default'] = False
+            self.config[name]['is_default'] = str(False)
 
-        self.config[self.name]['is_default'] = True
+        self.config[self.name]['is_default'] = str(True)
 
         self.config.save()
 
