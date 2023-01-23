@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 
 def _add_common_arguments(parser):
     parser.add_argument('-v', '--verbose', action='count', default=0,
-        help='verbos output (use repeatedly for more verbosity)')
+        help='verbose output (use repeatedly for more verbosity)')
     parser.add_argument('-c', '--config-file', default='~/.twclientrc',
         help='path to config file (default ~/.twclientrc)')
 
