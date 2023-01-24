@@ -72,7 +72,7 @@ The database backend can be either sqlite or an arbitrary database
 specified by a sqlalchemy connection string.
 
 You can set up the database in one of two ways. Both create a persistent
-profile in your `.twclientrc` file (or whatever other file you specify), so
+profile in your ``.twclientrc`` file (or whatever other file you specify), so
 there's no need to type the database details repeatedly.
 
 First, you can specify the DB with a sqlalchemy connection URL:
@@ -144,11 +144,10 @@ Here's an example of adding credentials that use `app-only auth <https://develop
 Pulling data
 ~~~~~~~~~~~~~~
 
-To actually pull data, use the ``twclient fetch`` command. The ``twclient tag``
-command can help keep track of users and datasets. We'll pull information about
-two specific users and a Twitter list here. You can refer to lists either by
-their "slug" (username/listname) or by the ID at the end of a URL of the form
-`https://twitter.com/i/lists/53603015`.
+To actually pull data, use the ``twclient fetch`` command. We'll pull
+information about two specific users and a Twitter list here. Note that you can
+refer to lists either by their "slug" (username/listname) or by the ID at the
+end of a URL of the form `https://twitter.com/i/lists/53603015`.
 
 First, let's load some users and their basic info:
 
@@ -157,8 +156,8 @@ First, let's load some users and their basic info:
    # you could instead also end this with "-l 53603015"; it's the same list
    twclient fetch users -n wwbrannon CCCatMIT MIT -l MIT/peers1
 
-Now, to save typing, let's apply a tag we can use to refer to these users
-later:
+Now, to save typing, let's use the ``twclient tag`` command to apply a tag we
+can use to keep track of these users later:
 
 .. code-block:: bash
 
