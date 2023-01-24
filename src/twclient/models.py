@@ -13,9 +13,15 @@ from sqlalchemy.types import TIMESTAMP  # recommended over DateTime for TZs
 from sqlalchemy.types import Float
 
 from sqlalchemy.orm import relationship
-from sqlalchemy.ext.declarative import as_declarative, declared_attr
 from sqlalchemy.schema import Column, Index, ForeignKey
 from sqlalchemy.schema import UniqueConstraint
+
+from . import _utils as ut
+
+if ut.SA_V14:
+    from sqlalchemy.orm import as_declarative, declared_attr
+else:
+    from sqlalchemy.ext.declarative import as_declarative, declared_attr
 
 from . import _utils as ut
 

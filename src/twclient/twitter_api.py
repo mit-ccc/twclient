@@ -232,7 +232,7 @@ class TwitterApi:
                     'tweet_mode': 'extended',  # don't truncate tweet text
                 }
 
-                if tweepy.__version__ >= '4.0.0':
+                if ut.TWEEPY_V4:
                     twargs['user_id'] = grp
                 else:
                     twargs['user_ids'] = grp
@@ -259,7 +259,7 @@ class TwitterApi:
                     'tweet_mode': 'extended',  # don't truncate tweet text
                 }
 
-                if tweepy.__version__ >= '4.0.0':
+                if ut.TWEEPY_V4:
                     twargs['screen_name'] = grp
                 else:
                     twargs['screen_names'] = grp
@@ -372,7 +372,7 @@ class TwitterApi:
             'owner_id': owner_id
         }
 
-        if tweepy.__version__ >= '4.0.0':
+        if ut.TWEEPY_V4:
             twargs['method'] = 'get_list_members'
         else:
             twargs['method'] = 'list_members'
@@ -477,7 +477,7 @@ class TwitterApi:
             user_type: user
         }
 
-        if tweepy.__version__ >= '4.0.0':
+        if ut.TWEEPY_V4:
             twargs['method'] = 'get_follower_ids'
         else:
             twargs['method'] = 'followers_ids'
@@ -527,7 +527,7 @@ class TwitterApi:
             user_type: user
         }
 
-        if tweepy.__version__ >= '4.0.0':
+        if ut.TWEEPY_V4:
             twargs['method'] = 'get_friend_ids'
         else:
             twargs['method'] = 'friends_ids'

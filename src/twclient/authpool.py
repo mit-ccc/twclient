@@ -19,7 +19,7 @@ logger = logging.getLogger(__name__)
 # Either tweepy.error or tweepy.errors will be missing depending on the
 # version and we want pylint not to freak out when it can't find exactly
 # one of them.
-if tweepy.__version__ >= '4.0.0':
+if ut.TWEEPY_V4:
     # pylint: disable-next=no-member
     RateLimitError = tweepy.errors.TooManyRequests
 

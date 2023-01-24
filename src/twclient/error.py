@@ -8,9 +8,7 @@ import tweepy
 
 from . import _utils as ut
 
-TWEEPY4 = tweepy.__version__ >= '4.0.0'
-
-if TWEEPY4:
+if ut.TWEEPY_V4:
     # tweepy.error (< 4.0.0) became tweepy.errors in 4.0.0, so the installed
     # package will have one or the other but not both. We want pylint to avoid
     # freaking out when it can't find the missing one.
@@ -110,7 +108,7 @@ class TwitterAPIError(TWClientError):
     def __init__(self, **kwargs):
         tweepy_exception = kwargs.pop('tweepy_exception', None)
 
-        if TWEEPY4:
+        if ut.TWEEPY_V4:
             message = '\n'.join(tweepy_exception.api_messages)
         else:
             message = tweepy_exception.reason
@@ -146,7 +144,7 @@ class TwitterAPIError(TWClientError):
         Error codes returned by the Twitter API.
         '''
 
-        if TWEEPY4:
+        if ut.TWEEPY_V4:
             ret = self.tweepy_exception.api_codes
         else:
             ret = [self.tweepy_exception.api_code]
@@ -210,12 +208,12 @@ class TwitterServiceError(TwitterAPIError):
 
     @staticmethod
     def tweepy_is_instance(exc):
-        if TWEEPY4:
+        if ut.TWEEPY_V4:
             api_codes = exc.api_codes
         else:
             api_codes = [exc.api_code]
 
-        if TWEEPY4 and isinstance(exc, TwitterServerError):
+        if ut.TWEEPY_V4 and isinstance(exc, TwitterServerError):
             ret = True
         elif exc.response is None:  # something went very wrong somewhere
             ret = True
@@ -261,7 +259,7 @@ class NotFoundError(TwitterLogicError):
 
     @staticmethod
     def tweepy_is_instance(exc):
-        if TWEEPY4:
+        if ut.TWEEPY_V4:
             ret = (isinstance(exc, NotFound))
         else:
             if exc.response is not None and exc.response.status_code == 404:
@@ -296,7 +294,7 @@ class ForbiddenError(TwitterLogicError):
 
     @staticmethod
     def tweepy_is_instance(exc):
-        if TWEEPY4:
+        if ut.TWEEPY_V4:
             ret = (isinstance(exc, (Forbidden, Unauthorized)))
         else:
             ret = (exc.response.status_code in (401, 403))
@@ -326,7 +324,7 @@ def dispatch_tweepy_exception(exc):
         The dispatched (possibly new) exception instance.
     '''
 
-    if TWEEPY4:
+    if ut.TWEEPY_V4:
         tweepy_exc_klass = TweepyException
     else:
         tweepy_exc_klass = TweepError

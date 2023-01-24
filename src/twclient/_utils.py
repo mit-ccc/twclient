@@ -9,9 +9,19 @@ import gzip
 import logging
 import contextlib
 
+from packaging import version
+
+import tweepy as tw
+import sqlalchemy as sa
 
 logger = logging.getLogger(__name__)
 
+
+# Version checks for elsewhere
+TWEEPY_V4 = version.parse(tw.__version__) >= version.parse('4.0.0')
+TWEEPY_V45 = version.parse(tw.__version__) >= version.parse('4.5.0')
+SA_V14 = version.parse(sa.__version__) >= version.parse('1.4.0')
+SA_V20 = version.parse(sa.__version__) >= version.parse('2.0.0')
 
 # c/o https://stackoverflow.com/questions/44834/can-someone-explain-all-in-python
 def export(obj):

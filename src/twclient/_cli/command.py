@@ -14,8 +14,15 @@ from .. import config as cfg
 from .. import error as err
 from .. import target as tg
 from .. import twitter_api as ta
+from .. import _utils as ut
 
 logger = logging.getLogger(__name__)
+
+
+if ut.TWEEPY_V45:
+    _AppAuthHandler = tweepy.OAuth2AppHandler
+else:
+    _AppAuthHandler = tweepy.AppAuthHandler
 
 
 class Command(ABC):
@@ -355,7 +362,7 @@ class ApiCommand(Command):
                 auth.set_access_token(self.config[profile]['token'],
                                       self.config[profile]['secret'])
             else:
-                auth = tweepy.AppAuthHandler(
+                auth = _AppAuthHandler(
                     self.config[profile]['consumer_key'],
                     self.config[profile]['consumer_secret']
                 )
