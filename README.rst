@@ -62,11 +62,13 @@ or use :bash:`pip3 install -e .[dev]` to also install all dev dependencies.
   Usage
 ~~~~~~~~~
 
+First, you need to tell twclient about your database backend and Twitter
+credentials.
+
 Setup: Database
 ~~~~~~~~~~~~~~~~
 
-First, you need to tell twclient about your database backend and Twitter
-credentials. The database backend can be either sqlite or an arbitrary database
+The database backend can be either sqlite or an arbitrary database
 specified by a sqlalchemy connection string.
 
 You can set up the database in one of two ways. Both create a persistent
