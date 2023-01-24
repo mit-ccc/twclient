@@ -79,8 +79,7 @@ First, you can specify the DB with a sqlalchemy connection URL:
 
 .. code-block:: bash
 
-   # Postgres
-   # This becomes the default DB because you've created it first
+   # Postgres -- this becomes the default DB because you've created it first
    twclient config add-db -u "postgresql+psycopg2://username@hostname:5432/dbname" my_postgres_db
 
    # Or you could use SQLite
