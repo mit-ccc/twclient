@@ -1,7 +1,23 @@
-.. |MIT license| image:: https://img.shields.io/badge/License-MIT-blue.svg
-   :target: https://mit-license.org/
-.. |License| image:: https://img.shields.io/:license-mit-blue.svg?style=flat
-   :target: https://mit-license.org/
+|Apache 2.0 license|
+
+.. |Apache 2.0 license| image:: https://img.shields.io/badge/License-Apache_2.0-blue.svg
+   :target: https://www.apache.org/licenses/LICENSE-2.0
+
+..
+    |Documentation Status|
+
+    .. |Documentation Status| image:: https://readthedocs.org/projects/twclient/badge/?version=latest
+       :target: http://twclient.readthedocs.io/?badge=latest
+
+    |PyPI version fury.io|
+
+    .. |PyPI version fury.io| image:: https://badge.fury.io/py/twclient.svg
+       :target: https://pypi.python.org/pypi/twclient/
+
+    |PyPI pyversions|
+
+    .. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/twclient.svg
+       :target: https://pypi.python.org/pypi/twclient/
 
 twclient
 ========
@@ -104,3 +120,21 @@ If you want to restrict the export to only the users specified above:
 
 If you come across a bug, please report it on the Github issue tracker. If you
 want to contribute, reach out! Extensions and improvements are welcome.
+
+~~~~~~~~~~~~~
+  Copyright
+~~~~~~~~~~~~~
+
+Copyright © 2019-2023 Massachusetts Institute of Technology.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this software except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
