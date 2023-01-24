@@ -1,5 +1,5 @@
 [build-system]
-requires = ["setuptools >= 46.4.0", "wheel"]  # 46.4.0 - attr: access to vesion
+requires = ["setuptools >= 46.4.0", "wheel"]  # 46.4.0 - attr: for version
 build-backend = "setuptools.build_meta"
 
 ##
