@@ -166,12 +166,14 @@ can use to keep track of these users later:
 
 We can now use this tag in specifying users, such as which users we'd like to
 fetch tweets for:
+
 .. code-block:: bash
 
    twclient fetch tweets -g subjects
 
 And if we also want their follow-graph info (note that a "friend" is Twitter's
 term for a follow-ee, an account you follow):
+
 .. code-block:: bash
 
    twclient fetch friends -g subjects
