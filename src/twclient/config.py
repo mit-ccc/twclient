@@ -238,10 +238,10 @@ class Config(cl.abc.MutableMapping):
                 raise err.BadConfigError(message=msg) from exc
 
         try:
-            assert sum([
+            assert sum(
                 self.getboolean(p, 'is_default')
                 for p in self.db_profile_names
-            ]) <= 1
+            ) <= 1
         except AssertionError as exc:
             msg = err_string + 'Need at most one DB profile marked default'
             raise err.BadConfigError(message=msg) from exc
