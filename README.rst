@@ -1,22 +1,22 @@
-|Apache 2.0 license|
-
-.. |Apache 2.0 license| image:: https://img.shields.io/badge/License-Apache_2.0-blue.svg
+..
+    |Apache 2.0 License|
+.. image:: https://img.shields.io/badge/License-Apache_2.0-blue.svg
    :target: https://www.apache.org/licenses/LICENSE-2.0
 
-|PyPI version fury.io|
+..
+    |PyPi version|
+.. image:: https://badge.fury.io/py/twclient.svg
+   :target: https://pypi.python.org/pypi/twclient/
 
-.. |PyPI version fury.io| image:: https://badge.fury.io/py/twclient.svg
-    :target: https://pypi.python.org/pypi/twclient/
-
-|PyPI pyversions|
-
-.. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/twclient.svg
-    :target: https://pypi.python.org/pypi/twclient/
+..
+    |PyPi pyversions|
+.. image:: https://img.shields.io/pypi/pyversions/twclient.svg
+   :target: https://pypi.python.org/pypi/twclient/
 
 ..
     |Documentation Status|
-
-    .. |Documentation Status| image:: https://readthedocs.org/projects/twclient/badge/?version=latest
+..
+    .. image:: https://readthedocs.org/projects/twclient/badge/?version=latest
        :target: http://twclient.readthedocs.io/?badge=latest
 
 twclient
@@ -51,7 +51,7 @@ editable mode:
    git clone git@github.com:mit-ccc/twclient.git && cd twclient
    pip3 install -e .
 
-or use :bash:`pip3 install -e .[dev]` to also install all dev dependencies.
+or use ``pip3 install -e .[dev]`` to also install all dev dependencies.
 
 Usage
 =====
@@ -222,5 +222,5 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 
-.. [1] You will of course need to make sure you have the right to use all of
+.. [1] Of course, you'll need to make sure you have the right to use all of
    your credentials and are complying with Twitter's terms of use.
