@@ -13,6 +13,7 @@
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -42,6 +43,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../overview/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../overview/changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html#apache-license">Apache License</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul>
@@ -66,9 +68,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../index.html">Module code</a> &raquo;</li>
-      <li>twclient.models</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">twclient.models</li>
       <li class="wy-breadcrumbs-aside">
       </li>
   </ul>
@@ -115,6 +117,23 @@
 <span class="c1"># Base classes and infra</span>
 <span class="c1">#</span>
 
+<span class="k">def</span> <span class="nf">reinitialize</span><span class="p">(</span><span class="n">engine</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Rebuild / reinitialize the database, dropping and recreating all tables.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    engine : instance of sqlalchemy.engine.Engine</span>
+<span class="sd">        The engine on which to rebuild the database.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    None</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">drop_all</span><span class="p">(</span><span class="n">engine</span><span class="p">)</span>
+    <span class="n">Base</span><span class="o">.</span><span class="n">metadata</span><span class="o">.</span><span class="n">create_all</span><span class="p">(</span><span class="n">engine</span><span class="p">)</span>
+
 
 <span class="nd">@as_declarative</span><span class="p">()</span>
 <span class="k">class</span> <span class="nc">Base</span><span class="p">:</span>
@@ -148,6 +167,27 @@
         <span class="n">fields</span> <span class="o">=</span> <span class="p">{</span><span class="n">n</span><span class="p">:</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">n</span><span class="p">)</span> <span class="k">for</span> <span class="n">n</span> <span class="ow">in</span> <span class="n">fieldnames</span><span class="p">}</span>
 
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_repr</span><span class="p">(</span><span class="o">**</span><span class="n">fields</span><span class="p">)</span>
+
+    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">clear_fast</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">session</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Clear the table by dropping and recreating it.</span>
+
+<span class="sd">        This is much, much faster than .delete() / DELETE FROM &lt;tbl&gt;, but not</span>
+<span class="sd">        transactional on many DBs.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        session : instance of sqlalchemy.orm.Session</span>
+<span class="sd">            The session in which to clear the table.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        None</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="bp">cls</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">drop</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get_bind</span><span class="p">())</span>
+        <span class="bp">cls</span><span class="o">.</span><span class="n">__table__</span><span class="o">.</span><span class="n">create</span><span class="p">(</span><span class="n">session</span><span class="o">.</span><span class="n">get_bind</span><span class="p">())</span>
 
 
 <span class="c1"># This is from one of the standard sqlalchemy recipes:</span>
@@ -225,7 +265,7 @@
             <span class="k">return</span> <span class="n">cache</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
         <span class="k">with</span> <span class="n">session</span><span class="o">.</span><span class="n">no_autoflush</span><span class="p">:</span>
-            <span class="n">obj</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">unique_hash</span><span class="o">=</span><span class="n">uhash</span><span class="p">)</span><span class="o">.</span><span class="n">first</span><span class="p">()</span>
+            <span class="n">obj</span> <span class="o">=</span> <span class="n">session</span><span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="bp">cls</span><span class="p">)</span><span class="o">.</span><span class="n">filter_by</span><span class="p">(</span><span class="n">unique_hash</span><span class="o">=</span><span class="n">uhash</span><span class="p">)</span><span class="o">.</span><span class="n">one_or_none</span><span class="p">()</span>
 
             <span class="k">if</span> <span class="ow">not</span> <span class="n">obj</span><span class="p">:</span>
                 <span class="n">obj</span> <span class="o">=</span> <span class="bp">cls</span><span class="p">(</span><span class="n">unique_hash</span><span class="o">=</span><span class="n">uhash</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
@@ -467,12 +507,14 @@
 <span class="sd">        The number of lists the user appears on.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="n">user_data_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">user_data_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">()</span><span class="o">.</span><span class="n">with_variant</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">),</span>
+                          <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
     <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span>
                      <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;user.user_id&#39;</span><span class="p">,</span> <span class="n">deferrable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                      <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">url_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span>
+    <span class="n">url_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">()</span><span class="o">.</span><span class="n">with_variant</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">),</span>
                     <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;url.url_id&#39;</span><span class="p">,</span> <span class="n">deferrable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                     <span class="n">nullable</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -729,7 +771,8 @@
 <span class="sd">        The SCD validity end date (None / NULL if the row is current).</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="n">user_list_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">user_list_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">()</span><span class="o">.</span><span class="n">with_variant</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">),</span>
+                          <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span>
                      <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;user.user_id&#39;</span><span class="p">,</span> <span class="n">deferrable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -771,7 +814,8 @@
 <span class="sd">        The ID of the tag the user is assigned.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="n">user_tag_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">user_tag_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">()</span><span class="o">.</span><span class="n">with_variant</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">),</span>
+                         <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span>
                      <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;user.user_id&#39;</span><span class="p">,</span> <span class="n">deferrable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -822,7 +866,8 @@
 <span class="sd">        The SCD validity end date (None / NULL if the row is current).</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="n">follow_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">follow_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">()</span><span class="o">.</span><span class="n">with_variant</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">),</span>
+                       <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">source_user_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span>
                             <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;user.user_id&#39;</span><span class="p">,</span> <span class="n">deferrable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
@@ -1069,7 +1114,8 @@
 <span class="sd">        The text of the hashtag.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="n">hashtag_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">hashtag_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">()</span><span class="o">.</span><span class="n">with_variant</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">),</span>
+                        <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">UnicodeText</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1097,7 +1143,8 @@
 <span class="sd">        The text of the symbol / cashtag.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="n">symbol_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">symbol_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">()</span><span class="o">.</span><span class="n">with_variant</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">),</span>
+                       <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="n">name</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">UnicodeText</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1123,9 +1170,19 @@
 <span class="sd">        The URL itself.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
-    <span class="n">url_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">url_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">()</span><span class="o">.</span><span class="n">with_variant</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">),</span>
+                    <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-    <span class="n">url</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">UnicodeText</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="c1"># NOTE there&#39;s no unique index here because URLs can be very long, too long</span>
+    <span class="c1"># for many index implementations to handle. The URLs are semantically</span>
+    <span class="c1"># unique and are kept unique at the application layer by the logic in</span>
+    <span class="c1"># UniqueMixin. (That is, there&#39;s a unique_hash column which is the SHA-1</span>
+    <span class="c1"># hash of the url value and is under a unique constraint. Application code</span>
+    <span class="c1"># fetching URLs deduplicates them according to the unique_hash.) It would</span>
+    <span class="c1"># also be good to have a CHECK constraint that the url column hashes to the</span>
+    <span class="c1"># appropriate value, but we can&#39;t even consider doing that because standard</span>
+    <span class="c1"># SQL doesn&#39;t provide SHA-1.</span>
+    <span class="n">url</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">UnicodeText</span><span class="p">,</span> <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="n">mentions</span> <span class="o">=</span> <span class="n">relationship</span><span class="p">(</span><span class="s1">&#39;UrlMention&#39;</span><span class="p">,</span> <span class="n">back_populates</span><span class="o">=</span><span class="s1">&#39;url&#39;</span><span class="p">,</span>
                             <span class="n">cascade_backrefs</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
@@ -1209,7 +1266,8 @@
 
     <span class="c1"># Twitter gives these IDs, so unlike with the other entities we don&#39;t have</span>
     <span class="c1"># to make one up</span>
-    <span class="n">media_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">media_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span>
+                      <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="n">media_type_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span>
                            <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;media_type.media_type_id&#39;</span><span class="p">,</span>
@@ -1281,7 +1339,7 @@
                       <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;media.media_id&#39;</span><span class="p">,</span> <span class="n">deferrable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                       <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="n">url_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span>
+    <span class="n">url_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">()</span><span class="o">.</span><span class="n">with_variant</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">),</span>
                     <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;url.url_id&#39;</span><span class="p">,</span> <span class="n">deferrable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                     <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
@@ -1415,7 +1473,7 @@
     <span class="n">start_index</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">end_index</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="n">hashtag_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span>
+    <span class="n">hashtag_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">()</span><span class="o">.</span><span class="n">with_variant</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">),</span>
                         <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;hashtag.hashtag_id&#39;</span><span class="p">,</span> <span class="n">deferrable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                         <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1479,7 +1537,7 @@
     <span class="n">start_index</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">end_index</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="n">symbol_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span>
+    <span class="n">symbol_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">()</span><span class="o">.</span><span class="n">with_variant</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">),</span>
                        <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;symbol.symbol_id&#39;</span><span class="p">,</span> <span class="n">deferrable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                        <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -1570,7 +1628,7 @@
     <span class="n">start_index</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
     <span class="n">end_index</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="n">primary_key</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">autoincrement</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
-    <span class="n">url_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">,</span>
+    <span class="n">url_id</span> <span class="o">=</span> <span class="n">Column</span><span class="p">(</span><span class="n">BigInteger</span><span class="p">()</span><span class="o">.</span><span class="n">with_variant</span><span class="p">(</span><span class="n">Integer</span><span class="p">,</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">),</span>
                     <span class="n">ForeignKey</span><span class="p">(</span><span class="s1">&#39;url.url_id&#39;</span><span class="p">,</span> <span class="n">deferrable</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
                     <span class="n">nullable</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">index</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 

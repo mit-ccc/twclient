@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>README &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,6 +13,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -44,16 +44,20 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">README</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#twclient">twclient</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#why-use-this-project">Why use this project?</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installation">Installation</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#setup">Setup</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#pulling-data">Pulling data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#exporting-data">Exporting data</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#feedback-or-contributions">Feedback or Contributions</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#copyright">Copyright</a></li>
 </ul>
 </li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html#apache-license">Apache License</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul>
@@ -78,8 +82,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>README</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">README</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/overview/readme.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -89,10 +93,13 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="readme">
-<h1>README<a class="headerlink" href="#readme" title="Permalink to this headline"></a></h1>
-<section id="twclient">
-<h2>twclient<a class="headerlink" href="#twclient" title="Permalink to this headline"></a></h2>
+  <div class="section" id="readme">
+<h1>README<a class="headerlink" href="#readme" title="Permalink to this heading"></a></h1>
+<p><a class="reference external" href="https://www.apache.org/licenses/LICENSE-2.0"><img alt="Apache 2.0 license" src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" /></a></p>
+<div class="section" id="twclient">
+<h2>twclient<a class="headerlink" href="#twclient" title="Permalink to this heading"></a></h2>
+<div class="section" id="why-use-this-project">
+<h3>Why use this project?<a class="headerlink" href="#why-use-this-project" title="Permalink to this heading"></a></h3>
 <p>This package provides a high-level command-line client for the Twitter API,
 with a focus on loading data into a database. The goal is to be higher-level
 than twurl or tweepy and offer useful primitives for researchers who want to
@@ -100,19 +107,32 @@ get data out of Twitter, without worrying about the details. The client can
 handle multiple sets of API credentials seamlessly, helping avoid rate limit
 issues. There’s also support for exporting bulk datasets from the fetched raw
 data.</p>
-<section id="setup">
-<h3>Setup<a class="headerlink" href="#setup" title="Permalink to this headline"></a></h3>
+</div>
+<div class="section" id="installation">
+<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h3>
 <p>Install the package from pypi, or by cloning this repo and using <code class="docutils literal notranslate"><span class="pre">pip</span>
-<span class="pre">install</span></code> if you want to use the development version. After that, you need to
-tell twclient about your database backend and Twitter credentials:</p>
+<span class="pre">install</span></code> if you want to use the development version.</p>
+</div>
+<div class="section" id="setup">
+<h3>Setup<a class="headerlink" href="#setup" title="Permalink to this heading"></a></h3>
+<p>First, you need to tell twclient about your database backend and Twitter
+credentials. The database backend can be either sqlite or an arbitrary database
+specified by a sqlalchemy connection string.</p>
+<p>Here’s setting up the database. This creates a persistent profile in a config
+file, so there’s no need to type the URL repeatedly. You specify a database via
+a sqlalchemy connection url, which can be sqlite (as here) for a
+zero-configuration setup, and can also be something like “postgresql:///” to
+use a traditional full-fledged database you’ve set up separately.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set up the database. This creates a persistent profile in a config file, no</span>
 <span class="c1"># need to type the URL repeatedly. You specify a database via a sqlalchemy</span>
 <span class="c1"># connection url, which can be sqlite (as here) for a zero-configuration</span>
 <span class="c1"># setup, and can also be something like &quot;postgresql:///&quot; to use a</span>
 <span class="c1"># traditional full-fledged database you&#39;ve set up separately.</span>
 twclient config add-db -u <span class="s2">&quot;sqlite:///home/user/twitter.db&quot;</span> sqlite
-
-<span class="c1"># Set up the Twitter credentials. As with the database setup, this stores</span>
+</pre></div>
+</div>
+<p>Twitter API credentials:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Set up the Twitter credentials. As with the database setup, this stores</span>
 <span class="c1"># the credentials in a config file for ease of use. Only two sets of</span>
 <span class="c1"># credentials are shown, but arbitrarily many can be added.</span>
 twclient config add-api -n twitter1 <span class="se">\</span>
@@ -131,9 +151,9 @@ twclient config add-api -n twitter2 <span class="se">\</span>
 twclient initialize -y
 </pre></div>
 </div>
-</section>
-<section id="pulling-data">
-<h3>Pulling data<a class="headerlink" href="#pulling-data" title="Permalink to this headline"></a></h3>
+</div>
+<div class="section" id="pulling-data">
+<h3>Pulling data<a class="headerlink" href="#pulling-data" title="Permalink to this heading"></a></h3>
 <p>To actually pull data, use the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span></code> command. The <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">tag</span></code>
 command can help keep track of users and datasets. We’ll pull information about
 two specific users and a Twitter list here:</p>
@@ -155,9 +175,9 @@ twclient fetch tweets -g subjects
 <p>At this point, the loaded data is in the database configured with <code class="docutils literal notranslate"><span class="pre">config</span>
 <span class="pre">add-db</span></code>. Useful features have been normalized out to save processing time. The
 raw API responses are also saved for later analysis.</p>
-</section>
-<section id="exporting-data">
-<h3>Exporting data<a class="headerlink" href="#exporting-data" title="Permalink to this headline"></a></h3>
+</div>
+<div class="section" id="exporting-data">
+<h3>Exporting data<a class="headerlink" href="#exporting-data" title="Permalink to this heading"></a></h3>
 <p>You can query the data with the usual database tools (<code class="docutils literal notranslate"><span class="pre">psql</span></code> for postgres,
 <code class="docutils literal notranslate"><span class="pre">sqlite3</span></code> for sqlite, ODBC clients, etc.) or export certain pre-defined bulk
 datasets with the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">export</span></code> command. For example, here’s getting the
@@ -171,14 +191,29 @@ twclient <span class="nb">export</span> mention-graph -o mention-graph.csv
 twclient <span class="nb">export</span> mention-graph -g subjects -o mention-graph.csv
 </pre></div>
 </div>
-</section>
-<section id="feedback-or-contributions">
-<h3>Feedback or Contributions<a class="headerlink" href="#feedback-or-contributions" title="Permalink to this headline"></a></h3>
+</div>
+<div class="section" id="feedback-or-contributions">
+<h3>Feedback or Contributions<a class="headerlink" href="#feedback-or-contributions" title="Permalink to this heading"></a></h3>
 <p>If you come across a bug, please report it on the Github issue tracker. If you
 want to contribute, reach out! Extensions and improvements are welcome.</p>
-</section>
-</section>
-</section>
+</div>
+<div class="section" id="copyright">
+<h3>Copyright<a class="headerlink" href="#copyright" title="Permalink to this heading"></a></h3>
+<p>Copyright © 2019-2023 Massachusetts Institute of Technology.</p>
+<p>Licensed under the Apache License, Version 2.0 (the “License”);
+you may not use this software except in compliance with the License.
+You may obtain a copy of the License at</p>
+<blockquote>
+<div><p><a class="reference external" href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a></p>
+</div></blockquote>
+<p>Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an “AS IS” BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.</p>
+</div>
+</div>
+</div>
 
 
            </div>

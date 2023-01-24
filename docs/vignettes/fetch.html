@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Getting data from the Twitter API &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -14,6 +13,7 @@
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
         <script src="../_static/jquery.js"></script>
         <script src="../_static/underscore.js"></script>
+        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
@@ -45,6 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../overview/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../overview/license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/license.html#apache-license">Apache License</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul class="current">
@@ -83,8 +84,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>Getting data from the Twitter API</li>
+      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">Getting data from the Twitter API</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/vignettes/fetch.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -94,15 +95,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="getting-data-from-the-twitter-api">
-<h1>Getting data from the Twitter API<a class="headerlink" href="#getting-data-from-the-twitter-api" title="Permalink to this headline"></a></h1>
+  <div class="section" id="getting-data-from-the-twitter-api">
+<h1>Getting data from the Twitter API<a class="headerlink" href="#getting-data-from-the-twitter-api" title="Permalink to this heading"></a></h1>
 <p>So you want to analyze some Twitter data. (That’s why you’re here, right?) This
 vignette walks through how to get set up and how to acquire the data.</p>
 <p><strong>Obligatory disclaimer / reminder</strong>: You should comply with Twitter’s terms of
 service and respect user privacy. It’s important to only access data you have a
 right to access.</p>
-<section id="introduction">
-<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this headline"></a></h2>
+<div class="section" id="introduction">
+<h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
 <p>Twclient makes acquiring data easier than directly interacting with the Twitter
 REST API, which you can do through a lightweight client like Twitter’s own
 <a class="reference external" href="https://github.com/twitter/twurl">twurl</a> or a more featureful package like
@@ -134,9 +135,9 @@ either <code class="docutils literal notranslate"><span class="pre">twitter</spa
 as in <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-n</span> <span class="pre">wwbrannon</span></code>. (We’ll use the <code class="docutils literal notranslate"><span class="pre">twclient</span></code> alias
 in this vignette.) You need to set up the database, get API credentials, and
 then pull some data.</p>
-</section>
-<section id="database-setup">
-<h2>Database setup<a class="headerlink" href="#database-setup" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="database-setup">
+<h2>Database setup<a class="headerlink" href="#database-setup" title="Permalink to this heading"></a></h2>
 <p>The first step is to set up a database backend. You can use any DB that
 <a class="reference external" href="https://docs.sqlalchemy.org/en/14/dialects/">sqlalchemy supports</a>, which
 with plugins is quite a few to choose from. This is less intimidating than it
@@ -190,9 +191,9 @@ to specify the <code class="docutils literal notranslate"><span class="pre">-y</
 example), you’ll see a new database schema installed. The tables, columns and
 other objects are documented, in the form of their sqlalchemy model classes, in
 the API documentation for twclient.models.</p>
-</section>
-<section id="api-setup">
-<h2>API setup<a class="headerlink" href="#api-setup" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="api-setup">
+<h2>API setup<a class="headerlink" href="#api-setup" title="Permalink to this heading"></a></h2>
 <p>You can’t get data from the Twitter API without API credentials, so the next
 step is to get at least one set of credentials. If you don’t already have
 credentials, Twitter has <a class="reference external" href="https://developer.twitter.com/en/docs/twitter-api/getting-started/getting-access-to-the-twitter-api">documentation</a>
@@ -215,9 +216,9 @@ config file under an API profile named “twitter1” for ease of use. We’ve o
 added one set of credentials here, but you can add arbitrarily many under
 different names. Twclient will seamlessly switch between them as each one hits
 rate limits.</p>
-</section>
-<section id="actually-pulling-data">
-<h2>Actually pulling data<a class="headerlink" href="#actually-pulling-data" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="actually-pulling-data">
+<h2>Actually pulling data<a class="headerlink" href="#actually-pulling-data" title="Permalink to this heading"></a></h2>
 <p>Now comes the fun part: actually downloading some data. We’ll assume you’ve
 pulled together sets of Twitter users and <a class="reference external" href="https://help.twitter.com/en/using-twitter/twitter-lists">Twitter lists</a> you want to
 retrieve information on. This example will use the following two files, one
@@ -243,8 +244,8 @@ each of individual users and lists of users.</p>
 <span class="mi">172409353</span>
 </pre></div>
 </div>
-<section id="a-word-about-identifiers">
-<h3>A word about identifiers<a class="headerlink" href="#a-word-about-identifiers" title="Permalink to this headline"></a></h3>
+<div class="section" id="a-word-about-identifiers">
+<h3>A word about identifiers<a class="headerlink" href="#a-word-about-identifiers" title="Permalink to this heading"></a></h3>
 <p>In general, Twitter allows you to refer to a user or list by either a) a
 numeric user ID or list ID, or b) a human-readable name. Readable names for
 users are called screen names, and for lists are called “full names.” List full
@@ -266,9 +267,9 @@ list-specific slug, separated by a slash. (For example,
 <p>but not one file which mixes user IDs and screen names together. This is
 because of the way the underlying Twitter API endpoints are implemented:
 They’ll accept mixed references to lists, but not to users.</p>
-</section>
-<section id="hydrating-users">
-<h3>Hydrating users<a class="headerlink" href="#hydrating-users" title="Permalink to this headline"></a></h3>
+</div>
+<div class="section" id="hydrating-users">
+<h3>Hydrating users<a class="headerlink" href="#hydrating-users" title="Permalink to this heading"></a></h3>
 <p>The first step is to <a class="reference external" href="https://stackoverflow.com/questions/34191022/what-does-hydrate-mean-on-twitter/34192633">hydrate</a>
 the target users, which confirms with the Twitter API that they exist,
 retrieves some summary information about them and creates records for them in
@@ -293,9 +294,9 @@ something like <code class="docutils literal notranslate"><span class="pre">twcl
 <p>A noteworthy difference from the case of lists is that you use the <code class="docutils literal notranslate"><span class="pre">-n</span></code>
 option, for users identified by screen names, rather than the <code class="docutils literal notranslate"><span class="pre">-l</span></code> option for
 lists.</p>
-</section>
-<section id="tagging-users">
-<h3>Tagging users<a class="headerlink" href="#tagging-users" title="Permalink to this headline"></a></h3>
+</div>
+<div class="section" id="tagging-users">
+<h3>Tagging users<a class="headerlink" href="#tagging-users" title="Permalink to this heading"></a></h3>
 <p>Having fetched the users, we may want to give them <em>tags</em> for easier reference
 in SQL or later commands. Twclient has a tag table that allows you to associate
 arbitrary tag names with user IDs, to keep track of relevant groups of users in
@@ -327,9 +328,9 @@ twclient tag apply universe -g twitter_users twitter_lists
 <p>This time, however, you can see that the <code class="docutils literal notranslate"><span class="pre">-g</span></code> option allows selecting users
 to operate on—whether that’s tagging, hydrating, or fetching tweets and
 follow edges—according to tags you’ve defined.</p>
-</section>
-<section id="fetching-tweets">
-<h3>Fetching tweets<a class="headerlink" href="#fetching-tweets" title="Permalink to this headline"></a></h3>
+</div>
+<div class="section" id="fetching-tweets">
+<h3>Fetching tweets<a class="headerlink" href="#fetching-tweets" title="Permalink to this heading"></a></h3>
 <p>Now, with fully hydrated users, it’s time to get down to one of our primary
 jobs: fetching the users’ tweets. We can do this with the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span>
 <span class="pre">tweets</span></code> command:</p>
@@ -346,9 +347,9 @@ like the mention / quote / etc graphs over users. (For how to do this and
 sample SQL, see the vignette on <a class="reference internal" href="export.html"><span class="doc">exporting data</span></a>.) The
 raw json API responses are also saved so that you can work with data we don’t
 parse.</p>
-</section>
-<section id="fetching-the-follow-graph">
-<h3>Fetching the follow graph<a class="headerlink" href="#fetching-the-follow-graph" title="Permalink to this headline"></a></h3>
+</div>
+<div class="section" id="fetching-the-follow-graph">
+<h3>Fetching the follow graph<a class="headerlink" href="#fetching-the-follow-graph" title="Permalink to this heading"></a></h3>
 <p>Finally, we want to get the user IDs of our target users’ followers and
 friends. (A “friend” is Twitter’s term for the opposite of a follower: if A
 follows B, B is A’s friend and A is B’s follower.) There are two more
@@ -379,10 +380,10 @@ running these commands and storing multiple snapshots at different times,
 without using enormous amounts of disk space. (See the <a class="reference internal" href="export.html"><span class="doc">exporting data
 vignette</span></a> for details of how to get follow graph snapshots
 out of the SCD table.)</p>
-</section>
-</section>
-<section id="putting-it-all-together">
-<h2>Putting it all together<a class="headerlink" href="#putting-it-all-together" title="Permalink to this headline"></a></h2>
+</div>
+</div>
+<div class="section" id="putting-it-all-together">
+<h2>Putting it all together<a class="headerlink" href="#putting-it-all-together" title="Permalink to this heading"></a></h2>
 <p>Here’s all of our hard work in one little script:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
 
@@ -431,8 +432,8 @@ the <a class="reference internal" href="export.html"><span class="doc">exporting
 of data you want out of it: the follow graph, a user’s tweets, mention / quote
 / reply / retweet graphs, etc. Your creativity in SQL is the limit.</p>
 <p>Wasn’t that easier than you’re used to?</p>
-</section>
-</section>
+</div>
+</div>
 
 
            </div>

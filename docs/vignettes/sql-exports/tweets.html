@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Users’ Tweets &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -14,6 +13,7 @@
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -45,6 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../overview/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../overview/changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html#apache-license">Apache License</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul class="current">
@@ -80,9 +81,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../export.html">Working with fetched data</a> &raquo;</li>
-      <li>Users’ Tweets</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../export.html">Working with fetched data</a></li>
+      <li class="breadcrumb-item active">Users’ Tweets</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/vignettes/sql-exports/tweets.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -92,108 +93,108 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="users-tweets">
-<h1>Users’ Tweets<a class="headerlink" href="#users-tweets" title="Permalink to this headline"></a></h1>
+  <div class="section" id="users-tweets">
+<h1>Users’ Tweets<a class="headerlink" href="#users-tweets" title="Permalink to this heading"></a></h1>
 <p>One of the more obvious things to want to get out of the database is the tweets
 users have posted. Tweets are the stuff of Twitter and usually an important
 component of an analysis.</p>
 <p>As with the <a class="reference internal" href="follow-graph.html"><span class="doc">follow graph</span></a>,
 retrieving tweets can be quick and simple or have some more bells and whistles.
 Here’s the simplest version:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
-    <span class="o">*</span>
-<span class="k">from</span> <span class="n">tweet</span><span class="p">;</span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span><span class="w"></span>
+<span class="w">    </span><span class="o">*</span><span class="w"></span>
+<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 </div>
 <p>While appealingly short, this query will fetch some columns (like insertion and
 modification times) that we don’t want. A longer query for a smaller file might
 go:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
-    <span class="n">tweet_id</span><span class="p">,</span> <span class="c1">-- Twitter&#39;s ID for the tweet</span>
-    <span class="n">user_id</span><span class="p">,</span> <span class="c1">-- Twitter&#39;s ID for the user who posted it</span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span><span class="w"></span>
+<span class="w">    </span><span class="n">tweet_id</span><span class="p">,</span><span class="w"> </span><span class="c1">-- Twitter&#39;s ID for the tweet</span>
+<span class="w">    </span><span class="n">user_id</span><span class="p">,</span><span class="w"> </span><span class="c1">-- Twitter&#39;s ID for the user who posted it</span>
 
-    <span class="n">content</span><span class="p">,</span> <span class="c1">-- the tweet text</span>
+<span class="w">    </span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="c1">-- the tweet text</span>
 
-    <span class="c1">-- is this tweet an RT?</span>
-    <span class="n">retweeted_status_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">as</span> <span class="n">is_retweet</span><span class="p">,</span>
+<span class="w">    </span><span class="c1">-- is this tweet an RT?</span>
+<span class="w">    </span><span class="n">retweeted_status_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">is_retweet</span><span class="p">,</span><span class="w"></span>
 
-    <span class="c1">-- is this tweet a reply to another tweet?</span>
-    <span class="n">in_reply_to_status_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">as</span> <span class="n">is_reply</span><span class="p">,</span>
+<span class="w">    </span><span class="c1">-- is this tweet a reply to another tweet?</span>
+<span class="w">    </span><span class="n">in_reply_to_status_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">is_reply</span><span class="p">,</span><span class="w"></span>
 
-    <span class="c1">-- is this tweet a QT of another tweet?</span>
-    <span class="n">quoted_status_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">as</span> <span class="n">is_quote_tweet</span><span class="p">,</span>
+<span class="w">    </span><span class="c1">-- is this tweet a QT of another tweet?</span>
+<span class="w">    </span><span class="n">quoted_status_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">is_quote_tweet</span><span class="p">,</span><span class="w"></span>
 
-    <span class="n">create_dt</span><span class="p">,</span> <span class="c1">-- when the tweet was posted</span>
-    <span class="n">lang</span><span class="p">,</span> <span class="c1">-- Twitter&#39;s autodetected language of the tweet</span>
-    <span class="n">retweet_count</span><span class="p">,</span> <span class="c1">-- as of when we fetched the tweet</span>
-    <span class="n">favorite_count</span><span class="p">,</span> <span class="c1">-- as of when we fetched the tweet</span>
-    <span class="k">source</span> <span class="c1">-- the app or Twitter client with which the tweet was posted</span>
-<span class="k">from</span> <span class="n">tweet</span><span class="p">;</span>
+<span class="w">    </span><span class="n">create_dt</span><span class="p">,</span><span class="w"> </span><span class="c1">-- when the tweet was posted</span>
+<span class="w">    </span><span class="n">lang</span><span class="p">,</span><span class="w"> </span><span class="c1">-- Twitter&#39;s autodetected language of the tweet</span>
+<span class="w">    </span><span class="n">retweet_count</span><span class="p">,</span><span class="w"> </span><span class="c1">-- as of when we fetched the tweet</span>
+<span class="w">    </span><span class="n">favorite_count</span><span class="p">,</span><span class="w"> </span><span class="c1">-- as of when we fetched the tweet</span>
+<span class="w">    </span><span class="k">source</span><span class="w"> </span><span class="c1">-- the app or Twitter client with which the tweet was posted</span>
+<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 </div>
 <p>This query still leaves a few data formatting issues we could fix: the
 <code class="docutils literal notranslate"><span class="pre">source</span></code> field is unstandardized and the <code class="docutils literal notranslate"><span class="pre">content</span></code> field is totally
 freeform text which can include newlines. These aren’t hard to fix, though
 (remember that we’re using Postgres’ dialect of SQL):</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
-    <span class="n">tweet_id</span><span class="p">,</span>
-    <span class="n">user_id</span><span class="p">,</span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span><span class="w"></span>
+<span class="w">    </span><span class="n">tweet_id</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">user_id</span><span class="p">,</span><span class="w"></span>
 
-    <span class="n">regexp_replace</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">content</span><span class="p">,</span>
+<span class="w">    </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">content</span><span class="p">,</span><span class="w"></span>
 
-    <span class="n">retweeted_status_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">as</span> <span class="n">is_retweet</span><span class="p">,</span>
-    <span class="n">in_reply_to_status_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">as</span> <span class="n">is_reply</span><span class="p">,</span>
-    <span class="n">quoted_status_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">as</span> <span class="n">is_quote_tweet</span><span class="p">,</span>
+<span class="w">    </span><span class="n">retweeted_status_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">is_retweet</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">in_reply_to_status_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">is_reply</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">quoted_status_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">is_quote_tweet</span><span class="p">,</span><span class="w"></span>
 
-    <span class="n">create_dt</span><span class="p">,</span>
-    <span class="n">lang</span><span class="p">,</span>
-    <span class="n">retweet_count</span><span class="p">,</span>
-    <span class="n">favorite_count</span><span class="p">,</span>
+<span class="w">    </span><span class="n">create_dt</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">lang</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">retweet_count</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">favorite_count</span><span class="p">,</span><span class="w"></span>
 
-    <span class="k">case</span> <span class="k">source</span>
-        <span class="k">when</span> <span class="s1">&#39;Twitter for iPhone&#39;</span> <span class="k">then</span> <span class="s1">&#39;iPhone&#39;</span>
-        <span class="k">when</span> <span class="s1">&#39;Twitter for Android&#39;</span> <span class="k">then</span> <span class="s1">&#39;Android&#39;</span>
-        <span class="k">when</span> <span class="s1">&#39;Twitter Web App&#39;</span> <span class="k">then</span> <span class="s1">&#39;Desktop&#39;</span>
-        <span class="k">when</span> <span class="s1">&#39;Twitter Web Client&#39;</span> <span class="k">then</span> <span class="s1">&#39;Desktop&#39;</span>
-        <span class="k">when</span> <span class="s1">&#39;TweetDeck&#39;</span> <span class="k">then</span> <span class="s1">&#39;Desktop&#39;</span>
-        <span class="k">else</span> <span class="s1">&#39;Other&#39;</span> <span class="c1">-- you could of course code more of these</span>
-    <span class="k">end</span> <span class="k">as</span> <span class="n">source_collapsed</span>
-<span class="k">from</span> <span class="n">tweet</span><span class="p">;</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="k">source</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;Twitter for iPhone&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;iPhone&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;Twitter for Android&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;Android&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;Twitter Web App&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;Desktop&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;Twitter Web Client&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;Desktop&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;TweetDeck&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;Desktop&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;Other&#39;</span><span class="w"> </span><span class="c1">-- you could of course code more of these</span>
+<span class="w">    </span><span class="k">end</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_collapsed</span><span class="w"></span>
+<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 </div>
 <p>What if you wanted to see the text of the retweeted, quoted or replied-to
 statuses for those tweets which are RTs, QTs or replies? Just (left) join the
 <code class="docutils literal notranslate"><span class="pre">tweet</span></code> table to itself:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">tweet_id</span><span class="p">,</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">user_id</span><span class="p">,</span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">tweet_id</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">user_id</span><span class="p">,</span><span class="w"></span>
 
-    <span class="n">regexp_replace</span><span class="p">(</span><span class="n">tw</span><span class="p">.</span><span class="n">content</span><span class="p">,</span> <span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">content</span><span class="p">,</span>
-    <span class="n">regexp_replace</span><span class="p">(</span><span class="n">twr</span><span class="p">.</span><span class="n">content</span><span class="p">,</span> <span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">retweeted_status_content</span><span class="p">,</span>
-    <span class="n">regexp_replace</span><span class="p">(</span><span class="n">twq</span><span class="p">.</span><span class="n">content</span><span class="p">,</span> <span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">quoted_status_content</span><span class="p">,</span>
-    <span class="n">regexp_replace</span><span class="p">(</span><span class="n">twp</span><span class="p">.</span><span class="n">content</span><span class="p">,</span> <span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">in_reply_to_status_content</span><span class="p">,</span>
+<span class="w">    </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">tw</span><span class="p">.</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">content</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">twr</span><span class="p">.</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">retweeted_status_content</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">twq</span><span class="p">.</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">quoted_status_content</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">twp</span><span class="p">.</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">in_reply_to_status_content</span><span class="p">,</span><span class="w"></span>
 
-    <span class="n">tw</span><span class="p">.</span><span class="n">retweeted_status_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">as</span> <span class="n">is_retweet</span><span class="p">,</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">in_reply_to_status_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">as</span> <span class="n">is_reply</span><span class="p">,</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">quoted_status_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">as</span> <span class="n">is_quote_tweet</span><span class="p">,</span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">retweeted_status_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">is_retweet</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">in_reply_to_status_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">is_reply</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">quoted_status_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">is_quote_tweet</span><span class="p">,</span><span class="w"></span>
 
-    <span class="n">tw</span><span class="p">.</span><span class="n">create_dt</span><span class="p">,</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">lang</span><span class="p">,</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">retweet_count</span><span class="p">,</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">favorite_count</span><span class="p">,</span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">create_dt</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">lang</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">retweet_count</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">favorite_count</span><span class="p">,</span><span class="w"></span>
 
-    <span class="k">case</span> <span class="n">tw</span><span class="p">.</span><span class="k">source</span>
-        <span class="k">when</span> <span class="s1">&#39;Twitter for iPhone&#39;</span> <span class="k">then</span> <span class="s1">&#39;iPhone&#39;</span>
-        <span class="k">when</span> <span class="s1">&#39;Twitter for Android&#39;</span> <span class="k">then</span> <span class="s1">&#39;Android&#39;</span>
-        <span class="k">when</span> <span class="s1">&#39;Twitter Web App&#39;</span> <span class="k">then</span> <span class="s1">&#39;Desktop&#39;</span>
-        <span class="k">when</span> <span class="s1">&#39;Twitter Web Client&#39;</span> <span class="k">then</span> <span class="s1">&#39;Desktop&#39;</span>
-        <span class="k">when</span> <span class="s1">&#39;TweetDeck&#39;</span> <span class="k">then</span> <span class="s1">&#39;Desktop&#39;</span>
-        <span class="k">else</span> <span class="s1">&#39;Other&#39;</span>
-    <span class="k">end</span> <span class="k">as</span> <span class="n">source_collapsed</span>
-<span class="k">from</span> <span class="n">tweet</span> <span class="n">tw</span>
-    <span class="k">left</span> <span class="k">join</span> <span class="n">tweet</span> <span class="n">twr</span> <span class="k">on</span> <span class="n">twr</span><span class="p">.</span><span class="n">tweet_id</span> <span class="o">=</span> <span class="n">tw</span><span class="p">.</span><span class="n">retweeted_status_id</span>
-    <span class="k">left</span> <span class="k">join</span> <span class="n">tweet</span> <span class="n">twq</span> <span class="k">on</span> <span class="n">twr</span><span class="p">.</span><span class="n">tweet_id</span> <span class="o">=</span> <span class="n">tw</span><span class="p">.</span><span class="n">quoted_status_id</span>
-    <span class="k">left</span> <span class="k">join</span> <span class="n">tweet</span> <span class="n">twp</span> <span class="k">on</span> <span class="n">twr</span><span class="p">.</span><span class="n">tweet_id</span> <span class="o">=</span> <span class="n">tw</span><span class="p">.</span><span class="n">in_reply_to_status_id</span><span class="p">;</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">tw</span><span class="p">.</span><span class="k">source</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;Twitter for iPhone&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;iPhone&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;Twitter for Android&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;Android&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;Twitter Web App&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;Desktop&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;Twitter Web Client&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;Desktop&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;TweetDeck&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;Desktop&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;Other&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="k">end</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_collapsed</span><span class="w"></span>
+<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">tw</span><span class="w"></span>
+<span class="w">    </span><span class="k">left</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">twr</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">twr</span><span class="p">.</span><span class="n">tweet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tw</span><span class="p">.</span><span class="n">retweeted_status_id</span><span class="w"></span>
+<span class="w">    </span><span class="k">left</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">twq</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">twr</span><span class="p">.</span><span class="n">tweet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tw</span><span class="p">.</span><span class="n">quoted_status_id</span><span class="w"></span>
+<span class="w">    </span><span class="k">left</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">twp</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">twr</span><span class="p">.</span><span class="n">tweet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tw</span><span class="p">.</span><span class="n">in_reply_to_status_id</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 </div>
 <p>It is worth noting that while we receive the IDs of retweeted, quoted or
@@ -209,59 +210,59 @@ tagged set of users and within a certain period of time. As in the <a class="ref
 graph</span></a> vignette, you can achieve the
 first with a join to a temporary table or <a class="reference external" href="https://www.postgresql.org/docs/14/queries-with.html">CTE</a> and the second with a
 WHERE-clause filter:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tmp_universe</span> <span class="k">as</span>
-<span class="p">(</span>
-    <span class="k">select</span>
-        <span class="n">u</span><span class="p">.</span><span class="n">user_id</span>
-    <span class="k">from</span> <span class="ss">&quot;user&quot;</span> <span class="n">u</span> <span class="c1">-- standard sql reserves this table name, need to quote it</span>
-        <span class="k">inner</span> <span class="k">join</span> <span class="n">user_tag</span> <span class="n">ut</span> <span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
-        <span class="k">inner</span> <span class="k">join</span> <span class="n">tag</span> <span class="n">ta</span> <span class="k">using</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span>
-    <span class="k">where</span>
-        <span class="c1">-- just an example of using tagging, a tag</span>
-        <span class="c1">-- with this name is not created automatically</span>
-        <span class="n">ta</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;universe&#39;</span>
-<span class="p">)</span>
-<span class="k">select</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">tweet_id</span><span class="p">,</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">user_id</span><span class="p">,</span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">with</span><span class="w"> </span><span class="n">tmp_universe</span><span class="w"> </span><span class="k">as</span><span class="w"></span>
+<span class="p">(</span><span class="w"></span>
+<span class="w">    </span><span class="k">select</span><span class="w"></span>
+<span class="w">        </span><span class="n">u</span><span class="p">.</span><span class="n">user_id</span><span class="w"></span>
+<span class="w">    </span><span class="k">from</span><span class="w"> </span><span class="ss">&quot;user&quot;</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="c1">-- standard sql reserves this table name, need to quote it</span>
+<span class="w">        </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">user_tag</span><span class="w"> </span><span class="n">ut</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tag</span><span class="w"> </span><span class="n">ta</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="k">where</span><span class="w"></span>
+<span class="w">        </span><span class="c1">-- just an example of using tagging, a tag</span>
+<span class="w">        </span><span class="c1">-- with this name is not created automatically</span>
+<span class="w">        </span><span class="n">ta</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;universe&#39;</span><span class="w"></span>
+<span class="p">)</span><span class="w"></span>
+<span class="k">select</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">tweet_id</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">user_id</span><span class="p">,</span><span class="w"></span>
 
-    <span class="n">regexp_replace</span><span class="p">(</span><span class="n">tw</span><span class="p">.</span><span class="n">content</span><span class="p">,</span> <span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">content</span><span class="p">,</span>
-    <span class="n">regexp_replace</span><span class="p">(</span><span class="n">twr</span><span class="p">.</span><span class="n">content</span><span class="p">,</span> <span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">retweeted_status_content</span><span class="p">,</span>
-    <span class="n">regexp_replace</span><span class="p">(</span><span class="n">twq</span><span class="p">.</span><span class="n">content</span><span class="p">,</span> <span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">quoted_status_content</span><span class="p">,</span>
-    <span class="n">regexp_replace</span><span class="p">(</span><span class="n">twp</span><span class="p">.</span><span class="n">content</span><span class="p">,</span> <span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span> <span class="s1">&#39; &#39;</span><span class="p">,</span> <span class="s1">&#39;g&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">in_reply_to_status_content</span><span class="p">,</span>
+<span class="w">    </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">tw</span><span class="p">.</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">content</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">twr</span><span class="p">.</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">retweeted_status_content</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">twq</span><span class="p">.</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">quoted_status_content</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">regexp_replace</span><span class="p">(</span><span class="n">twp</span><span class="p">.</span><span class="n">content</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;[\n\r]+&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39; &#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;g&#39;</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">in_reply_to_status_content</span><span class="p">,</span><span class="w"></span>
 
-    <span class="n">tw</span><span class="p">.</span><span class="n">retweeted_status_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">as</span> <span class="n">is_retweet</span><span class="p">,</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">in_reply_to_status_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">as</span> <span class="n">is_reply</span><span class="p">,</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">quoted_status_id</span> <span class="k">is</span> <span class="k">not</span> <span class="k">null</span> <span class="k">as</span> <span class="n">is_quote_tweet</span><span class="p">,</span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">retweeted_status_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">is_retweet</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">in_reply_to_status_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">is_reply</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">quoted_status_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">is_quote_tweet</span><span class="p">,</span><span class="w"></span>
 
-    <span class="n">tw</span><span class="p">.</span><span class="n">create_dt</span><span class="p">,</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">lang</span><span class="p">,</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">retweet_count</span><span class="p">,</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">favorite_count</span><span class="p">,</span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">create_dt</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">lang</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">retweet_count</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">favorite_count</span><span class="p">,</span><span class="w"></span>
 
-    <span class="k">case</span> <span class="n">tw</span><span class="p">.</span><span class="k">source</span>
-        <span class="k">when</span> <span class="s1">&#39;Twitter for iPhone&#39;</span> <span class="k">then</span> <span class="s1">&#39;iPhone&#39;</span>
-        <span class="k">when</span> <span class="s1">&#39;Twitter for Android&#39;</span> <span class="k">then</span> <span class="s1">&#39;Android&#39;</span>
-        <span class="k">when</span> <span class="s1">&#39;Twitter Web App&#39;</span> <span class="k">then</span> <span class="s1">&#39;Desktop&#39;</span>
-        <span class="k">when</span> <span class="s1">&#39;Twitter Web Client&#39;</span> <span class="k">then</span> <span class="s1">&#39;Desktop&#39;</span>
-        <span class="k">when</span> <span class="s1">&#39;TweetDeck&#39;</span> <span class="k">then</span> <span class="s1">&#39;Desktop&#39;</span>
-        <span class="k">else</span> <span class="s1">&#39;Other&#39;</span>
-    <span class="k">end</span> <span class="k">as</span> <span class="n">source_collapsed</span>
-<span class="k">from</span> <span class="n">tweet</span> <span class="n">tw</span>
-    <span class="k">inner</span> <span class="k">join</span> <span class="n">tmp_universe</span> <span class="n">tu</span> <span class="k">on</span> <span class="n">tu</span><span class="p">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">tw</span><span class="p">.</span><span class="n">user_id</span>
-    <span class="k">left</span> <span class="k">join</span> <span class="n">tweet</span> <span class="n">twr</span> <span class="k">on</span> <span class="n">twr</span><span class="p">.</span><span class="n">tweet_id</span> <span class="o">=</span> <span class="n">tw</span><span class="p">.</span><span class="n">retweeted_status_id</span>
-    <span class="k">left</span> <span class="k">join</span> <span class="n">tweet</span> <span class="n">twq</span> <span class="k">on</span> <span class="n">twr</span><span class="p">.</span><span class="n">tweet_id</span> <span class="o">=</span> <span class="n">tw</span><span class="p">.</span><span class="n">quoted_status_id</span>
-    <span class="k">left</span> <span class="k">join</span> <span class="n">tweet</span> <span class="n">twp</span> <span class="k">on</span> <span class="n">twr</span><span class="p">.</span><span class="n">tweet_id</span> <span class="o">=</span> <span class="n">tw</span><span class="p">.</span><span class="n">in_reply_to_status_id</span>
-<span class="k">where</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">create_dt</span> <span class="o">&gt;=</span> <span class="s1">&#39;2020-01-01&#39;</span> <span class="k">and</span>
-    <span class="n">tw</span><span class="p">.</span><span class="n">create_dt</span> <span class="o">&lt;=</span> <span class="s1">&#39;2020-06-01&#39;</span><span class="p">;</span>
+<span class="w">    </span><span class="k">case</span><span class="w"> </span><span class="n">tw</span><span class="p">.</span><span class="k">source</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;Twitter for iPhone&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;iPhone&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;Twitter for Android&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;Android&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;Twitter Web App&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;Desktop&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;Twitter Web Client&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;Desktop&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">when</span><span class="w"> </span><span class="s1">&#39;TweetDeck&#39;</span><span class="w"> </span><span class="k">then</span><span class="w"> </span><span class="s1">&#39;Desktop&#39;</span><span class="w"></span>
+<span class="w">        </span><span class="k">else</span><span class="w"> </span><span class="s1">&#39;Other&#39;</span><span class="w"></span>
+<span class="w">    </span><span class="k">end</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_collapsed</span><span class="w"></span>
+<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">tw</span><span class="w"></span>
+<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tmp_universe</span><span class="w"> </span><span class="n">tu</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">tu</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tw</span><span class="p">.</span><span class="n">user_id</span><span class="w"></span>
+<span class="w">    </span><span class="k">left</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">twr</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">twr</span><span class="p">.</span><span class="n">tweet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tw</span><span class="p">.</span><span class="n">retweeted_status_id</span><span class="w"></span>
+<span class="w">    </span><span class="k">left</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">twq</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">twr</span><span class="p">.</span><span class="n">tweet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tw</span><span class="p">.</span><span class="n">quoted_status_id</span><span class="w"></span>
+<span class="w">    </span><span class="k">left</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">twp</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">twr</span><span class="p">.</span><span class="n">tweet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tw</span><span class="p">.</span><span class="n">in_reply_to_status_id</span><span class="w"></span>
+<span class="k">where</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">create_dt</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="s1">&#39;2020-01-01&#39;</span><span class="w"> </span><span class="k">and</span><span class="w"></span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">create_dt</span><span class="w"> </span><span class="o">&lt;=</span><span class="w"> </span><span class="s1">&#39;2020-06-01&#39;</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 </div>
 <p>And that’s it! Another vignette on <a class="reference internal" href="tweet-graphs.html"><span class="doc">exporting graph structures extracted
 from tweets</span></a> discusses how to work with
 the mention, retweet, quote-tweet and reply networks over users that their
 tweets give rise to.</p>
-</section>
+</div>
 
 
            </div>

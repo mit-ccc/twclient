@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Follow Graph &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -14,6 +13,7 @@
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/jquery.js"></script>
         <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
@@ -45,6 +45,7 @@
 <li class="toctree-l1"><a class="reference internal" href="../../overview/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../overview/changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html#apache-license">Apache License</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul class="current">
@@ -80,9 +81,9 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
-          <li><a href="../export.html">Working with fetched data</a> &raquo;</li>
-      <li>Follow Graph</li>
+      <li><a href="../../index.html" class="icon icon-home"></a></li>
+          <li class="breadcrumb-item"><a href="../export.html">Working with fetched data</a></li>
+      <li class="breadcrumb-item active">Follow Graph</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../../_sources/vignettes/sql-exports/follow-graph.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -92,8 +93,8 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="follow-graph">
-<h1>Follow Graph<a class="headerlink" href="#follow-graph" title="Permalink to this headline"></a></h1>
+  <div class="section" id="follow-graph">
+<h1>Follow Graph<a class="headerlink" href="#follow-graph" title="Permalink to this heading"></a></h1>
 <p>One of the most important pieces of Twitter data is the <em>follow graph</em> — the
 network among users where user A has a directed edge to user B if A follows B
 on Twitter. Follow relationships shape which tweets people see, which other
@@ -101,14 +102,14 @@ users Twitter recommends they follow, and greatly affects their experience on
 the site. Here we describe how to get the follow graph out of the twclient
 database.</p>
 <p>Without further ado, here’s the simple version:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
-    <span class="n">source_user_id</span><span class="p">,</span>
-    <span class="n">target_user_id</span>
-<span class="k">from</span> <span class="n">follow</span>
-<span class="k">where</span>
-    <span class="c1">-- the follow table does type-2 SCD, so this condition says</span>
-    <span class="c1">-- &quot;only currently valid rows (not marked obsolete by a subsequent fetch)&quot;</span>
-    <span class="n">valid_end_dt</span> <span class="k">is</span> <span class="k">null</span><span class="p">;</span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span><span class="w"></span>
+<span class="w">    </span><span class="n">source_user_id</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">target_user_id</span><span class="w"></span>
+<span class="k">from</span><span class="w"> </span><span class="n">follow</span><span class="w"></span>
+<span class="k">where</span><span class="w"></span>
+<span class="w">    </span><span class="c1">-- the follow table does type-2 SCD, so this condition says</span>
+<span class="w">    </span><span class="c1">-- &quot;only currently valid rows (not marked obsolete by a subsequent fetch)&quot;</span>
+<span class="w">    </span><span class="n">valid_end_dt</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">null</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 </div>
 <p>As you can see, it isn’t complicated. Directed edges are stored in the
@@ -136,13 +137,13 @@ particular time in the past</em>. The WHERE clause snippet in the example above 
 <code class="docutils literal notranslate"><span class="pre">where</span> <span class="pre">valid_end_dt</span> <span class="pre">is</span> <span class="pre">null</span></code> — asks for all currently valid rows, or the
 most current state of the graph. But you can also get, for example, the follow
 graph as you had recorded it six months ago:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
-    <span class="n">source_user_id</span><span class="p">,</span>
-    <span class="n">target_user_id</span>
-<span class="k">from</span> <span class="n">follow</span>
-<span class="k">where</span>
-    <span class="n">valid_start_dt</span> <span class="o">&lt;</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="nb">interval</span> <span class="s1">&#39;6 months&#39;</span> <span class="k">and</span>
-    <span class="p">(</span><span class="n">valid_end_dt</span> <span class="o">&gt;=</span> <span class="n">now</span><span class="p">()</span> <span class="o">-</span> <span class="nb">interval</span> <span class="s1">&#39;6 months&#39;</span> <span class="k">or</span> <span class="n">valid_end_dt</span> <span class="k">is</span> <span class="k">null</span><span class="p">);</span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span><span class="w"></span>
+<span class="w">    </span><span class="n">source_user_id</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">target_user_id</span><span class="w"></span>
+<span class="k">from</span><span class="w"> </span><span class="n">follow</span><span class="w"></span>
+<span class="k">where</span><span class="w"></span>
+<span class="w">    </span><span class="n">valid_start_dt</span><span class="w"> </span><span class="o">&lt;</span><span class="w"> </span><span class="n">now</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">interval</span><span class="w"> </span><span class="s1">&#39;6 months&#39;</span><span class="w"> </span><span class="k">and</span><span class="w"></span>
+<span class="w">    </span><span class="p">(</span><span class="n">valid_end_dt</span><span class="w"> </span><span class="o">&gt;=</span><span class="w"> </span><span class="n">now</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">interval</span><span class="w"> </span><span class="s1">&#39;6 months&#39;</span><span class="w"> </span><span class="k">or</span><span class="w"> </span><span class="n">valid_end_dt</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">null</span><span class="p">);</span><span class="w"></span>
 </pre></div>
 </div>
 <p>That is, follow edges which were first observed more than six months ago, and
@@ -159,29 +160,29 @@ out of date, and that’s the version this query will return.</p>
 <p>Here’s a slightly more complicated query which selects only follow edges
 between a certain set of users—here, those with the “universe” tag. It
 leverages the tagging feature explained in the <a class="reference internal" href="../fetch.html"><span class="doc">fetching data vignette</span></a> and provides an example of how to use it:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">with</span> <span class="n">tmp_universe</span> <span class="k">as</span>
-<span class="p">(</span>
-    <span class="k">select</span>
-        <span class="n">u</span><span class="p">.</span><span class="n">user_id</span>
-    <span class="k">from</span> <span class="ss">&quot;user&quot;</span> <span class="n">u</span> <span class="c1">-- standard sql reserves this name, need to quote it</span>
-        <span class="k">inner</span> <span class="k">join</span> <span class="n">user_tag</span> <span class="n">ut</span> <span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
-        <span class="k">inner</span> <span class="k">join</span> <span class="n">tag</span> <span class="n">ta</span> <span class="k">using</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span>
-    <span class="k">where</span>
-        <span class="c1">-- just an example of using tagging, a tag</span>
-        <span class="c1">-- with this name is not created automatically</span>
-        <span class="n">ta</span><span class="p">.</span><span class="n">name</span> <span class="o">=</span> <span class="s1">&#39;universe&#39;</span>
-<span class="p">)</span>
-<span class="k">select</span>
-    <span class="n">uts</span><span class="p">.</span><span class="n">user_id</span> <span class="k">as</span> <span class="n">source_user_id</span><span class="p">,</span>
-    <span class="n">utt</span><span class="p">.</span><span class="n">user_id</span> <span class="k">as</span> <span class="n">target_user_id</span>
-<span class="k">from</span> <span class="n">tmp_universe</span> <span class="n">uts</span>
-    <span class="k">inner</span> <span class="k">join</span> <span class="n">follow</span> <span class="n">fo</span> <span class="k">on</span> <span class="n">fo</span><span class="p">.</span><span class="n">source_user_id</span> <span class="o">=</span> <span class="n">uts</span><span class="p">.</span><span class="n">user_id</span>
-    <span class="k">inner</span> <span class="k">join</span> <span class="n">tmp_universe</span> <span class="n">utt</span> <span class="k">on</span> <span class="n">utt</span><span class="p">.</span><span class="n">user_id</span> <span class="o">=</span> <span class="n">fo</span><span class="p">.</span><span class="n">target_user_id</span>
-<span class="k">where</span>
-    <span class="n">fo</span><span class="p">.</span><span class="n">valid_end_dt</span> <span class="k">is</span> <span class="k">null</span><span class="p">;</span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">with</span><span class="w"> </span><span class="n">tmp_universe</span><span class="w"> </span><span class="k">as</span><span class="w"></span>
+<span class="p">(</span><span class="w"></span>
+<span class="w">    </span><span class="k">select</span><span class="w"></span>
+<span class="w">        </span><span class="n">u</span><span class="p">.</span><span class="n">user_id</span><span class="w"></span>
+<span class="w">    </span><span class="k">from</span><span class="w"> </span><span class="ss">&quot;user&quot;</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="c1">-- standard sql reserves this name, need to quote it</span>
+<span class="w">        </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">user_tag</span><span class="w"> </span><span class="n">ut</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span><span class="w"></span>
+<span class="w">        </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tag</span><span class="w"> </span><span class="n">ta</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span><span class="w"></span>
+<span class="w">    </span><span class="k">where</span><span class="w"></span>
+<span class="w">        </span><span class="c1">-- just an example of using tagging, a tag</span>
+<span class="w">        </span><span class="c1">-- with this name is not created automatically</span>
+<span class="w">        </span><span class="n">ta</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;universe&#39;</span><span class="w"></span>
+<span class="p">)</span><span class="w"></span>
+<span class="k">select</span><span class="w"></span>
+<span class="w">    </span><span class="n">uts</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_user_id</span><span class="p">,</span><span class="w"></span>
+<span class="w">    </span><span class="n">utt</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">target_user_id</span><span class="w"></span>
+<span class="k">from</span><span class="w"> </span><span class="n">tmp_universe</span><span class="w"> </span><span class="n">uts</span><span class="w"></span>
+<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">follow</span><span class="w"> </span><span class="n">fo</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">fo</span><span class="p">.</span><span class="n">source_user_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">uts</span><span class="p">.</span><span class="n">user_id</span><span class="w"></span>
+<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tmp_universe</span><span class="w"> </span><span class="n">utt</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">utt</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">fo</span><span class="p">.</span><span class="n">target_user_id</span><span class="w"></span>
+<span class="k">where</span><span class="w"></span>
+<span class="w">    </span><span class="n">fo</span><span class="p">.</span><span class="n">valid_end_dt</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">null</span><span class="p">;</span><span class="w"></span>
 </pre></div>
 </div>
-</section>
+</div>
 
 
            </div>

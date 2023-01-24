@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
-
+  <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>API Documentation &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -14,6 +13,7 @@
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
         <script src="_static/jquery.js"></script>
         <script src="_static/underscore.js"></script>
+        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
@@ -44,6 +44,7 @@
 <li class="toctree-l1"><a class="reference internal" href="overview/readme.html">README</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview/changelog.html">Changelog</a></li>
 <li class="toctree-l1"><a class="reference internal" href="overview/license.html">License</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview/license.html#apache-license">Apache License</a></li>
 </ul>
 <p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
 <ul>
@@ -76,8 +77,8 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a> &raquo;</li>
-      <li>API Documentation</li>
+      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li class="breadcrumb-item active">API Documentation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/apidocs.rst.txt" rel="nofollow"> View page source</a>
       </li>
@@ -87,15 +88,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-twclient">
-<span id="api-documentation"></span><h1>API Documentation<a class="headerlink" href="#module-twclient" title="Permalink to this headline"></a></h1>
+  <div class="section" id="module-twclient">
+<span id="api-documentation"></span><h1>API Documentation<a class="headerlink" href="#module-twclient" title="Permalink to this heading"></a></h1>
 <p>A high-level analytics-focused command line client for the Twitter API.</p>
 <p>This documentation focuses on the Python API. For an introduction to
 command-line usage, see the <a class="reference internal" href="vignettes/fetch.html"><span class="doc">fetching-data vignette</span></a>;
 for detailed command-line help, see the <code class="docutils literal notranslate"><span class="pre">--help</span></code> flag to the <code class="docutils literal notranslate"><span class="pre">twclient</span></code> (or
 <code class="docutils literal notranslate"><span class="pre">twitter</span></code>) command.</p>
-<section id="module-twclient.authpool">
-<span id="twclient-authpool"></span><h2>twclient.authpool<a class="headerlink" href="#module-twclient.authpool" title="Permalink to this headline"></a></h2>
+<div class="section" id="module-twclient.authpool">
+<span id="twclient-authpool"></span><h2>twclient.authpool<a class="headerlink" href="#module-twclient.authpool" title="Permalink to this heading"></a></h2>
 <p>A version of tweepy.API with support for multiple sets of credentials.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.authpool.AuthPoolAPI">
@@ -134,9 +135,9 @@ seconds.</p></li>
 </dl>
 </dd></dl>
 
-</section>
-<section id="module-twclient.error">
-<span id="twclient-error"></span><h2>twclient.error<a class="headerlink" href="#module-twclient.error" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="module-twclient.error">
+<span id="twclient-error"></span><h2>twclient.error<a class="headerlink" href="#module-twclient.error" title="Permalink to this heading"></a></h2>
 <p>Exceptions that twclient code may raise.</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="twclient.error.TWClientError">
@@ -174,7 +175,7 @@ this value is passed to <cite>sys.exit</cite>.</p></li>
 <dl class="py exception">
 <dt class="sig sig-object py" id="twclient.error.TwitterAPIError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.error.</span></span><span class="sig-name descname"><span class="pre">TwitterAPIError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/error.html#TwitterAPIError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.TwitterAPIError" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.error.TWClientError" title="twclient.error.TWClientError"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.error.TWClientError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.error.TWClientError" title="twclient.error.TWClientError"><code class="xref py py-class docutils literal notranslate"><span class="pre">TWClientError</span></code></a></p>
 <p>Base class for errors returned by the Twitter API.</p>
 <p>Instances of this class correspond to errors returned by the Twitter API,
 but are higher-level and easier to handle in client code than the
@@ -234,11 +235,8 @@ raised.</p></li>
 <li><p><strong>tweepy.error.TweepError</strong><strong>)</strong> – The exception from which to generate a TwitterAPIError instance.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>Instance of the appropriate subclass of TwitterAPIError.</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>Instance of the appropriate subclass of TwitterAPIError.</p>
 </dd>
 </dl>
 </dd></dl>
@@ -269,7 +267,7 @@ via from_tweepy().</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="twclient.error.TwitterServiceError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.error.</span></span><span class="sig-name descname"><span class="pre">TwitterServiceError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/error.html#TwitterServiceError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.TwitterServiceError" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.error.TwitterAPIError" title="twclient.error.TwitterAPIError"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.error.TwitterAPIError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.error.TwitterAPIError" title="twclient.error.TwitterAPIError"><code class="xref py py-class docutils literal notranslate"><span class="pre">TwitterAPIError</span></code></a></p>
 <p>A problem with the Twitter service.</p>
 <p>A request to the Twitter service encountered a problem which was with the
 service rather than the request itself. Examples include low-level network
@@ -301,7 +299,7 @@ via from_tweepy().</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="twclient.error.TwitterLogicError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.error.</span></span><span class="sig-name descname"><span class="pre">TwitterLogicError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/error.html#TwitterLogicError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.TwitterLogicError" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.error.TwitterAPIError" title="twclient.error.TwitterAPIError"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.error.TwitterAPIError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.error.TwitterAPIError" title="twclient.error.TwitterAPIError"><code class="xref py py-class docutils literal notranslate"><span class="pre">TwitterAPIError</span></code></a></p>
 <p>A request to the Twitter service encountered a logical error condition.</p>
 <p>This error is raised when a request to the Twitter service was received and
 executed successfully but returned a logical error condition. For example,
@@ -312,7 +310,7 @@ of this exception class.</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="twclient.error.NotFoundError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.error.</span></span><span class="sig-name descname"><span class="pre">NotFoundError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/error.html#NotFoundError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.NotFoundError" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.error.TwitterLogicError" title="twclient.error.TwitterLogicError"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.error.TwitterLogicError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.error.TwitterLogicError" title="twclient.error.TwitterLogicError"><code class="xref py py-class docutils literal notranslate"><span class="pre">TwitterLogicError</span></code></a></p>
 <p>A requested object was not found.</p>
 <p>There are several ways Twitter indicates that a requested object was not
 found, involving some combination of the API response code, the HTTP status
@@ -344,7 +342,7 @@ via from_tweepy().</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="twclient.error.ForbiddenError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.error.</span></span><span class="sig-name descname"><span class="pre">ForbiddenError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/error.html#ForbiddenError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.ForbiddenError" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.error.TwitterLogicError" title="twclient.error.TwitterLogicError"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.error.TwitterLogicError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.error.TwitterLogicError" title="twclient.error.TwitterLogicError"><code class="xref py py-class docutils literal notranslate"><span class="pre">TwitterLogicError</span></code></a></p>
 <p>A request was forbidden.</p>
 <p>This frequently occurs when trying to request tweets or friends/followers
 for users with private accounts / protected tweets. Requesting information
@@ -399,7 +397,7 @@ used in wrappers of the Twitter API to simplify exception handling.</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="twclient.error.SemanticError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.error.</span></span><span class="sig-name descname"><span class="pre">SemanticError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/error.html#SemanticError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.SemanticError" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.error.TWClientError" title="twclient.error.TWClientError"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.error.TWClientError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.error.TWClientError" title="twclient.error.TWClientError"><code class="xref py py-class docutils literal notranslate"><span class="pre">TWClientError</span></code></a></p>
 <p>Base class for non-Twitter error conditions.</p>
 <p>These errors indicate larger problems with the operation of the program
 than a specific Twitter or database error (though such an error may have
@@ -409,7 +407,7 @@ led to this one being raised).</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="twclient.error.BadTargetError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.error.</span></span><span class="sig-name descname"><span class="pre">BadTargetError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/error.html#BadTargetError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.BadTargetError" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.error.SemanticError" title="twclient.error.SemanticError"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.error.SemanticError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.error.SemanticError" title="twclient.error.SemanticError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SemanticError</span></code></a></p>
 <p>A specified target user is protected, suspended or otherwise nonexistent.</p>
 <p>This error is raised when a user targeted for <cite>fetch</cite> is found to be
 unavailable. There may be several reasons for unavailability: a user having
@@ -435,7 +433,7 @@ protected tweets, being suspended, or otherwise not existing.</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="twclient.error.BadTagError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.error.</span></span><span class="sig-name descname"><span class="pre">BadTagError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/error.html#BadTagError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.BadTagError" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.error.SemanticError" title="twclient.error.SemanticError"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.error.SemanticError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.error.SemanticError" title="twclient.error.SemanticError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SemanticError</span></code></a></p>
 <p>A requested tag does not exist.</p>
 <p>This error is raised when job.ApplyTagJob is given a tag which does not
 exist in the database.</p>
@@ -460,7 +458,7 @@ exist in the database.</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="twclient.error.BadSchemaError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.error.</span></span><span class="sig-name descname"><span class="pre">BadSchemaError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/error.html#BadSchemaError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.BadSchemaError" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.error.SemanticError" title="twclient.error.SemanticError"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.error.SemanticError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.error.SemanticError" title="twclient.error.SemanticError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SemanticError</span></code></a></p>
 <p>The database schema is corrupt or the wrong version.</p>
 <p>This error is raised when a Job detects that the schema present in the
 selected database profile is corrupt, an unsupported version, or not a
@@ -470,21 +468,21 @@ twclient schema.</p>
 <dl class="py exception">
 <dt class="sig sig-object py" id="twclient.error.BadConfigError">
 <em class="property"><span class="pre">exception</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.error.</span></span><span class="sig-name descname"><span class="pre">BadConfigError</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/error.html#BadConfigError"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.BadConfigError" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.error.SemanticError" title="twclient.error.SemanticError"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.error.SemanticError</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.error.SemanticError" title="twclient.error.SemanticError"><code class="xref py py-class docutils literal notranslate"><span class="pre">SemanticError</span></code></a></p>
 <p>An operation on the config file encountered an error.</p>
 <p>This error is raised when an operation to be performed on the config file
 is misspecified, impossible, encounters another error, or the config file
 is malformed.</p>
 </dd></dl>
 
-</section>
-<section id="module-twclient.job">
-<span id="twclient-job"></span><h2>twclient.job<a class="headerlink" href="#module-twclient.job" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="module-twclient.job">
+<span id="twclient-job"></span><h2>twclient.job<a class="headerlink" href="#module-twclient.job" title="Permalink to this heading"></a></h2>
 <p>Job classes which implement core package functionality.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.job.Job">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">Job</span></span><a class="reference internal" href="_modules/twclient/job/job.html#Job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.Job" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>A job to be run against the database and possibly also the Twitter API.</p>
 <dl class="py method">
 <dt class="sig sig-object py" id="twclient.job.Job.run">
@@ -497,7 +495,7 @@ is malformed.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.job.DatabaseJob">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">DatabaseJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/job/job.html#DatabaseJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.DatabaseJob" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.job.Job" title="twclient.job.job.Job"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.job.job.Job</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.Job" title="twclient.job.job.Job"><code class="xref py py-class docutils literal notranslate"><span class="pre">Job</span></code></a></p>
 <p>A job to be run against the database.</p>
 <p>This class represents a job to be run against the database. Subclasses may
 or may not also support access to the Twitter API.</p>
@@ -537,11 +535,8 @@ by self.engine is a version the Job class knows how to work with. If
 the schema is an unsupported version or is missing / corrupt, an
 instance of error.BadSchemaError will be raised.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Returns</dt>
-<dd class="field-odd"><p></p>
-</dd>
-<dt class="field-even">Return type</dt>
-<dd class="field-even"><p>None</p>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -576,7 +571,7 @@ appropriate attribute values.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.job.TargetJob">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">TargetJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/job/job.html#TargetJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.TargetJob" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.job.DatabaseJob" title="twclient.job.job.DatabaseJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.job.job.DatabaseJob</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.DatabaseJob" title="twclient.job.job.DatabaseJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatabaseJob</span></code></a></p>
 <p>A job which requires targets.</p>
 <p>A TargetJob is a job which requires a set of target.Target instances to
 specify users. An instance of this class must specify its resolve mode for
@@ -703,7 +698,7 @@ to True. Subclasses may override with other configurations.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.job.ApiJob">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ApiJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/job/job.html#ApiJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ApiJob" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.job.Job" title="twclient.job.job.Job"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.job.job.Job</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.Job" title="twclient.job.job.Job"><code class="xref py py-class docutils literal notranslate"><span class="pre">Job</span></code></a></p>
 <p>A job requiring acess to the Twitter API.</p>
 <p>This class represents a job which interacts with the Twitter API. It
 configures API access, and defers other functionality to subclasses.</p>
@@ -740,14 +735,14 @@ default), or ignore and continue (if True)?</p></li>
 
 </dd></dl>
 
-</section>
-<section id="module-twclient.models">
-<span id="twclient-models"></span><h2>twclient.models<a class="headerlink" href="#module-twclient.models" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="module-twclient.models">
+<span id="twclient-models"></span><h2>twclient.models<a class="headerlink" href="#module-twclient.models" title="Permalink to this heading"></a></h2>
 <p>The database schema for storing Twitter data.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.SchemaVersion">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">SchemaVersion</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#SchemaVersion"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.SchemaVersion" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A stub table to store the schema version.</p>
 <p>This table contains one row with the version of twclient which created the
 database. This version string is stored to support future migrations,
@@ -776,7 +771,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.User">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">User</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#User"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.User" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.FromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">FromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A Twitter user.</p>
 <p>This class and its associated user table represent attributes of a Twitter
 user which can’t change over time. In practice, that means only user IDs -
@@ -830,7 +825,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.UserData">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">UserData</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#UserData"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.UserData" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.FromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">FromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>Mutable attributes of a Twitter user.</p>
 <p>This class and its associated user_data table represent records of a
 Twitter user’s mutable attributes. Many API requests to Twitter send back
@@ -963,7 +958,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.Tag">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">Tag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#Tag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.Tag" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A tag that can be given to one or more Twitter users.</p>
 <p>This class represents a tag that can be applied to a set of Twitter users
 to help track them. Examples might include “treatment A”, “journalists”,
@@ -998,7 +993,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.List">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">List</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#List"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.List" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.FromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">FromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A Twitter list of users.</p>
 <p>Twitter allows users to create lists of other users, and represents these
 lists as first-class entities in its API. This class represents one of
@@ -1121,7 +1116,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.UserList">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">UserList</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#UserList"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.UserList" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>User membership status for Twitter lists.</p>
 <p>This class represents a user’s membership in a list, and records a user ID
 and a list ID. The underlying table is in type-2 SCD format, which means
@@ -1165,7 +1160,7 @@ is added.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.UserTag">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">UserTag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#UserTag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.UserTag" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>Users who have been assigned tags.</p>
 <p>This table records the assignment of user tags (the Tag class) to users.</p>
 <dl class="py attribute">
@@ -1204,7 +1199,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.Follow">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">Follow</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#Follow"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.Follow" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>The Twitter follow graph.</p>
 <p>This class records an edge in the Twitter follow graph. The underlying
 table stores these edges in a type-2 SCD format, which means that the
@@ -1250,7 +1245,7 @@ followed by the user given by source_user_id).</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.Tweet">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">Tweet</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#Tweet"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.Tweet" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.FromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">FromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A tweet.</p>
 <p>This model represents a tweet posted on Twitter and ingested from its API.
 Several tweet properties are normalized from the raw json into database
@@ -1398,7 +1393,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.Hashtag">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">Hashtag</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#Hashtag"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.Hashtag" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.UniqueMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A hashtag.</p>
 <p>This class represents a hashtag used in a tweet. Hashtags are stored
 without their ‘#’ prefix.</p>
@@ -1438,7 +1433,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.Symbol">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">Symbol</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#Symbol"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.Symbol" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.UniqueMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A ticker symbol as detected by Twitter.</p>
 <p>Twitter attempts to detect stock-ticker symbols when prefixed with a ‘$’ (a
 “cashtag”) and make them searchable on its service. The detection is crude
@@ -1481,7 +1476,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.Url">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">Url</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#Url"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.Url" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.UniqueMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A URL.</p>
 <p>This class represents a unique URL that appeared somewhere on Twitter. URLs
 are represented as a separate entity rather than multiple text fields to
@@ -1522,7 +1517,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.MediaType">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">MediaType</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#MediaType"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.MediaType" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.UniqueMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.FromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">UniqueMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">FromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>The type of a media object in a tweet.</p>
 <p>Media objects in tweets can have several types: photo, video, and others.
 This table tracks the observed types of media.</p>
@@ -1585,7 +1580,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.Media">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">Media</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#Media"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.Media" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.FromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">FromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A media object on Twitter.</p>
 <p>This class represents media objects like photos and videos which occur in
 tweets. The media’s type and primary URL are recorded here. Note though
@@ -1672,7 +1667,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.MediaVariant">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">MediaVariant</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#MediaVariant"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.MediaVariant" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.ListFromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ListFromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>Specific video files for a Twitter video, which may have more than one.</p>
 <p>Twitter video media may have multiple specific video files associated with
 them, providing different bitrates, file formats or other properties. Each
@@ -1744,7 +1739,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.UserMention">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">UserMention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#UserMention"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.UserMention" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.ListFromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ListFromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A mention of a user in a tweet.</p>
 <p>This class represents a mention of a user in a tweet. There can be multiple
 mentions of the same user in the same tweet, so we also record the position
@@ -1816,7 +1811,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.HashtagMention">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">HashtagMention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#HashtagMention"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.HashtagMention" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.ListFromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ListFromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A mention of a hashtag in a tweet.</p>
 <p>This class represents a mention of a hashtag in a tweet. There can be
 multiple mentions of the same hashtag in the same tweet, so we also record
@@ -1888,7 +1883,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.SymbolMention">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">SymbolMention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#SymbolMention"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.SymbolMention" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.ListFromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ListFromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A mention of a ticker symbol (“cashtag”) in a tweet.</p>
 <p>This class represents a mention of a ticker symbol in a tweet. There can be
 multiple mentions of the same symbol in the same tweet, so we also record
@@ -1960,7 +1955,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.UrlMention">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">UrlMention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#UrlMention"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.UrlMention" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.ListFromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ListFromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A mention of a URL in a tweet.</p>
 <p>This class represents a mention of a URL in a tweet. There can be
 multiple mentions of the same URL in the same tweet, so we also record
@@ -2077,7 +2072,7 @@ application logic rather than a trigger.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.models.MediaMention">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.models.</span></span><span class="sig-name descname"><span class="pre">MediaMention</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#MediaMention"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.MediaMention" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.models.ListFromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">sqlalchemy.orm.decl_api.Base</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">TimestampsMixin</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">ListFromTweepyInterface</span></code>, <code class="xref py py-class docutils literal notranslate"><span class="pre">Base</span></code></p>
 <p>A mention of a media object in a tweet.</p>
 <p>This class represents a mention of a media object like a photo or video in
 a tweet. There can be multiple mentions of the same media in the same
@@ -2168,14 +2163,14 @@ application logic rather than a trigger.</p>
 
 </dd></dl>
 
-</section>
-<section id="module-twclient.target">
-<span id="twclient-target"></span><h2>twclient.target<a class="headerlink" href="#module-twclient.target" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="module-twclient.target">
+<span id="twclient-target"></span><h2>twclient.target<a class="headerlink" href="#module-twclient.target" title="Permalink to this heading"></a></h2>
 <p>Classes encapsulating the “targets” of certain jobs.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.target.Target">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.target.</span></span><span class="sig-name descname"><span class="pre">Target</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/target.html#Target"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.target.Target" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">abc.ABC</span></code></p>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
 <p>Encapsulate the notion of a “target” for certain kinds of jobs.</p>
 <p>Some of the operations defined by Job classes operate on users. These users
 can be specified in several ways (user IDs, screen names, tags stored in
@@ -2227,11 +2222,8 @@ replaced with the value passed here so long as <code class="docutils literal not
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>context</strong> (<em>job.Job object</em><em>, or </em><em>None</em>) – The Job instance to use as context for resolving targets to users.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>None</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2329,7 +2321,7 @@ can be provided on initialization or as an argument to resolve().</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.target.UserIdTarget">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.target.</span></span><span class="sig-name descname"><span class="pre">UserIdTarget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/target.html#UserIdTarget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.target.UserIdTarget" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.target.Target</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a></p>
 <p>A set of Twitter user IDs to resolve to users.</p>
 <p>This class takes targets specified by Twitter’s numeric user IDs. These
 targets are resolved to models.User objects in one of three ways,
@@ -2364,11 +2356,8 @@ replaced with the value passed here so long as <code class="docutils literal not
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>context</strong> (<em>job.Job object</em><em>, or </em><em>None</em>) – The Job instance to use as context for resolving targets to users.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>None</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2378,7 +2367,7 @@ replaced with the value passed here so long as <code class="docutils literal not
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.target.ScreenNameTarget">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.target.</span></span><span class="sig-name descname"><span class="pre">ScreenNameTarget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/target.html#ScreenNameTarget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.target.ScreenNameTarget" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.target.Target</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a></p>
 <p>A set of screen names to resolve to users.</p>
 <p>This class takes targets specified by Twitter screen names for users.
 These targets are resolved to models.User objects in one of three ways,
@@ -2413,11 +2402,8 @@ replaced with the value passed here so long as <code class="docutils literal not
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>context</strong> (<em>job.Job object</em><em>, or </em><em>None</em>) – The Job instance to use as context for resolving targets to users.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>None</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2427,7 +2413,7 @@ replaced with the value passed here so long as <code class="docutils literal not
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.target.SelectTagTarget">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.target.</span></span><span class="sig-name descname"><span class="pre">SelectTagTarget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/target.html#SelectTagTarget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.target.SelectTagTarget" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.target.Target</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a></p>
 <p>A set of user tags to resolve to users.</p>
 <p>This class takes targets specified by user tags, as recorded in the
 user_tag table in the database. These tags are first looked up in the
@@ -2461,11 +2447,8 @@ replaced with the value passed here so long as <code class="docutils literal not
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>context</strong> (<em>job.Job object</em><em>, or </em><em>None</em>) – The Job instance to use as context for resolving targets to users.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>None</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2475,7 +2458,7 @@ replaced with the value passed here so long as <code class="docutils literal not
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.target.TwitterListTarget">
 <em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.target.</span></span><span class="sig-name descname"><span class="pre">TwitterListTarget</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/target.html#TwitterListTarget"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.target.TwitterListTarget" title="Permalink to this definition"></a></dt>
-<dd><p>Bases: <a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">twclient.target.Target</span></code></a></p>
+<dd><p>Bases: <a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target"><code class="xref py py-class docutils literal notranslate"><span class="pre">Target</span></code></a></p>
 <p>A set of Twitter lists to resolve to users.</p>
 <p>This class takes Twitter lists as targets. These lists can be specified by
 their “full names” (that is, the owner_screen_name/slug format, like
@@ -2514,20 +2497,17 @@ replaced with the value passed here so long as <code class="docutils literal not
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><p><strong>context</strong> (<em>job.Job object</em><em>, or </em><em>None</em>) – The Job instance to use as context for resolving targets to users.</p>
 </dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p></p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>None</p>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>None</p>
 </dd>
 </dl>
 </dd></dl>
 
 </dd></dl>
 
-</section>
-<section id="module-twclient.twitter_api">
-<span id="twclient-twitter-api"></span><h2>twclient.twitter_api<a class="headerlink" href="#module-twclient.twitter_api" title="Permalink to this headline"></a></h2>
+</div>
+<div class="section" id="module-twclient.twitter_api">
+<span id="twclient-twitter-api"></span><h2>twclient.twitter_api<a class="headerlink" href="#module-twclient.twitter_api" title="Permalink to this heading"></a></h2>
 <p>A Twitter API wrapper for job classes.</p>
 <dl class="py class">
 <dt class="sig sig-object py" id="twclient.twitter_api.TwitterApi">
@@ -2785,8 +2765,8 @@ retrieved.</p></li>
 
 </dd></dl>
 
-</section>
-</section>
+</div>
+</div>
 
 
            </div>
