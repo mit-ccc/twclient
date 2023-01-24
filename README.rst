@@ -53,7 +53,9 @@ Usage
 =====
 
 First, you need to tell twclient about your database backend and Twitter
-credentials.
+credentials. On the database side, we've only tested with Postgres and SQLite.
+While the package may well work with other DB engines, be aware that you may
+encounter issues.
 
 Setup: Database
 ---------------
