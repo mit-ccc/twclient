@@ -15,6 +15,7 @@
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -101,7 +102,7 @@
 <span class="c1"># Either tweepy.error or tweepy.errors will be missing depending on the</span>
 <span class="c1"># version and we want pylint not to freak out when it can&#39;t find exactly</span>
 <span class="c1"># one of them.</span>
-<span class="k">if</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">__version__</span> <span class="o">&gt;=</span> <span class="s1">&#39;4.0.0&#39;</span><span class="p">:</span>
+<span class="k">if</span> <span class="n">ut</span><span class="o">.</span><span class="n">TWEEPY_V4</span><span class="p">:</span>
     <span class="c1"># pylint: disable-next=no-member</span>
     <span class="n">RateLimitError</span> <span class="o">=</span> <span class="n">tweepy</span><span class="o">.</span><span class="n">errors</span><span class="o">.</span><span class="n">TooManyRequests</span>
 
@@ -117,7 +118,7 @@
 
 <div class="viewcode-block" id="AuthPoolAPI"><a class="viewcode-back" href="../../apidocs.html#twclient.authpool.AuthPoolAPI">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
 <span class="k">class</span> <span class="nc">AuthPoolAPI</span><span class="p">:</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A version of ``tweepy.API`` with support for multiple sets of credentials.</span>
 
 <span class="sd">    This class transparently proxies access to multiple sets of Twitter API</span>

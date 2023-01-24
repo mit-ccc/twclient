@@ -15,6 +15,7 @@
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" /> 
@@ -98,7 +99,7 @@
 
 <div class="viewcode-block" id="Target"><a class="viewcode-back" href="../../apidocs.html#twclient.target.Target">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
 <span class="k">class</span> <span class="nc">Target</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    Encapsulate the notion of a &quot;target&quot; for certain kinds of jobs.</span>
 
 <span class="sd">    Some of the operations defined by Job classes operate on users. These users</span>
@@ -164,7 +165,7 @@
     <span class="c1"># their main piece of logic, so the implementation on Target is abstract.</span>
 <div class="viewcode-block" id="Target.resolve"><a class="viewcode-back" href="../../apidocs.html#twclient.target.Target.resolve">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">resolve</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">context</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Resolve this Target object into users.</span>
 
 <span class="sd">        The resolve() method looks up the raw targets provided at self.targets</span>
@@ -193,7 +194,7 @@
     <span class="nd">@property</span>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">allowed_resolve_modes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        The resolve modes this Target implements.</span>
 
 <span class="sd">        The Job instance referred to by self.context has a resolve_mode</span>
@@ -210,7 +211,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">resolved</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Has this Target been set up with a Job instance as context?</span>
 
 <span class="sd">        A Target instance can only resolve its users and make them available in</span>
@@ -222,7 +223,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">users</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        The users resolved from this Target&#39;s raw targets.</span>
 
 <span class="sd">        The users attribute contains a list of the models.User attributes</span>
@@ -243,7 +244,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">bad_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Raw targets which were supposed to be looked up via the Twitter API</span>
 <span class="sd">        and which, on doing so, were found not to exist.</span>
 
@@ -263,7 +264,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">missing_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Raw targets which were supposed to be found in the database but were</span>
 <span class="sd">        not there.</span>
 
@@ -281,7 +282,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">good_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Raw targets which were successfully resolved to users, either in the</span>
 <span class="sd">        database or via the Twitter API.</span>
 
@@ -306,7 +307,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">context</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        The Job instance to be used as context by resolve().</span>
 
 <span class="sd">        The resolve() method can only look up users with a Job instance as</span>
@@ -426,7 +427,7 @@
 
 <div class="viewcode-block" id="UserIdTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.UserIdTarget">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
 <span class="k">class</span> <span class="nc">UserIdTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of Twitter user IDs to resolve to users.</span>
 
 <span class="sd">    This class takes targets specified by Twitter&#39;s numeric user IDs. These</span>
@@ -470,7 +471,7 @@
 
 <div class="viewcode-block" id="ScreenNameTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.ScreenNameTarget">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
 <span class="k">class</span> <span class="nc">ScreenNameTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of screen names to resolve to users.</span>
 
 <span class="sd">    This class takes targets specified by Twitter screen names for users.</span>
@@ -515,7 +516,7 @@
 
 <div class="viewcode-block" id="SelectTagTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.SelectTagTarget">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
 <span class="k">class</span> <span class="nc">SelectTagTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of user tags to resolve to users.</span>
 
 <span class="sd">    This class takes targets specified by user tags, as recorded in the</span>
@@ -562,7 +563,7 @@
 
 <div class="viewcode-block" id="TwitterListTarget"><a class="viewcode-back" href="../../apidocs.html#twclient.target.TwitterListTarget">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
 <span class="k">class</span> <span class="nc">TwitterListTarget</span><span class="p">(</span><span class="n">Target</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A set of Twitter lists to resolve to users.</span>
 
 <span class="sd">    This class takes Twitter lists as targets. These lists can be specified by</span>

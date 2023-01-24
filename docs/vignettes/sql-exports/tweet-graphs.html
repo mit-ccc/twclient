@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Tweet-Derived Graphs: Mention, Reply, Retweet, Quote &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
@@ -15,6 +16,7 @@
         <script src="../../_static/underscore.js"></script>
         <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
     <script src="../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../genindex.html" />
     <link rel="search" title="Search" href="../../search.html" />
@@ -100,7 +102,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="tweet-derived-graphs-mention-reply-retweet-quote">
+  <section id="tweet-derived-graphs-mention-reply-retweet-quote">
 <h1>Tweet-Derived Graphs: Mention, Reply, Retweet, Quote<a class="headerlink" href="#tweet-derived-graphs-mention-reply-retweet-quote" title="Permalink to this heading"></a></h1>
 <p>The <a class="reference internal" href="follow-graph.html"><span class="doc">follow graph</span></a> isn’t the only
 useful graph structure in Twitter. There are several other graphs that connect
@@ -111,21 +113,21 @@ We’ll look at four such graphs in total: mention, reply, retweet and quote.</p
 graphs easier. User mentions as well as reply, retweet and quote relationships
 between tweets are extracted into link tables or tweet attributes. For you,
 trying to get the graphs out, that means simpler SQL.</p>
-<div class="section" id="mention-graph">
+<section id="mention-graph">
 <h2>Mention graph<a class="headerlink" href="#mention-graph" title="Permalink to this heading"></a></h2>
 <p>Without further ado, the mention graph:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span><span class="w"></span>
-<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_user_id</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="n">mt</span><span class="p">.</span><span class="n">mentioned_user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">target_user_id</span><span class="p">,</span><span class="w"></span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
+<span class="w">    </span><span class="n">tw</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_user_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">mt</span><span class="p">.</span><span class="n">mentioned_user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">target_user_id</span><span class="p">,</span>
 
 <span class="w">    </span><span class="c1">-- you can also, e.g., group by time</span>
 <span class="w">    </span><span class="c1">-- extract(year from tw.create_dt) as year,</span>
 <span class="w">    </span><span class="c1">-- extract(month from tw.create_dt) as month,</span>
 
-<span class="w">    </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">num_mentions</span><span class="w"></span>
-<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">tw</span><span class="w"></span>
-<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">user_mention</span><span class="w"> </span><span class="n">mt</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">tweet_id</span><span class="p">)</span><span class="w"></span>
-<span class="k">group</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">num_mentions</span>
+<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">tw</span>
+<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">user_mention</span><span class="w"> </span><span class="n">mt</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">tweet_id</span><span class="p">)</span>
+<span class="k">group</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>The <code class="docutils literal notranslate"><span class="pre">user_mention</span></code> table represents mentions of users in tweets. There’s a
@@ -136,20 +138,20 @@ than once.</p>
 <code class="docutils literal notranslate"><span class="pre">count(*)</span></code> if the number of mentions isn’t relevant, you can group by year,
 month or other window of time during which tweets were posted, you can filter
 by values of the tweet’s <code class="docutils literal notranslate"><span class="pre">create_dt</span></code> in the WHERE clause, and so on.</p>
-</div>
-<div class="section" id="reply-graph">
+</section>
+<section id="reply-graph">
 <h2>Reply graph<a class="headerlink" href="#reply-graph" title="Permalink to this heading"></a></h2>
 <p>The <em>reply graph</em> has a directed edge from user A to user B if A replies to B’s
 tweet. It’s even simpler to retrieve than the mention graph:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span><span class="w"></span>
-<span class="w">    </span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_user_id</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="n">in_reply_to_user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">target_user_id</span><span class="p">,</span><span class="w"></span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
+<span class="w">    </span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_user_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">in_reply_to_user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">target_user_id</span><span class="p">,</span>
 
-<span class="w">    </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">num_replies</span><span class="w"></span>
-<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">tw</span><span class="w"></span>
-<span class="k">where</span><span class="w"></span>
-<span class="w">    </span><span class="n">in_reply_to_user_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span><span class="w"></span>
-<span class="k">group</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">num_replies</span>
+<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">tw</span>
+<span class="k">where</span>
+<span class="w">    </span><span class="n">in_reply_to_user_id</span><span class="w"> </span><span class="k">is</span><span class="w"> </span><span class="k">not</span><span class="w"> </span><span class="k">null</span>
+<span class="k">group</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>As with the mention graph, you can write plenty of variations on this query:
@@ -167,89 +169,89 @@ user B’s Twitter user ID.</p>
 <p>It’s also worth noting that in_reply_to_user_id may refer to a user not in the
 <code class="docutils literal notranslate"><span class="pre">&quot;user&quot;</span></code> table. This is because (unlike with retweets and quote tweets), the
 Twitter API doesn’t return the full text of the replied-to tweet with a reply.</p>
-</div>
-<div class="section" id="retweet-graph">
+</section>
+<section id="retweet-graph">
 <h2>Retweet graph<a class="headerlink" href="#retweet-graph" title="Permalink to this heading"></a></h2>
 <p>The <em>retweet graph</em> has a directed edge from user A to user B if A retweets B’s
 tweet. Extracting it from the database relies on the <code class="docutils literal notranslate"><span class="pre">retweeted_status_id</span></code>
 column of the <code class="docutils literal notranslate"><span class="pre">tweet</span></code> table:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span><span class="w"></span>
-<span class="w">    </span><span class="n">tws</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_user_id</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="n">twt</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">target_user_id</span><span class="p">,</span><span class="w"></span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
+<span class="w">    </span><span class="n">tws</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_user_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">twt</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">target_user_id</span><span class="p">,</span>
 
-<span class="w">    </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">num_retweets</span><span class="w"></span>
-<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">tws</span><span class="w"></span>
-<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">twt</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">twt</span><span class="p">.</span><span class="n">tweet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tws</span><span class="p">.</span><span class="n">retweeted_status_id</span><span class="w"></span>
-<span class="k">group</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">num_retweets</span>
+<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">tws</span>
+<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">twt</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">twt</span><span class="p">.</span><span class="n">tweet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tws</span><span class="p">.</span><span class="n">retweeted_status_id</span>
+<span class="k">group</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>Because the Twitter API does return the full text of the retweeted tweet along
 with a retweet, we can join back to the <code class="docutils literal notranslate"><span class="pre">tweet</span></code> table to get the retweeted
 user’s ID.</p>
-</div>
-<div class="section" id="quote-graph">
+</section>
+<section id="quote-graph">
 <h2>Quote graph<a class="headerlink" href="#quote-graph" title="Permalink to this heading"></a></h2>
 <p>The <em>quote graph</em> has a directed edge from user A to user B if A quote-tweets
 B’s tweet. As with the use of the <code class="docutils literal notranslate"><span class="pre">retweeted_status_id</span></code> column to construct
 the retweet graph, getting the quote graph out of the database relies on the
 <code class="docutils literal notranslate"><span class="pre">tweet.quoted_status_id</span></code> column:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span><span class="w"></span>
-<span class="w">    </span><span class="n">tws</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_user_id</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="n">twt</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">target_user_id</span><span class="p">,</span><span class="w"></span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
+<span class="w">    </span><span class="n">tws</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_user_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">twt</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">target_user_id</span><span class="p">,</span>
 
-<span class="w">    </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">num_quote_tweets</span><span class="w"></span>
-<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">tws</span><span class="w"></span>
-<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">twt</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">twt</span><span class="p">.</span><span class="n">tweet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tws</span><span class="p">.</span><span class="n">quoted_status_id</span><span class="w"></span>
-<span class="k">group</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">num_quote_tweets</span>
+<span class="k">from</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">tws</span>
+<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">twt</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">twt</span><span class="p">.</span><span class="n">tweet_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">tws</span><span class="p">.</span><span class="n">quoted_status_id</span>
+<span class="k">group</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>As with the retweet graph, the Twitter API returns the full text of quoted
 tweets with the tweets that QT them, which allows us to join through <code class="docutils literal notranslate"><span class="pre">tweet</span></code>
 in constructing this graph.</p>
-</div>
-<div class="section" id="filtering-to-a-particular-set-of-users">
+</section>
+<section id="filtering-to-a-particular-set-of-users">
 <h2>Filtering to a particular set of users<a class="headerlink" href="#filtering-to-a-particular-set-of-users" title="Permalink to this heading"></a></h2>
 <p>Frequently you won’t want the mention graph over all users whose tweets you’ve
 fetched, but only over some subset. If you’ve used the <a class="reference internal" href="../fetch.html"><span class="doc">tagging feature</span></a> twclient provides for working with groups of users, you can
 get the list of users tagged (for example) “influencers” as follows:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span><span class="w"></span>
-<span class="w">    </span><span class="n">u</span><span class="p">.</span><span class="n">user_id</span><span class="w"></span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
+<span class="w">    </span><span class="n">u</span><span class="p">.</span><span class="n">user_id</span>
 <span class="k">from</span><span class="w"> </span><span class="ss">&quot;user&quot;</span><span class="w"> </span><span class="n">u</span><span class="w"> </span><span class="c1">-- standard sql reserves this table name, need to quote</span>
-<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">user_tag</span><span class="w"> </span><span class="n">ut</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tag</span><span class="w"> </span><span class="n">ta</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span><span class="w"></span>
-<span class="k">where</span><span class="w"></span>
-<span class="w">    </span><span class="n">ta</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;influencers&#39;</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">user_tag</span><span class="w"> </span><span class="n">ut</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tag</span><span class="w"> </span><span class="n">ta</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span>
+<span class="k">where</span>
+<span class="w">    </span><span class="n">ta</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;influencers&#39;</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>Given this set of users, the trick is to join to it on the columns giving both
 source and target user IDs:</p>
-<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">with</span><span class="w"> </span><span class="n">tmp_universe</span><span class="w"> </span><span class="k">as</span><span class="w"></span>
-<span class="p">(</span><span class="w"></span>
-<span class="w">    </span><span class="k">select</span><span class="w"></span>
-<span class="w">        </span><span class="n">u</span><span class="p">.</span><span class="n">user_id</span><span class="w"></span>
-<span class="w">    </span><span class="k">from</span><span class="w"> </span><span class="ss">&quot;user&quot;</span><span class="w"> </span><span class="n">u</span><span class="w"></span>
-<span class="w">        </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">user_tag</span><span class="w"> </span><span class="n">ut</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span><span class="w"></span>
-<span class="w">        </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tag</span><span class="w"> </span><span class="n">ta</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="k">where</span><span class="w"></span>
-<span class="w">        </span><span class="n">ta</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;influencers&#39;</span><span class="w"></span>
-<span class="p">)</span><span class="w"></span>
-<span class="k">select</span><span class="w"></span>
-<span class="w">    </span><span class="n">uts</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_user_id</span><span class="p">,</span><span class="w"></span>
-<span class="w">    </span><span class="n">utt</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">target_user_id</span><span class="p">,</span><span class="w"></span>
+<div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">with</span><span class="w"> </span><span class="n">tmp_universe</span><span class="w"> </span><span class="k">as</span>
+<span class="p">(</span>
+<span class="w">    </span><span class="k">select</span>
+<span class="w">        </span><span class="n">u</span><span class="p">.</span><span class="n">user_id</span>
+<span class="w">    </span><span class="k">from</span><span class="w"> </span><span class="ss">&quot;user&quot;</span><span class="w"> </span><span class="n">u</span>
+<span class="w">        </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">user_tag</span><span class="w"> </span><span class="n">ut</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+<span class="w">        </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tag</span><span class="w"> </span><span class="n">ta</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">tag_id</span><span class="p">)</span>
+<span class="w">    </span><span class="k">where</span>
+<span class="w">        </span><span class="n">ta</span><span class="p">.</span><span class="n">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;influencers&#39;</span>
+<span class="p">)</span>
+<span class="k">select</span>
+<span class="w">    </span><span class="n">uts</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">source_user_id</span><span class="p">,</span>
+<span class="w">    </span><span class="n">utt</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">target_user_id</span><span class="p">,</span>
 
-<span class="w">    </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">num_mentions</span><span class="w"></span>
-<span class="k">from</span><span class="w"> </span><span class="n">tmp_universe</span><span class="w"> </span><span class="n">uts</span><span class="w"></span>
-<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">tw</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">user_mention</span><span class="w"> </span><span class="n">mt</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">tweet_id</span><span class="p">)</span><span class="w"></span>
-<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tmp_universe</span><span class="w"> </span><span class="n">utt</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">utt</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mt</span><span class="p">.</span><span class="n">mentioned_user_id</span><span class="w"></span>
-<span class="k">group</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span><span class="w"></span>
+<span class="w">    </span><span class="k">count</span><span class="p">(</span><span class="o">*</span><span class="p">)</span><span class="w"> </span><span class="k">as</span><span class="w"> </span><span class="n">num_mentions</span>
+<span class="k">from</span><span class="w"> </span><span class="n">tmp_universe</span><span class="w"> </span><span class="n">uts</span>
+<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tweet</span><span class="w"> </span><span class="n">tw</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">user_id</span><span class="p">)</span>
+<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">user_mention</span><span class="w"> </span><span class="n">mt</span><span class="w"> </span><span class="k">using</span><span class="p">(</span><span class="n">tweet_id</span><span class="p">)</span>
+<span class="w">    </span><span class="k">inner</span><span class="w"> </span><span class="k">join</span><span class="w"> </span><span class="n">tmp_universe</span><span class="w"> </span><span class="n">utt</span><span class="w"> </span><span class="k">on</span><span class="w"> </span><span class="n">utt</span><span class="p">.</span><span class="n">user_id</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="n">mt</span><span class="p">.</span><span class="n">mentioned_user_id</span>
+<span class="k">group</span><span class="w"> </span><span class="k">by</span><span class="w"> </span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">;</span>
 </pre></div>
 </div>
 <p>We won’t go through similar code snippets for the reply, retweet and quote
 graphs, but you can use the same strategy of joining source and target user
 columns to a list of users you want to restrict the graph to.</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

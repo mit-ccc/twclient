@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Working with fetched data &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,6 +16,7 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -92,7 +94,7 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="working-with-fetched-data">
+  <section id="working-with-fetched-data">
 <h1>Working with fetched data<a class="headerlink" href="#working-with-fetched-data" title="Permalink to this heading"></a></h1>
 <p>Why go to the trouble of writing this package at all? The fundamental reason is
 that, for analyzing data at least, it’s easier to work with a relational
@@ -108,7 +110,7 @@ data you may want to export (there’s nothing here about URLs, for instance),
 but it covers the most common bases.</p>
 <p>There are two ways to get data out of the database: the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">export</span></code>
 command, and writing your own SQL.</p>
-<div class="section" id="built-in-exports">
+<section id="built-in-exports">
 <h2>Built-in exports<a class="headerlink" href="#built-in-exports" title="Permalink to this heading"></a></h2>
 <p>You can export certain predefined bulk datasets with the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">export</span></code>
 command. The built-in exports cover the same datasets we present SQL for below:
@@ -125,12 +127,12 @@ names, <code class="docutils literal notranslate"><span class="pre">-i</span></c
 Twitter lists, and <code class="docutils literal notranslate"><span class="pre">-g</span></code> to include one or more <a class="reference internal" href="fetch.html"><span class="doc">tags you’ve created for
 users</span></a>.</p>
 <p>Here’s a realistic example:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient <span class="nb">export</span> mention-graph -o mention-graph.csv -g survey_respondents
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span><span class="nb">export</span><span class="w"> </span>mention-graph<span class="w"> </span>-o<span class="w"> </span>mention-graph.csv<span class="w"> </span>-g<span class="w"> </span>survey_respondents
 </pre></div>
 </div>
 <p>For the full list of exportable datasets, run <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">export</span> <span class="pre">--help</span></code>.</p>
-</div>
-<div class="section" id="custom-sql">
+</section>
+<section id="custom-sql">
 <h2>Custom SQL<a class="headerlink" href="#custom-sql" title="Permalink to this heading"></a></h2>
 <p>Going the SQL route is more flexible if also somewhat more work. You’ll need to
 do this if you want to do much customization of the built-in exports. (Allowing
@@ -148,8 +150,8 @@ you may be using.</p>
 <li class="toctree-l1"><a class="reference internal" href="sql-exports/mutual-followers-friends-counts.html">Mutual Followers and Friends</a></li>
 </ul>
 </div>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

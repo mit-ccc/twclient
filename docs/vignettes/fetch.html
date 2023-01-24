@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Getting data from the Twitter API &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
@@ -15,6 +16,7 @@
         <script src="../_static/underscore.js"></script>
         <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
+        <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
@@ -95,14 +97,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="getting-data-from-the-twitter-api">
+  <section id="getting-data-from-the-twitter-api">
 <h1>Getting data from the Twitter API<a class="headerlink" href="#getting-data-from-the-twitter-api" title="Permalink to this heading"></a></h1>
 <p>So you want to analyze some Twitter data. (That’s why you’re here, right?) This
 vignette walks through how to get set up and how to acquire the data.</p>
 <p><strong>Obligatory disclaimer / reminder</strong>: You should comply with Twitter’s terms of
 service and respect user privacy. It’s important to only access data you have a
 right to access.</p>
-<div class="section" id="introduction">
+<section id="introduction">
 <h2>Introduction<a class="headerlink" href="#introduction" title="Permalink to this heading"></a></h2>
 <p>Twclient makes acquiring data easier than directly interacting with the Twitter
 REST API, which you can do through a lightweight client like Twitter’s own
@@ -135,8 +137,8 @@ either <code class="docutils literal notranslate"><span class="pre">twitter</spa
 as in <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-n</span> <span class="pre">wwbrannon</span></code>. (We’ll use the <code class="docutils literal notranslate"><span class="pre">twclient</span></code> alias
 in this vignette.) You need to set up the database, get API credentials, and
 then pull some data.</p>
-</div>
-<div class="section" id="database-setup">
+</section>
+<section id="database-setup">
 <h2>Database setup<a class="headerlink" href="#database-setup" title="Permalink to this heading"></a></h2>
 <p>The first step is to set up a database backend. You can use any DB that
 <a class="reference external" href="https://docs.sqlalchemy.org/en/14/dialects/">sqlalchemy supports</a>, which
@@ -165,7 +167,7 @@ or Oracle, may also work but, again, have not been tested.</p>
 <p>Having set up our database system, we need to do two more things to make it
 usable: tell twclient how to use it, and install the data model. First, we’ll
 use a <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">config</span></code> subcommand to set up the database:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient config add-db -u <span class="s2">&quot;postgresql:///&quot;</span> postgres
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>config<span class="w"> </span>add-db<span class="w"> </span>-u<span class="w"> </span><span class="s2">&quot;postgresql:///&quot;</span><span class="w"> </span>postgres
 </pre></div>
 </div>
 <p>This command tells twclient to create a persistent profile for a database and
@@ -184,15 +186,15 @@ and other DB objects the twclient package uses. Be aware that doing this will
 <span class="pre">initialize</span></code> command will do the trick, but to confirm that you understand
 running it will <strong>drop all existing twclient data in your database</strong> you have
 to specify the <code class="docutils literal notranslate"><span class="pre">-y</span></code> flag:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient initialize -y
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>initialize<span class="w"> </span>-y
 </pre></div>
 </div>
 <p>And that’s it! If you fire up a database client (psql in the case of this
 example), you’ll see a new database schema installed. The tables, columns and
 other objects are documented, in the form of their sqlalchemy model classes, in
 the API documentation for twclient.models.</p>
-</div>
-<div class="section" id="api-setup">
+</section>
+<section id="api-setup">
 <h2>API setup<a class="headerlink" href="#api-setup" title="Permalink to this heading"></a></h2>
 <p>You can’t get data from the Twitter API without API credentials, so the next
 step is to get at least one set of credentials. If you don’t already have
@@ -204,11 +206,11 @@ bearer tokens</a> you may receive only a
 consumer key and consumer secret. Regardless, you can add them to twclient as
 follows (replacing the “XXXXX” with your values, and omitting token and token
 secret if using a bearer token):</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient config add-api -n twitter1 <span class="se">\</span>
-    --consumer-key XXXXX <span class="se">\</span>
-    --consumer-secret XXXXX <span class="se">\</span>
-    --token XXXXX <span class="se">\</span>
-    --token-secret XXXXX
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>config<span class="w"> </span>add-api<span class="w"> </span>-n<span class="w"> </span>twitter1<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--consumer-key<span class="w"> </span>XXXXX<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--consumer-secret<span class="w"> </span>XXXXX<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--token<span class="w"> </span>XXXXX<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--token-secret<span class="w"> </span>XXXXX
 </pre></div>
 </div>
 <p>Similarly to the database setup, this command stores the credentials in your
@@ -216,8 +218,8 @@ config file under an API profile named “twitter1” for ease of use. We’ve o
 added one set of credentials here, but you can add arbitrarily many under
 different names. Twclient will seamlessly switch between them as each one hits
 rate limits.</p>
-</div>
-<div class="section" id="actually-pulling-data">
+</section>
+<section id="actually-pulling-data">
 <h2>Actually pulling data<a class="headerlink" href="#actually-pulling-data" title="Permalink to this heading"></a></h2>
 <p>Now comes the fun part: actually downloading some data. We’ll assume you’ve
 pulled together sets of Twitter users and <a class="reference external" href="https://help.twitter.com/en/using-twitter/twitter-lists">Twitter lists</a> you want to
@@ -244,7 +246,7 @@ each of individual users and lists of users.</p>
 <span class="mi">172409353</span>
 </pre></div>
 </div>
-<div class="section" id="a-word-about-identifiers">
+<section id="a-word-about-identifiers">
 <h3>A word about identifiers<a class="headerlink" href="#a-word-about-identifiers" title="Permalink to this heading"></a></h3>
 <p>In general, Twitter allows you to refer to a user or list by either a) a
 numeric user ID or list ID, or b) a human-readable name. Readable names for
@@ -267,8 +269,8 @@ list-specific slug, separated by a slash. (For example,
 <p>but not one file which mixes user IDs and screen names together. This is
 because of the way the underlying Twitter API endpoints are implemented:
 They’ll accept mixed references to lists, but not to users.</p>
-</div>
-<div class="section" id="hydrating-users">
+</section>
+<section id="hydrating-users">
 <h3>Hydrating users<a class="headerlink" href="#hydrating-users" title="Permalink to this heading"></a></h3>
 <p>The first step is to <a class="reference external" href="https://stackoverflow.com/questions/34191022/what-does-hydrate-mean-on-twitter/34192633">hydrate</a>
 the target users, which confirms with the Twitter API that they exist,
@@ -276,7 +278,7 @@ retrieves some summary information about them and creates records for them in
 the database. You can do this with the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span></code> family of commands,
 and specifically <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span></code>. We’ll start by fetching the users in
 the lists of <code class="docutils literal notranslate"><span class="pre">lists.csv</span></code>, though you could do the individual users first:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 lists.csv <span class="p">|</span> xargs twclient fetch users -v -b -l
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail<span class="w"> </span>-n<span class="w"> </span>+2<span class="w"> </span>lists.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>twclient<span class="w"> </span>fetch<span class="w"> </span>users<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>-l
 </pre></div>
 </div>
 <p>This command skips the CSV header line (via <code class="docutils literal notranslate"><span class="pre">tail</span> <span class="pre">-n</span> <span class="pre">+2</span> <span class="pre">lists.csv</span></code>), which
@@ -288,14 +290,14 @@ in the form of Twitter lists. (If you’d left the header line out of the CSV
 file and wanted to avoid using xargs, note that you could instead write
 something like <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-v</span> <span class="pre">-b</span> <span class="pre">-l</span> <span class="pre">$(cat</span> <span class="pre">lists.csv)</span></code>.)</p>
 <p>Similarly, you can hydrate the individual users as follows:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 users.csv <span class="p">|</span> xargs twclient fetch users -v -b -n
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail<span class="w"> </span>-n<span class="w"> </span>+2<span class="w"> </span>users.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>twclient<span class="w"> </span>fetch<span class="w"> </span>users<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>-n
 </pre></div>
 </div>
 <p>A noteworthy difference from the case of lists is that you use the <code class="docutils literal notranslate"><span class="pre">-n</span></code>
 option, for users identified by screen names, rather than the <code class="docutils literal notranslate"><span class="pre">-l</span></code> option for
 lists.</p>
-</div>
-<div class="section" id="tagging-users">
+</section>
+<section id="tagging-users">
 <h3>Tagging users<a class="headerlink" href="#tagging-users" title="Permalink to this heading"></a></h3>
 <p>Having fetched the users, we may want to give them <em>tags</em> for easier reference
 in SQL or later commands. Twclient has a tag table that allows you to associate
@@ -303,16 +305,16 @@ arbitrary tag names with user IDs, to keep track of relevant groups of users in
 your analysis. Let’s say we want to track all individually fetched users
 together, and all users retrieved from lists together, as two groups.</p>
 <p>First, we need to create a tag:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient tag create twitter_lists
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>tag<span class="w"> </span>create<span class="w"> </span>twitter_lists
 </pre></div>
 </div>
 <p>Next, we associate the new tag with the users it should apply to:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail -n +2 lists.csv <span class="p">|</span> xargs twclient tag apply twitter_lists -l
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>tail<span class="w"> </span>-n<span class="w"> </span>+2<span class="w"> </span>lists.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>twclient<span class="w"> </span>tag<span class="w"> </span>apply<span class="w"> </span>twitter_lists<span class="w"> </span>-l
 </pre></div>
 </div>
 <p>Similarly, we can tag the individually fetched users:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient tag create twitter_users
-tail -n +2 users.csv <span class="p">|</span> xargs twclient tag apply twitter_users -l
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>tag<span class="w"> </span>create<span class="w"> </span>twitter_users
+tail<span class="w"> </span>-n<span class="w"> </span>+2<span class="w"> </span>users.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>twclient<span class="w"> </span>tag<span class="w"> </span>apply<span class="w"> </span>twitter_users<span class="w"> </span>-l
 </pre></div>
 </div>
 <p>Users fetched from Twitter lists will be associated with the lists they are
@@ -321,20 +323,20 @@ lists individually.</p>
 <p>Finally, we might want to create one tag referring to both sets of users (for
 example, to run a regular job for fetching everyone’s tweets). We do the same
 two-step as above:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient tag create universe
-twclient tag apply universe -g twitter_users twitter_lists
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>tag<span class="w"> </span>create<span class="w"> </span>universe
+twclient<span class="w"> </span>tag<span class="w"> </span>apply<span class="w"> </span>universe<span class="w"> </span>-g<span class="w"> </span>twitter_users<span class="w"> </span>twitter_lists
 </pre></div>
 </div>
 <p>This time, however, you can see that the <code class="docutils literal notranslate"><span class="pre">-g</span></code> option allows selecting users
 to operate on—whether that’s tagging, hydrating, or fetching tweets and
 follow edges—according to tags you’ve defined.</p>
-</div>
-<div class="section" id="fetching-tweets">
+</section>
+<section id="fetching-tweets">
 <h3>Fetching tweets<a class="headerlink" href="#fetching-tweets" title="Permalink to this heading"></a></h3>
 <p>Now, with fully hydrated users, it’s time to get down to one of our primary
 jobs: fetching the users’ tweets. We can do this with the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span>
 <span class="pre">tweets</span></code> command:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient fetch tweets -v -b -g universe
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>fetch<span class="w"> </span>tweets<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>-g<span class="w"> </span>universe
 </pre></div>
 </div>
 <p>As before, <code class="docutils literal notranslate"><span class="pre">-v</span></code> asks for verbose output, <code class="docutils literal notranslate"><span class="pre">-b</span></code> says to ignore nonexistent or
@@ -347,8 +349,8 @@ like the mention / quote / etc graphs over users. (For how to do this and
 sample SQL, see the vignette on <a class="reference internal" href="export.html"><span class="doc">exporting data</span></a>.) The
 raw json API responses are also saved so that you can work with data we don’t
 parse.</p>
-</div>
-<div class="section" id="fetching-the-follow-graph">
+</section>
+<section id="fetching-the-follow-graph">
 <h3>Fetching the follow graph<a class="headerlink" href="#fetching-the-follow-graph" title="Permalink to this heading"></a></h3>
 <p>Finally, we want to get the user IDs of our target users’ followers and
 friends. (A “friend” is Twitter’s term for the opposite of a follower: if A
@@ -358,11 +360,11 @@ follows B, B is A’s friend and A is B’s follower.) There are two more
 underlying Twitter API endpoints don’t, so the <code class="docutils literal notranslate"><span class="pre">follow</span></code> table will end up
 being populated with bare numeric user IDs.</p>
 <p>Here’s fetching friends, using options you’ve seen all of by now:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient fetch friends -v -b -g universe
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>fetch<span class="w"> </span>friends<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>-g<span class="w"> </span>universe
 </pre></div>
 </div>
 <p>And here’s followers:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient fetch followers -v -b -p -j <span class="m">5000</span> -g universe
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>fetch<span class="w"> </span>followers<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>-p<span class="w"> </span>-j<span class="w"> </span><span class="m">5000</span><span class="w"> </span>-g<span class="w"> </span>universe
 </pre></div>
 </div>
 <p>The one new flag used here, <code class="docutils literal notranslate"><span class="pre">-j</span> <span class="pre">5000</span></code>, indicates the size of the batch used
@@ -380,51 +382,51 @@ running these commands and storing multiple snapshots at different times,
 without using enormous amounts of disk space. (See the <a class="reference internal" href="export.html"><span class="doc">exporting data
 vignette</span></a> for details of how to get follow graph snapshots
 out of the SCD table.)</p>
-</div>
-</div>
-<div class="section" id="putting-it-all-together">
+</section>
+</section>
+<section id="putting-it-all-together">
 <h2>Putting it all together<a class="headerlink" href="#putting-it-all-together" title="Permalink to this heading"></a></h2>
 <p>Here’s all of our hard work in one little script:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
 
-<span class="nb">set</span> -xe
+<span class="nb">set</span><span class="w"> </span>-xe
 
 <span class="c1"># We assume you&#39;ve already installed the twclient package (e.g., from PyPI),</span>
 <span class="c1"># set up the database, and gotten API keys, so we won&#39;t show any of that</span>
 <span class="c1"># here. See also the command-line -h/--help option for more info.</span>
 
-twclient config add-db -u <span class="s2">&quot;postgresql:///&quot;</span> postgres
-twclient initialize -y
+twclient<span class="w"> </span>config<span class="w"> </span>add-db<span class="w"> </span>-u<span class="w"> </span><span class="s2">&quot;postgresql:///&quot;</span><span class="w"> </span>postgres
+twclient<span class="w"> </span>initialize<span class="w"> </span>-y
 
-twclient config add-api -n twitter1 <span class="se">\</span>
-    --consumer-key XXXXX <span class="se">\</span>
-    --consumer-secret XXXXXX <span class="se">\</span>
-    --token XXXXXX <span class="se">\</span>
-    --token-secret XXXXXX
+twclient<span class="w"> </span>config<span class="w"> </span>add-api<span class="w"> </span>-n<span class="w"> </span>twitter1<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--consumer-key<span class="w"> </span>XXXXX<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--consumer-secret<span class="w"> </span>XXXXXX<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--token<span class="w"> </span>XXXXXX<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--token-secret<span class="w"> </span>XXXXXX
 
-twclient config add-api -n twitter2 <span class="se">\</span>
-    --consumer-key XXXXX <span class="se">\</span>
-    --consumer-secret XXXXXX <span class="se">\</span>
-    --token XXXXXX <span class="se">\</span>
-    --token-secret XXXXXX
+twclient<span class="w"> </span>config<span class="w"> </span>add-api<span class="w"> </span>-n<span class="w"> </span>twitter2<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--consumer-key<span class="w"> </span>XXXXX<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--consumer-secret<span class="w"> </span>XXXXXX<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--token<span class="w"> </span>XXXXXX<span class="w"> </span><span class="se">\</span>
+<span class="w">    </span>--token-secret<span class="w"> </span>XXXXXX
 
-tail -n +2 lists.csv <span class="p">|</span> xargs twclient fetch users -v -b -l
+tail<span class="w"> </span>-n<span class="w"> </span>+2<span class="w"> </span>lists.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>twclient<span class="w"> </span>fetch<span class="w"> </span>users<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>-l
 
-twclient tag create twitter_lists
-tail -n +2 lists.csv <span class="p">|</span> xargs twclient tag apply twitter_lists -l
+twclient<span class="w"> </span>tag<span class="w"> </span>create<span class="w"> </span>twitter_lists
+tail<span class="w"> </span>-n<span class="w"> </span>+2<span class="w"> </span>lists.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>twclient<span class="w"> </span>tag<span class="w"> </span>apply<span class="w"> </span>twitter_lists<span class="w"> </span>-l
 
-tail -n +2 users.csv <span class="p">|</span> xargs twclient fetch users -v -b -n
+tail<span class="w"> </span>-n<span class="w"> </span>+2<span class="w"> </span>users.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>twclient<span class="w"> </span>fetch<span class="w"> </span>users<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>-n
 
-twclient tag create twitter_users
-tail -n +2 users.csv <span class="p">|</span> xargs twclient tag apply twitter_users -l
+twclient<span class="w"> </span>tag<span class="w"> </span>create<span class="w"> </span>twitter_users
+tail<span class="w"> </span>-n<span class="w"> </span>+2<span class="w"> </span>users.csv<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>twclient<span class="w"> </span>tag<span class="w"> </span>apply<span class="w"> </span>twitter_users<span class="w"> </span>-l
 
-twclient tag create universe
-twclient tag apply universe -g twitter_users twitter_lists
+twclient<span class="w"> </span>tag<span class="w"> </span>create<span class="w"> </span>universe
+twclient<span class="w"> </span>tag<span class="w"> </span>apply<span class="w"> </span>universe<span class="w"> </span>-g<span class="w"> </span>twitter_users<span class="w"> </span>twitter_lists
 
-twclient fetch tweets -v -b -g universe
+twclient<span class="w"> </span>fetch<span class="w"> </span>tweets<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>-g<span class="w"> </span>universe
 
-twclient fetch friends -v -b -g universe
-twclient fetch followers -v -b -j <span class="m">5000</span> -g universe
+twclient<span class="w"> </span>fetch<span class="w"> </span>friends<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>-g<span class="w"> </span>universe
+twclient<span class="w"> </span>fetch<span class="w"> </span>followers<span class="w"> </span>-v<span class="w"> </span>-b<span class="w"> </span>-j<span class="w"> </span><span class="m">5000</span><span class="w"> </span>-g<span class="w"> </span>universe
 </pre></div>
 </div>
 <p>Tada! Now you have data in a DB. You can use canned SQL queries, like those in
@@ -432,8 +434,8 @@ the <a class="reference internal" href="export.html"><span class="doc">exporting
 of data you want out of it: the follow graph, a user’s tweets, mention / quote
 / reply / retweet graphs, etc. Your creativity in SQL is the limit.</p>
 <p>Wasn’t that easier than you’re used to?</p>
-</div>
-</div>
+</section>
+</section>
 
 
            </div>

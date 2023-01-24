@@ -15,6 +15,7 @@
         <script src="../../../_static/underscore.js"></script>
         <script src="../../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../../_static/doctools.js"></script>
+        <script src="../../../_static/sphinx_highlight.js"></script>
     <script src="../../../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../../../genindex.html" />
     <link rel="search" title="Search" href="../../../search.html" /> 
@@ -102,7 +103,7 @@
 
 <div class="viewcode-block" id="Job"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.Job">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
 <span class="k">class</span> <span class="nc">Job</span><span class="p">(</span><span class="n">ABC</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job to be run against the database and possibly also the Twitter API.</span>
 <span class="sd">    &#39;&#39;&#39;</span>
 
@@ -110,7 +111,7 @@
     <span class="c1"># expected to override it with their business logic.</span>
 <div class="viewcode-block" id="Job.run"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.Job.run">[docs]</a>    <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Run the job.</span>
 <span class="sd">        &#39;&#39;&#39;</span>
 
@@ -119,7 +120,7 @@
 
 <div class="viewcode-block" id="DatabaseJob"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.DatabaseJob">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
 <span class="k">class</span> <span class="nc">DatabaseJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job to be run against the database.</span>
 
 <span class="sd">    This class represents a job to be run against the database. Subclasses may</span>
@@ -157,7 +158,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_schema_verified</span> <span class="o">=</span> <span class="kc">False</span>
 
 <div class="viewcode-block" id="DatabaseJob.ensure_schema_version"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.DatabaseJob.ensure_schema_version">[docs]</a>    <span class="k">def</span> <span class="nf">ensure_schema_version</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Ensure that the database schema is a usable version.</span>
 
 <span class="sd">        This method checks that the schema present in the database referred to</span>
@@ -200,7 +201,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">_schema_verified</span> <span class="o">=</span> <span class="kc">True</span></div>
 
 <div class="viewcode-block" id="DatabaseJob.get_or_create"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.DatabaseJob.get_or_create">[docs]</a>    <span class="k">def</span> <span class="nf">get_or_create</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">model</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Get a persistent object or create a pending one.</span>
 
 <span class="sd">        Given a model and a set of kwargs, interpretable as the values of the</span>
@@ -236,7 +237,7 @@
 
 <div class="viewcode-block" id="TargetJob"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.TargetJob">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
 <span class="k">class</span> <span class="nc">TargetJob</span><span class="p">(</span><span class="n">DatabaseJob</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job which requires targets.</span>
 
 <span class="sd">    A TargetJob is a job which requires a set of target.Target instances to</span>
@@ -279,7 +280,7 @@
     <span class="nd">@property</span>
     <span class="nd">@abstractmethod</span>
     <span class="k">def</span> <span class="nf">resolve_mode</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        The resolve mode attribute to specify behavior of Target instances.</span>
 
 <span class="sd">        This attribute is consumed by the Target instances in self.targets.</span>
@@ -291,7 +292,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">resolved</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Have all targets been resolved to users?</span>
 
 <span class="sd">        This attribute is false on instantiation, and is normally set to True</span>
@@ -308,7 +309,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">users</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        The combined set of users referred to by all targets.</span>
 
 <span class="sd">        This is the union of all the users referred to by the Target instances</span>
@@ -320,7 +321,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">bad_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        The combined set of bad raw targets referred to by all targets.</span>
 
 <span class="sd">        This is the union of all the bad raw targets in the Target instances in</span>
@@ -334,7 +335,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">missing_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        The combined set of missing raw targets referred to by all targets.</span>
 
 <span class="sd">        This is the union of all the missing raw targets in the Target</span>
@@ -349,7 +350,7 @@
 
     <span class="nd">@property</span>
     <span class="k">def</span> <span class="nf">good_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        The combined set of good raw targets referred to by all targets.</span>
 
 <span class="sd">        This is the union of all the good raw targets in the Target instances</span>
@@ -362,7 +363,7 @@
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_combine_sub_attrs</span><span class="p">(</span><span class="s1">&#39;good_targets&#39;</span><span class="p">)</span>
 
 <div class="viewcode-block" id="TargetJob.resolve_targets"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.TargetJob.resolve_targets">[docs]</a>    <span class="k">def</span> <span class="nf">resolve_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Resolve all of the targets in self.targets to users.</span>
 
 <span class="sd">        This method resolves all of the targets in self.targets to users (and</span>
@@ -376,7 +377,7 @@
         <span class="bp">self</span><span class="o">.</span><span class="n">validate_targets</span><span class="p">()</span></div>
 
 <div class="viewcode-block" id="TargetJob.validate_targets"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.TargetJob.validate_targets">[docs]</a>    <span class="k">def</span> <span class="nf">validate_targets</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-        <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">        Validate the targets in self.targets.</span>
 
 <span class="sd">        This method is a hook called by resolve_targets to ensure that the</span>
@@ -403,7 +404,7 @@
 
 <div class="viewcode-block" id="ApiJob"><a class="viewcode-back" href="../../../apidocs.html#twclient.job.ApiJob">[docs]</a><span class="nd">@ut</span><span class="o">.</span><span class="n">export</span>
 <span class="k">class</span> <span class="nc">ApiJob</span><span class="p">(</span><span class="n">Job</span><span class="p">):</span>
-    <span class="sd">&#39;&#39;&#39;</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
 <span class="sd">    A job requiring acess to the Twitter API.</span>
 
 <span class="sd">    This class represents a job which interacts with the Twitter API. It</span>

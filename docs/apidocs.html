@@ -1,7 +1,8 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>API Documentation &mdash; twclient 0.2.0 documentation</title>
       <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
@@ -15,6 +16,7 @@
         <script src="_static/underscore.js"></script>
         <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
+        <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
     <link rel="index" title="Index" href="genindex.html" />
     <link rel="search" title="Search" href="search.html" />
@@ -54,12 +56,354 @@
 <p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Documentation</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#module-twclient.authpool">twclient.authpool</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-twclient.error">twclient.error</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-twclient.job">twclient.job</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-twclient.models">twclient.models</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-twclient.target">twclient.target</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#module-twclient.twitter_api">twclient.twitter_api</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-twclient.authpool">twclient.authpool</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.authpool.AuthPoolAPI"><code class="docutils literal notranslate"><span class="pre">AuthPoolAPI</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-twclient.error">twclient.error</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.error.TWClientError"><code class="docutils literal notranslate"><span class="pre">TWClientError</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.TWClientError.message"><code class="docutils literal notranslate"><span class="pre">TWClientError.message</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.TWClientError.exit_status"><code class="docutils literal notranslate"><span class="pre">TWClientError.exit_status</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.error.TwitterAPIError"><code class="docutils literal notranslate"><span class="pre">TwitterAPIError</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.TwitterAPIError.tweepy_exception"><code class="docutils literal notranslate"><span class="pre">TwitterAPIError.tweepy_exception</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.TwitterAPIError.response"><code class="docutils literal notranslate"><span class="pre">TwitterAPIError.response</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.TwitterAPIError.http_code"><code class="docutils literal notranslate"><span class="pre">TwitterAPIError.http_code</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.TwitterAPIError.api_codes"><code class="docutils literal notranslate"><span class="pre">TwitterAPIError.api_codes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.TwitterAPIError.from_tweepy"><code class="docutils literal notranslate"><span class="pre">TwitterAPIError.from_tweepy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.TwitterAPIError.tweepy_is_instance"><code class="docutils literal notranslate"><span class="pre">TwitterAPIError.tweepy_is_instance()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.error.TwitterServiceError"><code class="docutils literal notranslate"><span class="pre">TwitterServiceError</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.TwitterServiceError.tweepy_is_instance"><code class="docutils literal notranslate"><span class="pre">TwitterServiceError.tweepy_is_instance()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.error.TwitterLogicError"><code class="docutils literal notranslate"><span class="pre">TwitterLogicError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.error.NotFoundError"><code class="docutils literal notranslate"><span class="pre">NotFoundError</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.NotFoundError.tweepy_is_instance"><code class="docutils literal notranslate"><span class="pre">NotFoundError.tweepy_is_instance()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.error.ForbiddenError"><code class="docutils literal notranslate"><span class="pre">ForbiddenError</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.ForbiddenError.tweepy_is_instance"><code class="docutils literal notranslate"><span class="pre">ForbiddenError.tweepy_is_instance()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.error.dispatch_tweepy_exception"><code class="docutils literal notranslate"><span class="pre">dispatch_tweepy_exception()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.error.SemanticError"><code class="docutils literal notranslate"><span class="pre">SemanticError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.error.BadTargetError"><code class="docutils literal notranslate"><span class="pre">BadTargetError</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.BadTargetError.targets"><code class="docutils literal notranslate"><span class="pre">BadTargetError.targets</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.error.BadTagError"><code class="docutils literal notranslate"><span class="pre">BadTagError</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.error.BadTagError.tag"><code class="docutils literal notranslate"><span class="pre">BadTagError.tag</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.error.BadSchemaError"><code class="docutils literal notranslate"><span class="pre">BadSchemaError</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.error.BadConfigError"><code class="docutils literal notranslate"><span class="pre">BadConfigError</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-twclient.job">twclient.job</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.Job"><code class="docutils literal notranslate"><span class="pre">Job</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.Job.run"><code class="docutils literal notranslate"><span class="pre">Job.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.DatabaseJob"><code class="docutils literal notranslate"><span class="pre">DatabaseJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.DatabaseJob.engine"><code class="docutils literal notranslate"><span class="pre">DatabaseJob.engine</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.DatabaseJob.session"><code class="docutils literal notranslate"><span class="pre">DatabaseJob.session</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.DatabaseJob.ensure_schema_version"><code class="docutils literal notranslate"><span class="pre">DatabaseJob.ensure_schema_version()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.DatabaseJob.get_or_create"><code class="docutils literal notranslate"><span class="pre">DatabaseJob.get_or_create()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.TargetJob"><code class="docutils literal notranslate"><span class="pre">TargetJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.allow_missing_targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.allow_missing_targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.resolve_mode"><code class="docutils literal notranslate"><span class="pre">TargetJob.resolve_mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.resolved"><code class="docutils literal notranslate"><span class="pre">TargetJob.resolved</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.users"><code class="docutils literal notranslate"><span class="pre">TargetJob.users</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.bad_targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.bad_targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.missing_targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.missing_targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.good_targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.good_targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.resolve_targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.resolve_targets()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.validate_targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.validate_targets()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ApiJob"><code class="docutils literal notranslate"><span class="pre">ApiJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ApiJob.api"><code class="docutils literal notranslate"><span class="pre">ApiJob.api</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ApiJob.allow_api_errors"><code class="docutils literal notranslate"><span class="pre">ApiJob.allow_api_errors</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-twclient.models">twclient.models</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.SchemaVersion"><code class="docutils literal notranslate"><span class="pre">SchemaVersion</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.SchemaVersion.version"><code class="docutils literal notranslate"><span class="pre">SchemaVersion.version</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.SchemaVersion.insert_dt"><code class="docutils literal notranslate"><span class="pre">SchemaVersion.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.SchemaVersion.modified_dt"><code class="docutils literal notranslate"><span class="pre">SchemaVersion.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.User"><code class="docutils literal notranslate"><span class="pre">User</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.User.user_id"><code class="docutils literal notranslate"><span class="pre">User.user_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.User.from_tweepy"><code class="docutils literal notranslate"><span class="pre">User.from_tweepy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.User.insert_dt"><code class="docutils literal notranslate"><span class="pre">User.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.User.modified_dt"><code class="docutils literal notranslate"><span class="pre">User.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.UserData"><code class="docutils literal notranslate"><span class="pre">UserData</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.user_data_id"><code class="docutils literal notranslate"><span class="pre">UserData.user_data_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.user_id"><code class="docutils literal notranslate"><span class="pre">UserData.user_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.url_id"><code class="docutils literal notranslate"><span class="pre">UserData.url_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.api_response"><code class="docutils literal notranslate"><span class="pre">UserData.api_response</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.screen_name"><code class="docutils literal notranslate"><span class="pre">UserData.screen_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.create_dt"><code class="docutils literal notranslate"><span class="pre">UserData.create_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.protected"><code class="docutils literal notranslate"><span class="pre">UserData.protected</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.verified"><code class="docutils literal notranslate"><span class="pre">UserData.verified</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.display_name"><code class="docutils literal notranslate"><span class="pre">UserData.display_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.description"><code class="docutils literal notranslate"><span class="pre">UserData.description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.location"><code class="docutils literal notranslate"><span class="pre">UserData.location</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.friends_count"><code class="docutils literal notranslate"><span class="pre">UserData.friends_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.followers_count"><code class="docutils literal notranslate"><span class="pre">UserData.followers_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.listed_count"><code class="docutils literal notranslate"><span class="pre">UserData.listed_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.from_tweepy"><code class="docutils literal notranslate"><span class="pre">UserData.from_tweepy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.insert_dt"><code class="docutils literal notranslate"><span class="pre">UserData.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserData.modified_dt"><code class="docutils literal notranslate"><span class="pre">UserData.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.Tag"><code class="docutils literal notranslate"><span class="pre">Tag</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tag.tag_id"><code class="docutils literal notranslate"><span class="pre">Tag.tag_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tag.name"><code class="docutils literal notranslate"><span class="pre">Tag.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tag.insert_dt"><code class="docutils literal notranslate"><span class="pre">Tag.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tag.modified_dt"><code class="docutils literal notranslate"><span class="pre">Tag.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.List"><code class="docutils literal notranslate"><span class="pre">List</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.list_id"><code class="docutils literal notranslate"><span class="pre">List.list_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.user_id"><code class="docutils literal notranslate"><span class="pre">List.user_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.slug"><code class="docutils literal notranslate"><span class="pre">List.slug</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.api_response"><code class="docutils literal notranslate"><span class="pre">List.api_response</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.create_dt"><code class="docutils literal notranslate"><span class="pre">List.create_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.full_name"><code class="docutils literal notranslate"><span class="pre">List.full_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.display_name"><code class="docutils literal notranslate"><span class="pre">List.display_name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.uri"><code class="docutils literal notranslate"><span class="pre">List.uri</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.description"><code class="docutils literal notranslate"><span class="pre">List.description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.mode"><code class="docutils literal notranslate"><span class="pre">List.mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.member_count"><code class="docutils literal notranslate"><span class="pre">List.member_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.subscriber_count"><code class="docutils literal notranslate"><span class="pre">List.subscriber_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.from_tweepy"><code class="docutils literal notranslate"><span class="pre">List.from_tweepy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.insert_dt"><code class="docutils literal notranslate"><span class="pre">List.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.List.modified_dt"><code class="docutils literal notranslate"><span class="pre">List.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.UserList"><code class="docutils literal notranslate"><span class="pre">UserList</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserList.user_list_id"><code class="docutils literal notranslate"><span class="pre">UserList.user_list_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserList.user_id"><code class="docutils literal notranslate"><span class="pre">UserList.user_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserList.list_id"><code class="docutils literal notranslate"><span class="pre">UserList.list_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserList.valid_start_dt"><code class="docutils literal notranslate"><span class="pre">UserList.valid_start_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserList.valid_end_dt"><code class="docutils literal notranslate"><span class="pre">UserList.valid_end_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.UserTag"><code class="docutils literal notranslate"><span class="pre">UserTag</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserTag.user_tag_id"><code class="docutils literal notranslate"><span class="pre">UserTag.user_tag_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserTag.user_id"><code class="docutils literal notranslate"><span class="pre">UserTag.user_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserTag.tag_id"><code class="docutils literal notranslate"><span class="pre">UserTag.tag_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserTag.insert_dt"><code class="docutils literal notranslate"><span class="pre">UserTag.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserTag.modified_dt"><code class="docutils literal notranslate"><span class="pre">UserTag.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.Follow"><code class="docutils literal notranslate"><span class="pre">Follow</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Follow.follow_id"><code class="docutils literal notranslate"><span class="pre">Follow.follow_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Follow.source_user_id"><code class="docutils literal notranslate"><span class="pre">Follow.source_user_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Follow.target_user_id"><code class="docutils literal notranslate"><span class="pre">Follow.target_user_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Follow.valid_start_dt"><code class="docutils literal notranslate"><span class="pre">Follow.valid_start_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Follow.valid_end_dt"><code class="docutils literal notranslate"><span class="pre">Follow.valid_end_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.Tweet"><code class="docutils literal notranslate"><span class="pre">Tweet</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.tweet_id"><code class="docutils literal notranslate"><span class="pre">Tweet.tweet_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.user_id"><code class="docutils literal notranslate"><span class="pre">Tweet.user_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.retweeted_status_id"><code class="docutils literal notranslate"><span class="pre">Tweet.retweeted_status_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.quoted_status_id"><code class="docutils literal notranslate"><span class="pre">Tweet.quoted_status_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.api_response"><code class="docutils literal notranslate"><span class="pre">Tweet.api_response</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.content"><code class="docutils literal notranslate"><span class="pre">Tweet.content</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.create_dt"><code class="docutils literal notranslate"><span class="pre">Tweet.create_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.in_reply_to_status_id"><code class="docutils literal notranslate"><span class="pre">Tweet.in_reply_to_status_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.in_reply_to_user_id"><code class="docutils literal notranslate"><span class="pre">Tweet.in_reply_to_user_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.lang"><code class="docutils literal notranslate"><span class="pre">Tweet.lang</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.source"><code class="docutils literal notranslate"><span class="pre">Tweet.source</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.truncated"><code class="docutils literal notranslate"><span class="pre">Tweet.truncated</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.retweet_count"><code class="docutils literal notranslate"><span class="pre">Tweet.retweet_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.favorite_count"><code class="docutils literal notranslate"><span class="pre">Tweet.favorite_count</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.from_tweepy"><code class="docutils literal notranslate"><span class="pre">Tweet.from_tweepy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.insert_dt"><code class="docutils literal notranslate"><span class="pre">Tweet.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Tweet.modified_dt"><code class="docutils literal notranslate"><span class="pre">Tweet.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.Hashtag"><code class="docutils literal notranslate"><span class="pre">Hashtag</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Hashtag.hashtag_id"><code class="docutils literal notranslate"><span class="pre">Hashtag.hashtag_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Hashtag.name"><code class="docutils literal notranslate"><span class="pre">Hashtag.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Hashtag.insert_dt"><code class="docutils literal notranslate"><span class="pre">Hashtag.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Hashtag.modified_dt"><code class="docutils literal notranslate"><span class="pre">Hashtag.modified_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Hashtag.unique_hash"><code class="docutils literal notranslate"><span class="pre">Hashtag.unique_hash</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.Symbol"><code class="docutils literal notranslate"><span class="pre">Symbol</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Symbol.symbol_id"><code class="docutils literal notranslate"><span class="pre">Symbol.symbol_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Symbol.name"><code class="docutils literal notranslate"><span class="pre">Symbol.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Symbol.insert_dt"><code class="docutils literal notranslate"><span class="pre">Symbol.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Symbol.modified_dt"><code class="docutils literal notranslate"><span class="pre">Symbol.modified_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Symbol.unique_hash"><code class="docutils literal notranslate"><span class="pre">Symbol.unique_hash</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.Url"><code class="docutils literal notranslate"><span class="pre">Url</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Url.url_id"><code class="docutils literal notranslate"><span class="pre">Url.url_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Url.url"><code class="docutils literal notranslate"><span class="pre">Url.url</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Url.insert_dt"><code class="docutils literal notranslate"><span class="pre">Url.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Url.modified_dt"><code class="docutils literal notranslate"><span class="pre">Url.modified_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Url.unique_hash"><code class="docutils literal notranslate"><span class="pre">Url.unique_hash</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.MediaType"><code class="docutils literal notranslate"><span class="pre">MediaType</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaType.media_type_id"><code class="docutils literal notranslate"><span class="pre">MediaType.media_type_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaType.name"><code class="docutils literal notranslate"><span class="pre">MediaType.name</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaType.from_tweepy"><code class="docutils literal notranslate"><span class="pre">MediaType.from_tweepy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaType.insert_dt"><code class="docutils literal notranslate"><span class="pre">MediaType.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaType.modified_dt"><code class="docutils literal notranslate"><span class="pre">MediaType.modified_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaType.unique_hash"><code class="docutils literal notranslate"><span class="pre">MediaType.unique_hash</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.Media"><code class="docutils literal notranslate"><span class="pre">Media</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Media.media_id"><code class="docutils literal notranslate"><span class="pre">Media.media_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Media.media_type_id"><code class="docutils literal notranslate"><span class="pre">Media.media_type_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Media.media_url_id"><code class="docutils literal notranslate"><span class="pre">Media.media_url_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Media.aspect_ratio_width"><code class="docutils literal notranslate"><span class="pre">Media.aspect_ratio_width</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Media.aspect_ratio_height"><code class="docutils literal notranslate"><span class="pre">Media.aspect_ratio_height</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Media.duration"><code class="docutils literal notranslate"><span class="pre">Media.duration</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Media.from_tweepy"><code class="docutils literal notranslate"><span class="pre">Media.from_tweepy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Media.insert_dt"><code class="docutils literal notranslate"><span class="pre">Media.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.Media.modified_dt"><code class="docutils literal notranslate"><span class="pre">Media.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.MediaVariant"><code class="docutils literal notranslate"><span class="pre">MediaVariant</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaVariant.media_id"><code class="docutils literal notranslate"><span class="pre">MediaVariant.media_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaVariant.url_id"><code class="docutils literal notranslate"><span class="pre">MediaVariant.url_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaVariant.bitrate"><code class="docutils literal notranslate"><span class="pre">MediaVariant.bitrate</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaVariant.content_type"><code class="docutils literal notranslate"><span class="pre">MediaVariant.content_type</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaVariant.list_from_tweepy"><code class="docutils literal notranslate"><span class="pre">MediaVariant.list_from_tweepy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaVariant.insert_dt"><code class="docutils literal notranslate"><span class="pre">MediaVariant.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaVariant.modified_dt"><code class="docutils literal notranslate"><span class="pre">MediaVariant.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.UserMention"><code class="docutils literal notranslate"><span class="pre">UserMention</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserMention.tweet_id"><code class="docutils literal notranslate"><span class="pre">UserMention.tweet_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserMention.start_index"><code class="docutils literal notranslate"><span class="pre">UserMention.start_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserMention.end_index"><code class="docutils literal notranslate"><span class="pre">UserMention.end_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserMention.mentioned_user_id"><code class="docutils literal notranslate"><span class="pre">UserMention.mentioned_user_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserMention.list_from_tweepy"><code class="docutils literal notranslate"><span class="pre">UserMention.list_from_tweepy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserMention.insert_dt"><code class="docutils literal notranslate"><span class="pre">UserMention.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UserMention.modified_dt"><code class="docutils literal notranslate"><span class="pre">UserMention.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.HashtagMention"><code class="docutils literal notranslate"><span class="pre">HashtagMention</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.HashtagMention.tweet_id"><code class="docutils literal notranslate"><span class="pre">HashtagMention.tweet_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.HashtagMention.start_index"><code class="docutils literal notranslate"><span class="pre">HashtagMention.start_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.HashtagMention.end_index"><code class="docutils literal notranslate"><span class="pre">HashtagMention.end_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.HashtagMention.hashtag_id"><code class="docutils literal notranslate"><span class="pre">HashtagMention.hashtag_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.HashtagMention.list_from_tweepy"><code class="docutils literal notranslate"><span class="pre">HashtagMention.list_from_tweepy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.HashtagMention.insert_dt"><code class="docutils literal notranslate"><span class="pre">HashtagMention.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.HashtagMention.modified_dt"><code class="docutils literal notranslate"><span class="pre">HashtagMention.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.SymbolMention"><code class="docutils literal notranslate"><span class="pre">SymbolMention</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.SymbolMention.tweet_id"><code class="docutils literal notranslate"><span class="pre">SymbolMention.tweet_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.SymbolMention.start_index"><code class="docutils literal notranslate"><span class="pre">SymbolMention.start_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.SymbolMention.end_index"><code class="docutils literal notranslate"><span class="pre">SymbolMention.end_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.SymbolMention.symbol_id"><code class="docutils literal notranslate"><span class="pre">SymbolMention.symbol_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.SymbolMention.list_from_tweepy"><code class="docutils literal notranslate"><span class="pre">SymbolMention.list_from_tweepy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.SymbolMention.insert_dt"><code class="docutils literal notranslate"><span class="pre">SymbolMention.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.SymbolMention.modified_dt"><code class="docutils literal notranslate"><span class="pre">SymbolMention.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.UrlMention"><code class="docutils literal notranslate"><span class="pre">UrlMention</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.tweet_id"><code class="docutils literal notranslate"><span class="pre">UrlMention.tweet_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.start_index"><code class="docutils literal notranslate"><span class="pre">UrlMention.start_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.end_index"><code class="docutils literal notranslate"><span class="pre">UrlMention.end_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.url_id"><code class="docutils literal notranslate"><span class="pre">UrlMention.url_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.twitter_short_url"><code class="docutils literal notranslate"><span class="pre">UrlMention.twitter_short_url</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.twitter_display_url"><code class="docutils literal notranslate"><span class="pre">UrlMention.twitter_display_url</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.expanded_short_url"><code class="docutils literal notranslate"><span class="pre">UrlMention.expanded_short_url</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.status"><code class="docutils literal notranslate"><span class="pre">UrlMention.status</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.title"><code class="docutils literal notranslate"><span class="pre">UrlMention.title</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.description"><code class="docutils literal notranslate"><span class="pre">UrlMention.description</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.list_from_tweepy"><code class="docutils literal notranslate"><span class="pre">UrlMention.list_from_tweepy()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.insert_dt"><code class="docutils literal notranslate"><span class="pre">UrlMention.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.UrlMention.modified_dt"><code class="docutils literal notranslate"><span class="pre">UrlMention.modified_dt</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.models.MediaMention"><code class="docutils literal notranslate"><span class="pre">MediaMention</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaMention.tweet_id"><code class="docutils literal notranslate"><span class="pre">MediaMention.tweet_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaMention.start_index"><code class="docutils literal notranslate"><span class="pre">MediaMention.start_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaMention.end_index"><code class="docutils literal notranslate"><span class="pre">MediaMention.end_index</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaMention.media_id"><code class="docutils literal notranslate"><span class="pre">MediaMention.media_id</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaMention.twitter_short_url"><code class="docutils literal notranslate"><span class="pre">MediaMention.twitter_short_url</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaMention.twitter_display_url"><code class="docutils literal notranslate"><span class="pre">MediaMention.twitter_display_url</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaMention.twitter_expanded_url"><code class="docutils literal notranslate"><span class="pre">MediaMention.twitter_expanded_url</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaMention.insert_dt"><code class="docutils literal notranslate"><span class="pre">MediaMention.insert_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaMention.modified_dt"><code class="docutils literal notranslate"><span class="pre">MediaMention.modified_dt</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.models.MediaMention.list_from_tweepy"><code class="docutils literal notranslate"><span class="pre">MediaMention.list_from_tweepy()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-twclient.target">twclient.target</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.target.Target"><code class="docutils literal notranslate"><span class="pre">Target</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.Target.targets"><code class="docutils literal notranslate"><span class="pre">Target.targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.Target.resolve"><code class="docutils literal notranslate"><span class="pre">Target.resolve()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.Target.allowed_resolve_modes"><code class="docutils literal notranslate"><span class="pre">Target.allowed_resolve_modes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.Target.resolved"><code class="docutils literal notranslate"><span class="pre">Target.resolved</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.Target.users"><code class="docutils literal notranslate"><span class="pre">Target.users</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.Target.bad_targets"><code class="docutils literal notranslate"><span class="pre">Target.bad_targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.Target.missing_targets"><code class="docutils literal notranslate"><span class="pre">Target.missing_targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.Target.good_targets"><code class="docutils literal notranslate"><span class="pre">Target.good_targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.Target.context"><code class="docutils literal notranslate"><span class="pre">Target.context</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.target.UserIdTarget"><code class="docutils literal notranslate"><span class="pre">UserIdTarget</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.UserIdTarget.allowed_resolve_modes"><code class="docutils literal notranslate"><span class="pre">UserIdTarget.allowed_resolve_modes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.UserIdTarget.resolve"><code class="docutils literal notranslate"><span class="pre">UserIdTarget.resolve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.target.ScreenNameTarget"><code class="docutils literal notranslate"><span class="pre">ScreenNameTarget</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.ScreenNameTarget.allowed_resolve_modes"><code class="docutils literal notranslate"><span class="pre">ScreenNameTarget.allowed_resolve_modes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.ScreenNameTarget.resolve"><code class="docutils literal notranslate"><span class="pre">ScreenNameTarget.resolve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.target.SelectTagTarget"><code class="docutils literal notranslate"><span class="pre">SelectTagTarget</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.SelectTagTarget.allowed_resolve_modes"><code class="docutils literal notranslate"><span class="pre">SelectTagTarget.allowed_resolve_modes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.SelectTagTarget.resolve"><code class="docutils literal notranslate"><span class="pre">SelectTagTarget.resolve()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.target.TwitterListTarget"><code class="docutils literal notranslate"><span class="pre">TwitterListTarget</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.TwitterListTarget.allowed_resolve_modes"><code class="docutils literal notranslate"><span class="pre">TwitterListTarget.allowed_resolve_modes</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.target.TwitterListTarget.resolve"><code class="docutils literal notranslate"><span class="pre">TwitterListTarget.resolve()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="#module-twclient.twitter_api">twclient.twitter_api</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.twitter_api.TwitterApi"><code class="docutils literal notranslate"><span class="pre">TwitterApi</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.twitter_api.TwitterApi.auths"><code class="docutils literal notranslate"><span class="pre">TwitterApi.auths</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.twitter_api.TwitterApi.pool"><code class="docutils literal notranslate"><span class="pre">TwitterApi.pool</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.twitter_api.TwitterApi.make_api_call"><code class="docutils literal notranslate"><span class="pre">TwitterApi.make_api_call()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.twitter_api.TwitterApi.rate_limit_status"><code class="docutils literal notranslate"><span class="pre">TwitterApi.rate_limit_status()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.twitter_api.TwitterApi.lookup_users"><code class="docutils literal notranslate"><span class="pre">TwitterApi.lookup_users()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.twitter_api.TwitterApi.get_list"><code class="docutils literal notranslate"><span class="pre">TwitterApi.get_list()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.twitter_api.TwitterApi.list_members"><code class="docutils literal notranslate"><span class="pre">TwitterApi.list_members()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.twitter_api.TwitterApi.user_timeline"><code class="docutils literal notranslate"><span class="pre">TwitterApi.user_timeline()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.twitter_api.TwitterApi.followers_ids"><code class="docutils literal notranslate"><span class="pre">TwitterApi.followers_ids()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.twitter_api.TwitterApi.friends_ids"><code class="docutils literal notranslate"><span class="pre">TwitterApi.friends_ids()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 </ul>
 </li>
 </ul>
@@ -88,14 +432,14 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <div class="section" id="module-twclient">
+  <section id="module-twclient">
 <span id="api-documentation"></span><h1>API Documentation<a class="headerlink" href="#module-twclient" title="Permalink to this heading"></a></h1>
 <p>A high-level analytics-focused command line client for the Twitter API.</p>
 <p>This documentation focuses on the Python API. For an introduction to
 command-line usage, see the <a class="reference internal" href="vignettes/fetch.html"><span class="doc">fetching-data vignette</span></a>;
 for detailed command-line help, see the <code class="docutils literal notranslate"><span class="pre">--help</span></code> flag to the <code class="docutils literal notranslate"><span class="pre">twclient</span></code> (or
 <code class="docutils literal notranslate"><span class="pre">twitter</span></code>) command.</p>
-<div class="section" id="module-twclient.authpool">
+<section id="module-twclient.authpool">
 <span id="twclient-authpool"></span><h2>twclient.authpool<a class="headerlink" href="#module-twclient.authpool" title="Permalink to this heading"></a></h2>
 <p>A version of tweepy.API with support for multiple sets of credentials.</p>
 <dl class="py class">
@@ -120,7 +464,7 @@ values are the <code class="docutils literal notranslate"><span class="pre">rate
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>auths</strong> (<em>list of tweepy.AuthHandler</em>) – The Twitter API credentials to use.</p></li>
+<li><p><strong>auths</strong> (<em>list</em><em> of </em><em>tweepy.AuthHandler</em>) – The Twitter API credentials to use.</p></li>
 <li><p><strong>capacity_sleep</strong> (<em>float</em>) – How long to sleep before retrying after a Twitter capacity error, in
 seconds.</p></li>
 <li><p><strong>capacity_retries</strong> (<em>int</em>) – How many times to retry on capacity error before giving up.</p></li>
@@ -135,8 +479,8 @@ seconds.</p></li>
 </dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-twclient.error">
+</section>
+<section id="module-twclient.error">
 <span id="twclient-error"></span><h2>twclient.error<a class="headerlink" href="#module-twclient.error" title="Permalink to this heading"></a></h2>
 <p>Exceptions that twclient code may raise.</p>
 <dl class="py exception">
@@ -184,7 +528,7 @@ it’s instead tweepy.error.TweepError) which gave rise to them.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>tweepy_exception</strong> (<em>instance of tweepy.errors.TweepyException</em>) – </p></li>
+<li><p><strong>tweepy_exception</strong> (<em>instance</em><em> of </em><em>tweepy.errors.TweepyException</em>) – </p></li>
 <li><p><strong>4.0.0</strong><strong>)</strong> (<em>(</em><em>tweepy.error.TweepError in tweepy &lt;</em>) – The underlying tweepy exception instance which caused this error to be
 raised.</p></li>
 </ul>
@@ -231,7 +575,7 @@ raised.</p></li>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>exc</strong> (<em>instance of tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
+<li><p><strong>exc</strong> (<em>instance</em><em> of </em><em>tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
 <li><p><strong>tweepy.error.TweepError</strong><strong>)</strong> – The exception from which to generate a TwitterAPIError instance.</p></li>
 </ul>
 </dd>
@@ -249,7 +593,7 @@ via from_tweepy().</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>exc</strong> (<em>instance of tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
+<li><p><strong>exc</strong> (<em>instance</em><em> of </em><em>tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
 <li><p><strong>tweepy.error.TweepError</strong><strong>)</strong> – The tweepy exception object to check.</p></li>
 </ul>
 </dd>
@@ -281,7 +625,7 @@ via from_tweepy().</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>exc</strong> (<em>instance of tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
+<li><p><strong>exc</strong> (<em>instance</em><em> of </em><em>tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
 <li><p><strong>tweepy.error.TweepError</strong><strong>)</strong> – The tweepy exception object to check.</p></li>
 </ul>
 </dd>
@@ -324,7 +668,7 @@ via from_tweepy().</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>exc</strong> (<em>instance of tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
+<li><p><strong>exc</strong> (<em>instance</em><em> of </em><em>tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
 <li><p><strong>tweepy.error.TweepError</strong><strong>)</strong> – The tweepy exception object to check.</p></li>
 </ul>
 </dd>
@@ -357,7 +701,7 @@ via from_tweepy().</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>exc</strong> (<em>instance of tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
+<li><p><strong>exc</strong> (<em>instance</em><em> of </em><em>tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
 <li><p><strong>tweepy.error.TweepError</strong><strong>)</strong> – The tweepy exception object to check.</p></li>
 </ul>
 </dd>
@@ -414,7 +758,7 @@ unavailable. There may be several reasons for unavailability: a user having
 protected tweets, being suspended, or otherwise not existing.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>targets</strong> (<em>list of str</em><em> or </em><em>int</em>) – The Twitter user IDs or screen names causing the error.</p>
+<dd class="field-odd"><p><strong>targets</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>int</em>) – The Twitter user IDs or screen names causing the error.</p>
 </dd>
 </dl>
 <dl class="py attribute">
@@ -475,8 +819,8 @@ is misspecified, impossible, encounters another error, or the config file
 is malformed.</p>
 </dd></dl>
 
-</div>
-<div class="section" id="module-twclient.job">
+</section>
+<section id="module-twclient.job">
 <span id="twclient-job"></span><h2>twclient.job<a class="headerlink" href="#module-twclient.job" title="Permalink to this heading"></a></h2>
 <p>Job classes which implement core package functionality.</p>
 <dl class="py class">
@@ -553,7 +897,7 @@ appropriate attribute values.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>model</strong> (<em>instance of models.Base</em>) – A sqlalchemy model object.</p></li>
+<li><p><strong>model</strong> (<em>instance</em><em> of </em><em>models.Base</em>) – A sqlalchemy model object.</p></li>
 <li><p><strong>**kwargs</strong> – Keyword arguments specifying the values of the model’s attributes.</p></li>
 </ul>
 </dd>
@@ -580,7 +924,7 @@ users.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>targets</strong> (<em>list of target.Target</em>) – The list of targets for the job.</p></li>
+<li><p><strong>targets</strong> (<em>list</em><em> of </em><a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target"><em>target.Target</em></a>) – The list of targets for the job.</p></li>
 <li><p><strong>allow_missing_targets</strong> (<em>bool</em>) – If resolving the targets indicates that some targets should be in the
 database but are not (i.e., one of the Target instances in self.targets
 has a non-empty missing_targets attribute), should we raise
@@ -595,7 +939,7 @@ missing targets (if True)?</p></li>
 <dd><p>The parameter passed to __init__.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>list of target.Target</p>
+<dd class="field-odd"><p>list of <a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target">target.Target</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -705,7 +1049,7 @@ configures API access, and defers other functionality to subclasses.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>api</strong> (<em>instance of twitter_api.TwitterApi</em>) – The TwitterApi instance to use for API access.</p></li>
+<li><p><strong>api</strong> (<em>instance</em><em> of </em><a class="reference internal" href="#twclient.twitter_api.TwitterApi" title="twclient.twitter_api.TwitterApi"><em>twitter_api.TwitterApi</em></a>) – The TwitterApi instance to use for API access.</p></li>
 <li><p><strong>allow_api_errors</strong> (<em>bool</em>) – If the Twitter API returns an error, should we abort (if False,
 default), or ignore and continue (if True)?</p></li>
 </ul>
@@ -717,7 +1061,7 @@ default), or ignore and continue (if True)?</p></li>
 <dd><p>The parameter passed to __init__.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Type</dt>
-<dd class="field-odd"><p>instance of twitter_api.TwitterApi</p>
+<dd class="field-odd"><p>instance of <a class="reference internal" href="#twclient.twitter_api.TwitterApi" title="twclient.twitter_api.TwitterApi">twitter_api.TwitterApi</a></p>
 </dd>
 </dl>
 </dd></dl>
@@ -735,8 +1079,8 @@ default), or ignore and continue (if True)?</p></li>
 
 </dd></dl>
 
-</div>
-<div class="section" id="module-twclient.models">
+</section>
+<section id="module-twclient.models">
 <span id="twclient-models"></span><h2>twclient.models<a class="headerlink" href="#module-twclient.models" title="Permalink to this heading"></a></h2>
 <p>The database schema for storing Twitter data.</p>
 <dl class="py class">
@@ -794,8 +1138,8 @@ by some subclasses which rely on UniqueMixin.as_unique.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> (<em>instance of tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
-<li><p><strong>session</strong> (<em>instance of sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
+<li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
+<li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -927,8 +1271,8 @@ by some subclasses which rely on UniqueMixin.as_unique.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> (<em>instance of tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
-<li><p><strong>session</strong> (<em>instance of sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
+<li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
+<li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1085,8 +1429,8 @@ by some subclasses which rely on UniqueMixin.as_unique.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> (<em>instance of tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
-<li><p><strong>session</strong> (<em>instance of sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
+<li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
+<li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1362,8 +1706,8 @@ by some subclasses which rely on UniqueMixin.as_unique.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> (<em>instance of tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
-<li><p><strong>session</strong> (<em>instance of sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
+<li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
+<li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1543,8 +1887,8 @@ by some subclasses which rely on UniqueMixin.as_unique.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> (<em>instance of tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
-<li><p><strong>session</strong> (<em>instance of sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
+<li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
+<li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1636,8 +1980,8 @@ by some subclasses which rely on UniqueMixin.as_unique.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> (<em>instance of tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
-<li><p><strong>session</strong> (<em>instance of sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
+<li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
+<li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
@@ -1708,15 +2052,15 @@ abstract stub that raises NotImplementedError.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> (<em>instance of tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
-<li><p><strong>session</strong> (<em>instance of sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
+<li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
+<li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The constructed class instances.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List of instances of FromTweepyInterface</p>
+<dd class="field-odd"><p><a class="reference internal" href="#twclient.models.List" title="twclient.models.List">List</a> of instances of FromTweepyInterface</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1780,15 +2124,15 @@ abstract stub that raises NotImplementedError.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> (<em>instance of tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
-<li><p><strong>session</strong> (<em>instance of sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
+<li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
+<li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The constructed class instances.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List of instances of FromTweepyInterface</p>
+<dd class="field-odd"><p><a class="reference internal" href="#twclient.models.List" title="twclient.models.List">List</a> of instances of FromTweepyInterface</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1852,15 +2196,15 @@ abstract stub that raises NotImplementedError.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> (<em>instance of tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
-<li><p><strong>session</strong> (<em>instance of sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
+<li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
+<li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The constructed class instances.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List of instances of FromTweepyInterface</p>
+<dd class="field-odd"><p><a class="reference internal" href="#twclient.models.List" title="twclient.models.List">List</a> of instances of FromTweepyInterface</p>
 </dd>
 </dl>
 </dd></dl>
@@ -1924,15 +2268,15 @@ abstract stub that raises NotImplementedError.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> (<em>instance of tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
-<li><p><strong>session</strong> (<em>instance of sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
+<li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
+<li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The constructed class instances.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List of instances of FromTweepyInterface</p>
+<dd class="field-odd"><p><a class="reference internal" href="#twclient.models.List" title="twclient.models.List">List</a> of instances of FromTweepyInterface</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2041,15 +2385,15 @@ abstract stub that raises NotImplementedError.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> (<em>instance of tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
-<li><p><strong>session</strong> (<em>instance of sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
+<li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
+<li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
 <dt class="field-even">Returns</dt>
 <dd class="field-even"><p>The constructed class instances.</p>
 </dd>
 <dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List of instances of FromTweepyInterface</p>
+<dd class="field-odd"><p><a class="reference internal" href="#twclient.models.List" title="twclient.models.List">List</a> of instances of FromTweepyInterface</p>
 </dd>
 </dl>
 </dd></dl>
@@ -2123,31 +2467,6 @@ website.</p>
 would encounter after clicking on it from Twitter.com.</p>
 </dd></dl>
 
-<dl class="py method">
-<dt class="sig sig-object py" id="twclient.models.MediaMention.list_from_tweepy">
-<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_from_tweepy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#MediaMention.list_from_tweepy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.MediaMention.list_from_tweepy" title="Permalink to this definition"></a></dt>
-<dd><p>Return a list of class instances from a tweepy object.</p>
-<p>This method constructs multiple class instances from a tweepy object. A
-sqlalchemy database session is optional in general but may be required
-by some subclasses which rely on UniqueMixin.as_unique. Subclasses are
-expected to provide this logic, and the implementation here is an
-abstract stub that raises NotImplementedError.</p>
-<dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><ul class="simple">
-<li><p><strong>obj</strong> (<em>instance of tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
-<li><p><strong>session</strong> (<em>instance of sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
-</ul>
-</dd>
-<dt class="field-even">Returns</dt>
-<dd class="field-even"><p>The constructed class instances.</p>
-</dd>
-<dt class="field-odd">Return type</dt>
-<dd class="field-odd"><p>List of instances of FromTweepyInterface</p>
-</dd>
-</dl>
-</dd></dl>
-
 <dl class="py attribute">
 <dt class="sig sig-object py" id="twclient.models.MediaMention.insert_dt">
 <span class="sig-name descname"><span class="pre">insert_dt</span></span><a class="headerlink" href="#twclient.models.MediaMention.insert_dt" title="Permalink to this definition"></a></dt>
@@ -2161,10 +2480,35 @@ abstract stub that raises NotImplementedError.</p>
 application logic rather than a trigger.</p>
 </dd></dl>
 
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.models.MediaMention.list_from_tweepy">
+<em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">list_from_tweepy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">obj</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">session</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/models.html#MediaMention.list_from_tweepy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.models.MediaMention.list_from_tweepy" title="Permalink to this definition"></a></dt>
+<dd><p>Return a list of class instances from a tweepy object.</p>
+<p>This method constructs multiple class instances from a tweepy object. A
+sqlalchemy database session is optional in general but may be required
+by some subclasses which rely on UniqueMixin.as_unique. Subclasses are
+expected to provide this logic, and the implementation here is an
+abstract stub that raises NotImplementedError.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
+<li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>The constructed class instances.</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p><a class="reference internal" href="#twclient.models.List" title="twclient.models.List">List</a> of instances of FromTweepyInterface</p>
+</dd>
+</dl>
 </dd></dl>
 
-</div>
-<div class="section" id="module-twclient.target">
+</dd></dl>
+
+</section>
+<section id="module-twclient.target">
 <span id="twclient-target"></span><h2>twclient.target<a class="headerlink" href="#module-twclient.target" title="Permalink to this heading"></a></h2>
 <p>Classes encapsulating the “targets” of certain jobs.</p>
 <dl class="py class">
@@ -2183,9 +2527,9 @@ After calling resolve(), a list of the User objects are available in the
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>targets</strong> (<em>list of str</em><em> or </em><em>int</em>) – The raw targets to be resolved to users. These will be deduplicated
+<li><p><strong>targets</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>int</em>) – The raw targets to be resolved to users. These will be deduplicated
 in a way that preserves order.</p></li>
-<li><p><strong>context</strong> (<em>instance of job.Job</em><em>, or </em><em>None</em>) – The Job instance’s database and API connections will be used as
+<li><p><strong>context</strong> (<em>instance</em><em> of </em><a class="reference internal" href="#twclient.job.Job" title="twclient.job.Job"><em>job.Job</em></a><em>, or </em><em>None</em>) – The Job instance’s database and API connections will be used as
 needed to resolve raw targets to users. If not passed on
 initialization, a context object must be passed to <code class="docutils literal notranslate"><span class="pre">resolve()</span></code>.</p></li>
 </ul>
@@ -2505,8 +2849,8 @@ replaced with the value passed here so long as <code class="docutils literal not
 
 </dd></dl>
 
-</div>
-<div class="section" id="module-twclient.twitter_api">
+</section>
+<section id="module-twclient.twitter_api">
 <span id="twclient-twitter-api"></span><h2>twclient.twitter_api<a class="headerlink" href="#module-twclient.twitter_api" title="Permalink to this heading"></a></h2>
 <p>A Twitter API wrapper for job classes.</p>
 <dl class="py class">
@@ -2522,7 +2866,7 @@ credentials (via authpool.AuthPoolAPI), with the effect of combining their
 rate limits. Not all Twitter API methods are supported.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
-<dd class="field-odd"><p><strong>auths</strong> (<em>list of tweepy.AuthHandler</em>) – The Twitter API credentials to use.</p>
+<dd class="field-odd"><p><strong>auths</strong> (<em>list</em><em> of </em><em>tweepy.AuthHandler</em>) – The Twitter API credentials to use.</p>
 </dd>
 </dl>
 <dl class="py attribute">
@@ -2624,9 +2968,9 @@ entities are requested.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters</dt>
 <dd class="field-odd"><ul class="simple">
-<li><p><strong>user_ids</strong> (<em>list of int</em><em>, or </em><em>None</em>) – Twitter user IDs to hydrate. May be passed simultaneously with
+<li><p><strong>user_ids</strong> (<em>list</em><em> of </em><em>int</em><em>, or </em><em>None</em>) – Twitter user IDs to hydrate. May be passed simultaneously with
 screen_names.</p></li>
-<li><p><strong>screen_names</strong> (<em>list of str</em><em>, or </em><em>None</em>) – Twitter screen names to hydrate. May be passed simultaneously with
+<li><p><strong>screen_names</strong> (<em>list</em><em> of </em><em>str</em><em>, or </em><em>None</em>) – Twitter screen names to hydrate. May be passed simultaneously with
 user_ids.</p></li>
 </ul>
 </dd>
@@ -2765,8 +3109,8 @@ retrieved.</p></li>
 
 </dd></dl>
 
-</div>
-</div>
+</section>
+</section>
 
 
            </div>
