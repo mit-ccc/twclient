@@ -114,8 +114,8 @@ Setup: Twitter
 
 You'll also need to set up your Twitter API credentials. [1]_ As with the
 database setup, doing this stores the credentials in a config file (the same
-config file) for ease of use. Only two sets of credentials are shown, but
-you can add as many as you want.
+config file as for database info) for ease of use. Only two sets of credentials
+are shown, but you can add as many as you want.
 
 Here's an example of adding two API keys:
 
