@@ -3,24 +3,21 @@
 .. |Apache 2.0 license| image:: https://img.shields.io/badge/License-Apache_2.0-blue.svg
    :target: https://www.apache.org/licenses/LICENSE-2.0
 
+|PyPI version fury.io|
+
+.. |PyPI version fury.io| image:: https://badge.fury.io/py/twclient.svg
+    :target: https://pypi.python.org/pypi/twclient/
+
+|PyPI pyversions|
+
+.. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/twclient.svg
+    :target: https://pypi.python.org/pypi/twclient/
+
 ..
     |Documentation Status|
 
     .. |Documentation Status| image:: https://readthedocs.org/projects/twclient/badge/?version=latest
        :target: http://twclient.readthedocs.io/?badge=latest
-
-    |PyPI version fury.io|
-
-    .. |PyPI version fury.io| image:: https://badge.fury.io/py/twclient.svg
-       :target: https://pypi.python.org/pypi/twclient/
-
-    |PyPI pyversions|
-
-    .. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/twclient.svg
-       :target: https://pypi.python.org/pypi/twclient/
-
-.. role:: bash(code)
-   :language: bash
 
 twclient
 ========
