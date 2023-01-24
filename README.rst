@@ -145,9 +145,9 @@ Pulling data
 ~~~~~~~~~~~~~~
 
 To actually pull data, use the ``twclient fetch`` command. We'll pull
-information about two specific users and a Twitter list here. Note that you can
-refer to lists either by their "slug" (username/listname) or by the ID at the
-end of a URL of the form `https://twitter.com/i/lists/53603015`.
+information about three specific users and a Twitter list here. Note that you
+can refer to lists either by their "slug" (username/listname) or by the ID at
+the end of a URL of the form `https://twitter.com/i/lists/53603015`.
 
 First, let's load some users and their basic info:
 
