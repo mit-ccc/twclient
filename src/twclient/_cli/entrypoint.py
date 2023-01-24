@@ -287,7 +287,7 @@ def _make_parser():
     return parser
 
 
-def cli():
+def cli(args=None):
     '''
     The main command-line entrypoint.
 
@@ -301,7 +301,7 @@ def cli():
     '''
 
     parser = _make_parser()
-    args = parser.parse_args()
+    args = parser.parse_args(args)
 
     command = vars(args).pop('command')
     verbosity = vars(args).pop('verbose')
