@@ -19,37 +19,111 @@
     .. |PyPI pyversions| image:: https://img.shields.io/pypi/pyversions/twclient.svg
        :target: https://pypi.python.org/pypi/twclient/
 
+.. role:: bash(code)
+   :language: bash
+
 twclient
 ========
 
 This package provides a high-level command-line client for the Twitter API,
-with a focus on loading data into a database. The goal is to be higher-level
-than twurl or tweepy and offer useful primitives for researchers who want to
-get data out of Twitter, without worrying about the details. The client can
+with a focus on loading data into a database for analysis or bulk use.
+
+~~~~~~~~~~~~~~~~~~~~~~~~~
+  Why use this project?
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
+This project offers high-level primitives for researchers who want to get
+data out of Twitter, without worrying about the API details. The client can
 handle multiple sets of API credentials seamlessly, helping avoid rate limit
-issues. There's also support for exporting bulk datasets from the fetched raw
-data.
+issues. [1]_ There's also support for exporting bulk datasets from the fetched
+raw data.
 
-~~~~~~~~~
-  Setup
-~~~~~~~~~
+~~~~~~~~~~~~~~~~
+  Installation
+~~~~~~~~~~~~~~~~
 
-Install the package from pypi, or by cloning this repo and using ``pip
-install`` if you want to use the development version. After that, you need to
-tell twclient about your database backend and Twitter credentials:
+Install the package from pypi:
 
 .. code-block:: bash
 
-   # Set up the database. This creates a persistent profile in a config file, no
-   # need to type the URL repeatedly. You specify a database via a sqlalchemy
-   # connection url, which can be sqlite (as here) for a zero-configuration
-   # setup, and can also be something like "postgresql:///" to use a
-   # traditional full-fledged database you've set up separately.
-   twclient config add-db -u "sqlite:///home/user/twitter.db" sqlite
+   pip3 install twclient
 
-   # Set up the Twitter credentials. As with the database setup, this stores
-   # the credentials in a config file for ease of use. Only two sets of
-   # credentials are shown, but arbitrarily many can be added.
+or, if you want to use the development version, clone this repo and install in
+editable mode:
+
+.. code-block:: bash
+
+   git clone git@github.com:mit-ccc/twclient.git && cd twclient
+   pip3 install -e .
+
+or use :bash:`pip3 install -e .[dev]` to also install all dev dependencies.
+
+~~~~~~~~~
+  Usage
+~~~~~~~~~
+
+Setup: Database
+~~~~~~~~~~~~~~~~
+
+First, you need to tell twclient about your database backend and Twitter
+credentials. The database backend can be either sqlite or an arbitrary database
+specified by a sqlalchemy connection string.
+
+You can set up the database in one of two ways. Both create a persistent
+profile in your `.twclientrc` file (or whatever other file you specify), so
+there's no need to type the database details repeatedly.
+
+a sqlalchemy connection url, which can be sqlite (as here) for a
+zero-configuration setup, and can also be something like "postgresql:///" to
+use a traditional full-fledged database you've set up separately.
+
+First, you can specify the DB with a sqlalchemy connection URL:
+
+.. code-block:: bash
+
+   # Postgres
+   # This becomes the default DB because you've created it first
+   twclient config add-db -u "postgresql+psycopg2://username@hostname:5432/dbname" my_postgres_db
+
+   # Or you could use SQLite
+   twclient config add-db -u "sqlite:///home/user/twitter.db" my_sqlite_db
+
+There's also support for using SQLite without having to think about sqlalchemy
+and connection URLs:
+
+.. code-block:: bash
+
+   twclient config add-db -f ./twitter2.db my_sqlite_db2
+
+If you specify a file-backed sqlite DB, as in the examples above, it'll be
+created if it doesn't exist. Other databases (Postgres, for example) will need
+to be set up separately.
+
+Finally, you have to install our database schema into your database to receive
+Twitter data:
+
+.. code-block:: bash
+
+   # You have to specify the -y to say you're aware all data will be dropped
+   twclient initialize -d my_postgres_db -y
+
+Be aware that doing this will **DROP ALL EXISTING TWCLIENT DATA**!!! (Or other
+tables with the same names.) If you're not just getting started, check to make
+sure you're using a new or empty database, don't care about the contents,
+and/or have backups before running this.
+
+Setup: Twitter
+~~~~~~~~~~~~~~~~
+
+You'll also need to set up your Twitter API credentials. [1]_ As with the
+database setup, doing this stores the credentials in a config file (the same
+config file) for ease of use. Only two sets of credentials are shown, but
+you can add as many as you want.
+
+Here's an example of adding two API keys:
+
+.. code-block:: bash
+
    twclient config add-api -n twitter1 \
        --consumer-key XXXXX \
        --consumer-secret XXXXXX \
@@ -62,45 +136,62 @@ tell twclient about your database backend and Twitter credentials:
        --token XXXXXX \
        --token-secret XXXXXX
 
-   # Initialize or re-initialize the DB schema, **dropping any existing data**.
-   twclient initialize -y
-
-~~~~~~~~~~~~~~~~
-  Pulling data
-~~~~~~~~~~~~~~~~
-
-To actually pull data, use the ``twclient fetch`` command. The ``twclient tag``
-command can help keep track of users and datasets. We'll pull information about
-two specific users and a Twitter list here:
+Here's an example of adding credentials that use `app-only auth <https://developer.twitter.com/en/docs/authentication/oauth-2-0/application-only>`_:
 
 .. code-block:: bash
 
-   # Load some users and their basic info
-   twclient fetch users -n wwbrannon socialmachines mit -l mit/a-twitter-list
+   twclient config add-api -n twitter3 \
+       --consumer-key XXXXX \
+       --consumer-secret XXXXXX
 
-   # Tag them for ease of analysis
+Pulling data
+~~~~~~~~~~~~~~
+
+To actually pull data, use the ``twclient fetch`` command. The ``twclient tag``
+command can help keep track of users and datasets. We'll pull information about
+two specific users and a Twitter list here. You can refer to lists either by
+their "slug" (username/listname) or by the ID at the end of a URL of the form
+`https://twitter.com/i/lists/53603015`.
+
+First, let's load some users and their basic info:
+
+.. code-block:: bash
+
+   # you could instead also end this with "-l 53603015"; it's the same list
+   twclient fetch users -n wwbrannon CCCatMIT MIT -l MIT/peers1
+
+Now, to save typing, let's apply a tag we can use to refer to these users
+later:
+
+.. code-block:: bash
+
    twclient tag create subjects
-   twclient tag apply subjects -n wwbrannon socialmachines mit -l mit/a-twitter-list
+   twclient tag apply subjects -n wwbrannon CCCatMIT MIT -l MIT/peers1
 
-   # Get their friends and followers
+We can now use this tag in specifying users, such as which users we'd like to
+fetch tweets for:
+.. code-block:: bash
+
+   twclient fetch tweets -g subjects
+
+And if we also want their follow-graph info (note that a "friend" is Twitter's
+term for a follow-ee, an account you follow):
+.. code-block:: bash
+
    twclient fetch friends -g subjects
    twclient fetch followers -g subjects
-
-   # Get their tweets
-   twclient fetch tweets -g subjects
 
 At this point, the loaded data is in the database configured with ``config
 add-db``. Useful features have been normalized out to save processing time. The
 raw API responses are also saved for later analysis.
 
-~~~~~~~~~~~~~~~~~~
-  Exporting data
-~~~~~~~~~~~~~~~~~~
+Exporting data
+~~~~~~~~~~~~~~~~
 
 You can query the data with the usual database tools (``psql`` for postgres,
 ``sqlite3`` for sqlite, ODBC clients, etc.) or export certain pre-defined bulk
-datasets with the ``twclient export`` command. For example, here's getting the
-follow graph and mention graph:
+datasets with the ``twclient export`` command. For example, here are the follow
+graph and mention graph over users:
 
 .. code-block:: bash
 
@@ -113,6 +204,8 @@ If you want to restrict the export to only the users specified above:
 
     twclient export follow-graph -g subjects -o follow-graph.csv
     twclient export mention-graph -g subjects -o mention-graph.csv
+
+For other exports and other options, see the documentation.
 
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
   Feedback or Contributions
@@ -138,3 +231,6 @@ distributed under the License is distributed on an "AS IS" BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
+
+.. [1] You will of course need to make sure you have the right to use all of
+   your credentials and are complying with Twitter's terms of use.
