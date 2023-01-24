@@ -28,9 +28,8 @@ twclient
 This package provides a high-level command-line client for the Twitter API,
 with a focus on loading data into a database for analysis or bulk use.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~
-  Why use this project?
-~~~~~~~~~~~~~~~~~~~~~~~~~
+Why use this project?
+=====================
 
 This project offers high-level primitives for researchers who want to get
 data out of Twitter, without worrying about the API details. The client can
@@ -38,9 +37,8 @@ handle multiple sets of API credentials seamlessly, helping avoid rate limit
 issues. [1]_ There's also support for exporting bulk datasets from the fetched
 raw data.
 
-~~~~~~~~~~~~~~~~
-  Installation
-~~~~~~~~~~~~~~~~
+Installation
+============
 
 Install the package from pypi:
 
@@ -58,15 +56,14 @@ editable mode:
 
 or use :bash:`pip3 install -e .[dev]` to also install all dev dependencies.
 
-~~~~~~~~~
-  Usage
-~~~~~~~~~
+Usage
+=====
 
 First, you need to tell twclient about your database backend and Twitter
 credentials.
 
 Setup: Database
-~~~~~~~~~~~~~~~~
+---------------
 
 The database backend can be either sqlite or an arbitrary database
 specified by a sqlalchemy connection string.
@@ -110,7 +107,7 @@ sure you're using a new or empty database, don't care about the contents,
 and/or have backups before running this.
 
 Setup: Twitter
-~~~~~~~~~~~~~~~~
+----------------
 
 You'll also need to set up your Twitter API credentials. [1]_ As with the
 database setup, doing this stores the credentials in a config file (the same
@@ -142,7 +139,7 @@ Here's an example of adding credentials that use `app-only auth <https://develop
        --consumer-secret XXXXXX
 
 Pulling data
-~~~~~~~~~~~~~~
+--------------
 
 To actually pull data, use the ``twclient fetch`` command. We'll pull
 information about three specific users and a Twitter list here. Note that you
@@ -184,7 +181,7 @@ add-db``. Useful features have been normalized out to save processing time. The
 raw API responses are also saved for later analysis.
 
 Exporting data
-~~~~~~~~~~~~~~~~
+----------------
 
 You can query the data with the usual database tools (``psql`` for postgres,
 ``sqlite3`` for sqlite, ODBC clients, etc.) or export certain pre-defined bulk
@@ -205,16 +202,14 @@ If you want to restrict the export to only the users specified above:
 
 For other exports and other options, see the documentation.
 
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-  Feedback or Contributions
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Feedback or Contributions
+=========================
 
 If you come across a bug, please report it on the Github issue tracker. If you
 want to contribute, reach out! Extensions and improvements are welcome.
 
-~~~~~~~~~~~~~
-  Copyright
-~~~~~~~~~~~~~
+Copyright
+===========
 
 Copyright © 2019-2023 Massachusetts Institute of Technology.
 
