@@ -45,20 +45,18 @@
               <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">README</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#twclient">twclient</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#why-use-this-project">Why use this project?</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#installation">Installation</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#usage">Usage</a><ul>
-<li class="toctree-l4"><a class="reference internal" href="#setup-database">Setup: Database</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#setup-twitter">Setup: Twitter</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#pulling-data">Pulling data</a></li>
-<li class="toctree-l4"><a class="reference internal" href="#exporting-data">Exporting data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#twclient">twclient</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#why-use-this-project">Why use this project?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#installation">Installation</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#usage">Usage</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#setup-database">Setup: Database</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#setup-twitter">Setup: Twitter</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#pulling-data">Pulling data</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#exporting-data">Exporting data</a></li>
 </ul>
 </li>
-<li class="toctree-l3"><a class="reference internal" href="#feedback-or-contributions">Feedback or Contributions</a></li>
-<li class="toctree-l3"><a class="reference internal" href="#copyright">Copyright</a></li>
-</ul>
-</li>
+<li class="toctree-l2"><a class="reference internal" href="#feedback-or-contributions">Feedback or Contributions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#copyright">Copyright</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
@@ -106,8 +104,9 @@
 <h2>twclient<a class="headerlink" href="#twclient" title="Permalink to this heading"></a></h2>
 <p>This package provides a high-level command-line client for the Twitter API,
 with a focus on loading data into a database for analysis or bulk use.</p>
+</section>
 <section id="why-use-this-project">
-<h3>Why use this project?<a class="headerlink" href="#why-use-this-project" title="Permalink to this heading"></a></h3>
+<h2>Why use this project?<a class="headerlink" href="#why-use-this-project" title="Permalink to this heading"></a></h2>
 <p>This project offers high-level primitives for researchers who want to get
 data out of Twitter, without worrying about the API details. The client can
 handle multiple sets of API credentials seamlessly, helping avoid rate limit
@@ -115,7 +114,7 @@ issues. <a class="footnote-reference brackets" href="#id3" id="id1">1</a> There�
 raw data.</p>
 </section>
 <section id="installation">
-<h3>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h3>
+<h2>Installation<a class="headerlink" href="#installation" title="Permalink to this heading"></a></h2>
 <p>Install the package from pypi:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3<span class="w"> </span>install<span class="w"> </span>twclient
 </pre></div>
@@ -129,21 +128,18 @@ pip3<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </
 <p>or use <code class="code highlight bash docutils literal highlight-bash">pip3<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.<span class="o">[</span>dev<span class="o">]</span></code> to also install all dev dependencies.</p>
 </section>
 <section id="usage">
-<h3>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h3>
-<section id="setup-database">
-<h4>Setup: Database<a class="headerlink" href="#setup-database" title="Permalink to this heading"></a></h4>
+<h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
 <p>First, you need to tell twclient about your database backend and Twitter
-credentials. The database backend can be either sqlite or an arbitrary database
+credentials.</p>
+<section id="setup-database">
+<h3>Setup: Database<a class="headerlink" href="#setup-database" title="Permalink to this heading"></a></h3>
+<p>The database backend can be either sqlite or an arbitrary database
 specified by a sqlalchemy connection string.</p>
 <p>You can set up the database in one of two ways. Both create a persistent
-profile in your <cite>.twclientrc</cite> file (or whatever other file you specify), so
+profile in your <code class="docutils literal notranslate"><span class="pre">.twclientrc</span></code> file (or whatever other file you specify), so
 there’s no need to type the database details repeatedly.</p>
-<p>a sqlalchemy connection url, which can be sqlite (as here) for a
-zero-configuration setup, and can also be something like “postgresql:///” to
-use a traditional full-fledged database you’ve set up separately.</p>
 <p>First, you can specify the DB with a sqlalchemy connection URL:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Postgres</span>
-<span class="c1"># This becomes the default DB because you&#39;ve created it first</span>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># Postgres -- this becomes the default DB because you&#39;ve created it first</span>
 twclient<span class="w"> </span>config<span class="w"> </span>add-db<span class="w"> </span>-u<span class="w"> </span><span class="s2">&quot;postgresql+psycopg2://username@hostname:5432/dbname&quot;</span><span class="w"> </span>my_postgres_db
 
 <span class="c1"># Or you could use SQLite</span>
@@ -170,11 +166,11 @@ sure you’re using a new or empty database, don’t care about the contents,
 and/or have backups before running this.</p>
 </section>
 <section id="setup-twitter">
-<h4>Setup: Twitter<a class="headerlink" href="#setup-twitter" title="Permalink to this heading"></a></h4>
+<h3>Setup: Twitter<a class="headerlink" href="#setup-twitter" title="Permalink to this heading"></a></h3>
 <p>You’ll also need to set up your Twitter API credentials. <a class="footnote-reference brackets" href="#id3" id="id2">1</a> As with the
 database setup, doing this stores the credentials in a config file (the same
-config file) for ease of use. Only two sets of credentials are shown, but
-you can add as many as you want.</p>
+config file as for database info) for ease of use. Only two sets of credentials
+are shown, but you can add as many as you want.</p>
 <p>Here’s an example of adding two API keys:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>config<span class="w"> </span>add-api<span class="w"> </span>-n<span class="w"> </span>twitter1<span class="w"> </span><span class="se">\</span>
 <span class="w">    </span>--consumer-key<span class="w"> </span>XXXXX<span class="w"> </span><span class="se">\</span>
@@ -197,42 +193,39 @@ twclient<span class="w"> </span>config<span class="w"> </span>add-api<span class
 </div>
 </section>
 <section id="pulling-data">
-<h4>Pulling data<a class="headerlink" href="#pulling-data" title="Permalink to this heading"></a></h4>
-<p>To actually pull data, use the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span></code> command. The <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">tag</span></code>
-command can help keep track of users and datasets. We’ll pull information about
-two specific users and a Twitter list here. You can refer to lists either by
-their “slug” (username/listname) or by the ID at the end of a URL of the form
-<cite>https://twitter.com/i/lists/53603015</cite>.</p>
+<h3>Pulling data<a class="headerlink" href="#pulling-data" title="Permalink to this heading"></a></h3>
+<p>To actually pull data, use the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span></code> command. We’ll pull
+information about three specific users and a Twitter list here. Note that you
+can refer to lists either by their “slug” (username/listname) or by the ID at
+the end of a URL of the form <cite>https://twitter.com/i/lists/53603015</cite>.</p>
 <p>First, let’s load some users and their basic info:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># you could instead also end this with &quot;-l 53603015&quot;; it&#39;s the same list</span>
 twclient<span class="w"> </span>fetch<span class="w"> </span>users<span class="w"> </span>-n<span class="w"> </span>wwbrannon<span class="w"> </span>CCCatMIT<span class="w"> </span>MIT<span class="w"> </span>-l<span class="w"> </span>MIT/peers1
 </pre></div>
 </div>
-<p>Now, to save typing, let’s apply a tag we can use to refer to these users
-later:</p>
+<p>Now, to save typing, let’s use the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">tag</span></code> command to apply a tag we
+can use to keep track of these users later:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>tag<span class="w"> </span>create<span class="w"> </span>subjects
 twclient<span class="w"> </span>tag<span class="w"> </span>apply<span class="w"> </span>subjects<span class="w"> </span>-n<span class="w"> </span>wwbrannon<span class="w"> </span>CCCatMIT<span class="w"> </span>MIT<span class="w"> </span>-l<span class="w"> </span>MIT/peers1
 </pre></div>
 </div>
 <p>We can now use this tag in specifying users, such as which users we’d like to
-fetch tweets for:
-.. code-block:: bash</p>
-<blockquote>
-<div><p>twclient fetch tweets -g subjects</p>
-</div></blockquote>
+fetch tweets for:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>fetch<span class="w"> </span>tweets<span class="w"> </span>-g<span class="w"> </span>subjects
+</pre></div>
+</div>
 <p>And if we also want their follow-graph info (note that a “friend” is Twitter’s
-term for a follow-ee, an account you follow):
-.. code-block:: bash</p>
-<blockquote>
-<div><p>twclient fetch friends -g subjects
-twclient fetch followers -g subjects</p>
-</div></blockquote>
+term for a follow-ee, an account you follow):</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>fetch<span class="w"> </span>friends<span class="w"> </span>-g<span class="w"> </span>subjects
+twclient<span class="w"> </span>fetch<span class="w"> </span>followers<span class="w"> </span>-g<span class="w"> </span>subjects
+</pre></div>
+</div>
 <p>At this point, the loaded data is in the database configured with <code class="docutils literal notranslate"><span class="pre">config</span>
 <span class="pre">add-db</span></code>. Useful features have been normalized out to save processing time. The
 raw API responses are also saved for later analysis.</p>
 </section>
 <section id="exporting-data">
-<h4>Exporting data<a class="headerlink" href="#exporting-data" title="Permalink to this heading"></a></h4>
+<h3>Exporting data<a class="headerlink" href="#exporting-data" title="Permalink to this heading"></a></h3>
 <p>You can query the data with the usual database tools (<code class="docutils literal notranslate"><span class="pre">psql</span></code> for postgres,
 <code class="docutils literal notranslate"><span class="pre">sqlite3</span></code> for sqlite, ODBC clients, etc.) or export certain pre-defined bulk
 datasets with the <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">export</span></code> command. For example, here are the follow
@@ -250,12 +243,12 @@ twclient<span class="w"> </span><span class="nb">export</span><span class="w"> <
 </section>
 </section>
 <section id="feedback-or-contributions">
-<h3>Feedback or Contributions<a class="headerlink" href="#feedback-or-contributions" title="Permalink to this heading"></a></h3>
+<h2>Feedback or Contributions<a class="headerlink" href="#feedback-or-contributions" title="Permalink to this heading"></a></h2>
 <p>If you come across a bug, please report it on the Github issue tracker. If you
 want to contribute, reach out! Extensions and improvements are welcome.</p>
 </section>
 <section id="copyright">
-<h3>Copyright<a class="headerlink" href="#copyright" title="Permalink to this heading"></a></h3>
+<h2>Copyright<a class="headerlink" href="#copyright" title="Permalink to this heading"></a></h2>
 <p>Copyright © 2019-2023 Massachusetts Institute of Technology.</p>
 <p>Licensed under the Apache License, Version 2.0 (the “License”);
 you may not use this software except in compliance with the License.
@@ -274,7 +267,6 @@ limitations under the License.</p>
 your credentials and are complying with Twitter’s terms of use.</p>
 </dd>
 </dl>
-</section>
 </section>
 </section>
 
