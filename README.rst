@@ -75,10 +75,6 @@ You can set up the database in one of two ways. Both create a persistent
 profile in your `.twclientrc` file (or whatever other file you specify), so
 there's no need to type the database details repeatedly.
 
-a sqlalchemy connection url, which can be sqlite (as here) for a
-zero-configuration setup, and can also be something like "postgresql:///" to
-use a traditional full-fledged database you've set up separately.
-
 First, you can specify the DB with a sqlalchemy connection URL:
 
 .. code-block:: bash
