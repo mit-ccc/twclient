@@ -10,6 +10,7 @@ import pytest
 
 from src.twclient._cli.entrypoint import cli
 
+from . import utils as ut
 
 # sqlalchemy made several breaking changes in version 2.0; let's see the
 # warnings about them if using an earlier version
@@ -61,8 +62,8 @@ def make_commands(d):
         ['export', 'retweet-graph', '-o', str(d / 'retweet-graph.csv')] + conf,
         ['export', 'reply-graph', '-o', str(d / 'reply-graph.csv')] + conf,
         ['export', 'quote-graph', '-o', str(d / 'quote-graph.csv')] + conf,
-        ['export', 'tweets', '-o', d / str('tweets.csv')] + conf,
-        ['export', 'user-info', '-o', d / str('user-info.csv')] + conf,
+        ['export', 'tweets', '-o', str(d / 'tweets.csv')] + conf,
+        ['export', 'user-info', '-o', str(d / 'user-info.csv')] + conf,
         ['export', 'mutual-followers', '-o', str(d / 'mutual-followers.csv')] + conf,
         ['export', 'mutual-friends', '-o', str(d / 'mutual-friends.csv')] + conf,
     ]
@@ -86,19 +87,17 @@ def make_commands(d):
 @pytest.mark.vcr('cassettes/twclient/end-to-end.yaml')
 def test_end_to_end(tmp_path):
     # dat = make_commands(tmp_path)
-
     import pathlib
     dat = make_commands(pathlib.Path('.'))
 
     for cmd in dat['commands']:
-        print(cmd)
         cli(prog='twclient', args=cmd)
 
     for k, v in dat['artifacts'].items():
         checksum = hashlib.sha256()
 
         with open(k, 'rb') as f:
-            for chunk in iter(lambda f: f.read(4096), b''):
+            for chunk in ut.chunk_read(f, chunk_size=4096):
                 checksum.update(chunk)
 
         assert checksum.hexdigest() is not None  # FIXME == v
