@@ -37,4 +37,4 @@ devsetup:
 	python3 -m venv $(ENVPATH)
 	
 	$(ENVPATH)/bin/pip install -U pip
-	$(ENVPATH)/bin/pip install -e .[test,dev,docs]
+	$(ENVPATH)/bin/pip install -e .[dev]
