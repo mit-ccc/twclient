@@ -9,8 +9,8 @@ lint:
 tests:
 	coverage run -m tox
 
-docs:
-	cd docs && $(MAKE)
+doc:
+	cd docs && $(MAKE) html
 
 ## Local dev use only, not used in CI ##
 
