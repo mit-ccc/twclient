@@ -89,9 +89,9 @@ def _add_fetch_arguments(parser, extra=False):
     return parser
 
 
-def _make_parser():
+def _make_parser(prog=None):
     desc = 'Fetch Twitter data and store in a DB schema'
-    parser = ap.ArgumentParser(description=desc)
+    parser = ap.ArgumentParser(prog=prog, description=desc)
 
     #
     # Commands
@@ -287,7 +287,7 @@ def _make_parser():
     return parser
 
 
-def cli(args=None):
+def cli(prog=None, args=None):
     '''
     The main command-line entrypoint.
 
@@ -300,8 +300,8 @@ def cli(args=None):
     None
     '''
 
-    parser = _make_parser()
-    args = parser.parse_args(args)
+    parser = _make_parser(prog=prog)
+    args = parser.parse_args(args=args)
 
     command = vars(args).pop('command')
     verbosity = vars(args).pop('verbose')
