@@ -22,15 +22,15 @@ jobs:
             - name: Install dependencies
               run: |
                   python3 -m pip install -U pip
-                  python3 -m pip install .[doc]
+                  python3 -m pip install .[docs]
 
             - name: Build
-              run: make doc
+              run: make docs
 
             - name: Deploy
               uses: peaceiris/actions-gh-pages@v3
               if: ${{ github.ref == 'refs/heads/main' }}
               with:
                   github_token: ${{ secrets.GITHUB_TOKEN }}
-                  publish_dir: docsrc/_build/html
+                  publish_dir: docs/_build/html
                   publish_branch: gh-pages

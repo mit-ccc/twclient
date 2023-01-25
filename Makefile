@@ -9,8 +9,8 @@ lint:
 tests:
 	coverage run -m tox
 
-doc:
-	cd docsrc && $(MAKE)
+docs:
+	cd docs && $(MAKE)
 
 ## Local dev use only, not used in CI ##
 
@@ -22,7 +22,7 @@ clean:
 	find . -name '*.egg-info' -exec rm -rf {} \+  # directories
 	find . -name '*~'    -exec rm -f {} \+
 	
-	cd docsrc && $(MAKE) clean
+	cd docs && $(MAKE) clean
 
 devsetup:
 	# for local multi-python testing with tox; assumes pyenv already installed
