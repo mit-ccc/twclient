@@ -68,5 +68,5 @@ python =
 [testenv]
 commands = pytest []
 passenv = CONSUMER_KEY, CONSUMER_SECRET
-extras = dev
+extras = ci
 """
