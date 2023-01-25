@@ -1,0 +1,36 @@
+name: GitHub Pages
+
+on:
+  push:
+    branches: main
+
+jobs:
+    deploy:
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        concurrency:
+            group: ${{ github.workflow }}-${{ github.ref }}
+        steps:
+            - uses: actions/checkout@v3
+
+            - name: Set up Python
+                uses: actions/setup-python@v4
+                with:
+                    python-version: 3.11
+
+            - name: Install dependencies
+              run: |
+                  python3 -m pip install -U pip
+                  python3 -m pip install .[doc]
+
+            - name: Build
+              run: make doc
+
+            - name: Deploy
+              uses: peaceiris/actions-gh-pages@v3
+              if: ${{ github.ref == 'refs/heads/main' }}
+              with:
+                github_token: ${{ secrets.GITHUB_TOKEN }}
+                publish_dir: docsrc/_build/html
+                publish_branch: gh-pages
