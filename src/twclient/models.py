@@ -23,8 +23,6 @@ if ut.SA_V14:
 else:
     from sqlalchemy.ext.declarative import as_declarative, declared_attr
 
-from . import _utils as ut
-
 logger = logging.getLogger(__name__)
 
 # Better to have these all in one file
