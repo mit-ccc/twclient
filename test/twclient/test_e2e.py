@@ -22,17 +22,21 @@ warnings.filterwarnings('always')
 
 
 @pytest.fixture(scope="module")
-def vcr_config():
+def vcr_config():  # pylint: disable=missing-function-docstring
     return {"filter_headers": ["authorization"]}
 
 
-def make_commands(d):
+def make_commands(dct):
+    '''
+    Make command sequence for end-to-end test
+    '''
+
     targets = [
         '-n', 'wwbrannon', 'CCCatMIT', 'RTFC_Boston', 'cortico',
         '-l', '214727905'
     ]
 
-    frc = ['-c', str(d / 'twclientrc.tmp')]
+    frc = ['-c', str(dct / 'twclientrc.tmp')]
     fdb = ['-d', 'db']
     fai = ['-a', 'api']
 
@@ -45,7 +49,7 @@ def make_commands(d):
             '-m', os.environ['CONSUMER_SECRET'],
             'api'
         ] + frc,
-        ['config', 'add-db', '-f', str(d / 'scratch.db'), 'db'] + frc,
+        ['config', 'add-db', '-f', str(dct / 'scratch.db'), 'db'] + frc,
 
         ['initialize', '-d', 'db', '-y'] + conf,
         ['tag', 'create', 'users'] + conf,
@@ -57,47 +61,49 @@ def make_commands(d):
         ['fetch', 'friends', '-g', 'users'] + conf + fai,
         ['fetch', 'followers', '-g', 'users'] + conf + fai,
 
-        ['export', 'follow-graph', '-o', str(d / 'follow-graph.csv')] + conf,
-        ['export', 'mention-graph', '-o', str(d / 'mention-graph.csv')] + conf,
-        ['export', 'retweet-graph', '-o', str(d / 'retweet-graph.csv')] + conf,
-        ['export', 'reply-graph', '-o', str(d / 'reply-graph.csv')] + conf,
-        ['export', 'quote-graph', '-o', str(d / 'quote-graph.csv')] + conf,
-        ['export', 'tweets', '-o', str(d / 'tweets.csv')] + conf,
-        ['export', 'user-info', '-o', str(d / 'user-info.csv')] + conf,
-        ['export', 'mutual-followers', '-o', str(d / 'mutual-followers.csv')] + conf,
-        ['export', 'mutual-friends', '-o', str(d / 'mutual-friends.csv')] + conf,
+        ['export', 'follow-graph', '-o', str(dct / 'follow-graph.csv')] + conf,
+        ['export', 'mention-graph', '-o', str(dct / 'mention-graph.csv')] + conf,
+        ['export', 'retweet-graph', '-o', str(dct / 'retweet-graph.csv')] + conf,
+        ['export', 'reply-graph', '-o', str(dct / 'reply-graph.csv')] + conf,
+        ['export', 'quote-graph', '-o', str(dct / 'quote-graph.csv')] + conf,
+        ['export', 'tweets', '-o', str(dct / 'tweets.csv')] + conf,
+        ['export', 'user-info', '-o', str(dct / 'user-info.csv')] + conf,
+        ['export', 'mutual-followers', '-o', str(dct / 'mutual-followers.csv')] + conf,
+        ['export', 'mutual-friends', '-o', str(dct / 'mutual-friends.csv')] + conf,
     ]
 
-    return {
+    return {  # pylint: disable=line-too-long
         'commands': commands,
         'artifacts': {
-            d / 'follow-graph.csv': '',
-            d / 'mention-graph.csv': '',
-            d / 'retweet-graph.csv': '',
-            d / 'reply-graph.csv': '',
-            d / 'quote-graph.csv': '',
-            d / 'tweets.csv': '',
-            d / 'user-info.csv': '',
-            d / 'mutual-followers.csv': '',
-            d / 'mutual-friends.csv': '',
+            str(dct / 'follow-graph.csv'): '08e41beaf34ab619d14b83221f41a975c69f14f9c3244218a7211455496eda48',
+            str(dct / 'mention-graph.csv'): '88feb9e7e28f4ca1c4fd1a37fdaa8482bcb407a98b90a203465f4e69513a5e90',
+            str(dct / 'retweet-graph.csv'): '8e611260875d3f8ec5de3cedf3178c9e2b7ed5578ce66edcec1b8830fa1d52d1',
+            str(dct / 'reply-graph.csv'): '379809a4a8ddc45cbaee470f1edcd32e98a56d066719ee16f9a824f45e45f634',
+            str(dct / 'quote-graph.csv'): '7aecb467be3e200c4c7d8f051327ac6ab2f1316e9c1a86f63efea6fa31f7bc96',
+            str(dct / 'tweets.csv'): 'e032e29008bcef814e7b259852f53d6ff83bf412a07ffd9f251e32d7d1813e43',
+            str(dct / 'user-info.csv'): 'b73338c9aeeb182885b15ed330016190567405eeb7f83ad674dc410f6b1dc5da',
+            str(dct / 'mutual-followers.csv'): '81085039adb01c328969bc4ac087426536da8a2172f2d2f19d4e06184c242e81',
+            str(dct / 'mutual-friends.csv'): '2087c305023d79d4f92ac80771ef2cc2b4dd0cdea26370e6453df5cd64f70967',
         },
     }
 
 
 @pytest.mark.vcr('cassettes/twclient/end-to-end.yaml')
 def test_end_to_end(tmp_path):
-    # dat = make_commands(tmp_path)
-    import pathlib
-    dat = make_commands(pathlib.Path('.'))
+    '''
+    End-to-end integration test of twclient functionality
+    '''
+
+    dat = make_commands(tmp_path)
 
     for cmd in dat['commands']:
         cli(prog='twclient', args=cmd)
 
-    for k, v in dat['artifacts'].items():
+    for fname, val in dat['artifacts'].items():
         checksum = hashlib.sha256()
 
-        with open(k, 'rb') as f:
-            for chunk in ut.chunk_read(f, chunk_size=4096):
+        with open(fname, 'rb') as fil:
+            for chunk in ut.chunk_read(fil, chunk_size=4096):
                 checksum.update(chunk)
 
-        assert checksum.hexdigest() is not None  # FIXME == v
+        assert checksum.hexdigest() == val
