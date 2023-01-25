@@ -23,7 +23,10 @@ warnings.filterwarnings('always')
 
 @pytest.fixture(scope="module")
 def vcr_config():  # pylint: disable=missing-function-docstring
-    return {"filter_headers": ["authorization"]}
+    return {
+        'filter_headers': ['authorization'],
+        'record_mode': 'none',
+    }
 
 
 def make_commands(dct):
