@@ -4,8 +4,6 @@ Exceptions that twclient code may raise.
 
 import logging
 
-import tweepy
-
 from . import _utils as ut
 
 if ut.TWEEPY_V4:
