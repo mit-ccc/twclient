@@ -4,7 +4,15 @@ A command to interact with the config file.
 
 import logging
 
-from ..job import config as cj
+from ..job_config import (
+    ConfigListDbJob,
+    ConfigListApiJob,
+    ConfigRmDbJob,
+    ConfigRmApiJob,
+    SetDbDefaultJob,
+    ConfigAddDbJob,
+    ConfigAddApiJob
+)
 from . import command as cmd
 
 logger = logging.getLogger(__name__)
@@ -78,13 +86,13 @@ class ConfigCommand(cmd.Command):
     '''
 
     subcommand_to_job = {
-        'list-db': cj.ConfigListDbJob,
-        'list-api': cj.ConfigListApiJob,
-        'rm-db': cj.ConfigRmDbJob,
-        'rm-api': cj.ConfigRmApiJob,
-        'set-db-default': cj.SetDbDefaultJob,
-        'add-db': cj.ConfigAddDbJob,
-        'add-api': cj.ConfigAddApiJob
+        'list-db': ConfigListDbJob,
+        'list-api': ConfigListApiJob,
+        'rm-db': ConfigRmDbJob,
+        'rm-api': ConfigRmApiJob,
+        'set-db-default': SetDbDefaultJob,
+        'add-db': ConfigAddDbJob,
+        'add-api': ConfigAddApiJob
     }
 
     def __init__(self, **kwargs):

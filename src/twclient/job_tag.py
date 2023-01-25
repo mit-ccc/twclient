@@ -4,13 +4,19 @@ Jobs which create, apply or delete user tags.
 
 import logging
 
-from .job import DatabaseJob, TargetJob
-from .. import error as err
-from .. import models as md
+from .job_base import DatabaseJob, TargetJob
+from .error import BadTagError
+from .models import Tag
+from ._utils import export
 
 logger = logging.getLogger(__name__)
 
 
+# this is just a stub to placate the linter; the @export decorator adds
+# objects to __all__ so that whether an object is included is noted next to it
+__all__ = []
+
+@export
 class TagJob(DatabaseJob):
     '''
     A job which uses user tags.
@@ -42,6 +48,7 @@ class TagJob(DatabaseJob):
         self.ensure_schema_version()
 
 
+@export
 class CreateTagJob(TagJob):
     '''
     Create a user tag.
@@ -52,11 +59,12 @@ class CreateTagJob(TagJob):
     '''
 
     def run(self):
-        self.get_or_create(md.Tag, name=self.tag)
+        self.get_or_create(Tag, name=self.tag)
 
         self.session.commit()
 
 
+@export
 class DeleteTagJob(TagJob):
     '''
     Delete a user tag.
@@ -67,7 +75,7 @@ class DeleteTagJob(TagJob):
     '''
 
     def run(self):
-        tag = self.session.query(md.Tag).filter_by(name=self.tag).one_or_none()
+        tag = self.session.query(Tag).filter_by(name=self.tag).one_or_none()
 
         if tag:
             # DELETE is slow on many databases, but we're assuming none of
@@ -79,6 +87,7 @@ class DeleteTagJob(TagJob):
             self.session.commit()
 
 
+@export
 class ApplyTagJob(TagJob, TargetJob):
     '''
     Apply a user tag to a set of users.
@@ -101,11 +110,11 @@ class ApplyTagJob(TagJob, TargetJob):
     def run(self):
         self.resolve_targets()
 
-        tag = self.session.query(md.Tag).filter_by(name=self.tag).one_or_none()
+        tag = self.session.query(Tag).filter_by(name=self.tag).one_or_none()
 
         if not tag:
             msg = f'Tag {self.tag} does not exist'
-            raise err.BadTagError(message=msg, tag=tag)
+            raise BadTagError(message=msg, tag=tag)
 
         for user in self.users:
             user.tags.append(tag)

@@ -4,7 +4,17 @@ A command to export data from the database.
 
 import logging
 
-from ..job import export as ej
+from ..job_export import (
+    ExportFollowGraphJob,
+    ExportMentionGraphJob,
+    ExportRetweetGraphJob,
+    ExportReplyGraphJob,
+    ExportQuoteGraphJob,
+    ExportTweetsJob,
+    ExportUserInfoJob,
+    ExportMutualFollowersJob,
+    ExportMutualFriendsJob
+)
 from . import command as cmd
 
 logger = logging.getLogger(__name__)
@@ -40,15 +50,15 @@ class ExportCommand(cmd.DatabaseCommand, cmd.TargetCommand):
         self.outfile = outfile
 
     subcommand_to_job = {
-        'follow-graph': ej.ExportFollowGraphJob,
-        'mention-graph': ej.ExportMentionGraphJob,
-        'retweet-graph': ej.ExportRetweetGraphJob,
-        'reply-graph': ej.ExportReplyGraphJob,
-        'quote-graph': ej.ExportQuoteGraphJob,
-        'tweets': ej.ExportTweetsJob,
-        'user-info': ej.ExportUserInfoJob,
-        'mutual-followers': ej.ExportMutualFollowersJob,
-        'mutual-friends': ej.ExportMutualFriendsJob
+        'follow-graph': ExportFollowGraphJob,
+        'mention-graph': ExportMentionGraphJob,
+        'retweet-graph': ExportRetweetGraphJob,
+        'reply-graph': ExportReplyGraphJob,
+        'quote-graph': ExportQuoteGraphJob,
+        'tweets': ExportTweetsJob,
+        'user-info': ExportUserInfoJob,
+        'mutual-followers': ExportMutualFollowersJob,
+        'mutual-friends': ExportMutualFriendsJob
     }
 
     @property

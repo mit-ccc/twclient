@@ -4,12 +4,18 @@ Jobs which modify or display the config file.
 
 import logging
 
-from .job import Job
-from .. import error as err
+from .job_base import Job
+from .error import BadConfigError
+from ._utils import export
 
 logger = logging.getLogger(__name__)
 
 
+# this is just a stub to placate the linter; the @export decorator adds
+# objects to __all__ so that whether an object is included is noted next to it
+__all__ = []
+
+@export
 class ConfigJob(Job):
     '''
     A job which interacts with the config file.
@@ -40,6 +46,7 @@ class ConfigJob(Job):
         self.config = config
 
 
+@export
 class ConfigPrintJob(ConfigJob):
     '''
     A job which prints information from the config file.
@@ -67,6 +74,7 @@ class ConfigPrintJob(ConfigJob):
         self.full = full
 
 
+@export
 class ConfigWriteJob(ConfigJob):
     '''
     A job which modifies the config file.
@@ -93,6 +101,7 @@ class ConfigWriteJob(ConfigJob):
         self.name = name
 
 
+@export
 class ConfigListDbJob(ConfigPrintJob):
     '''
     List the database profiles given in the config file.
@@ -109,6 +118,7 @@ class ConfigListDbJob(ConfigPrintJob):
                 print(name)
 
 
+@export
 class ConfigListApiJob(ConfigPrintJob):
     '''
     List the API profiles given in the config file.
@@ -124,6 +134,8 @@ class ConfigListApiJob(ConfigPrintJob):
             else:
                 print(name)
 
+
+@export
 class ConfigRmDbJob(ConfigWriteJob):
     '''
     Remove a database profile given in the config file.
@@ -132,11 +144,11 @@ class ConfigRmDbJob(ConfigWriteJob):
     def run(self):
         if self.name not in self.config.profile_names:
             msg = 'DB profile {0} not found'
-            raise err.BadConfigError(message=msg.format(self.name))
+            raise BadConfigError(message=msg.format(self.name))
 
         if self.name in self.config.api_profile_names:
             msg = f'Profile {self.name} is an API profile'
-            raise err.BadConfigError(message=msg)
+            raise BadConfigError(message=msg)
 
         if self.config.getboolean(self.name, 'is_default'):
             for name in self.config.db_profile_names:
@@ -148,6 +160,8 @@ class ConfigRmDbJob(ConfigWriteJob):
 
         self.config.save()
 
+
+@export
 class ConfigRmApiJob(ConfigWriteJob):
     '''
     Remove an API profile given in the config file.
@@ -156,16 +170,18 @@ class ConfigRmApiJob(ConfigWriteJob):
     def run(self):
         if self.name not in self.config.profile_names:
             msg = 'API profile {0} not found'
-            raise err.BadConfigError(message=msg.format(self.name))
+            raise BadConfigError(message=msg.format(self.name))
 
         if self.name in self.config.db_profile_names:
             msg = f'Profile {self.name} is a DB profile'
-            raise err.BadConfigError(message=msg)
+            raise BadConfigError(message=msg)
 
         self.config.pop(self.name)
 
         self.config.save()
 
+
+@export
 class SetDbDefaultJob(ConfigWriteJob):
     '''
     Set a database profile given in the config file as the default DB profile.
@@ -174,11 +190,11 @@ class SetDbDefaultJob(ConfigWriteJob):
     def run(self):
         if self.name not in self.config.profile_names:
             msg = 'DB profile {0} not found'
-            raise err.BadConfigError(message=msg.format(self.name))
+            raise BadConfigError(message=msg.format(self.name))
 
         if self.name in self.config.api_profile_names:
             msg = f'Profile {self.name} is an API profile'
-            raise err.BadConfigError(message=msg)
+            raise BadConfigError(message=msg)
 
         for name in self.config.db_profile_names:
             self.config[name]['is_default'] = str(False)
@@ -187,6 +203,8 @@ class SetDbDefaultJob(ConfigWriteJob):
 
         self.config.save()
 
+
+@export
 class ConfigAddDbJob(ConfigWriteJob):
     '''
     Add a database profile to the config file.
@@ -216,11 +234,11 @@ class ConfigAddDbJob(ConfigWriteJob):
     def run(self):
         if self.name == 'DEFAULT':
             msg = 'Profile name may not be "DEFAULT"'
-            raise err.BadConfigError(message=msg)
+            raise BadConfigError(message=msg)
 
         if self.name in self.config.profile_names:
             msg = f'Profile {self.name} already exists'
-            raise err.BadConfigError(message=msg)
+            raise BadConfigError(message=msg)
 
         self.config[self.name] = {
             'type': 'database',
@@ -230,6 +248,8 @@ class ConfigAddDbJob(ConfigWriteJob):
 
         self.config.save()
 
+
+@export
 class ConfigAddApiJob(ConfigWriteJob):
     '''
     Add an API profile to the config file.
@@ -287,11 +307,11 @@ class ConfigAddApiJob(ConfigWriteJob):
     def run(self):
         if self.name == 'DEFAULT':
             msg = 'Profile name may not be "DEFAULT"'
-            raise err.BadConfigError(message=msg)
+            raise BadConfigError(message=msg)
 
         if self.name in self.config.profile_names:
             msg = f'Profile {self.name} already exists'
-            raise err.BadConfigError(message=msg)
+            raise BadConfigError(message=msg)
 
         self.config[self.name] = {
             'type': 'api',

@@ -10,15 +10,19 @@ from abc import ABC, abstractmethod
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 
-from .._version import __version__
-from .. import error as err
-from .. import models as md
-from .. import _utils as ut
+from ._version import __version__
+from .error import BadSchemaError, BadTargetError
+from .models import SchemaVersion
+from ._utils import export
 
 logger = logging.getLogger(__name__)
 
 
-@ut.export
+# this is just a stub to placate the linter; the @export decorator adds
+# objects to __all__ so that whether an object is included is noted next to it
+__all__ = []
+
+@export
 class Job(ABC):
     '''
     A job to be run against the database and possibly also the Twitter API.
@@ -35,7 +39,7 @@ class Job(ABC):
         raise NotImplementedError()
 
 
-@ut.export
+@export
 class DatabaseJob(Job):
     '''
     A job to be run against the database.
@@ -92,28 +96,28 @@ class DatabaseJob(Job):
             return
 
         try:
-            schema_version = self.session.query(md.SchemaVersion).all()
+            schema_version = self.session.query(SchemaVersion).all()
         except sa.exc.ProgrammingError as exc:
             msg = 'Bad or missing schema version tag in database (have you ' \
                   'initialized it?)'
-            raise err.BadSchemaError(message=msg) from exc
+            raise BadSchemaError(message=msg) from exc
 
         if len(schema_version) != 1:
             msg = 'Bad or missing schema version tag in database'
-            raise err.BadSchemaError(message=msg)
+            raise BadSchemaError(message=msg)
 
         db_version = schema_version[0].version
 
         if db_version > __version__:
             msg = 'Package version {0} cannot use future schema version {1}'
             msg = msg.format(__version__, db_version)
-            raise err.BadSchemaError(message=msg)
+            raise BadSchemaError(message=msg)
 
         if db_version < __version__:  # likely to change in future versions
             msg = 'Package version {0} cannot migrate old schema version ' \
                   '{1}; consider downgrading the package version'
             msg = msg.format(__version__, db_version)
-            raise err.BadSchemaError(message=msg)
+            raise BadSchemaError(message=msg)
 
         self._schema_verified = True
 
@@ -152,7 +156,7 @@ class DatabaseJob(Job):
         return instance
 
 
-@ut.export
+@export
 class TargetJob(DatabaseJob):
     '''
     A job which requires targets.
@@ -313,13 +317,13 @@ class TargetJob(DatabaseJob):
             if self.allow_missing_targets:
                 logger.warning(msg)
             else:
-                raise err.BadTargetError(
+                raise BadTargetError(
                     message=msg,
                     targets=self.missing_targets
                 )
 
 
-@ut.export
+@export
 class ApiJob(Job):
     '''
     A job requiring acess to the Twitter API.

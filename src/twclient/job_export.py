@@ -11,13 +11,18 @@ import sqlalchemy as sa
 from sqlalchemy import sql
 from sqlalchemy.sql.expression import func
 
-from .job import DatabaseJob, TargetJob
-from .. import _utils as ut
-from .. import models as md
+from .job_base import DatabaseJob, TargetJob
+from ._utils import smart_open, grouper, export
+from .models import Follow, StgUser, Tweet, Url, UserData, UserMention
 
 logger = logging.getLogger(__name__)
 
 
+# this is just a stub to placate the linter; the @export decorator adds
+# objects to __all__ so that whether an object is included is noted next to it
+__all__ = []
+
+@export
 class ExportJob(TargetJob, DatabaseJob):
     '''
     A job exporting data from the database.
@@ -81,7 +86,7 @@ class ExportJob(TargetJob, DatabaseJob):
         self.resolve_targets()
         self._load_targets_to_stg()
 
-        with ut.smart_open(self.outfile, mode='wt') as fle:
+        with smart_open(self.outfile, mode='wt') as fle:
             writer = csv.DictWriter(fle, self.columns)
             writer.writeheader()
 
@@ -90,9 +95,9 @@ class ExportJob(TargetJob, DatabaseJob):
 
     def _load_targets_to_stg(self):
         ids = list(set(self.users))
-        ids = ut.grouper(self.users, 5000)  # just a default batch size
+        ids = grouper(self.users, 5000)  # just a default batch size
 
-        md.StgUser.clear_fast(self.session)
+        StgUser.clear_fast(self.session)
 
         n_items = 0
         for ind, batch in enumerate(ids):
@@ -101,13 +106,14 @@ class ExportJob(TargetJob, DatabaseJob):
             logger.debug(msg)
 
             rows = ({'user_id': t.user_id} for t in batch)
-            self.session.bulk_insert_mappings(md.StgUser, rows)
+            self.session.bulk_insert_mappings(StgUser, rows)
 
             n_items += len(batch)
 
         return n_items
 
 
+@export
 class ExportFollowGraphJob(ExportJob):
     '''
     Export the follow graph.
@@ -125,22 +131,23 @@ class ExportFollowGraphJob(ExportJob):
 
     def query(self):
         ret = self.session \
-            .query(md.Follow.source_user_id, md.Follow.target_user_id)
+            .query(Follow.source_user_id, Follow.target_user_id)
 
         if self.users:
-            su1 = sa.orm.aliased(md.StgUser)
-            su2 = sa.orm.aliased(md.StgUser)
+            su1 = sa.orm.aliased(StgUser)
+            su2 = sa.orm.aliased(StgUser)
 
             ret = ret \
-                .join(su1, su1.user_id == md.Follow.source_user_id) \
-                .join(su2, su2.user_id == md.Follow.target_user_id) \
+                .join(su1, su1.user_id == Follow.source_user_id) \
+                .join(su2, su2.user_id == Follow.target_user_id) \
 
         ret = ret \
-            .filter(md.Follow.valid_end_dt.is_(None))
+            .filter(Follow.valid_end_dt.is_(None))
 
         yield from ret
 
 
+@export
 class ExportMentionGraphJob(ExportJob):
     '''
     Export the mention graph.
@@ -160,26 +167,27 @@ class ExportMentionGraphJob(ExportJob):
     def query(self):
         ret = self.session \
             .query(
-                md.Tweet.user_id,
-                md.UserMention.mentioned_user_id,
+                Tweet.user_id,
+                UserMention.mentioned_user_id,
                 func.count()
             ) \
-            .join(md.Tweet, md.Tweet.tweet_id == md.UserMention.tweet_id)
+            .join(Tweet, Tweet.tweet_id == UserMention.tweet_id)
 
         if self.users:
-            su1 = sa.orm.aliased(md.StgUser)
-            su2 = sa.orm.aliased(md.StgUser)
+            su1 = sa.orm.aliased(StgUser)
+            su2 = sa.orm.aliased(StgUser)
 
             ret = ret \
-                .join(su1, su1.user_id == md.Tweet.user_id) \
-                .join(su2, su2.user_id == md.UserMention.mentioned_user_id) \
+                .join(su1, su1.user_id == Tweet.user_id) \
+                .join(su2, su2.user_id == UserMention.mentioned_user_id) \
 
         ret = ret \
-            .group_by(md.Tweet.user_id, md.UserMention.mentioned_user_id)
+            .group_by(Tweet.user_id, UserMention.mentioned_user_id)
 
         yield from ret
 
 
+@export
 class ExportReplyGraphJob(ExportJob):
     '''
     Export the reply graph.
@@ -199,26 +207,27 @@ class ExportReplyGraphJob(ExportJob):
     def query(self):
         ret = self.session \
             .query(
-                md.Tweet.user_id,
-                md.Tweet.in_reply_to_user_id,
+                Tweet.user_id,
+                Tweet.in_reply_to_user_id,
                 func.count()
             )
 
         if self.users:
-            su1 = sa.orm.aliased(md.StgUser)
-            su2 = sa.orm.aliased(md.StgUser)
+            su1 = sa.orm.aliased(StgUser)
+            su2 = sa.orm.aliased(StgUser)
 
             ret = ret \
-                .join(su1, su1.user_id == md.Tweet.user_id) \
-                .join(su2, su2.user_id == md.Tweet.in_reply_to_user_id)
+                .join(su1, su1.user_id == Tweet.user_id) \
+                .join(su2, su2.user_id == Tweet.in_reply_to_user_id)
 
         ret = ret \
-            .filter(md.Tweet.in_reply_to_user_id.isnot(None)) \
-            .group_by(md.Tweet.user_id, md.Tweet.in_reply_to_user_id)
+            .filter(Tweet.in_reply_to_user_id.isnot(None)) \
+            .group_by(Tweet.user_id, Tweet.in_reply_to_user_id)
 
         yield from ret
 
 
+@export
 class ExportRetweetGraphJob(ExportJob):
     '''
     Export the retweet graph.
@@ -236,16 +245,16 @@ class ExportRetweetGraphJob(ExportJob):
     columns = ['source_user_id', 'target_user_id', 'num_retweets']
 
     def query(self):
-        tws = sa.orm.aliased(md.Tweet)
-        twt = sa.orm.aliased(md.Tweet)
+        tws = sa.orm.aliased(Tweet)
+        twt = sa.orm.aliased(Tweet)
 
         ret = self.session \
             .query(tws.user_id, twt.user_id, func.count()) \
             .join(twt, twt.tweet_id == tws.retweeted_status_id)
 
         if self.users:
-            su1 = sa.orm.aliased(md.StgUser)
-            su2 = sa.orm.aliased(md.StgUser)
+            su1 = sa.orm.aliased(StgUser)
+            su2 = sa.orm.aliased(StgUser)
 
             ret = ret \
                 .join(su1, su1.user_id == twt.user_id) \
@@ -257,6 +266,7 @@ class ExportRetweetGraphJob(ExportJob):
         yield from ret
 
 
+@export
 class ExportQuoteGraphJob(ExportJob):
     '''
     Export the quote graph.
@@ -274,16 +284,16 @@ class ExportQuoteGraphJob(ExportJob):
     columns = ['source_user_id', 'target_user_id', 'num_quotes']
 
     def query(self):
-        tws = sa.orm.aliased(md.Tweet)
-        twt = sa.orm.aliased(md.Tweet)
+        tws = sa.orm.aliased(Tweet)
+        twt = sa.orm.aliased(Tweet)
 
         ret = self.session \
             .query(tws.user_id, twt.user_id, func.count()) \
             .join(twt, twt.tweet_id == tws.quoted_status_id)
 
         if self.users:
-            su1 = sa.orm.aliased(md.StgUser)
-            su2 = sa.orm.aliased(md.StgUser)
+            su1 = sa.orm.aliased(StgUser)
+            su2 = sa.orm.aliased(StgUser)
 
             ret = ret \
                 .join(su1, su1.user_id == twt.user_id) \
@@ -295,6 +305,7 @@ class ExportQuoteGraphJob(ExportJob):
         yield from ret
 
 
+@export
 class ExportTweetsJob(ExportJob):
     '''
     Export the set of user tweets.
@@ -317,10 +328,10 @@ class ExportTweetsJob(ExportJob):
                'retweet_count', 'favorite_count', 'source_collapsed']
 
     def query(self):
-        twt = sa.orm.aliased(md.Tweet)
-        twr = sa.orm.aliased(md.Tweet)
-        twq = sa.orm.aliased(md.Tweet)
-        twp = sa.orm.aliased(md.Tweet)
+        twt = sa.orm.aliased(Tweet)
+        twr = sa.orm.aliased(Tweet)
+        twq = sa.orm.aliased(Tweet)
+        twp = sa.orm.aliased(Tweet)
 
         ret = self.session \
             .query(
@@ -355,11 +366,12 @@ class ExportTweetsJob(ExportJob):
 
         if self.users:
             ret = ret \
-                .join(md.StgUser, md.StgUser.user_id == twt.user_id)
+                .join(StgUser, StgUser.user_id == twt.user_id)
 
         yield from ret
 
 
+@export
 class ExportUserInfoJob(ExportJob):
     '''
     Export user-level information.
@@ -385,25 +397,25 @@ class ExportUserInfoJob(ExportJob):
 
     def query(self):  # pylint: disable=too-many-locals
         if self.users:
-            eligibles = md.StgUser
+            eligibles = StgUser
 
             # we have to refer to subquery columns with subquery.c.column
             # rather than table.column as for tables, so this function
-            # abstracts away which to use (rather than wrapping md.StgUser in a
+            # abstracts away which to use (rather than wrapping StgUser in a
             # subquery which might have performance implications on e.g. MySQL)
             def access(obj, name):
                 return getattr(obj, name)
         else:
             eligibles = self.session \
-                .query(md.UserData.user_id) \
-                .group_by(md.UserData.user_id) \
+                .query(UserData.user_id) \
+                .group_by(UserData.user_id) \
                 .subquery()
 
             def access(obj, name):
                 return getattr(getattr(obj, 'c'), name)
 
         elt = sa.orm.aliased(eligibles)
-        twt = sa.orm.aliased(md.Tweet)
+        twt = sa.orm.aliased(Tweet)
         tweet_data = self.session \
             .query(
                 access(elt, 'user_id').label('user_id'),
@@ -445,8 +457,8 @@ class ExportUserInfoJob(ExportJob):
             .subquery()
 
         elu = sa.orm.aliased(eligibles)
-        uda = sa.orm.aliased(md.UserData)
-        url = sa.orm.aliased(md.Url)
+        uda = sa.orm.aliased(UserData)
+        url = sa.orm.aliased(Url)
         user_data_inner = self.session \
             .query(
                 uda.user_id.label('user_id'),
@@ -509,6 +521,7 @@ class ExportUserInfoJob(ExportJob):
         yield from ret
 
 
+@export
 class ExportMutualsJob(ExportJob):
     '''
     Compute mutual friends or followers counts for pairs of some set of users.
@@ -543,14 +556,14 @@ class ExportMutualsJob(ExportJob):
             filter_col = 'source_user_id'
 
         if self.users:
-            eligibles = md.StgUser
+            eligibles = StgUser
 
             def access(obj, name):
                 return getattr(obj, name)
         else:
             eligibles = self.session \
-                .query(md.UserData.user_id) \
-                .group_by(md.UserData.user_id) \
+                .query(UserData.user_id) \
+                .group_by(UserData.user_id) \
                 .subquery()
 
             def access(obj, name):
@@ -559,7 +572,7 @@ class ExportMutualsJob(ExportJob):
         el1 = sa.orm.aliased(eligibles)
         el2 = sa.orm.aliased(eligibles)
 
-        fo1 = sa.orm.aliased(md.Follow)
+        fo1 = sa.orm.aliased(Follow)
         mutuals1 = self.session \
             .query(getattr(fo1, select_col).label('source_user_id')) \
             .filter(
@@ -567,7 +580,7 @@ class ExportMutualsJob(ExportJob):
                 getattr(fo1, filter_col) == access(el1, 'user_id')
             ).correlate(el1)
 
-        fo2 = sa.orm.aliased(md.Follow)
+        fo2 = sa.orm.aliased(Follow)
         mutuals2 = self.session \
             .query(getattr(fo2, select_col).label('source_user_id')) \
             .filter(
@@ -597,6 +610,7 @@ class ExportMutualsJob(ExportJob):
         yield from ret
 
 
+@export
 class ExportMutualFollowersJob(ExportMutualsJob):
     '''
     Export counts of mutual followers.
@@ -618,6 +632,8 @@ class ExportMutualFollowersJob(ExportMutualsJob):
 
     direction = 'followers'
 
+
+@export
 class ExportMutualFriendsJob(ExportMutualsJob):
     '''
     Export counts of mutual friends.

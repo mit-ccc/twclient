@@ -5,11 +5,18 @@ Jobs for printing information to the screen.
 import json
 import logging
 
-from .job import ApiJob
+from .job_base import ApiJob
+
+from ._utils import export
 
 logger = logging.getLogger(__name__)
 
 
+# this is just a stub to placate the linter; the @export decorator adds
+# objects to __all__ so that whether an object is included is noted next to it
+__all__ = []
+
+@export
 class RateLimitStatusJob(ApiJob):
     '''
     Check the rate limits for the API keys in the config file.

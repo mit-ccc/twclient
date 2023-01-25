@@ -10,10 +10,10 @@ from abc import abstractmethod
 
 import sqlalchemy as sa
 
-from .job import TargetJob, ApiJob
-from .. import error as err
-from .. import _utils as ut
-from .. import models as md
+from .job_base import TargetJob, ApiJob
+from .error import BadTargetError, ForbiddenError, NotFoundError
+from ._utils import grouper, export
+from .models import User, Follow, StgFollow, Tweet
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +22,11 @@ logger = logging.getLogger(__name__)
 # pylint: disable=no-member
 
 
+# this is just a stub to placate the linter; the @export decorator adds
+# objects to __all__ so that whether an object is included is noted next to it
+__all__ = []
+
+@export
 class FetchJob(ApiJob, TargetJob):
     '''
     A job fetching data from the Twitter API.
@@ -90,9 +95,10 @@ class FetchJob(ApiJob, TargetJob):
             if self.allow_api_errors:
                 logger.warning(msg)
             else:
-                raise err.BadTargetError(message=msg, targets=self.bad_targets)
+                raise BadTargetError(message=msg, targets=self.bad_targets)
 
 
+@export
 class UserInfoJob(FetchJob):
     '''
     A job which hydrates users.
@@ -112,6 +118,7 @@ class UserInfoJob(FetchJob):
         self.session.commit()
 
 
+@export
 class TweetsJob(FetchJob):
     '''
     Fetch user tweets from the Twitter API.
@@ -173,8 +180,8 @@ class TweetsJob(FetchJob):
         if self.old_tweets:
             since_id = None
         else:
-            since_id = self.session.query(sa.func.max(md.Tweet.tweet_id)) \
-                           .filter(md.Tweet.user_id == user.user_id).scalar()
+            since_id = self.session.query(sa.func.max(Tweet.tweet_id)) \
+                           .filter(Tweet.user_id == user.user_id).scalar()
 
         twargs = {
             'user_id': user.user_id,
@@ -184,7 +191,7 @@ class TweetsJob(FetchJob):
         }
 
         tweets = self.api.user_timeline(**twargs)
-        tweets = ut.grouper(tweets, self.load_batch_size)
+        tweets = grouper(tweets, self.load_batch_size)
 
         n_items = 0
         for ind, batch in enumerate(tweets):
@@ -193,7 +200,7 @@ class TweetsJob(FetchJob):
             logger.debug(msg)
 
             for resp in batch:
-                tweet = md.Tweet.from_tweepy(resp, self.session)
+                tweet = Tweet.from_tweepy(resp, self.session)
 
                 # The merge emits warnings about having disabled the
                 # save-update cascade on Hashtag, Url, Symbol and Media,
@@ -218,10 +225,10 @@ class TweetsJob(FetchJob):
 
             try:
                 n_items += self._load_tweets_for(user)
-            except (err.ForbiddenError, err.NotFoundError) as exc:
-                if isinstance(exc, err.ForbiddenError):
+            except (ForbiddenError, NotFoundError) as exc:
+                if isinstance(exc, ForbiddenError):
                     msg = 'Encountered protected user (user_id {0}) in {1}'
-                else:  # isinstance(e, err.NotFoundError)
+                else:  # isinstance(e, NotFoundError)
                     # Twitter's API docs about errors don't capture all the
                     # actual behavior, so it's hard to tell what is and what
                     # isn't a protected user
@@ -233,7 +240,7 @@ class TweetsJob(FetchJob):
                 else:
                     self.session.rollback()
 
-                    raise err.BadTargetError(
+                    raise BadTargetError(
                         message=msg,
                         targets=[user.user_id]
                     ) from exc
@@ -243,7 +250,7 @@ class TweetsJob(FetchJob):
 
 # NOTE that here (unlike in TweetsJob), you can get gnarly primary key
 # integrity errors on the user table if resolve_mode != 'skip': merging in
-# an md.User object (but not flushing) and then running an insert against
+# a User object (but not flushing) and then running an insert against
 # the user table may try to insert the same row again at commit if one of
 # the User objects is for a row already loaded by the insert. (That is, if
 # fetching users A and B, user B hadn't already been loaded and were
@@ -252,6 +259,7 @@ class TweetsJob(FetchJob):
 # self.session.flush() afterward. Note also that this only applies if the
 # _load_edges_for steps don't implicitly commit, which they do on most DBs.
 # (See the comments in that method.)
+@export
 class FollowGraphJob(FetchJob):
     '''
     Fetch follow-graph edges from the Twitter API.
@@ -321,9 +329,9 @@ class FollowGraphJob(FetchJob):
         api_method = getattr(self.api, self._api_method_name)
 
         ids = api_method(user_id=user.user_id)
-        ids = ut.grouper(ids, self.load_batch_size)
+        ids = grouper(ids, self.load_batch_size)
 
-        md.StgFollow.clear_fast(self.session)
+        StgFollow.clear_fast(self.session)
 
         n_items = 0
         for ind, batch in enumerate(ids):
@@ -346,7 +354,7 @@ class FollowGraphJob(FetchJob):
         )
 
         try:
-            self.session.bulk_insert_mappings(md.StgFollow, rows)
+            self.session.bulk_insert_mappings(StgFollow, rows)
         except sa.exc.IntegrityError:
             self.session.rollback()
             logger.info('Working around duplicates in Twitter API response')
@@ -375,7 +383,7 @@ class FollowGraphJob(FetchJob):
             }
 
             try:
-                ins = md.StgFollow.__table__.insert().values(**row)
+                ins = StgFollow.__table__.insert().values(**row)
                 self.session.execute(ins)
 
                 nrows += 1
@@ -396,9 +404,9 @@ class FollowGraphJob(FetchJob):
         # 1. Load any new users to user table
         #
 
-        flt = self.session.query(md.User).filter(
-            md.User.user_id == getattr(md.StgFollow, self._api_data_column)
-        ).correlate(md.StgFollow)
+        flt = self.session.query(User).filter(
+            User.user_id == getattr(StgFollow, self._api_data_column)
+        ).correlate(StgFollow)
 
         # We don't need to worry about inserting the same user_id value
         # that's already in the user.user_id object (and causing a primary
@@ -406,10 +414,10 @@ class FollowGraphJob(FetchJob):
         # already in the self._target_user_column column; it would only also
         # appear in the self._api_data_column column if you could follow
         # yourself on Twitter, which you can't.
-        ins = md.User.__table__.insert().from_select(
+        ins = User.__table__.insert().from_select(
             ['user_id'],
             self.session.query(
-                getattr(md.StgFollow, self._api_data_column)
+                getattr(StgFollow, self._api_data_column)
             ).filter(~flt.exists())
         )
 
@@ -419,17 +427,17 @@ class FollowGraphJob(FetchJob):
         # 2. Load new edges to follow table with valid_end_dt of null
         #
 
-        flt = self.session.query(md.Follow).filter(sa.and_(
-            md.Follow.valid_end_dt.is_(None),
-            md.Follow.source_user_id == md.StgFollow.source_user_id,
-            md.Follow.target_user_id == md.StgFollow.target_user_id
-        )).correlate(md.StgFollow)
+        flt = self.session.query(Follow).filter(sa.and_(
+            Follow.valid_end_dt.is_(None),
+            Follow.source_user_id == StgFollow.source_user_id,
+            Follow.target_user_id == StgFollow.target_user_id
+        )).correlate(StgFollow)
 
-        ins = md.Follow.__table__.insert().from_select(
+        ins = Follow.__table__.insert().from_select(
             ['source_user_id', 'target_user_id'],
             self.session.query(
-                md.StgFollow.source_user_id,
-                md.StgFollow.target_user_id
+                StgFollow.source_user_id,
+                StgFollow.target_user_id
             ).filter(~flt.exists())
         )
 
@@ -439,14 +447,14 @@ class FollowGraphJob(FetchJob):
         # 3. Mark edges no longer present as expired (valid_end_dt := now())
         #
 
-        flt = self.session.query(md.StgFollow).filter(sa.and_(
-            md.StgFollow.source_user_id == md.Follow.source_user_id,
-            md.StgFollow.target_user_id == md.Follow.target_user_id
-        )).correlate(md.Follow)
+        flt = self.session.query(StgFollow).filter(sa.and_(
+            StgFollow.source_user_id == Follow.source_user_id,
+            StgFollow.target_user_id == Follow.target_user_id
+        )).correlate(Follow)
 
-        upd = md.Follow.__table__.update().where(sa.and_(
-            md.Follow.valid_end_dt.is_(None),
-            getattr(md.Follow, self._target_user_column) == user.user_id,
+        upd = Follow.__table__.update().where(sa.and_(
+            Follow.valid_end_dt.is_(None),
+            getattr(Follow, self._target_user_column) == user.user_id,
 
             ~flt.exists()
         )).values(valid_end_dt=sa.func.now())
@@ -465,10 +473,10 @@ class FollowGraphJob(FetchJob):
 
             try:
                 n_items += self._load_edges_for(user)
-            except (err.ForbiddenError, err.NotFoundError) as exc:
-                if isinstance(exc, err.ForbiddenError):
+            except (ForbiddenError, NotFoundError) as exc:
+                if isinstance(exc, ForbiddenError):
                     msg = 'Encountered protected user with user_id {0} in {1}'
-                else:  # isinstance(e, err.NotFoundError)
+                else:  # isinstance(e, NotFoundError)
                     pass
                 msg = msg.format(user.user_id, self.__class__.__name__)
 
@@ -477,7 +485,7 @@ class FollowGraphJob(FetchJob):
                 else:
                     self.session.rollback()
 
-                    raise err.BadTargetError(
+                    raise BadTargetError(
                         message=msg,
                         targets=[user.user_id]
                     ) from exc
@@ -485,6 +493,7 @@ class FollowGraphJob(FetchJob):
                 self.session.commit()
 
 
+@export
 class FollowersJob(FollowGraphJob):
     '''
     A FollowGraphJob which fetches user followers.
@@ -494,6 +503,7 @@ class FollowersJob(FollowGraphJob):
     _api_data_column = 'source_user_id'
 
 
+@export
 class FriendsJob(FollowGraphJob):
     '''
     A FollowGraphJob which fetches user friends.

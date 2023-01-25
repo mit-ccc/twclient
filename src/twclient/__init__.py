@@ -12,11 +12,15 @@ from . import models
 from . import target
 from . import twitter_api
 
-from .authpool import AuthPoolAPI
-from .config import Config
-from .twitter_api import TwitterApi
-
-_modules = [authpool, config, error, job, models, target, twitter_api]
+_modules = [
+    authpool,
+    config,
+    error,
+    job,
+    models,
+    target,
+    twitter_api
+]
 
 __all__ = []
 for module in _modules:

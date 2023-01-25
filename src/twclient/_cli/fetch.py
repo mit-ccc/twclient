@@ -4,7 +4,12 @@ A command to fetch data from the Twitter API.
 
 import logging
 
-from ..job import fetch as fj
+from ..job_fetch import (
+    UserInfoJob,
+    FriendsJob,
+    FollowersJob,
+    TweetsJob
+)
 from . import command as cmd
 
 logger = logging.getLogger(__name__)
@@ -61,10 +66,10 @@ class FetchCommand(cmd.ApiCommand, cmd.TargetCommand, cmd.DatabaseCommand):
     '''
 
     subcommand_to_job = {
-        'users': fj.UserInfoJob,
-        'friends': fj.FriendsJob,
-        'followers': fj.FollowersJob,
-        'tweets': fj.TweetsJob
+        'users': UserInfoJob,
+        'friends': FriendsJob,
+        'followers': FollowersJob,
+        'tweets': TweetsJob
     }
 
     def __init__(self, **kwargs):

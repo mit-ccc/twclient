@@ -8,9 +8,11 @@ import collections as cl
 import configparser as cp
 
 from . import error as err
+from . import _utils as ut
 
 logger = logging.getLogger(__name__)
 
+@ut.export
 class Config(cl.abc.MutableMapping):
     '''
     A configuration including database and API profiles.

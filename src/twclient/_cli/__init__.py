@@ -12,8 +12,6 @@ from . import initialize
 from . import show
 from . import tag
 
-from .entrypoint import cli
-
 _modules = [command, config, entrypoint, export, fetch, initialize, show, tag]
 
 __all__ = []

@@ -4,7 +4,11 @@ A command to work with user tags.
 
 import logging
 
-from ..job import tag as tj
+from ..job_tag import (
+    CreateTagJob,
+    DeleteTagJob,
+    ApplyTagJob
+)
 from . import command as cmd
 
 logger = logging.getLogger(__name__)
@@ -30,9 +34,9 @@ class TagCommand(cmd.DatabaseCommand, cmd.TargetCommand):
     '''
 
     subcommand_to_job = {
-        'create': tj.CreateTagJob,
-        'delete': tj.DeleteTagJob,
-        'apply': tj.ApplyTagJob
+        'create': CreateTagJob,
+        'delete': DeleteTagJob,
+        'apply': ApplyTagJob
     }
 
     def __init__(self, **kwargs):

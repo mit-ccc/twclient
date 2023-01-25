@@ -10,16 +10,21 @@ from abc import ABC, abstractmethod
 import tweepy
 import sqlalchemy as sa
 
-from .. import config as cfg
-from .. import error as err
-from .. import target as tg
-from .. import twitter_api as ta
-from .. import _utils as ut
+from ..config import Config
+from ..error import BadConfigError, TWClientError
+from ..target import (
+    UserIdTarget,
+    ScreenNameTarget,
+    SelectTagTarget,
+    TwitterListTarget
+)
+from ..twitter_api import TwitterApi
+from .._utils import TWEEPY_V45
 
 logger = logging.getLogger(__name__)
 
 
-if ut.TWEEPY_V45:
+if TWEEPY_V45:
     _AppAuthHandler = tweepy.OAuth2AppHandler
 else:
     _AppAuthHandler = tweepy.AppAuthHandler
@@ -73,7 +78,7 @@ class Command(ABC):
         self.subcommand = subcommand
         self.parser = parser
 
-        self.config = cfg.Config(config_file=config_file)
+        self.config = Config(config_file=config_file)
 
     # NOTE using this for some errors and logger.____ for others isn't a bug
     # or problem per se, but it does lead to inconsistent output formatting
@@ -118,12 +123,12 @@ class Command(ABC):
             obj = cls(**self.job_args)
 
             return obj.run()
-        except err.BadConfigError as exc:
+        except BadConfigError as exc:
             # We want to print these in a more sane-looking way
             self.error(exc.message)
 
             sys.exit(exc.exit_status)
-        except err.TWClientError as exc:
+        except TWClientError as exc:
             # Don't catch other exceptions: if things we didn't raise reach the
             # toplevel, it's a bug (or, okay, a network issue, Twitter API
             # meltdown, whatever, but nothing to be gained in that case by
@@ -221,16 +226,16 @@ class TargetCommand(Command):
         targets = []
 
         if user_ids is not None:
-            targets += [tg.UserIdTarget(targets=user_ids)]
+            targets += [UserIdTarget(targets=user_ids)]
 
         if screen_names is not None:
-            targets += [tg.ScreenNameTarget(targets=screen_names)]
+            targets += [ScreenNameTarget(targets=screen_names)]
 
         if select_tags is not None:
-            targets += [tg.SelectTagTarget(targets=select_tags)]
+            targets += [SelectTagTarget(targets=select_tags)]
 
         if twitter_lists is not None:
-            targets += [tg.TwitterListTarget(targets=twitter_lists)]
+            targets += [TwitterListTarget(targets=twitter_lists)]
 
         if self.targets_required and not targets:
             self.error('No target users provided')
@@ -373,4 +378,4 @@ class ApiCommand(Command):
             msg = 'No Twitter credentials provided (use `config add-api`)'
             self.error(msg)
 
-        self.api = ta.TwitterApi(auths=auths)
+        self.api = TwitterApi(auths=auths)
