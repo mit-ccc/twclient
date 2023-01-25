@@ -68,4 +68,5 @@ python =
 [testenv]
 deps = pytest
 commands = pytest []
+passenv = CONSUMER_KEY, CONSUMER_SECRET
 """
