@@ -1,9 +1,6 @@
 ENVPATH := .env
-PYTHON  := python3
 
-.PHONY: lint tests check doc devsetup clean
-
-## For use locally or in CI ##
+.PHONY: lint tests doc clean devsetup
 
 lint:
 	pylint src test
@@ -12,25 +9,10 @@ lint:
 tests:
 	coverage run -m tox
 
-check: lint tests
-
 doc:
 	cd docsrc && $(MAKE)
 
 ## Local dev use only, not used in CI ##
-
-devsetup:
-	# for local multi-python testing with tox; assumes pyenv already installed
-	pyenv install -s 3.8.12
-	pyenv install -s 3.9.7
-	pyenv install -s 3.10.0
-	pyenv local 3.8.12 3.9.7 3.10.0
-	
-	rm -rf $(ENVPATH)
-	$(PYTHON) -m venv $(ENVPATH)
-	
-	$(ENVPATH)/bin/pip install -U pip
-	$(ENVPATH)/bin/pip install -e .[test,dev,docs]
 
 clean:
 	rm -rf build/ dist/ twclient.egg-info/ env/
@@ -42,3 +24,17 @@ clean:
 	
 	cd docsrc && $(MAKE) clean
 
+devsetup:
+	# for local multi-python testing with tox; assumes pyenv already installed
+	pyenv install -s 3.7.12
+	pyenv install -s 3.8.12
+	pyenv install -s 3.9.7
+	pyenv install -s 3.10.0
+	pyenv install -s 3.11.1
+	pyenv local 3.7.12 3.8.12 3.9.7 3.10.0 3.11.1
+	
+	rm -rf $(ENVPATH)
+	python3 -m venv $(ENVPATH)
+	
+	$(ENVPATH)/bin/pip install -U pip
+	$(ENVPATH)/bin/pip install -e .[test,dev,docs]
