@@ -40,16 +40,15 @@ Note that Twitter has other data sources than the REST API, in particular the
 `PowerTrack
 <https://developer.twitter.com/en/docs/twitter-api/enterprise/historical-powertrack-api/overview>`__
 API, and this package does not support those. It also does not (yet) support
-Twitter's new `v2 API <https://developer.twitter.com/en/docs/twitter-api>`.
+Twitter's new `v2 API <https://developer.twitter.com/en/docs/twitter-api>`__.
 
 Enough talk! How do you get started?
 
 In brief: This package provides a command-line interface for loading data from
 the Twitter REST API into the database of your choice. You can invoke it as
-either ``twitter``, as in ``twitter fetch users -n wwbrannon`` or ``twclient``,
-as in ``twclient fetch users -n wwbrannon``. (We'll use the ``twclient`` alias
-in this vignette.) You need to set up the database, get API credentials, and
-then pull some data.
+``twclient``, as in ``twclient fetch users -n wwbrannon``. You need to set up
+the database, get and set up API credentials, and then you can pull and work
+with data.
 
 ------------------
   Database setup
@@ -63,7 +62,7 @@ may sound---in fact it’s positively easy. Two good choices are `Postgres
 :doc:`data export vignette </vignettes/export>`, and the extremely lightweight
 `SQLite <https://www.sqlite.org/index.html>`__. Note that while you can use any
 database engine with sqlalchemy support, twclient has been tested only with
-Postgres and to a lesser degree SQLite.
+Postgres and SQLite.
 
 If you want to use one of these, which DB should you choose? If, like me,
 you’re on a Mac, `Postgres.app <https://postgresapp.com/>`__ is an excellent

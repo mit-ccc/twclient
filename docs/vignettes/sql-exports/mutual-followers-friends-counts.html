@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Mutual Followers and Friends &mdash; twclient 0.2.0 documentation</title>
@@ -11,10 +11,9 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK" src="../../_static/jquery.js"></script>
+        <script integrity="sha384-lSZeSIVKp9myfKbDQ3GkN/KHjUc+mzg17VKDN4Y2kUeBSJioB9QSM639vM9fuY//" src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
-        <script src="../../_static/jquery.js"></script>
-        <script src="../../_static/underscore.js"></script>
-        <script src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script src="../../_static/sphinx_highlight.js"></script>
         <script async="async" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
@@ -30,32 +29,38 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../../index.html" class="icon icon-home"> twclient
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            twclient
           </a>
               <div class="version">
                 0.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../overview/readme.html">README</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../overview/changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html#apache-license">Apache License</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">Apache License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Vignettes</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="../fetch.html">Getting data from the Twitter API</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="../export.html">Working with fetched data</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="../export.html#built-in-exports">Built-in exports</a></li>
-<li class="toctree-l2 current"><a class="reference internal" href="../export.html#custom-sql">Custom SQL</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="../export.html#custom-sql">Custom SQL</a></li>
+<li class="toctree-l2 current"><a class="reference internal" href="../export.html#sql-examples">SQL Examples</a><ul class="current">
 <li class="toctree-l3"><a class="reference internal" href="follow-graph.html">Follow Graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tweets.html">Users’ Tweets</a></li>
 <li class="toctree-l3"><a class="reference internal" href="tweet-graphs.html">Tweet-Derived Graphs: Mention, Reply, Retweet, Quote</a></li>
@@ -66,7 +71,7 @@
 </ul>
 </li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../../apidocs.html">API Documentation</a></li>
 </ul>
@@ -84,7 +89,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../../index.html" class="icon icon-home"></a></li>
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
           <li class="breadcrumb-item"><a href="../export.html">Working with fetched data</a></li>
       <li class="breadcrumb-item active">Mutual Followers and Friends</li>
       <li class="wy-breadcrumbs-aside">
@@ -99,7 +104,7 @@
   <section id="mutual-followers-and-friends">
 <h1>Mutual Followers and Friends<a class="headerlink" href="#mutual-followers-and-friends" title="Permalink to this heading"></a></h1>
 <p>One question that sometimes arises about a pair of Twitter users is how many
-followers or friends <a class="footnote-reference brackets" href="#id3" id="id1">1</a> they have in common. There are several reasons you
+followers or friends <a class="footnote-reference brackets" href="#id3" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> they have in common. There are several reasons you
 might want to know this, including that it provides an indication of
 between-user similarity. If you’ve <a class="reference internal" href="../fetch.html"><span class="doc">fetched</span></a>
 follow-graph data, you can compute the number of mutual friends or followers
@@ -225,7 +230,7 @@ as follows:</p>
 </pre></div>
 </div>
 <p>This query looks complicated but adds only one thing over the versions above.
-The FROM clause generates all pairs of user IDs, unique up to order <a class="footnote-reference brackets" href="#id4" id="id2">2</a>, and
+The FROM clause generates all pairs of user IDs, unique up to order <a class="footnote-reference brackets" href="#id4" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>2<span class="fn-bracket">]</span></a>, and
 the innermost pair of queries fed into the <code class="docutils literal notranslate"><span class="pre">INTERSECT</span></code> select the sets of
 followers of each element in a given pair. (By referring to <code class="docutils literal notranslate"><span class="pre">ut1.user_id</span></code> and
 <code class="docutils literal notranslate"><span class="pre">ut2.user_id</span></code> rather than the specific values 123 and 456.) Because the
@@ -284,19 +289,21 @@ just swap references to <code class="docutils literal notranslate"><span class="
 <p>Only the innermost queries returning sets of followers (which are the arguments
 to <code class="docutils literal notranslate"><span class="pre">INTERSECT</span> <span class="pre">ALL</span></code>) have changed. We now select <code class="docutils literal notranslate"><span class="pre">target_user_id</span></code> and refer
 to <code class="docutils literal notranslate"><span class="pre">source_user_id</span></code> in the WHERE clause, rather than the reverse.</p>
-<dl class="footnote brackets">
-<dt class="label" id="id3"><span class="brackets"><a class="fn-backref" href="#id1">1</a></span></dt>
-<dd><p>“Friend” is Twitter’s term for the opposite of a follower: if user A
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id3" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id1">1</a><span class="fn-bracket">]</span></span>
+<p>“Friend” is Twitter’s term for the opposite of a follower: if user A
 follows user B on Twitter, B is A’s friend and A is B’s follower.</p>
-</dd>
-<dt class="label" id="id4"><span class="brackets"><a class="fn-backref" href="#id2">2</a></span></dt>
-<dd><p>That is, of the two pairs (123, 456) and (456, 123) we only want one of
+</aside>
+<aside class="footnote brackets" id="id4" role="note">
+<span class="label"><span class="fn-bracket">[</span><a role="doc-backlink" href="#id2">2</a><span class="fn-bracket">]</span></span>
+<p>That is, of the two pairs (123, 456) and (456, 123) we only want one of
 them, and so we arbitrarily pick the one in which the first element is
 larger (<code class="docutils literal notranslate"><span class="pre">ut1.user_id</span> <span class="pre">&gt;</span> <span class="pre">ut2.user_id</span></code>). It’s “&gt;” rather than “&gt;=” because
 there’s no reason to ask how many followers a user has in common with
 themselves.</p>
-</dd>
-</dl>
+</aside>
+</aside>
 </section>
 
 

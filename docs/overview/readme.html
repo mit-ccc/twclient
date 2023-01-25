@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>README &mdash; twclient 0.2.0 documentation</title>
@@ -11,10 +11,9 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK" src="../_static/jquery.js"></script>
+        <script integrity="sha384-lSZeSIVKp9myfKbDQ3GkN/KHjUc+mzg17VKDN4Y2kUeBSJioB9QSM639vM9fuY//" src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -29,20 +28,24 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> twclient
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            twclient
           </a>
               <div class="version">
                 0.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">README</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#twclient">twclient</a></li>
@@ -59,16 +62,17 @@
 <li class="toctree-l2"><a class="reference internal" href="#copyright">Copyright</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="license.html#apache-license">Apache License</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="license.html">Apache License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Vignettes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../vignettes/fetch.html">Getting data from the Twitter API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../vignettes/export.html">Working with fetched data</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../apidocs.html">API Documentation</a></li>
 </ul>
@@ -86,7 +90,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">README</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/overview/readme.rst.txt" rel="nofollow"> View page source</a>
@@ -112,7 +116,7 @@ with a focus on loading data into a database for analysis or bulk use.</p>
 <p>This project offers high-level primitives for researchers who want to get
 data out of Twitter, without worrying about the API details. The client can
 handle multiple sets of API credentials seamlessly, helping avoid rate limit
-issues. <a class="footnote-reference brackets" href="#id3" id="id1">1</a> There’s also support for exporting bulk datasets from the fetched
+issues. <a class="footnote-reference brackets" href="#id3" id="id1" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> There’s also support for exporting bulk datasets from the fetched
 raw data.</p>
 </section>
 <section id="installation">
@@ -121,18 +125,24 @@ raw data.</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3<span class="w"> </span>install<span class="w"> </span>twclient
 </pre></div>
 </div>
-<p>or, if you want to use the development version, clone this repo and install in
-editable mode:</p>
+<p>or, if you want to use the development version, clone this repo and install:</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>git<span class="w"> </span>clone<span class="w"> </span>git@github.com:mit-ccc/twclient.git<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">cd</span><span class="w"> </span>twclient
-pip3<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+pip3<span class="w"> </span>install<span class="w"> </span>.
 </pre></div>
 </div>
-<p>or use <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span> <span class="pre">-e</span> <span class="pre">.[dev]</span></code> to also install all dev dependencies.</p>
+<p>You can also use the <code class="docutils literal notranslate"><span class="pre">-e</span></code> flag to install in editable mode:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>pip3<span class="w"> </span>install<span class="w"> </span>-e<span class="w"> </span>.
+</pre></div>
+</div>
+<p>To install all development dependencies, replace <code class="docutils literal notranslate"><span class="pre">.</span></code> with <code class="docutils literal notranslate"><span class="pre">.[dev]</span></code> in the
+arguments to <code class="docutils literal notranslate"><span class="pre">pip3</span> <span class="pre">install</span></code>.</p>
 </section>
 <section id="usage">
 <h2>Usage<a class="headerlink" href="#usage" title="Permalink to this heading"></a></h2>
 <p>First, you need to tell twclient about your database backend and Twitter
-credentials.</p>
+credentials. On the database side, we’ve only tested with Postgres and SQLite.
+While the package may well work with other DB engines, be aware that you may
+encounter issues.</p>
 <section id="setup-database">
 <h3>Setup: Database<a class="headerlink" href="#setup-database" title="Permalink to this heading"></a></h3>
 <p>The database backend can be either sqlite or an arbitrary database
@@ -169,7 +179,7 @@ and/or have backups before running this.</p>
 </section>
 <section id="setup-twitter">
 <h3>Setup: Twitter<a class="headerlink" href="#setup-twitter" title="Permalink to this heading"></a></h3>
-<p>You’ll also need to set up your Twitter API credentials. <a class="footnote-reference brackets" href="#id3" id="id2">1</a> As with the
+<p>You’ll also need to set up your Twitter API credentials. <a class="footnote-reference brackets" href="#id3" id="id2" role="doc-noteref"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></a> As with the
 database setup, doing this stores the credentials in a config file (the same
 config file as for database info) for ease of use. Only two sets of credentials
 are shown, but you can add as many as you want.</p>
@@ -263,12 +273,14 @@ distributed under the License is distributed on an “AS IS” BASIS,
 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.</p>
-<dl class="footnote brackets">
-<dt class="label" id="id3"><span class="brackets">1</span><span class="fn-backref">(<a href="#id1">1</a>,<a href="#id2">2</a>)</span></dt>
-<dd><p>Of course, you’ll need to make sure you have the right to use all of
+<aside class="footnote-list brackets">
+<aside class="footnote brackets" id="id3" role="note">
+<span class="label"><span class="fn-bracket">[</span>1<span class="fn-bracket">]</span></span>
+<span class="backrefs">(<a role="doc-backlink" href="#id1">1</a>,<a role="doc-backlink" href="#id2">2</a>)</span>
+<p>Of course, you’ll need to make sure you have the right to use all of
 your credentials and are complying with Twitter’s terms of use.</p>
-</dd>
-</dl>
+</aside>
+</aside>
 </section>
 </section>
 

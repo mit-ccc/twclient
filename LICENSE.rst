@@ -6,9 +6,8 @@ Apache License
 :Date: January 2004
 :URL: http://www.apache.org/licenses/
 
-------------------------------------------------------------
 TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
-------------------------------------------------------------
+----------------------------------------------------------------
 
 1. Definitions.
 ---------------

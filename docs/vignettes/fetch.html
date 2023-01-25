@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Getting data from the Twitter API &mdash; twclient 0.2.0 documentation</title>
@@ -11,17 +11,16 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK" src="../_static/jquery.js"></script>
+        <script integrity="sha384-lSZeSIVKp9myfKbDQ3GkN/KHjUc+mzg17VKDN4Y2kUeBSJioB9QSM639vM9fuY//" src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
     <link rel="next" title="Working with fetched data" href="export.html" />
-    <link rel="prev" title="License" href="../overview/license.html" /> 
+    <link rel="prev" title="Apache License" href="../overview/license.html" /> 
 </head>
 
 <body class="wy-body-for-nav"> 
@@ -29,27 +28,32 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> twclient
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            twclient
           </a>
               <div class="version">
                 0.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../overview/readme.html">README</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/license.html#apache-license">Apache License</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/license.html">Apache License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Vignettes</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting data from the Twitter API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
@@ -68,7 +72,7 @@
 </li>
 <li class="toctree-l1"><a class="reference internal" href="export.html">Working with fetched data</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../apidocs.html">API Documentation</a></li>
 </ul>
@@ -86,7 +90,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Getting data from the Twitter API</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/vignettes/fetch.rst.txt" rel="nofollow"> View page source</a>
@@ -129,14 +133,13 @@ see the <a class="reference internal" href="export.html"><span class="doc">other
 <p>Note that Twitter has other data sources than the REST API, in particular the
 <a class="reference external" href="https://developer.twitter.com/en/docs/twitter-api/enterprise/historical-powertrack-api/overview">PowerTrack</a>
 API, and this package does not support those. It also does not (yet) support
-Twitter’s new <cite>v2 API &lt;https://developer.twitter.com/en/docs/twitter-api&gt;</cite>.</p>
+Twitter’s new <a class="reference external" href="https://developer.twitter.com/en/docs/twitter-api">v2 API</a>.</p>
 <p>Enough talk! How do you get started?</p>
 <p>In brief: This package provides a command-line interface for loading data from
 the Twitter REST API into the database of your choice. You can invoke it as
-either <code class="docutils literal notranslate"><span class="pre">twitter</span></code>, as in <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-n</span> <span class="pre">wwbrannon</span></code> or <code class="docutils literal notranslate"><span class="pre">twclient</span></code>,
-as in <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-n</span> <span class="pre">wwbrannon</span></code>. (We’ll use the <code class="docutils literal notranslate"><span class="pre">twclient</span></code> alias
-in this vignette.) You need to set up the database, get API credentials, and
-then pull some data.</p>
+<code class="docutils literal notranslate"><span class="pre">twclient</span></code>, as in <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-n</span> <span class="pre">wwbrannon</span></code>. You need to set up
+the database, get and set up API credentials, and then you can pull and work
+with data.</p>
 </section>
 <section id="database-setup">
 <h2>Database setup<a class="headerlink" href="#database-setup" title="Permalink to this heading"></a></h2>
@@ -147,7 +150,7 @@ may sound—in fact it’s positively easy. Two good choices are <a class="refer
 <a class="reference internal" href="export.html"><span class="doc">data export vignette</span></a>, and the extremely lightweight
 <a class="reference external" href="https://www.sqlite.org/index.html">SQLite</a>. Note that while you can use any
 database engine with sqlalchemy support, twclient has been tested only with
-Postgres and to a lesser degree SQLite.</p>
+Postgres and SQLite.</p>
 <p>If you want to use one of these, which DB should you choose? If, like me,
 you’re on a Mac, <a class="reference external" href="https://postgresapp.com/">Postgres.app</a> is an excellent
 and user-friendly distribution of Postgres. It’s not the only one: among others
@@ -441,7 +444,7 @@ of data you want out of it: the follow graph, a user’s tweets, mention / quote
            </div>
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
-        <a href="../overview/license.html" class="btn btn-neutral float-left" title="License" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+        <a href="../overview/license.html" class="btn btn-neutral float-left" title="Apache License" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
         <a href="export.html" class="btn btn-neutral float-right" title="Working with fetched data" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 

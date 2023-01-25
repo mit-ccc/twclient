@@ -2,23 +2,27 @@ Twclient Documentation
 ======================
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Overview:
+   :caption: Overview
+   :maxdepth: 2
 
    overview/readme
+
+.. toctree::
+   :maxdepth: 1
+
    overview/changelog
    overview/license
 
 .. toctree::
-   :maxdepth: 1
-   :caption: Vignettes:
+   :caption: Vignettes
+   :maxdepth: 3
 
    vignettes/fetch
    vignettes/export
 
 .. toctree::
+   :caption: Reference
    :maxdepth: 1
-   :caption: Reference:
 
    apidocs
 

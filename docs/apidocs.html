@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>API Documentation &mdash; twclient 0.2.0 documentation</title>
@@ -11,10 +11,9 @@
     <script src="_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK" src="_static/jquery.js"></script>
+        <script integrity="sha384-lSZeSIVKp9myfKbDQ3GkN/KHjUc+mzg17VKDN4Y2kUeBSJioB9QSM639vM9fuY//" src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script data-url_root="./" id="documentation_options" src="_static/documentation_options.js"></script>
-        <script src="_static/jquery.js"></script>
-        <script src="_static/underscore.js"></script>
-        <script src="_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="_static/doctools.js"></script>
         <script src="_static/sphinx_highlight.js"></script>
     <script src="_static/js/theme.js"></script>
@@ -28,32 +27,37 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="index.html" class="icon icon-home"> twclient
+
+          
+          
+          <a href="index.html" class="icon icon-home">
+            twclient
           </a>
               <div class="version">
                 0.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="overview/readme.html">README</a></li>
-<li class="toctree-l1"><a class="reference internal" href="overview/changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="overview/license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="overview/license.html#apache-license">Apache License</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="overview/license.html">Apache License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Vignettes</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="vignettes/fetch.html">Getting data from the Twitter API</a></li>
 <li class="toctree-l1"><a class="reference internal" href="vignettes/export.html">Working with fetched data</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">API Documentation</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#module-twclient.authpool">twclient.authpool</a><ul>
@@ -421,7 +425,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="index.html" class="icon icon-home"></a></li>
+      <li><a href="index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">API Documentation</li>
       <li class="wy-breadcrumbs-aside">
             <a href="_sources/apidocs.rst.txt" rel="nofollow"> View page source</a>
@@ -462,7 +466,7 @@ currently active set of credentials, <code class="docutils literal notranslate">
 dictionary whose keys are the consumer keys of the credentials and whose
 values are the <code class="docutils literal notranslate"><span class="pre">rate_limit_status</span></code> responses for those keys.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>auths</strong> (<em>list</em><em> of </em><em>tweepy.AuthHandler</em>) – The Twitter API credentials to use.</p></li>
 <li><p><strong>capacity_sleep</strong> (<em>float</em>) – How long to sleep before retrying after a Twitter capacity error, in
@@ -471,7 +475,7 @@ seconds.</p></li>
 <li><p><strong>**kwargs</strong> – Keyword arguments passed through to tweepy.API.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Raises</dt>
+<dt class="field-even">Raises<span class="colon">:</span></dt>
 <dd class="field-even"><p><a class="reference internal" href="#twclient.error.TwitterServiceError" title="twclient.error.TwitterServiceError"><strong>error.TwitterServiceError</strong></a> – If Twitter is over capacity or encounters other internal problems for
     longer than (approximately) <cite>capacity_retries * capacity_sleep</cite>
     seconds.</p>
@@ -489,7 +493,7 @@ seconds.</p></li>
 <dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">Exception</span></code></p>
 <p>The base class for all errors raised by twclient.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>message</strong> (<em>str</em>) – The reason for this error.</p></li>
 <li><p><strong>exit_status</strong> (<em>int</em>) – If the exception is caught at the top-level command-line script,
@@ -502,7 +506,7 @@ this value is passed to <cite>sys.exit</cite>.</p></li>
 <span class="sig-name descname"><span class="pre">message</span></span><a class="headerlink" href="#twclient.error.TWClientError.message" title="Permalink to this definition"></a></dt>
 <dd><p>The parameter passed to __init__.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -526,7 +530,7 @@ but are higher-level and easier to handle in client code than the
 underlying instances of tweepy.errors.TweepyException (in tweepy &lt; 4.0.0,
 it’s instead tweepy.error.TweepError) which gave rise to them.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>tweepy_exception</strong> (<em>instance</em><em> of </em><em>tweepy.errors.TweepyException</em>) – </p></li>
 <li><p><strong>4.0.0</strong><strong>)</strong> (<em>(</em><em>tweepy.error.TweepError in tweepy &lt;</em>) – The underlying tweepy exception instance which caused this error to be
@@ -538,7 +542,7 @@ raised.</p></li>
 <dt class="sig sig-object py" id="twclient.error.TwitterAPIError.tweepy_exception">
 <span class="sig-name descname"><span class="pre">tweepy_exception</span></span><a class="headerlink" href="#twclient.error.TwitterAPIError.tweepy_exception" title="Permalink to this definition"></a></dt>
 <dd><dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>instance of tweepy.errors.TweepyException</p>
 </dd>
 </dl>
@@ -573,13 +577,13 @@ raised.</p></li>
 <em class="property"><span class="pre">classmethod</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">from_tweepy</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">exc</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/error.html#TwitterAPIError.from_tweepy"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.error.TwitterAPIError.from_tweepy" title="Permalink to this definition"></a></dt>
 <dd><p>Construct an instance from a tweepy exception object.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>exc</strong> (<em>instance</em><em> of </em><em>tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
 <li><p><strong>tweepy.error.TweepError</strong><strong>)</strong> – The exception from which to generate a TwitterAPIError instance.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>Instance of the appropriate subclass of TwitterAPIError.</p>
 </dd>
 </dl>
@@ -591,16 +595,16 @@ raised.</p></li>
 <dd><p>Check whether a tweepy exception object can be converted to this class
 via from_tweepy().</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>exc</strong> (<em>instance</em><em> of </em><em>tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
 <li><p><strong>tweepy.error.TweepError</strong><strong>)</strong> – The tweepy exception object to check.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>True if exc is convertible, False otherwise.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Boolean</p>
 </dd>
 </dl>
@@ -623,16 +627,16 @@ Generally requests encountering this error should be retried.</p>
 <dd><p>Check whether a tweepy exception object can be converted to this class
 via from_tweepy().</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>exc</strong> (<em>instance</em><em> of </em><em>tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
 <li><p><strong>tweepy.error.TweepError</strong><strong>)</strong> – The tweepy exception object to check.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>True if exc is convertible, False otherwise.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Boolean</p>
 </dd>
 </dl>
@@ -666,16 +670,16 @@ what object was not found, so we combine these errors into one class.</p>
 <dd><p>Check whether a tweepy exception object can be converted to this class
 via from_tweepy().</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>exc</strong> (<em>instance</em><em> of </em><em>tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
 <li><p><strong>tweepy.error.TweepError</strong><strong>)</strong> – The tweepy exception object to check.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>True if exc is convertible, False otherwise.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Boolean</p>
 </dd>
 </dl>
@@ -699,16 +703,16 @@ and instead will raise this error.</p>
 <dd><p>Check whether a tweepy exception object can be converted to this class
 via from_tweepy().</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>exc</strong> (<em>instance</em><em> of </em><em>tweepy.errors.TweepyException</em><em> (</em><em>in tweepy &lt; 4.0.0</em><em>,</em>) – </p></li>
 <li><p><strong>tweepy.error.TweepError</strong><strong>)</strong> – The tweepy exception object to check.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>True if exc is convertible, False otherwise.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Boolean</p>
 </dd>
 </dl>
@@ -726,13 +730,13 @@ following way: a) if ex is a tweepy.errors.TweepyException (in tweepy &lt;
 corresponding TWClientError if possible, else b) return ex as-is. It is
 used in wrappers of the Twitter API to simplify exception handling.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>ex</strong> (<em>Exception</em>) – The exception instance to dispatch.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The dispatched (possibly new) exception instance.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Exception</p>
 </dd>
 </dl>
@@ -757,7 +761,7 @@ led to this one being raised).</p>
 unavailable. There may be several reasons for unavailability: a user having
 protected tweets, being suspended, or otherwise not existing.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>targets</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>int</em>) – The Twitter user IDs or screen names causing the error.</p>
 </dd>
 </dl>
@@ -766,7 +770,7 @@ protected tweets, being suspended, or otherwise not existing.</p>
 <span class="sig-name descname"><span class="pre">targets</span></span><a class="headerlink" href="#twclient.error.BadTargetError.targets" title="Permalink to this definition"></a></dt>
 <dd><p>The parameter passed to __init__.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list of str or int</p>
 </dd>
 </dl>
@@ -782,7 +786,7 @@ protected tweets, being suspended, or otherwise not existing.</p>
 <p>This error is raised when job.ApplyTagJob is given a tag which does not
 exist in the database.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>tag</strong> (<em>str</em>) – The name of the nonexistent tag.</p>
 </dd>
 </dl>
@@ -791,7 +795,7 @@ exist in the database.</p>
 <span class="sig-name descname"><span class="pre">tag</span></span><a class="headerlink" href="#twclient.error.BadTagError.tag" title="Permalink to this definition"></a></dt>
 <dd><p>The parameter passed to __init__.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>str</p>
 </dd>
 </dl>
@@ -844,7 +848,7 @@ is malformed.</p>
 <p>This class represents a job to be run against the database. Subclasses may
 or may not also support access to the Twitter API.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>engine</strong> (<em>sqlalchemy.engine.Engine instance</em>) – The sqlalchemy engine representing the database to connect to.</p>
 </dd>
 </dl>
@@ -853,7 +857,7 @@ or may not also support access to the Twitter API.</p>
 <span class="sig-name descname"><span class="pre">engine</span></span><a class="headerlink" href="#twclient.job.DatabaseJob.engine" title="Permalink to this definition"></a></dt>
 <dd><p>The parameter passed to __init__.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>sqlalchemy.engine.Engine instance</p>
 </dd>
 </dl>
@@ -864,7 +868,7 @@ or may not also support access to the Twitter API.</p>
 <span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#twclient.job.DatabaseJob.session" title="Permalink to this definition"></a></dt>
 <dd><p>The actual database session to use.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>sqlalchemy.orm.session.Session instance</p>
 </dd>
 </dl>
@@ -879,7 +883,7 @@ by self.engine is a version the Job class knows how to work with. If
 the schema is an unsupported version or is missing / corrupt, an
 instance of error.BadSchemaError will be raised.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>None</p>
 </dd>
 </dl>
@@ -895,16 +899,16 @@ database, query for it and a) return a persistent object if the
 row exists, or otherwise b) create and return a pending object with the
 appropriate attribute values.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>model</strong> (<em>instance</em><em> of </em><em>models.Base</em>) – A sqlalchemy model object.</p></li>
 <li><p><strong>**kwargs</strong> – Keyword arguments specifying the values of the model’s attributes.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The persistent or pending object.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>instance of models.Base</p>
 </dd>
 </dl>
@@ -922,7 +926,7 @@ specify users. An instance of this class must specify its resolve mode for
 the Target classes, and has defaut logic to resolve them and expose their
 users.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>targets</strong> (<em>list</em><em> of </em><a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target"><em>target.Target</em></a>) – The list of targets for the job.</p></li>
 <li><p><strong>allow_missing_targets</strong> (<em>bool</em>) – If resolving the targets indicates that some targets should be in the
@@ -938,7 +942,7 @@ missing targets (if True)?</p></li>
 <span class="sig-name descname"><span class="pre">targets</span></span><a class="headerlink" href="#twclient.job.TargetJob.targets" title="Permalink to this definition"></a></dt>
 <dd><p>The parameter passed to __init__.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list of <a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target">target.Target</a></p>
 </dd>
 </dl>
@@ -949,7 +953,7 @@ missing targets (if True)?</p></li>
 <span class="sig-name descname"><span class="pre">allow_missing_targets</span></span><a class="headerlink" href="#twclient.job.TargetJob.allow_missing_targets" title="Permalink to this definition"></a></dt>
 <dd><p>The parameter passed to __init__.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -1047,7 +1051,7 @@ to True. Subclasses may override with other configurations.</p>
 <p>This class represents a job which interacts with the Twitter API. It
 configures API access, and defers other functionality to subclasses.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>api</strong> (<em>instance</em><em> of </em><a class="reference internal" href="#twclient.twitter_api.TwitterApi" title="twclient.twitter_api.TwitterApi"><em>twitter_api.TwitterApi</em></a>) – The TwitterApi instance to use for API access.</p></li>
 <li><p><strong>allow_api_errors</strong> (<em>bool</em>) – If the Twitter API returns an error, should we abort (if False,
@@ -1060,7 +1064,7 @@ default), or ignore and continue (if True)?</p></li>
 <span class="sig-name descname"><span class="pre">api</span></span><a class="headerlink" href="#twclient.job.ApiJob.api" title="Permalink to this definition"></a></dt>
 <dd><p>The parameter passed to __init__.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>instance of <a class="reference internal" href="#twclient.twitter_api.TwitterApi" title="twclient.twitter_api.TwitterApi">twitter_api.TwitterApi</a></p>
 </dd>
 </dl>
@@ -1071,7 +1075,7 @@ default), or ignore and continue (if True)?</p></li>
 <span class="sig-name descname"><span class="pre">allow_api_errors</span></span><a class="headerlink" href="#twclient.job.ApiJob.allow_api_errors" title="Permalink to this definition"></a></dt>
 <dd><p>The parameter passed to __init__.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>bool</p>
 </dd>
 </dl>
@@ -1136,16 +1140,16 @@ creation and is stable for the lifetime of the account.</p>
 sqlalchemy database session is optional in general but may be required
 by some subclasses which rely on UniqueMixin.as_unique.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
 <li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The constructed class instance.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Instance of FromTweepyInterface</p>
 </dd>
 </dl>
@@ -1269,16 +1273,16 @@ they follow).</p>
 sqlalchemy database session is optional in general but may be required
 by some subclasses which rely on UniqueMixin.as_unique.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
 <li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The constructed class instance.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Instance of FromTweepyInterface</p>
 </dd>
 </dl>
@@ -1427,16 +1431,16 @@ members).</p>
 sqlalchemy database session is optional in general but may be required
 by some subclasses which rely on UniqueMixin.as_unique.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
 <li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The constructed class instance.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Instance of FromTweepyInterface</p>
 </dd>
 </dl>
@@ -1704,16 +1708,16 @@ included for visibility.</p>
 sqlalchemy database session is optional in general but may be required
 by some subclasses which rely on UniqueMixin.as_unique.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
 <li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The constructed class instance.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Instance of FromTweepyInterface</p>
 </dd>
 </dl>
@@ -1885,16 +1889,16 @@ This table tracks the observed types of media.</p>
 sqlalchemy database session is optional in general but may be required
 by some subclasses which rely on UniqueMixin.as_unique.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
 <li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The constructed class instance.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Instance of FromTweepyInterface</p>
 </dd>
 </dl>
@@ -1978,16 +1982,16 @@ otherwise.</p>
 sqlalchemy database session is optional in general but may be required
 by some subclasses which rely on UniqueMixin.as_unique.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
 <li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The constructed class instance.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>Instance of FromTweepyInterface</p>
 </dd>
 </dl>
@@ -2050,16 +2054,16 @@ by some subclasses which rely on UniqueMixin.as_unique. Subclasses are
 expected to provide this logic, and the implementation here is an
 abstract stub that raises NotImplementedError.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
 <li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The constructed class instances.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#twclient.models.List" title="twclient.models.List">List</a> of instances of FromTweepyInterface</p>
 </dd>
 </dl>
@@ -2122,16 +2126,16 @@ by some subclasses which rely on UniqueMixin.as_unique. Subclasses are
 expected to provide this logic, and the implementation here is an
 abstract stub that raises NotImplementedError.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
 <li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The constructed class instances.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#twclient.models.List" title="twclient.models.List">List</a> of instances of FromTweepyInterface</p>
 </dd>
 </dl>
@@ -2194,16 +2198,16 @@ by some subclasses which rely on UniqueMixin.as_unique. Subclasses are
 expected to provide this logic, and the implementation here is an
 abstract stub that raises NotImplementedError.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
 <li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The constructed class instances.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#twclient.models.List" title="twclient.models.List">List</a> of instances of FromTweepyInterface</p>
 </dd>
 </dl>
@@ -2266,16 +2270,16 @@ by some subclasses which rely on UniqueMixin.as_unique. Subclasses are
 expected to provide this logic, and the implementation here is an
 abstract stub that raises NotImplementedError.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
 <li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The constructed class instances.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#twclient.models.List" title="twclient.models.List">List</a> of instances of FromTweepyInterface</p>
 </dd>
 </dl>
@@ -2383,16 +2387,16 @@ by some subclasses which rely on UniqueMixin.as_unique. Subclasses are
 expected to provide this logic, and the implementation here is an
 abstract stub that raises NotImplementedError.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
 <li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The constructed class instances.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#twclient.models.List" title="twclient.models.List">List</a> of instances of FromTweepyInterface</p>
 </dd>
 </dl>
@@ -2490,16 +2494,16 @@ by some subclasses which rely on UniqueMixin.as_unique. Subclasses are
 expected to provide this logic, and the implementation here is an
 abstract stub that raises NotImplementedError.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>obj</strong> (<em>instance</em><em> of </em><em>tweepy.Model</em>) – The tweepy object to use as data source.</p></li>
 <li><p><strong>session</strong> (<em>instance</em><em> of </em><em>sqlalchemy.orm.session.Session</em><em>, or </em><em>None</em>) – A sqlalchemy database session.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The constructed class instances.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p><a class="reference internal" href="#twclient.models.List" title="twclient.models.List">List</a> of instances of FromTweepyInterface</p>
 </dd>
 </dl>
@@ -2525,7 +2529,7 @@ resolve() method that calculates the corresponding model.User objects.
 After calling resolve(), a list of the User objects are available in the
 .users attribute.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>targets</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>int</em>) – The raw targets to be resolved to users. These will be deduplicated
 in a way that preserves order.</p></li>
@@ -2542,7 +2546,7 @@ initialization, a context object must be passed to <code class="docutils literal
 deduplicated (without changing the relative order of any retained
 targets).</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list of str or int</p>
 </dd>
 </dl>
@@ -2563,10 +2567,10 @@ __init__, one must be given here. If one was passed to __init__, it is
 replaced with the value passed here so long as <code class="docutils literal notranslate"><span class="pre">bool(context)</span> <span class="pre">==</span>
 <span class="pre">True</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>context</strong> (<em>job.Job object</em><em>, or </em><em>None</em>) – The Job instance to use as context for resolving targets to users.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
@@ -2697,10 +2701,10 @@ __init__, one must be given here. If one was passed to __init__, it is
 replaced with the value passed here so long as <code class="docutils literal notranslate"><span class="pre">bool(context)</span> <span class="pre">==</span>
 <span class="pre">True</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>context</strong> (<em>job.Job object</em><em>, or </em><em>None</em>) – The Job instance to use as context for resolving targets to users.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
@@ -2743,10 +2747,10 @@ __init__, one must be given here. If one was passed to __init__, it is
 replaced with the value passed here so long as <code class="docutils literal notranslate"><span class="pre">bool(context)</span> <span class="pre">==</span>
 <span class="pre">True</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>context</strong> (<em>job.Job object</em><em>, or </em><em>None</em>) – The Job instance to use as context for resolving targets to users.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
@@ -2788,10 +2792,10 @@ __init__, one must be given here. If one was passed to __init__, it is
 replaced with the value passed here so long as <code class="docutils literal notranslate"><span class="pre">bool(context)</span> <span class="pre">==</span>
 <span class="pre">True</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>context</strong> (<em>job.Job object</em><em>, or </em><em>None</em>) – The Job instance to use as context for resolving targets to users.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
@@ -2838,10 +2842,10 @@ __init__, one must be given here. If one was passed to __init__, it is
 replaced with the value passed here so long as <code class="docutils literal notranslate"><span class="pre">bool(context)</span> <span class="pre">==</span>
 <span class="pre">True</span></code>.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>context</strong> (<em>job.Job object</em><em>, or </em><em>None</em>) – The Job instance to use as context for resolving targets to users.</p>
 </dd>
-<dt class="field-even">Return type</dt>
+<dt class="field-even">Return type<span class="colon">:</span></dt>
 <dd class="field-even"><p>None</p>
 </dd>
 </dl>
@@ -2865,7 +2869,7 @@ particular, it transparently multiplexes access to the passed API
 credentials (via authpool.AuthPoolAPI), with the effect of combining their
 rate limits. Not all Twitter API methods are supported.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>auths</strong> (<em>list</em><em> of </em><em>tweepy.AuthHandler</em>) – The Twitter API credentials to use.</p>
 </dd>
 </dl>
@@ -2874,7 +2878,7 @@ rate limits. Not all Twitter API methods are supported.</p>
 <span class="sig-name descname"><span class="pre">auths</span></span><a class="headerlink" href="#twclient.twitter_api.TwitterApi.auths" title="Permalink to this definition"></a></dt>
 <dd><p>The parameter passed to __init__.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>list of tweepy.AuthHandler</p>
 </dd>
 </dl>
@@ -2885,7 +2889,7 @@ rate limits. Not all Twitter API methods are supported.</p>
 <span class="sig-name descname"><span class="pre">pool</span></span><a class="headerlink" href="#twclient.twitter_api.TwitterApi.pool" title="Permalink to this definition"></a></dt>
 <dd><p>The AuthPoolAPI constructed with the API credentials.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Type</dt>
+<dt class="field-odd">Type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>instance of models.AuthPoolAPI</p>
 </dd>
 </dl>
@@ -2902,7 +2906,7 @@ using this method will avoid reading them all into memory at once. The
 calls are made through authpool.AuthPoolAPI, transparently handling use
 of multiple sets of API credentials.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>method</strong> (<em>str</em>) – The name of the tweepy.API method to call.</p></li>
 <li><p><strong>cursor</strong> (<em>bool</em>) – Should the results be cursored? Generally should be True if the
@@ -2915,7 +2919,7 @@ will in turn pass arguments it doesn’t consume through to the
 method ultimately called.)</p></li>
 </ul>
 </dd>
-<dt class="field-even">Yields</dt>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>instances of tweepy.Model, int, or other objects</em> – The results returned by the Twitter API call. The type of object
 yielded depends on the value of the method argument.</p>
 </dd>
@@ -2932,18 +2936,18 @@ The default is to request rate limit info for all credentials given in
 the <code class="docutils literal notranslate"><span class="pre">self.auths</span></code> attribute. See also the method of the same name on
 <code class="docutils literal notranslate"><span class="pre">authpool.AuthPoolAPI</span></code>, which this method calls.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><p><strong>consumer_key</strong> (<em>str</em><em> or </em><em>None</em>) – The consumer key for a particular set of API credentials whose rate
 limit should be checked. If None, check all credentials in
 <code class="docutils literal notranslate"><span class="pre">self.auths</span></code>. If not None, the value must match one of the
 consumer keys in <code class="docutils literal notranslate"><span class="pre">self.auths</span></code>.</p>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>A dictionary whose keys are the OAuth consumer keys and whose
 values are the Twitter API’s json responses describing rate limit
 information.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>dict</p>
 </dd>
 </dl>
@@ -2966,7 +2970,7 @@ both, must be specified. The most recent tweet for each user is
 returned in extended mode (i.e., not truncated to 140 characters), and
 entities are requested.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>user_ids</strong> (<em>list</em><em> of </em><em>int</em><em>, or </em><em>None</em>) – Twitter user IDs to hydrate. May be passed simultaneously with
 screen_names.</p></li>
@@ -2974,7 +2978,7 @@ screen_names.</p></li>
 user_ids.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Yields</dt>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>list of tweepy.User</em> – The hydrated user objects.</p>
 </dd>
 </dl>
@@ -2990,7 +2994,7 @@ The target list must be specified, as in the list_members method, by
 exactly one of list_id or slug as well as exactly one of
 owner_screen_name or owner_id.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>list_id</strong> (<em>int</em><em>, or </em><em>None</em>) – Twitter’s integer ID for the list.</p></li>
 <li><p><strong>slug</strong> (<em>str</em><em>, or </em><em>None</em>) – The slug of the list (not its display name).</p></li>
@@ -2998,10 +3002,10 @@ owner_screen_name or owner_id.</p>
 <li><p><strong>owner_id</strong> (<em>int</em><em>, or </em><em>None</em>) – Twitter’s integer user ID for the user who owns the list.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Returns</dt>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
 <dd class="field-even"><p>The hydrated list object.</p>
 </dd>
-<dt class="field-odd">Return type</dt>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
 <dd class="field-odd"><p>tweepy.List object</p>
 </dd>
 </dl>
@@ -3017,7 +3021,7 @@ method). The target list must be specified, as in the get_list method,
 by exactly one of list_id or slug as well as exactly one
 of owner_screen_name or owner_id.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>list_id</strong> (<em>int</em><em>, or </em><em>None</em>) – Twitter’s integer ID for the list.</p></li>
 <li><p><strong>slug</strong> (<em>str</em><em>, or </em><em>None</em>) – The slug of the list (not its display name).</p></li>
@@ -3025,7 +3029,7 @@ of owner_screen_name or owner_id.</p>
 <li><p><strong>owner_id</strong> (<em>int</em><em>, or </em><em>None</em>) – Twitter’s integer user ID for the user who owns the list.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Yields</dt>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>tweepy.User objects</em> – Hydrated user objects for the members of the list.</p>
 </dd>
 </dl>
@@ -3044,7 +3048,7 @@ that because of a limitation in the underlying Twitter API method, if
 the user has posted and not deleted more than approximately 3200
 tweets, only the most recent approximately 3200 will be retrieved.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>user_id</strong> (<em>int</em><em>, or </em><em>None</em>) – Twitter’s integer user ID for the user whose tweets are to be
 retrieved.</p></li>
@@ -3053,7 +3057,7 @@ retrieved.</p></li>
 possibly via tweepy.Cursor.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Yields</dt>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>tweepy.Tweet objects</em> – The user’s tweets.</p>
 </dd>
 </dl>
@@ -3068,7 +3072,7 @@ make_api_call method and ultimately via tweepy.API’s get_follower_ids
 method / followers_ids in tweepy &lt; 4.0.0). Exactly one of user_id and
 screen_name must be specified.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>user_id</strong> (<em>int</em><em>, or </em><em>None</em>) – Twitter’s integer user ID for the user whose followers’ IDs are to
 be retrieved.</p></li>
@@ -3076,7 +3080,7 @@ be retrieved.</p></li>
 retrieved.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Yields</dt>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>instances of int</em> – The Twitter user_ids of the requested user’s followers.</p>
 </dd>
 </dl>
@@ -3093,7 +3097,7 @@ screen_name must be specified. Note that “friends” is Twitter’s term
 for the opposite of followers: user A’s friends are the users that A
 follows.</p>
 <dl class="field-list simple">
-<dt class="field-odd">Parameters</dt>
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>user_id</strong> (<em>int</em><em>, or </em><em>None</em>) – Twitter’s integer user ID for the user whose friends’ IDs are to
 be retrieved.</p></li>
@@ -3101,7 +3105,7 @@ be retrieved.</p></li>
 retrieved.</p></li>
 </ul>
 </dd>
-<dt class="field-even">Yields</dt>
+<dt class="field-even">Yields<span class="colon">:</span></dt>
 <dd class="field-even"><p><em>instances of int</em> – The Twitter user_ids of the requested user’s friends.</p>
 </dd>
 </dl>

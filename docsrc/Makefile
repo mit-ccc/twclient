@@ -3,23 +3,18 @@
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = sphinx-build
+SPHINXBUILD   = python3 -m sphinx.cmd.build
 SPHINXPROJ    = twclient
 SOURCEDIR     = .
 BUILDDIR      = _build
 
-.PHONY: all github html help Makefile
+.PHONY: all html Makefile
 
-all: github
-
-github: html
-	cp -a _build/html/. ../docs
+all: html
+	rm -rf ../docs/ && cp -R _build/html ../docs
 
 html:
 	$(SPHINXBUILD) -b html $(ALLSPHINXOPTS) $(SOURCEDIR) $(BUILDDIR)/html
-
-help:
-	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
 # Catch-all target: route every other target to Sphinx using the new
 # "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).

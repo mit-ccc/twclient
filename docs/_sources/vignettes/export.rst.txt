@@ -58,9 +58,12 @@ Twitter data.) We'll use the PostgreSQL dialect of SQL for examples here, but
 it isn't hard to adapt the queries to the particular syntax of whatever DBMS
 you may be using.
 
+~~~~~~~~~~~~~~~~
+  SQL Examples
+~~~~~~~~~~~~~~~~
+
 .. toctree::
-   :maxdepth: 1
-   :caption: SQL Examples:
+   :maxdepth: 2
 
    sql-exports/follow-graph.rst
    sql-exports/tweets.rst

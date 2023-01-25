@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html class="writer-html5" lang="en" >
 <head>
-  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.17.1: http://docutils.sourceforge.net/" />
+  <meta charset="utf-8" /><meta name="generator" content="Docutils 0.18.1: http://docutils.sourceforge.net/" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Working with fetched data &mdash; twclient 0.2.0 documentation</title>
@@ -11,10 +11,9 @@
     <script src="../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
+        <script integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK" src="../_static/jquery.js"></script>
+        <script integrity="sha384-lSZeSIVKp9myfKbDQ3GkN/KHjUc+mzg17VKDN4Y2kUeBSJioB9QSM639vM9fuY//" src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script data-url_root="../" id="documentation_options" src="../_static/documentation_options.js"></script>
-        <script src="../_static/jquery.js"></script>
-        <script src="../_static/underscore.js"></script>
-        <script src="../_static/_sphinx_javascript_frameworks_compat.js"></script>
         <script src="../_static/doctools.js"></script>
         <script src="../_static/sphinx_highlight.js"></script>
     <script src="../_static/js/theme.js"></script>
@@ -29,32 +28,38 @@
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
       <div class="wy-side-scroll">
         <div class="wy-side-nav-search" >
-            <a href="../index.html" class="icon icon-home"> twclient
+
+          
+          
+          <a href="../index.html" class="icon icon-home">
+            twclient
           </a>
               <div class="version">
                 0.2.0
               </div>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
-    <input type="text" name="q" placeholder="Search docs" />
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
     <input type="hidden" name="check_keywords" value="yes" />
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
-              <p class="caption" role="heading"><span class="caption-text">Overview:</span></p>
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../overview/readme.html">README</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/changelog.html">Changelog</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/license.html">License</a></li>
-<li class="toctree-l1"><a class="reference internal" href="../overview/license.html#apache-license">Apache License</a></li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Vignettes:</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../overview/license.html">Apache License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Vignettes</span></p>
 <ul class="current">
 <li class="toctree-l1"><a class="reference internal" href="fetch.html">Getting data from the Twitter API</a></li>
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Working with fetched data</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#built-in-exports">Built-in exports</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#custom-sql">Custom SQL</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#custom-sql">Custom SQL</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#sql-examples">SQL Examples</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="sql-exports/follow-graph.html">Follow Graph</a></li>
 <li class="toctree-l3"><a class="reference internal" href="sql-exports/tweets.html">Users’ Tweets</a></li>
 <li class="toctree-l3"><a class="reference internal" href="sql-exports/tweet-graphs.html">Tweet-Derived Graphs: Mention, Reply, Retweet, Quote</a></li>
@@ -65,7 +70,7 @@
 </ul>
 </li>
 </ul>
-<p class="caption" role="heading"><span class="caption-text">Reference:</span></p>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="../apidocs.html">API Documentation</a></li>
 </ul>
@@ -83,7 +88,7 @@
         <div class="rst-content">
           <div role="navigation" aria-label="Page navigation">
   <ul class="wy-breadcrumbs">
-      <li><a href="../index.html" class="icon icon-home"></a></li>
+      <li><a href="../index.html" class="icon icon-home" aria-label="Home"></a></li>
       <li class="breadcrumb-item active">Working with fetched data</li>
       <li class="wy-breadcrumbs-aside">
             <a href="../_sources/vignettes/export.rst.txt" rel="nofollow"> View page source</a>
@@ -140,13 +145,25 @@ this sort of flexibility is the point of using a database backend to store the
 Twitter data.) We’ll use the PostgreSQL dialect of SQL for examples here, but
 it isn’t hard to adapt the queries to the particular syntax of whatever DBMS
 you may be using.</p>
+</section>
+<section id="sql-examples">
+<h2>SQL Examples<a class="headerlink" href="#sql-examples" title="Permalink to this heading"></a></h2>
 <div class="toctree-wrapper compound">
-<p class="caption" role="heading"><span class="caption-text">SQL Examples:</span></p>
 <ul>
 <li class="toctree-l1"><a class="reference internal" href="sql-exports/follow-graph.html">Follow Graph</a></li>
 <li class="toctree-l1"><a class="reference internal" href="sql-exports/tweets.html">Users’ Tweets</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sql-exports/tweet-graphs.html">Tweet-Derived Graphs: Mention, Reply, Retweet, Quote</a></li>
-<li class="toctree-l1"><a class="reference internal" href="sql-exports/user-info.html">User-Level Information: Bio, Location, Etc.</a></li>
+<li class="toctree-l1"><a class="reference internal" href="sql-exports/tweet-graphs.html">Tweet-Derived Graphs: Mention, Reply, Retweet, Quote</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sql-exports/tweet-graphs.html#mention-graph">Mention graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-exports/tweet-graphs.html#reply-graph">Reply graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-exports/tweet-graphs.html#retweet-graph">Retweet graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-exports/tweet-graphs.html#quote-graph">Quote graph</a></li>
+<li class="toctree-l2"><a class="reference internal" href="sql-exports/tweet-graphs.html#filtering-to-a-particular-set-of-users">Filtering to a particular set of users</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="sql-exports/user-info.html">User-Level Information: Bio, Location, Etc.</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="sql-exports/user-info.html#adding-tweet-data">Adding tweet data</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="sql-exports/mutual-followers-friends-counts.html">Mutual Followers and Friends</a></li>
 </ul>
 </div>
