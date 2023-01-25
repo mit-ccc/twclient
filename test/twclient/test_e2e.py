@@ -7,6 +7,7 @@ import hashlib
 import warnings
 
 import pytest
+assert hasattr(pytest.mark, 'vcr')
 
 from src.twclient._cli.entrypoint import cli
 
