@@ -39,15 +39,21 @@ Install the package from pypi:
 
    pip3 install twclient
 
-or, if you want to use the development version, clone this repo and install in
-editable mode:
+or, if you want to use the development version, clone this repo and install:
 
 .. code-block:: bash
 
    git clone git@github.com:mit-ccc/twclient.git && cd twclient
-   pip3 install -e .
+   pip3 install .
 
-or use ``pip3 install -e .[dev]`` to also install all dev dependencies.
+You can also use the ``-e`` flag to install in editable mode:
+
+.. code-block:: bash
+
+    pip3 install -e .
+
+To install all development dependencies, replace ``.`` with ``.[dev]`` in the
+arguments to ``pip3 install``.
 
 Usage
 =====
