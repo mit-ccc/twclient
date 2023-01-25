@@ -6,7 +6,7 @@ import logging
 
 from .job import DatabaseJob
 
-from .. import __version__
+from .._version import __version__
 from .. import models as md
 
 logger = logging.getLogger(__name__)

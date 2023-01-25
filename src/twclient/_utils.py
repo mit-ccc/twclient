@@ -11,15 +11,15 @@ import contextlib
 
 from packaging import version
 
-import tweepy as tw
+import tweepy as tp
 import sqlalchemy as sa
 
 logger = logging.getLogger(__name__)
 
 
 # Version checks for elsewhere
-TWEEPY_V4 = version.parse(tw.__version__) >= version.parse('4.0.0')
-TWEEPY_V45 = version.parse(tw.__version__) >= version.parse('4.5.0')
+TWEEPY_V4 = version.parse(tp.__version__) >= version.parse('4.0.0')
+TWEEPY_V45 = version.parse(tp.__version__) >= version.parse('4.5.0')
 SA_V14 = version.parse(sa.__version__) >= version.parse('1.4.0')
 SA_V20 = version.parse(sa.__version__) >= version.parse('2.0.0')
 

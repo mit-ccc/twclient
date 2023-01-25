@@ -10,7 +10,7 @@ from abc import ABC, abstractmethod
 import sqlalchemy as sa
 from sqlalchemy.orm import sessionmaker
 
-from .. import __version__
+from .._version import __version__
 from .. import error as err
 from .. import models as md
 from .. import _utils as ut
