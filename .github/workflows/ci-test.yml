@@ -1,4 +1,4 @@
-name: twclient
+name: CI tests
 
 on:
   push:
