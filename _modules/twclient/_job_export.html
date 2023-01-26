@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>twclient._job_export &mdash; twclient 0.2.0 documentation</title>
+      <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+      <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+        <script integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK" src="../../_static/jquery.js"></script>
+        <script integrity="sha384-lSZeSIVKp9myfKbDQ3GkN/KHjUc+mzg17VKDN4Y2kUeBSJioB9QSM639vM9fuY//" src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/doctools.js"></script>
+        <script src="../../_static/sphinx_highlight.js"></script>
+    <script src="../../_static/js/theme.js"></script>
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav"> 
+  <div class="wy-grid-for-nav">
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+
+          
+          
+          <a href="../../index.html" class="icon icon-home">
+            twclient
+          </a>
+              <div class="version">
+                0.2.0
+              </div>
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" aria-label="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+        </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
+              <p class="caption" role="heading"><span class="caption-text">Overview</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/readme.html">README</a></li>
+</ul>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/changelog.html">Changelog</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../overview/license.html">Apache License</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Vignettes</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../vignettes/fetch.html">Getting data from the Twitter API</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../vignettes/export.html">Working with fetched data</a></li>
+</ul>
+<p class="caption" role="heading"><span class="caption-text">Reference</span></p>
+<ul>
+<li class="toctree-l1"><a class="reference internal" href="../../apidocs.html">API Documentation</a></li>
+</ul>
+
+        </div>
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">twclient</a>
+      </nav>
+
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="Page navigation">
+  <ul class="wy-breadcrumbs">
+      <li><a href="../../index.html" class="icon icon-home" aria-label="Home"></a></li>
+          <li class="breadcrumb-item"><a href="../index.html">Module code</a></li>
+      <li class="breadcrumb-item active">twclient._job_export</li>
+      <li class="wy-breadcrumbs-aside">
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+             
+  <h1>Source code for twclient._job_export</h1><div class="highlight"><pre>
+<span></span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Jobs which export data from the database.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">logging</span>
+
+<span class="kn">from</span> <span class="nn">abc</span> <span class="kn">import</span> <span class="n">abstractmethod</span>
+
+<span class="kn">import</span> <span class="nn">sqlalchemy</span> <span class="k">as</span> <span class="nn">sa</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy</span> <span class="kn">import</span> <span class="n">sql</span>
+<span class="kn">from</span> <span class="nn">sqlalchemy.sql.expression</span> <span class="kn">import</span> <span class="n">func</span>
+
+<span class="kn">from</span> <span class="nn">._job_base</span> <span class="kn">import</span> <span class="n">DatabaseJob</span><span class="p">,</span> <span class="n">TargetJob</span>
+<span class="kn">from</span> <span class="nn">._utils</span> <span class="kn">import</span> <span class="n">smart_open</span><span class="p">,</span> <span class="n">grouper</span><span class="p">,</span> <span class="n">export</span>
+<span class="kn">from</span> <span class="nn">.models</span> <span class="kn">import</span> <span class="n">Follow</span><span class="p">,</span> <span class="n">StgUser</span><span class="p">,</span> <span class="n">Tweet</span><span class="p">,</span> <span class="n">Url</span><span class="p">,</span> <span class="n">UserData</span><span class="p">,</span> <span class="n">UserMention</span>
+
+<span class="n">logger</span> <span class="o">=</span> <span class="n">logging</span><span class="o">.</span><span class="n">getLogger</span><span class="p">(</span><span class="vm">__name__</span><span class="p">)</span>
+
+
+<span class="c1"># this is just a stub to placate the linter; the @export decorator adds</span>
+<span class="c1"># objects to __all__ so that whether an object is included is noted next to it</span>
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[]</span>
+
+<div class="viewcode-block" id="ExportJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportJob">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">ExportJob</span><span class="p">(</span><span class="n">TargetJob</span><span class="p">,</span> <span class="n">DatabaseJob</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    A job exporting data from the database.</span>
+
+<span class="sd">    This class represents a job which pulls an export of collected Twitter data</span>
+<span class="sd">    from the database. Several subclasses are defined for particular kinds of</span>
+<span class="sd">    commonly used exports. If targets are given, the exports are restricted to</span>
+<span class="sd">    only those targets (but note that how to do this is export-specific and</span>
+<span class="sd">    subclasses must implement it). The exports produced are CSV files with</span>
+<span class="sd">    columns given by the ``columns`` property, in the order they appear there.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    outfile : str</span>
+<span class="sd">        The path to the file where we should write the export (default &#39;-&#39; for</span>
+<span class="sd">        stdout).</span>
+
+<span class="sd">    Attributes</span>
+<span class="sd">    ----------</span>
+<span class="sd">    outfile : str</span>
+<span class="sd">        The parameter passed to __init__.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">resolve_mode</span> <span class="o">=</span> <span class="s1">&#39;skip&#39;</span>  <span class="c1"># bail out if requested targets are missing</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">outfile</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;outfile&#39;</span><span class="p">,</span> <span class="s1">&#39;-&#39;</span><span class="p">)</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">outfile</span> <span class="o">=</span> <span class="n">outfile</span>
+
+<div class="viewcode-block" id="ExportJob.query"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportJob.query">[docs]</a>    <span class="nd">@abstractmethod</span>  <span class="c1"># Job inherits from ABC</span>
+    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The sqlalchemy query returning rows to export.</span>
+
+<span class="sd">        This method is the main piece of business logic for subclasses, which</span>
+<span class="sd">        must implement it along with the ``columns`` property. It should return</span>
+<span class="sd">        an iterable (or be a generator) of tuples, with the elements of each</span>
+<span class="sd">        tuple assumed to be in the order specified by the ``columns`` property.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span></div>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">columns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The list of column names for the resultset returned by the ``query``</span>
+<span class="sd">        method.</span>
+
+<span class="sd">        Subclasses must implement this property along with the ``query``</span>
+<span class="sd">        method.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ExportJob.run"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportJob.run">[docs]</a>    <span class="k">def</span> <span class="nf">run</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># both of these are no-ops if targets == []</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">resolve_targets</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_targets_to_stg</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">smart_open</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">outfile</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;wt&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fle</span><span class="p">:</span>
+            <span class="n">writer</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">DictWriter</span><span class="p">(</span><span class="n">fle</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">)</span>
+            <span class="n">writer</span><span class="o">.</span><span class="n">writeheader</span><span class="p">()</span>
+
+            <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">query</span><span class="p">():</span>
+                <span class="n">writer</span><span class="o">.</span><span class="n">writerow</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">columns</span><span class="p">,</span> <span class="n">row</span><span class="p">)))</span></div>
+
+    <span class="k">def</span> <span class="nf">_load_targets_to_stg</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">))</span>
+        <span class="n">ids</span> <span class="o">=</span> <span class="n">grouper</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">,</span> <span class="mi">5000</span><span class="p">)</span>  <span class="c1"># just a default batch size</span>
+
+        <span class="n">StgUser</span><span class="o">.</span><span class="n">clear_fast</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="p">)</span>
+
+        <span class="n">n_items</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">for</span> <span class="n">ind</span><span class="p">,</span> <span class="n">batch</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">ids</span><span class="p">):</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="s1">&#39;Loading export target IDs batch </span><span class="si">{0}</span><span class="s1">, cumulative </span><span class="si">{1}</span><span class="s1">&#39;</span>
+            <span class="n">msg</span> <span class="o">=</span> <span class="n">msg</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">ind</span> <span class="o">+</span> <span class="mi">1</span><span class="p">,</span> <span class="n">n_items</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">debug</span><span class="p">(</span><span class="n">msg</span><span class="p">)</span>
+
+            <span class="n">rows</span> <span class="o">=</span> <span class="p">({</span><span class="s1">&#39;user_id&#39;</span><span class="p">:</span> <span class="n">t</span><span class="o">.</span><span class="n">user_id</span><span class="p">}</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">batch</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">bulk_insert_mappings</span><span class="p">(</span><span class="n">StgUser</span><span class="p">,</span> <span class="n">rows</span><span class="p">)</span>
+
+            <span class="n">n_items</span> <span class="o">+=</span> <span class="nb">len</span><span class="p">(</span><span class="n">batch</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">n_items</span></div>
+
+
+<div class="viewcode-block" id="ExportFollowGraphJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportFollowGraphJob">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">ExportFollowGraphJob</span><span class="p">(</span><span class="n">ExportJob</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Export the follow graph.</span>
+
+<span class="sd">    This export is a graph in edgelist format, with an edge from</span>
+<span class="sd">    ``source_user_id`` to ``target_user_id`` if the source user follows the</span>
+<span class="sd">    target user. There is one row per edge (i.e., per pair of users with a</span>
+<span class="sd">    following relationship).</span>
+
+<span class="sd">    If targets are specified, return only the follow graph on the users they</span>
+<span class="sd">    describe; otherwise, return the entire graph.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;source_user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;target_user_id&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ExportFollowGraphJob.query"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportFollowGraphJob.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">Follow</span><span class="o">.</span><span class="n">source_user_id</span><span class="p">,</span> <span class="n">Follow</span><span class="o">.</span><span class="n">target_user_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+            <span class="n">su1</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">StgUser</span><span class="p">)</span>
+            <span class="n">su2</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">StgUser</span><span class="p">)</span>
+
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> \
+                <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">su1</span><span class="p">,</span> <span class="n">su1</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">Follow</span><span class="o">.</span><span class="n">source_user_id</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">su2</span><span class="p">,</span> <span class="n">su2</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">Follow</span><span class="o">.</span><span class="n">target_user_id</span><span class="p">)</span> \
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> \
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Follow</span><span class="o">.</span><span class="n">valid_end_dt</span><span class="o">.</span><span class="n">is_</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
+
+        <span class="k">yield from</span> <span class="n">ret</span></div></div>
+
+
+<div class="viewcode-block" id="ExportMentionGraphJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportMentionGraphJob">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">ExportMentionGraphJob</span><span class="p">(</span><span class="n">ExportJob</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Export the mention graph.</span>
+
+<span class="sd">    This export is a graph in edgelist format, with an edge from</span>
+<span class="sd">    ``source_user_id`` to ``target_user_id`` if the source user has mentioned</span>
+<span class="sd">    the target user. The third column ``num_mentions`` gives the number of</span>
+<span class="sd">    mentions. There is one row per edge (i.e., per pair of users with a mention</span>
+<span class="sd">    relationship).</span>
+
+<span class="sd">    If targets are specified, return the mention graph only on the users they</span>
+<span class="sd">    specify; otherwise, return the entire graph.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;source_user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;target_user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;num_mentions&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ExportMentionGraphJob.query"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportMentionGraphJob.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                <span class="n">Tweet</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+                <span class="n">UserMention</span><span class="o">.</span><span class="n">mentioned_user_id</span><span class="p">,</span>
+                <span class="n">func</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+            <span class="p">)</span> \
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">Tweet</span><span class="p">,</span> <span class="n">Tweet</span><span class="o">.</span><span class="n">tweet_id</span> <span class="o">==</span> <span class="n">UserMention</span><span class="o">.</span><span class="n">tweet_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+            <span class="n">su1</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">StgUser</span><span class="p">)</span>
+            <span class="n">su2</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">StgUser</span><span class="p">)</span>
+
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> \
+                <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">su1</span><span class="p">,</span> <span class="n">su1</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">Tweet</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">su2</span><span class="p">,</span> <span class="n">su2</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">UserMention</span><span class="o">.</span><span class="n">mentioned_user_id</span><span class="p">)</span> \
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> \
+            <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">Tweet</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">UserMention</span><span class="o">.</span><span class="n">mentioned_user_id</span><span class="p">)</span>
+
+        <span class="k">yield from</span> <span class="n">ret</span></div></div>
+
+
+<div class="viewcode-block" id="ExportReplyGraphJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportReplyGraphJob">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">ExportReplyGraphJob</span><span class="p">(</span><span class="n">ExportJob</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Export the reply graph.</span>
+
+<span class="sd">    This export is a graph in edgelist format, with an edge from</span>
+<span class="sd">    ``source_user_id`` to ``target_user_id`` if the source user has replied to</span>
+<span class="sd">    the target user. The third column ``num_mentions`` gives the number of</span>
+<span class="sd">    mentions. There is one row per edge (i.e., per pair of users with a reply</span>
+<span class="sd">    relationship).</span>
+
+<span class="sd">    If targets are specified, return the reply graph only on the users they</span>
+<span class="sd">    specify; otherwise, return the entire graph.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;source_user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;target_user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;num_replies&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ExportReplyGraphJob.query"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportReplyGraphJob.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                <span class="n">Tweet</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+                <span class="n">Tweet</span><span class="o">.</span><span class="n">in_reply_to_user_id</span><span class="p">,</span>
+                <span class="n">func</span><span class="o">.</span><span class="n">count</span><span class="p">()</span>
+            <span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+            <span class="n">su1</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">StgUser</span><span class="p">)</span>
+            <span class="n">su2</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">StgUser</span><span class="p">)</span>
+
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> \
+                <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">su1</span><span class="p">,</span> <span class="n">su1</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">Tweet</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">su2</span><span class="p">,</span> <span class="n">su2</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">Tweet</span><span class="o">.</span><span class="n">in_reply_to_user_id</span><span class="p">)</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> \
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">Tweet</span><span class="o">.</span><span class="n">in_reply_to_user_id</span><span class="o">.</span><span class="n">isnot</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span> \
+            <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">Tweet</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">Tweet</span><span class="o">.</span><span class="n">in_reply_to_user_id</span><span class="p">)</span>
+
+        <span class="k">yield from</span> <span class="n">ret</span></div></div>
+
+
+<div class="viewcode-block" id="ExportRetweetGraphJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportRetweetGraphJob">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">ExportRetweetGraphJob</span><span class="p">(</span><span class="n">ExportJob</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Export the retweet graph.</span>
+
+<span class="sd">    This export is a graph in edgelist format, with an edge from</span>
+<span class="sd">    ``source_user_id`` to ``target_user_id`` if the source user has retweeted</span>
+<span class="sd">    the target user. The third column ``num_mentions`` gives the number of</span>
+<span class="sd">    mentions. There is one row per edge (i.e., per pair of users with a retweet</span>
+<span class="sd">    relationship).</span>
+
+<span class="sd">    If targets are specified, return the retweet graph only on the users they</span>
+<span class="sd">    specify; otherwise, return the entire graph.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;source_user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;target_user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;num_retweets&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ExportRetweetGraphJob.query"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportRetweetGraphJob.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tws</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">Tweet</span><span class="p">)</span>
+        <span class="n">twt</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">Tweet</span><span class="p">)</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">tws</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">twt</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">func</span><span class="o">.</span><span class="n">count</span><span class="p">())</span> \
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">twt</span><span class="p">,</span> <span class="n">twt</span><span class="o">.</span><span class="n">tweet_id</span> <span class="o">==</span> <span class="n">tws</span><span class="o">.</span><span class="n">retweeted_status_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+            <span class="n">su1</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">StgUser</span><span class="p">)</span>
+            <span class="n">su2</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">StgUser</span><span class="p">)</span>
+
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> \
+                <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">su1</span><span class="p">,</span> <span class="n">su1</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">twt</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">su2</span><span class="p">,</span> <span class="n">su2</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">tws</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> \
+            <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">tws</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">twt</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+
+        <span class="k">yield from</span> <span class="n">ret</span></div></div>
+
+
+<div class="viewcode-block" id="ExportQuoteGraphJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportQuoteGraphJob">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">ExportQuoteGraphJob</span><span class="p">(</span><span class="n">ExportJob</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Export the quote graph.</span>
+
+<span class="sd">    This export is a graph in edgelist format, with an edge from</span>
+<span class="sd">    ``source_user_id`` to ``target_user_id`` if the source user has</span>
+<span class="sd">    quote-tweeted the target user. The third column ``num_mentions`` gives the</span>
+<span class="sd">    number of mentions. There is one row per edge (i.e., per pair of users with</span>
+<span class="sd">    a quote-tweet relationship).</span>
+
+<span class="sd">    If targets are specified, return the quote graph only on the users they</span>
+<span class="sd">    specify; otherwise, return the entire graph.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;source_user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;target_user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;num_quotes&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ExportQuoteGraphJob.query"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportQuoteGraphJob.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tws</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">Tweet</span><span class="p">)</span>
+        <span class="n">twt</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">Tweet</span><span class="p">)</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">tws</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">twt</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">func</span><span class="o">.</span><span class="n">count</span><span class="p">())</span> \
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">twt</span><span class="p">,</span> <span class="n">twt</span><span class="o">.</span><span class="n">tweet_id</span> <span class="o">==</span> <span class="n">tws</span><span class="o">.</span><span class="n">quoted_status_id</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+            <span class="n">su1</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">StgUser</span><span class="p">)</span>
+            <span class="n">su2</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">StgUser</span><span class="p">)</span>
+
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> \
+                <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">su1</span><span class="p">,</span> <span class="n">su1</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">twt</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">su2</span><span class="p">,</span> <span class="n">su2</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">tws</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> \
+            <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">tws</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span> <span class="n">twt</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+
+        <span class="k">yield from</span> <span class="n">ret</span></div></div>
+
+
+<div class="viewcode-block" id="ExportTweetsJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportTweetsJob">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">ExportTweetsJob</span><span class="p">(</span><span class="n">ExportJob</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Export the set of user tweets.</span>
+
+<span class="sd">    This export includes all tweets for either all users or a particular set of</span>
+<span class="sd">    targets. Various relevant fields are included, including in particular the</span>
+<span class="sd">    text of any retweeted/quoted/replied-to status and a recoded version of the</span>
+<span class="sd">    client from which the tweet was posted. There is one row per tweet.</span>
+
+<span class="sd">    If targets are specified, return only tweets by the users they specify;</span>
+<span class="sd">    otherwise, return all tweets. Note that because we receive and store full</span>
+<span class="sd">    tweet objects for quote tweets and retweets, and users can RT or QT any</span>
+<span class="sd">    other user, not just ones whose tweets were fetched, &quot;all tweets&quot; may</span>
+<span class="sd">    include some tweets by users whose tweets weren&#39;t explicitly fetched.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;tweet_id&#39;</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;content&#39;</span><span class="p">,</span> <span class="s1">&#39;retweeted_status_content&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;quoted_status_content&#39;</span><span class="p">,</span> <span class="s1">&#39;in_reply_to_status_content&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;is_retweet&#39;</span><span class="p">,</span> <span class="s1">&#39;is_reply&#39;</span><span class="p">,</span> <span class="s1">&#39;is_quote&#39;</span><span class="p">,</span> <span class="s1">&#39;create_dt&#39;</span><span class="p">,</span> <span class="s1">&#39;lang&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;retweet_count&#39;</span><span class="p">,</span> <span class="s1">&#39;favorite_count&#39;</span><span class="p">,</span> <span class="s1">&#39;source_collapsed&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ExportTweetsJob.query"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportTweetsJob.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">twt</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">Tweet</span><span class="p">)</span>
+        <span class="n">twr</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">Tweet</span><span class="p">)</span>
+        <span class="n">twq</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">Tweet</span><span class="p">)</span>
+        <span class="n">twp</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">Tweet</span><span class="p">)</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                <span class="n">twt</span><span class="o">.</span><span class="n">tweet_id</span><span class="p">,</span>
+                <span class="n">twt</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+
+                <span class="n">twt</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+                <span class="n">twr</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+                <span class="n">twq</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+                <span class="n">twp</span><span class="o">.</span><span class="n">content</span><span class="p">,</span>
+
+                <span class="n">twt</span><span class="o">.</span><span class="n">retweeted_status_id</span><span class="o">.</span><span class="n">isnot</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
+                <span class="n">twt</span><span class="o">.</span><span class="n">in_reply_to_status_id</span><span class="o">.</span><span class="n">isnot</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
+                <span class="n">twt</span><span class="o">.</span><span class="n">quoted_status_id</span><span class="o">.</span><span class="n">isnot</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
+
+                <span class="n">twt</span><span class="o">.</span><span class="n">create_dt</span><span class="p">,</span>
+                <span class="n">twt</span><span class="o">.</span><span class="n">lang</span><span class="p">,</span>
+                <span class="n">twt</span><span class="o">.</span><span class="n">retweet_count</span><span class="p">,</span>
+                <span class="n">twt</span><span class="o">.</span><span class="n">favorite_count</span><span class="p">,</span>
+
+                <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">twt</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">whens</span><span class="o">=</span><span class="p">{</span>
+                    <span class="s1">&#39;Twitter for iPhone&#39;</span><span class="p">:</span> <span class="s1">&#39;iPhone&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;Twitter for Android&#39;</span><span class="p">:</span> <span class="s1">&#39;Android&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;Twitter Web App&#39;</span><span class="p">:</span> <span class="s1">&#39;Web&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;Twitter Web Client&#39;</span><span class="p">:</span> <span class="s1">&#39;Web&#39;</span><span class="p">,</span>
+                    <span class="s1">&#39;TweetDeck&#39;</span><span class="p">:</span> <span class="s1">&#39;Desktop&#39;</span>
+                <span class="p">},</span> <span class="n">else_</span><span class="o">=</span><span class="s1">&#39;Other&#39;</span><span class="p">)</span>
+            <span class="p">)</span> \
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">twr</span><span class="p">,</span> <span class="n">twr</span><span class="o">.</span><span class="n">tweet_id</span> <span class="o">==</span> <span class="n">twt</span><span class="o">.</span><span class="n">retweeted_status_id</span><span class="p">,</span> <span class="n">isouter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">twq</span><span class="p">,</span> <span class="n">twq</span><span class="o">.</span><span class="n">tweet_id</span> <span class="o">==</span> <span class="n">twt</span><span class="o">.</span><span class="n">quoted_status_id</span><span class="p">,</span> <span class="n">isouter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">twp</span><span class="p">,</span> <span class="n">twp</span><span class="o">.</span><span class="n">tweet_id</span> <span class="o">==</span> <span class="n">twt</span><span class="o">.</span><span class="n">in_reply_to_status_id</span><span class="p">,</span> <span class="n">isouter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+            <span class="n">ret</span> <span class="o">=</span> <span class="n">ret</span> \
+                <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">StgUser</span><span class="p">,</span> <span class="n">StgUser</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">twt</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span>
+
+        <span class="k">yield from</span> <span class="n">ret</span></div></div>
+
+
+<div class="viewcode-block" id="ExportUserInfoJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportUserInfoJob">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">ExportUserInfoJob</span><span class="p">(</span><span class="n">ExportJob</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Export user-level information.</span>
+
+<span class="sd">    This export includes user-level information. Besides the Twitter-assigned</span>
+<span class="sd">    user ID, fields include such things as the profile URL and self-reported</span>
+<span class="sd">    location, counts of friends, followers and list memberships, verified</span>
+<span class="sd">    status, and other such user-specific fields. If a given user&#39;s data has</span>
+<span class="sd">    been fetched more than once, only the most recent fetch will be used. There</span>
+<span class="sd">    is one row per user.</span>
+
+<span class="sd">    If targets are specified, only those users will be included in the export.</span>
+<span class="sd">    If no targets are specified, the default is to return rows for all users</span>
+<span class="sd">    who have been fetched with ``twitter fetch users`` (i.e., those with rows</span>
+<span class="sd">    in the ``user_data`` table).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user_id&#39;</span><span class="p">,</span> <span class="s1">&#39;profile_url&#39;</span><span class="p">,</span> <span class="s1">&#39;friends_count&#39;</span><span class="p">,</span> <span class="s1">&#39;followers_count&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;listed_count&#39;</span><span class="p">,</span> <span class="s1">&#39;screen_name&#39;</span><span class="p">,</span> <span class="s1">&#39;location&#39;</span><span class="p">,</span> <span class="s1">&#39;display_name&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;description&#39;</span><span class="p">,</span> <span class="s1">&#39;protected&#39;</span><span class="p">,</span> <span class="s1">&#39;verified&#39;</span><span class="p">,</span> <span class="s1">&#39;account_create_dt&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;recorded_tweets_all_time&#39;</span><span class="p">,</span> <span class="s1">&#39;first_tweet_dt&#39;</span><span class="p">,</span> <span class="s1">&#39;last_tweet_dt&#39;</span><span class="p">,</span>
+               <span class="s1">&#39;android_user&#39;</span><span class="p">,</span> <span class="s1">&#39;ios_user&#39;</span><span class="p">,</span> <span class="s1">&#39;desktop_user&#39;</span><span class="p">,</span> <span class="s1">&#39;business_app_user&#39;</span><span class="p">]</span>
+
+<div class="viewcode-block" id="ExportUserInfoJob.query"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportUserInfoJob.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>  <span class="c1"># pylint: disable=too-many-locals</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+            <span class="n">eligibles</span> <span class="o">=</span> <span class="n">StgUser</span>
+
+            <span class="c1"># we have to refer to subquery columns with subquery.c.column</span>
+            <span class="c1"># rather than table.column as for tables, so this function</span>
+            <span class="c1"># abstracts away which to use (rather than wrapping StgUser in a</span>
+            <span class="c1"># subquery which might have performance implications on e.g. MySQL)</span>
+            <span class="k">def</span> <span class="nf">access</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">eligibles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+                <span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UserData</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">UserData</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">subquery</span><span class="p">()</span>
+
+            <span class="k">def</span> <span class="nf">access</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">),</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="n">elt</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">eligibles</span><span class="p">)</span>
+        <span class="n">twt</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">Tweet</span><span class="p">)</span>
+        <span class="n">tweet_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                <span class="n">access</span><span class="p">(</span><span class="n">elt</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;user_id&#39;</span><span class="p">),</span>
+                <span class="n">func</span><span class="o">.</span><span class="n">count</span><span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">tweet_id</span><span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;recorded_tweets_all_time&#39;</span><span class="p">),</span>
+                <span class="n">func</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">create_dt</span><span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;first_tweet_dt&#39;</span><span class="p">),</span>
+                <span class="n">func</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">create_dt</span><span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;last_tweet_dt&#39;</span><span class="p">),</span>
+                <span class="n">func</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+                    <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">([</span>
+                        <span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="s1">&#39;Twitter for Android&#39;</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="p">],</span> <span class="n">else_</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;android_user&#39;</span><span class="p">),</span>
+                <span class="n">func</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+                    <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">([</span>
+                        <span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span>
+                            <span class="s1">&#39;Twitter for iPhone&#39;</span><span class="p">,</span> <span class="s1">&#39;Twitter for iPad&#39;</span><span class="p">,</span> <span class="s1">&#39;iOS&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;Tweetbot for iOS&#39;</span>
+                        <span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="p">],</span> <span class="n">else_</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;ios_user&#39;</span><span class="p">),</span>
+                <span class="n">func</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+                    <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">([</span>
+                        <span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span>
+                            <span class="s1">&#39;Twitter Web App&#39;</span><span class="p">,</span> <span class="s1">&#39;Twitter Web Client&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;TweetDeck&#39;</span><span class="p">,</span> <span class="s1">&#39;Twitter for Mac&#39;</span><span class="p">,</span> <span class="s1">&#39;Tweetbot for Mac&#39;</span>
+                        <span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="p">],</span> <span class="n">else_</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;desktop_user&#39;</span><span class="p">),</span>
+                <span class="n">func</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+                    <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">([</span>
+                        <span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span>
+                            <span class="s1">&#39;SocialFlow&#39;</span><span class="p">,</span> <span class="s1">&#39;Hootsuite&#39;</span><span class="p">,</span> <span class="s1">&#39;Hootsuite Inc.&#39;</span><span class="p">,</span>
+                            <span class="s1">&#39;Twitter Media Studio&#39;</span>
+                        <span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
+                    <span class="p">],</span> <span class="n">else_</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;business_app_user&#39;</span><span class="p">)</span>
+            <span class="p">)</span> \
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">twt</span><span class="p">,</span> <span class="n">access</span><span class="p">(</span><span class="n">elt</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">)</span> <span class="o">==</span> <span class="n">twt</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">access</span><span class="p">(</span><span class="n">elt</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">))</span> \
+            <span class="o">.</span><span class="n">subquery</span><span class="p">()</span>
+
+        <span class="n">elu</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">eligibles</span><span class="p">)</span>
+        <span class="n">uda</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">UserData</span><span class="p">)</span>
+        <span class="n">url</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">Url</span><span class="p">)</span>
+        <span class="n">user_data_inner</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                <span class="n">uda</span><span class="o">.</span><span class="n">user_id</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;user_id&#39;</span><span class="p">),</span>
+                <span class="n">url</span><span class="o">.</span><span class="n">url</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;profile_url&#39;</span><span class="p">),</span>
+                <span class="n">uda</span><span class="o">.</span><span class="n">friends_count</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;friends_count&#39;</span><span class="p">),</span>
+                <span class="n">uda</span><span class="o">.</span><span class="n">followers_count</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;followers_count&#39;</span><span class="p">),</span>
+                <span class="n">uda</span><span class="o">.</span><span class="n">listed_count</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;listed_count&#39;</span><span class="p">),</span>
+                <span class="n">uda</span><span class="o">.</span><span class="n">screen_name</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;screen_name&#39;</span><span class="p">),</span>
+                <span class="n">uda</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;location&#39;</span><span class="p">),</span>
+                <span class="n">uda</span><span class="o">.</span><span class="n">display_name</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;display_name&#39;</span><span class="p">),</span>
+                <span class="n">uda</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;description&#39;</span><span class="p">),</span>
+                <span class="n">uda</span><span class="o">.</span><span class="n">protected</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;protected&#39;</span><span class="p">),</span>
+                <span class="n">uda</span><span class="o">.</span><span class="n">verified</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;verified&#39;</span><span class="p">),</span>
+                <span class="n">uda</span><span class="o">.</span><span class="n">create_dt</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;account_create_dt&#39;</span><span class="p">),</span>
+                <span class="n">func</span><span class="o">.</span><span class="n">row_number</span><span class="p">()</span><span class="o">.</span><span class="n">over</span><span class="p">(</span>
+                    <span class="n">partition_by</span><span class="o">=</span><span class="n">uda</span><span class="o">.</span><span class="n">user_id</span><span class="p">,</span>
+                    <span class="n">order_by</span><span class="o">=</span><span class="n">uda</span><span class="o">.</span><span class="n">insert_dt</span><span class="o">.</span><span class="n">desc</span><span class="p">()</span>
+                <span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;rn&#39;</span><span class="p">)</span>
+            <span class="p">)</span> \
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">elu</span><span class="p">,</span> <span class="n">uda</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">access</span><span class="p">(</span><span class="n">elu</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">))</span> \
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">url</span><span class="p">,</span> <span class="n">url</span><span class="o">.</span><span class="n">url_id</span> <span class="o">==</span> <span class="n">uda</span><span class="o">.</span><span class="n">url_id</span><span class="p">,</span> <span class="n">isouter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">subquery</span><span class="p">()</span>
+
+        <span class="n">udi</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">user_data_inner</span><span class="p">)</span>
+        <span class="n">user_data</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">udi</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span><span class="n">udi</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">rn</span> <span class="o">==</span> <span class="mi">1</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">subquery</span><span class="p">()</span>
+
+        <span class="n">tda</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">tweet_data</span><span class="p">)</span>
+        <span class="n">uds</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">user_data</span><span class="p">)</span>
+        <span class="n">eli</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">eligibles</span><span class="p">)</span>
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                <span class="n">access</span><span class="p">(</span><span class="n">eli</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">),</span>
+                <span class="n">uds</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">profile_url</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;profile_url&#39;</span><span class="p">),</span>
+                <span class="n">uds</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">friends_count</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;friends_count&#39;</span><span class="p">),</span>
+                <span class="n">uds</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">followers_count</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;followers_count&#39;</span><span class="p">),</span>
+                <span class="n">uds</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">listed_count</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;listed_count&#39;</span><span class="p">),</span>
+                <span class="n">uds</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">screen_name</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;screen_name&#39;</span><span class="p">),</span>
+                <span class="n">uds</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">location</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;location&#39;</span><span class="p">),</span>
+                <span class="n">uds</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">display_name</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;display_name&#39;</span><span class="p">),</span>
+                <span class="n">uds</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">description</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;description&#39;</span><span class="p">),</span>
+                <span class="n">uds</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">protected</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;protected&#39;</span><span class="p">),</span>
+                <span class="n">uds</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">verified</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;verified&#39;</span><span class="p">),</span>
+                <span class="n">uds</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">account_create_dt</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;account_create_dt&#39;</span><span class="p">),</span>
+
+                <span class="n">func</span><span class="o">.</span><span class="n">coalesce</span><span class="p">(</span><span class="n">tda</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">recorded_tweets_all_time</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span> \
+                    <span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;recorded_tweets_all_time&#39;</span><span class="p">),</span>
+                <span class="n">tda</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">first_tweet_dt</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;first_tweet_dt&#39;</span><span class="p">),</span>
+                <span class="n">tda</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">last_tweet_dt</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;last_tweet_dt&#39;</span><span class="p">),</span>
+                <span class="n">tda</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">android_user</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;android_user&#39;</span><span class="p">),</span>
+                <span class="n">tda</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">ios_user</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;ios_user&#39;</span><span class="p">),</span>
+                <span class="n">tda</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">desktop_user</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;desktop_user&#39;</span><span class="p">),</span>
+                <span class="n">tda</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">business_app_user</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;business_app_user&#39;</span><span class="p">)</span>
+            <span class="p">)</span> \
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">uds</span><span class="p">,</span> <span class="n">uds</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">access</span><span class="p">(</span><span class="n">eli</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">),</span> <span class="n">isouter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> \
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">tda</span><span class="p">,</span> <span class="n">tda</span><span class="o">.</span><span class="n">c</span><span class="o">.</span><span class="n">user_id</span> <span class="o">==</span> <span class="n">access</span><span class="p">(</span><span class="n">eli</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">),</span> <span class="n">isouter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="k">yield from</span> <span class="n">ret</span></div></div>
+
+
+<div class="viewcode-block" id="ExportMutualsJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportMutualsJob">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">ExportMutualsJob</span><span class="p">(</span><span class="n">ExportJob</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Compute mutual friends or followers counts for pairs of some set of users.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">columns</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">columns</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;user_id1&#39;</span><span class="p">,</span> <span class="s1">&#39;user_id2&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;followers&#39;</span><span class="p">:</span>
+            <span class="n">columns</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;mutual_followers&#39;</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">columns</span> <span class="o">+=</span> <span class="p">[</span><span class="s1">&#39;mutual_friends&#39;</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">columns</span>
+
+    <span class="nd">@property</span>
+    <span class="nd">@abstractmethod</span>
+    <span class="k">def</span> <span class="nf">direction</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+<span class="w">        </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        The direction (friends or followers) of mutual counts to compute.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">()</span>
+
+<div class="viewcode-block" id="ExportMutualsJob.query"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportMutualsJob.query">[docs]</a>    <span class="k">def</span> <span class="nf">query</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">direction</span> <span class="o">==</span> <span class="s1">&#39;followers&#39;</span><span class="p">:</span>
+            <span class="n">select_col</span> <span class="o">=</span> <span class="s1">&#39;source_user_id&#39;</span>
+            <span class="n">filter_col</span> <span class="o">=</span> <span class="s1">&#39;target_user_id&#39;</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">select_col</span> <span class="o">=</span> <span class="s1">&#39;target_user_id&#39;</span>
+            <span class="n">filter_col</span> <span class="o">=</span> <span class="s1">&#39;source_user_id&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">users</span><span class="p">:</span>
+            <span class="n">eligibles</span> <span class="o">=</span> <span class="n">StgUser</span>
+
+            <span class="k">def</span> <span class="nf">access</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">eligibles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+                <span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="n">UserData</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">group_by</span><span class="p">(</span><span class="n">UserData</span><span class="o">.</span><span class="n">user_id</span><span class="p">)</span> \
+                <span class="o">.</span><span class="n">subquery</span><span class="p">()</span>
+
+            <span class="k">def</span> <span class="nf">access</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="n">name</span><span class="p">):</span>
+                <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">obj</span><span class="p">,</span> <span class="s1">&#39;c&#39;</span><span class="p">),</span> <span class="n">name</span><span class="p">)</span>
+
+        <span class="n">el1</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">eligibles</span><span class="p">)</span>
+        <span class="n">el2</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">eligibles</span><span class="p">)</span>
+
+        <span class="n">fo1</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">Follow</span><span class="p">)</span>
+        <span class="n">mutuals1</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">fo1</span><span class="p">,</span> <span class="n">select_col</span><span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;source_user_id&#39;</span><span class="p">))</span> \
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">fo1</span><span class="o">.</span><span class="n">valid_end_dt</span><span class="o">.</span><span class="n">is_</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">fo1</span><span class="p">,</span> <span class="n">filter_col</span><span class="p">)</span> <span class="o">==</span> <span class="n">access</span><span class="p">(</span><span class="n">el1</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">el1</span><span class="p">)</span>
+
+        <span class="n">fo2</span> <span class="o">=</span> <span class="n">sa</span><span class="o">.</span><span class="n">orm</span><span class="o">.</span><span class="n">aliased</span><span class="p">(</span><span class="n">Follow</span><span class="p">)</span>
+        <span class="n">mutuals2</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">fo2</span><span class="p">,</span> <span class="n">select_col</span><span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;source_user_id&#39;</span><span class="p">))</span> \
+            <span class="o">.</span><span class="n">filter</span><span class="p">(</span>
+                <span class="n">fo2</span><span class="o">.</span><span class="n">valid_end_dt</span><span class="o">.</span><span class="n">is_</span><span class="p">(</span><span class="kc">None</span><span class="p">),</span>
+                <span class="nb">getattr</span><span class="p">(</span><span class="n">fo2</span><span class="p">,</span> <span class="n">filter_col</span><span class="p">)</span> <span class="o">==</span> <span class="n">access</span><span class="p">(</span><span class="n">el2</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">)</span>
+            <span class="p">)</span><span class="o">.</span><span class="n">correlate</span><span class="p">(</span><span class="n">el2</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span><span class="o">.</span><span class="n">bind</span><span class="o">.</span><span class="n">dialect</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="s1">&#39;sqlite&#39;</span><span class="p">:</span>
+            <span class="c1"># sqlite doesn&#39;t support INTERSECT ALL</span>
+            <span class="n">mutuals</span> <span class="o">=</span> <span class="n">mutuals1</span><span class="o">.</span><span class="n">intersect</span><span class="p">(</span><span class="n">mutuals2</span><span class="p">)</span><span class="o">.</span><span class="n">subquery</span><span class="p">()</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">mutuals</span> <span class="o">=</span> <span class="n">mutuals1</span><span class="o">.</span><span class="n">intersect_all</span><span class="p">(</span><span class="n">mutuals2</span><span class="p">)</span><span class="o">.</span><span class="n">subquery</span><span class="p">()</span>
+        <span class="n">mutuals_count</span> <span class="o">=</span> <span class="n">sql</span><span class="o">.</span><span class="n">select</span><span class="p">(</span><span class="n">func</span><span class="o">.</span><span class="n">count</span><span class="p">())</span><span class="o">.</span><span class="n">select_from</span><span class="p">(</span><span class="n">mutuals</span><span class="p">)</span><span class="o">.</span><span class="n">scalar_subquery</span><span class="p">()</span>
+
+        <span class="n">ret</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">session</span> \
+            <span class="o">.</span><span class="n">query</span><span class="p">(</span>
+                <span class="n">access</span><span class="p">(</span><span class="n">el1</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;user_id1&#39;</span><span class="p">),</span>
+                <span class="n">access</span><span class="p">(</span><span class="n">el2</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;user_id2&#39;</span><span class="p">),</span>
+                <span class="n">mutuals_count</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;mutual_followers&#39;</span><span class="p">)</span>
+            <span class="p">)</span> \
+            <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">el1</span><span class="p">,</span> <span class="n">access</span><span class="p">(</span><span class="n">el1</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">access</span><span class="p">(</span><span class="n">el2</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">))</span> \
+            <span class="o">.</span><span class="n">group_by</span><span class="p">(</span>
+                <span class="n">access</span><span class="p">(</span><span class="n">el1</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">),</span>
+                <span class="n">access</span><span class="p">(</span><span class="n">el2</span><span class="p">,</span> <span class="s1">&#39;user_id&#39;</span><span class="p">)</span>
+            <span class="p">)</span>
+
+        <span class="k">yield from</span> <span class="n">ret</span></div></div>
+
+
+<div class="viewcode-block" id="ExportMutualFollowersJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportMutualFollowersJob">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">ExportMutualFollowersJob</span><span class="p">(</span><span class="n">ExportMutualsJob</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Export counts of mutual followers.</span>
+
+<span class="sd">    This export includes counts of mutual followers between all pairs of users</span>
+<span class="sd">    from a certain set of eligible users (exactly which set is discussed</span>
+<span class="sd">    below). That is, if user A and user B are both included, there will be one</span>
+<span class="sd">    row with a count of the number of users who follow both A and B. Note that</span>
+<span class="sd">    you must have fetched followers of both A and B for the counts to be</span>
+<span class="sd">    accurate: if either has not had followers fetched, there will be a row for</span>
+<span class="sd">    the (A, B) pair but it will record 0 mutual followers. There is one row per</span>
+<span class="sd">    pair of users in the set of eligible users (for all pairs).</span>
+
+<span class="sd">    If targets are specified, the set of eligible users is restricted to only</span>
+<span class="sd">    the users they describe. Otherwise, the default set of users is those who</span>
+<span class="sd">    have been fetched with ``twitter fetch users`` (i.e., those with rows in</span>
+<span class="sd">    the ``user_data`` table).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">direction</span> <span class="o">=</span> <span class="s1">&#39;followers&#39;</span></div>
+
+
+<div class="viewcode-block" id="ExportMutualFriendsJob"><a class="viewcode-back" href="../../apidocs.html#twclient.job.ExportMutualFriendsJob">[docs]</a><span class="nd">@export</span>
+<span class="k">class</span> <span class="nc">ExportMutualFriendsJob</span><span class="p">(</span><span class="n">ExportMutualsJob</span><span class="p">):</span>
+<span class="w">    </span><span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Export counts of mutual friends.</span>
+
+<span class="sd">    This export includes counts of mutual friends between all pairs of users</span>
+<span class="sd">    from a certain set of eligible users (exactly which set is discussed</span>
+<span class="sd">    below). That is, if user A and user B are both included, there will be one</span>
+<span class="sd">    row with a count of the number of users who are followed by both A and B.</span>
+<span class="sd">    Note that you must have fetched friends of both A and B for the counts to</span>
+<span class="sd">    be accurate: if either has not had friends fetched, there will be a row for</span>
+<span class="sd">    the (A, B) pair but it will record 0 mutual friends. There is one row per</span>
+<span class="sd">    pair of users in the set of eligible users (for all pairs).</span>
+
+<span class="sd">    If targets are specified, the set of eligible users is restricted to only</span>
+<span class="sd">    the users they describe. Otherwise, the default set of users is those who</span>
+<span class="sd">    have been fetched with ``twitter fetch users`` (i.e., those with rows in</span>
+<span class="sd">    the ``user_data`` table).</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">direction</span> <span class="o">=</span> <span class="s1">&#39;friends&#39;</span></div>
+</pre></div>
+
+           </div>
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>&#169; Copyright 2019-2021, Massachusetts Institute of Technology.</p>
+  </div>
+
+  Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    provided by <a href="https://readthedocs.org">Read the Docs</a>.
+   
+
+</footer>
+        </div>
+      </div>
+    </section>
+  </div>
+  <script>
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script> 
+
+</body>
+</html>

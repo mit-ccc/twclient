@@ -106,7 +106,198 @@
 <li class="toctree-l3"><a class="reference internal" href="#twclient.error.BadConfigError"><code class="docutils literal notranslate"><span class="pre">BadConfigError</span></code></a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="#module-twclient.job">twclient.job</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#module-twclient.job">twclient.job</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.Job"><code class="docutils literal notranslate"><span class="pre">Job</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.Job.run"><code class="docutils literal notranslate"><span class="pre">Job.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.DatabaseJob"><code class="docutils literal notranslate"><span class="pre">DatabaseJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.DatabaseJob.engine"><code class="docutils literal notranslate"><span class="pre">DatabaseJob.engine</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.DatabaseJob.session"><code class="docutils literal notranslate"><span class="pre">DatabaseJob.session</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.DatabaseJob.ensure_schema_version"><code class="docutils literal notranslate"><span class="pre">DatabaseJob.ensure_schema_version()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.DatabaseJob.get_or_create"><code class="docutils literal notranslate"><span class="pre">DatabaseJob.get_or_create()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.TargetJob"><code class="docutils literal notranslate"><span class="pre">TargetJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.allow_missing_targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.allow_missing_targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.resolve_mode"><code class="docutils literal notranslate"><span class="pre">TargetJob.resolve_mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.resolved"><code class="docutils literal notranslate"><span class="pre">TargetJob.resolved</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.users"><code class="docutils literal notranslate"><span class="pre">TargetJob.users</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.bad_targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.bad_targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.missing_targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.missing_targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.good_targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.good_targets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.resolve_targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.resolve_targets()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TargetJob.validate_targets"><code class="docutils literal notranslate"><span class="pre">TargetJob.validate_targets()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ApiJob"><code class="docutils literal notranslate"><span class="pre">ApiJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ApiJob.api"><code class="docutils literal notranslate"><span class="pre">ApiJob.api</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ApiJob.allow_api_errors"><code class="docutils literal notranslate"><span class="pre">ApiJob.allow_api_errors</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ConfigJob"><code class="docutils literal notranslate"><span class="pre">ConfigJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigJob.config"><code class="docutils literal notranslate"><span class="pre">ConfigJob.config</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ConfigPrintJob"><code class="docutils literal notranslate"><span class="pre">ConfigPrintJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigPrintJob.full"><code class="docutils literal notranslate"><span class="pre">ConfigPrintJob.full</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ConfigWriteJob"><code class="docutils literal notranslate"><span class="pre">ConfigWriteJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigWriteJob.name"><code class="docutils literal notranslate"><span class="pre">ConfigWriteJob.name</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ConfigListDbJob"><code class="docutils literal notranslate"><span class="pre">ConfigListDbJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigListDbJob.run"><code class="docutils literal notranslate"><span class="pre">ConfigListDbJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ConfigListApiJob"><code class="docutils literal notranslate"><span class="pre">ConfigListApiJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigListApiJob.run"><code class="docutils literal notranslate"><span class="pre">ConfigListApiJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ConfigRmDbJob"><code class="docutils literal notranslate"><span class="pre">ConfigRmDbJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigRmDbJob.run"><code class="docutils literal notranslate"><span class="pre">ConfigRmDbJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ConfigRmApiJob"><code class="docutils literal notranslate"><span class="pre">ConfigRmApiJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigRmApiJob.run"><code class="docutils literal notranslate"><span class="pre">ConfigRmApiJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.SetDbDefaultJob"><code class="docutils literal notranslate"><span class="pre">SetDbDefaultJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.SetDbDefaultJob.run"><code class="docutils literal notranslate"><span class="pre">SetDbDefaultJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ConfigAddDbJob"><code class="docutils literal notranslate"><span class="pre">ConfigAddDbJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigAddDbJob.run"><code class="docutils literal notranslate"><span class="pre">ConfigAddDbJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ConfigAddApiJob"><code class="docutils literal notranslate"><span class="pre">ConfigAddApiJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigAddApiJob.consumer_key"><code class="docutils literal notranslate"><span class="pre">ConfigAddApiJob.consumer_key</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigAddApiJob.consumer_secret"><code class="docutils literal notranslate"><span class="pre">ConfigAddApiJob.consumer_secret</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigAddApiJob.token"><code class="docutils literal notranslate"><span class="pre">ConfigAddApiJob.token</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigAddApiJob.token_secret"><code class="docutils literal notranslate"><span class="pre">ConfigAddApiJob.token_secret</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ConfigAddApiJob.run"><code class="docutils literal notranslate"><span class="pre">ConfigAddApiJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ExportJob"><code class="docutils literal notranslate"><span class="pre">ExportJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportJob.outfile"><code class="docutils literal notranslate"><span class="pre">ExportJob.outfile</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportJob.resolve_mode"><code class="docutils literal notranslate"><span class="pre">ExportJob.resolve_mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportJob.query"><code class="docutils literal notranslate"><span class="pre">ExportJob.query()</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportJob.columns"><code class="docutils literal notranslate"><span class="pre">ExportJob.columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportJob.run"><code class="docutils literal notranslate"><span class="pre">ExportJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ExportFollowGraphJob"><code class="docutils literal notranslate"><span class="pre">ExportFollowGraphJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportFollowGraphJob.columns"><code class="docutils literal notranslate"><span class="pre">ExportFollowGraphJob.columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportFollowGraphJob.query"><code class="docutils literal notranslate"><span class="pre">ExportFollowGraphJob.query()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ExportMentionGraphJob"><code class="docutils literal notranslate"><span class="pre">ExportMentionGraphJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportMentionGraphJob.columns"><code class="docutils literal notranslate"><span class="pre">ExportMentionGraphJob.columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportMentionGraphJob.query"><code class="docutils literal notranslate"><span class="pre">ExportMentionGraphJob.query()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ExportReplyGraphJob"><code class="docutils literal notranslate"><span class="pre">ExportReplyGraphJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportReplyGraphJob.columns"><code class="docutils literal notranslate"><span class="pre">ExportReplyGraphJob.columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportReplyGraphJob.query"><code class="docutils literal notranslate"><span class="pre">ExportReplyGraphJob.query()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ExportRetweetGraphJob"><code class="docutils literal notranslate"><span class="pre">ExportRetweetGraphJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportRetweetGraphJob.columns"><code class="docutils literal notranslate"><span class="pre">ExportRetweetGraphJob.columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportRetweetGraphJob.query"><code class="docutils literal notranslate"><span class="pre">ExportRetweetGraphJob.query()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ExportQuoteGraphJob"><code class="docutils literal notranslate"><span class="pre">ExportQuoteGraphJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportQuoteGraphJob.columns"><code class="docutils literal notranslate"><span class="pre">ExportQuoteGraphJob.columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportQuoteGraphJob.query"><code class="docutils literal notranslate"><span class="pre">ExportQuoteGraphJob.query()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ExportTweetsJob"><code class="docutils literal notranslate"><span class="pre">ExportTweetsJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportTweetsJob.columns"><code class="docutils literal notranslate"><span class="pre">ExportTweetsJob.columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportTweetsJob.query"><code class="docutils literal notranslate"><span class="pre">ExportTweetsJob.query()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ExportUserInfoJob"><code class="docutils literal notranslate"><span class="pre">ExportUserInfoJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportUserInfoJob.columns"><code class="docutils literal notranslate"><span class="pre">ExportUserInfoJob.columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportUserInfoJob.query"><code class="docutils literal notranslate"><span class="pre">ExportUserInfoJob.query()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ExportMutualsJob"><code class="docutils literal notranslate"><span class="pre">ExportMutualsJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportMutualsJob.columns"><code class="docutils literal notranslate"><span class="pre">ExportMutualsJob.columns</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportMutualsJob.direction"><code class="docutils literal notranslate"><span class="pre">ExportMutualsJob.direction</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportMutualsJob.query"><code class="docutils literal notranslate"><span class="pre">ExportMutualsJob.query()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ExportMutualFollowersJob"><code class="docutils literal notranslate"><span class="pre">ExportMutualFollowersJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportMutualFollowersJob.direction"><code class="docutils literal notranslate"><span class="pre">ExportMutualFollowersJob.direction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ExportMutualFriendsJob"><code class="docutils literal notranslate"><span class="pre">ExportMutualFriendsJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ExportMutualFriendsJob.direction"><code class="docutils literal notranslate"><span class="pre">ExportMutualFriendsJob.direction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.FetchJob"><code class="docutils literal notranslate"><span class="pre">FetchJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.FetchJob.load_batch_size"><code class="docutils literal notranslate"><span class="pre">FetchJob.load_batch_size</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.FetchJob.randomize"><code class="docutils literal notranslate"><span class="pre">FetchJob.randomize</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.FetchJob.users"><code class="docutils literal notranslate"><span class="pre">FetchJob.users</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.FetchJob.validate_targets"><code class="docutils literal notranslate"><span class="pre">FetchJob.validate_targets()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.UserInfoJob"><code class="docutils literal notranslate"><span class="pre">UserInfoJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.UserInfoJob.resolve_mode"><code class="docutils literal notranslate"><span class="pre">UserInfoJob.resolve_mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.UserInfoJob.run"><code class="docutils literal notranslate"><span class="pre">UserInfoJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.TweetsJob"><code class="docutils literal notranslate"><span class="pre">TweetsJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TweetsJob.since_timestamp"><code class="docutils literal notranslate"><span class="pre">TweetsJob.since_timestamp</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TweetsJob.max_tweets"><code class="docutils literal notranslate"><span class="pre">TweetsJob.max_tweets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TweetsJob.old_tweets"><code class="docutils literal notranslate"><span class="pre">TweetsJob.old_tweets</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TweetsJob.resolve_mode"><code class="docutils literal notranslate"><span class="pre">TweetsJob.resolve_mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TweetsJob.run"><code class="docutils literal notranslate"><span class="pre">TweetsJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.FollowGraphJob"><code class="docutils literal notranslate"><span class="pre">FollowGraphJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.FollowGraphJob.resolve_mode"><code class="docutils literal notranslate"><span class="pre">FollowGraphJob.resolve_mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.FollowGraphJob.direction"><code class="docutils literal notranslate"><span class="pre">FollowGraphJob.direction</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.FollowGraphJob.run"><code class="docutils literal notranslate"><span class="pre">FollowGraphJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.FollowersJob"><code class="docutils literal notranslate"><span class="pre">FollowersJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.FollowersJob.direction"><code class="docutils literal notranslate"><span class="pre">FollowersJob.direction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.FriendsJob"><code class="docutils literal notranslate"><span class="pre">FriendsJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.FriendsJob.direction"><code class="docutils literal notranslate"><span class="pre">FriendsJob.direction</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.InitializeJob"><code class="docutils literal notranslate"><span class="pre">InitializeJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.InitializeJob.run"><code class="docutils literal notranslate"><span class="pre">InitializeJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.RateLimitStatusJob"><code class="docutils literal notranslate"><span class="pre">RateLimitStatusJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.RateLimitStatusJob.run"><code class="docutils literal notranslate"><span class="pre">RateLimitStatusJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.TagJob"><code class="docutils literal notranslate"><span class="pre">TagJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.TagJob.tag"><code class="docutils literal notranslate"><span class="pre">TagJob.tag</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.CreateTagJob"><code class="docutils literal notranslate"><span class="pre">CreateTagJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.CreateTagJob.run"><code class="docutils literal notranslate"><span class="pre">CreateTagJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.DeleteTagJob"><code class="docutils literal notranslate"><span class="pre">DeleteTagJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.DeleteTagJob.run"><code class="docutils literal notranslate"><span class="pre">DeleteTagJob.run()</span></code></a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#twclient.job.ApplyTagJob"><code class="docutils literal notranslate"><span class="pre">ApplyTagJob</span></code></a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ApplyTagJob.resolve_mode"><code class="docutils literal notranslate"><span class="pre">ApplyTagJob.resolve_mode</span></code></a></li>
+<li class="toctree-l4"><a class="reference internal" href="#twclient.job.ApplyTagJob.run"><code class="docutils literal notranslate"><span class="pre">ApplyTagJob.run()</span></code></a></li>
+</ul>
+</li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#module-twclient.models">twclient.models</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#twclient.models.SchemaVersion"><code class="docutils literal notranslate"><span class="pre">SchemaVersion</span></code></a><ul>
 <li class="toctree-l4"><a class="reference internal" href="#twclient.models.SchemaVersion.version"><code class="docutils literal notranslate"><span class="pre">SchemaVersion.version</span></code></a></li>
@@ -796,6 +987,1208 @@ is malformed.</p>
 <section id="module-twclient.job">
 <span id="twclient-job"></span><h2>twclient.job<a class="headerlink" href="#module-twclient.job" title="Permalink to this heading"></a></h2>
 <p>Job tasks providing core functionality</p>
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.Job">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">Job</span></span><a class="reference internal" href="_modules/twclient/_job_base.html#Job"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.Job" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">ABC</span></code></p>
+<p>A job to be run against the database and possibly also the Twitter API.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.Job.run">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_base.html#Job.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.Job.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.DatabaseJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">DatabaseJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_base.html#DatabaseJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.DatabaseJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.Job" title="twclient._job_base.Job"><code class="xref py py-class docutils literal notranslate"><span class="pre">Job</span></code></a></p>
+<p>A job to be run against the database.</p>
+<p>This class represents a job to be run against the database. Subclasses may
+or may not also support access to the Twitter API.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>engine</strong> (<em>sqlalchemy.engine.Engine instance</em>) – The sqlalchemy engine representing the database to connect to.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.DatabaseJob.engine">
+<span class="sig-name descname"><span class="pre">engine</span></span><a class="headerlink" href="#twclient.job.DatabaseJob.engine" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sqlalchemy.engine.Engine instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.DatabaseJob.session">
+<span class="sig-name descname"><span class="pre">session</span></span><a class="headerlink" href="#twclient.job.DatabaseJob.session" title="Permalink to this definition"></a></dt>
+<dd><p>The actual database session to use.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>sqlalchemy.orm.session.Session instance</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.DatabaseJob.ensure_schema_version">
+<span class="sig-name descname"><span class="pre">ensure_schema_version</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_base.html#DatabaseJob.ensure_schema_version"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.DatabaseJob.ensure_schema_version" title="Permalink to this definition"></a></dt>
+<dd><p>Ensure that the database schema is a usable version.</p>
+<p>This method checks that the schema present in the database referred to
+by self.engine is a version the Job class knows how to work with. If
+the schema is an unsupported version or is missing / corrupt, an
+instance of error.BadSchemaError will be raised.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>None</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.DatabaseJob.get_or_create">
+<span class="sig-name descname"><span class="pre">get_or_create</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">model</span></span></em>, <em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_base.html#DatabaseJob.get_or_create"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.DatabaseJob.get_or_create" title="Permalink to this definition"></a></dt>
+<dd><p>Get a persistent object or create a pending one.</p>
+<p>Given a model and a set of kwargs, interpretable as the values of the
+model’s attributes, which together should identify one row in the
+database, query for it and a) return a persistent object if the
+row exists, or otherwise b) create and return a pending object with the
+appropriate attribute values.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>model</strong> (<em>instance</em><em> of </em><em>models.Base</em>) – A sqlalchemy model object.</p></li>
+<li><p><strong>**kwargs</strong> – Keyword arguments specifying the values of the model’s attributes.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns<span class="colon">:</span></dt>
+<dd class="field-even"><p>The persistent or pending object.</p>
+</dd>
+<dt class="field-odd">Return type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>instance of models.Base</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.TargetJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">TargetJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_base.html#TargetJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.TargetJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.DatabaseJob" title="twclient._job_base.DatabaseJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatabaseJob</span></code></a></p>
+<p>A job which requires targets.</p>
+<p>A TargetJob is a job which requires a set of target.Target instances to
+specify users. An instance of this class must specify its resolve mode for
+the Target classes, and has defaut logic to resolve them and expose their
+users.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>targets</strong> (<em>list</em><em> of </em><a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target"><em>target.Target</em></a>) – The list of targets for the job.</p></li>
+<li><p><strong>allow_missing_targets</strong> (<em>bool</em>) – If resolving the targets indicates that some targets should be in the
+database but are not (i.e., one of the Target instances in self.targets
+has a non-empty missing_targets attribute), should we raise
+error.BadTargetError (if False, default) or continue and ignore the
+missing targets (if True)?</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.TargetJob.targets">
+<span class="sig-name descname"><span class="pre">targets</span></span><a class="headerlink" href="#twclient.job.TargetJob.targets" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>list of <a class="reference internal" href="#twclient.target.Target" title="twclient.target.Target">target.Target</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.TargetJob.allow_missing_targets">
+<span class="sig-name descname"><span class="pre">allow_missing_targets</span></span><a class="headerlink" href="#twclient.job.TargetJob.allow_missing_targets" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="twclient.job.TargetJob.resolve_mode">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">resolve_mode</span></span><a class="headerlink" href="#twclient.job.TargetJob.resolve_mode" title="Permalink to this definition"></a></dt>
+<dd><p>The resolve mode attribute to specify behavior of Target instances.</p>
+<p>This attribute is consumed by the Target instances in self.targets.
+Acceptable values include ‘fetch’, ‘skip’, ‘hydrate’. See the
+documentation for target.Target for more information.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="twclient.job.TargetJob.resolved">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">resolved</span></span><a class="headerlink" href="#twclient.job.TargetJob.resolved" title="Permalink to this definition"></a></dt>
+<dd><p>Have all targets been resolved to users?</p>
+<p>This attribute is false on instantiation, and is normally set to True
+by calling resolve_targets().</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="twclient.job.TargetJob.users">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">users</span></span><a class="headerlink" href="#twclient.job.TargetJob.users" title="Permalink to this definition"></a></dt>
+<dd><p>The combined set of users referred to by all targets.</p>
+<p>This is the union of all the users referred to by the Target instances
+in self.targets. If the targets have not been resolved, accessing this
+attribute will raise AttributeError.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="twclient.job.TargetJob.bad_targets">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">bad_targets</span></span><a class="headerlink" href="#twclient.job.TargetJob.bad_targets" title="Permalink to this definition"></a></dt>
+<dd><p>The combined set of bad raw targets referred to by all targets.</p>
+<p>This is the union of all the bad raw targets in the Target instances in
+self.targets. If the targets have not been resolved, accessing this
+attribute will raise AttributeError. See the documentation for
+target.Target for details of what a target and raw target are and its
+bad_targets attribute for what it means for a raw target to be bad.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="twclient.job.TargetJob.missing_targets">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">missing_targets</span></span><a class="headerlink" href="#twclient.job.TargetJob.missing_targets" title="Permalink to this definition"></a></dt>
+<dd><p>The combined set of missing raw targets referred to by all targets.</p>
+<p>This is the union of all the missing raw targets in the Target
+instances in self.targets. If the targets have not been resolved,
+accessing this attribute will raise AttributeError. See the
+documentation for target.Target for details of what a target and raw
+target are and its missing_targets attribute for what it means for a
+raw target to be missing.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="twclient.job.TargetJob.good_targets">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">good_targets</span></span><a class="headerlink" href="#twclient.job.TargetJob.good_targets" title="Permalink to this definition"></a></dt>
+<dd><p>The combined set of good raw targets referred to by all targets.</p>
+<p>This is the union of all the good raw targets in the Target instances
+in self.targets. If the targets have not been resolved, accessing this
+attribute will raise AttributeError. See the documentation for
+target.Target for details of what a target and raw target are and its
+good_targets attribute for what it means for a raw target to be good.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.TargetJob.resolve_targets">
+<span class="sig-name descname"><span class="pre">resolve_targets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_base.html#TargetJob.resolve_targets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.TargetJob.resolve_targets" title="Permalink to this definition"></a></dt>
+<dd><p>Resolve all of the targets in self.targets to users.</p>
+<p>This method resolves all of the targets in self.targets to users (and
+bad/missing raw targets, if applicable) and validates them using
+whatever logic the subclass has defined for validate_targets().</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.TargetJob.validate_targets">
+<span class="sig-name descname"><span class="pre">validate_targets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_base.html#TargetJob.validate_targets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.TargetJob.validate_targets" title="Permalink to this definition"></a></dt>
+<dd><p>Validate the targets in self.targets.</p>
+<p>This method is a hook called by resolve_targets to ensure that the
+targets in self.targets have resolved into a sane configuration. If any
+error is detected, error.BadTargetError should be raised. The default
+implementation here checks whether there are missing targets (i.e.,
+targets which should have been but were not found in the database), and
+raises error.BadTargetError unless self.allow_missing_targets evaluates
+to True. Subclasses may override with other configurations.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ApiJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ApiJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_base.html#ApiJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ApiJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.Job" title="twclient._job_base.Job"><code class="xref py py-class docutils literal notranslate"><span class="pre">Job</span></code></a></p>
+<p>A job requiring acess to the Twitter API.</p>
+<p>This class represents a job which interacts with the Twitter API. It
+configures API access, and defers other functionality to subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>api</strong> (<em>instance</em><em> of </em><a class="reference internal" href="#twclient.twitter_api.TwitterApi" title="twclient.twitter_api.TwitterApi"><em>twitter_api.TwitterApi</em></a>) – The TwitterApi instance to use for API access.</p></li>
+<li><p><strong>allow_api_errors</strong> (<em>bool</em>) – If the Twitter API returns an error, should we abort (if False,
+default), or ignore and continue (if True)?</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ApiJob.api">
+<span class="sig-name descname"><span class="pre">api</span></span><a class="headerlink" href="#twclient.job.ApiJob.api" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>instance of <a class="reference internal" href="#twclient.twitter_api.TwitterApi" title="twclient.twitter_api.TwitterApi">twitter_api.TwitterApi</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ApiJob.allow_api_errors">
+<span class="sig-name descname"><span class="pre">allow_api_errors</span></span><a class="headerlink" href="#twclient.job.ApiJob.allow_api_errors" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ConfigJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ConfigJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.Job" title="twclient._job_base.Job"><code class="xref py py-class docutils literal notranslate"><span class="pre">Job</span></code></a></p>
+<p>A job which interacts with the config file.</p>
+<p>Instances of subclasses of ConfigJob do various config-related tasks:
+printing information from the file, adding new DB or API profiles, or
+removing such profiles, among others.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>config</strong> (<em>instance</em><em> of </em><em>Config</em>) – The Config object to work with.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ConfigJob.config">
+<span class="sig-name descname"><span class="pre">config</span></span><a class="headerlink" href="#twclient.job.ConfigJob.config" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>instance of Config</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ConfigPrintJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ConfigPrintJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigPrintJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigPrintJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ConfigJob" title="twclient._job_config.ConfigJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigJob</span></code></a></p>
+<p>A job which prints information from the config file.</p>
+<p>Jobs which are instances of subclasses of this class print various kinds of
+information, such as lists of API credentials or database URLs.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>full</strong> (<em>bool</em>) – Whether to print profile names only (if False, default), or all
+information (if True).</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ConfigPrintJob.full">
+<span class="sig-name descname"><span class="pre">full</span></span><a class="headerlink" href="#twclient.job.ConfigPrintJob.full" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ConfigWriteJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ConfigWriteJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigWriteJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigWriteJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ConfigJob" title="twclient._job_config.ConfigJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigJob</span></code></a></p>
+<p>A job which modifies the config file.</p>
+<p>Jobs which are instances of subclasses of this class modify the config
+file, for example by adding a new database profile or API credential.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>name</strong> (<em>str</em>) – The name of the profile to operate on.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ConfigWriteJob.name">
+<span class="sig-name descname"><span class="pre">name</span></span><a class="headerlink" href="#twclient.job.ConfigWriteJob.name" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ConfigListDbJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ConfigListDbJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigListDbJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigListDbJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ConfigPrintJob" title="twclient._job_config.ConfigPrintJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigPrintJob</span></code></a></p>
+<p>List the database profiles given in the config file.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ConfigListDbJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigListDbJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigListDbJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ConfigListApiJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ConfigListApiJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigListApiJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigListApiJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ConfigPrintJob" title="twclient._job_config.ConfigPrintJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigPrintJob</span></code></a></p>
+<p>List the API profiles given in the config file.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ConfigListApiJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigListApiJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigListApiJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ConfigRmDbJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ConfigRmDbJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigRmDbJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigRmDbJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ConfigWriteJob" title="twclient._job_config.ConfigWriteJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigWriteJob</span></code></a></p>
+<p>Remove a database profile given in the config file.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ConfigRmDbJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigRmDbJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigRmDbJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ConfigRmApiJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ConfigRmApiJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigRmApiJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigRmApiJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ConfigWriteJob" title="twclient._job_config.ConfigWriteJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigWriteJob</span></code></a></p>
+<p>Remove an API profile given in the config file.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ConfigRmApiJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigRmApiJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigRmApiJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.SetDbDefaultJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">SetDbDefaultJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#SetDbDefaultJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.SetDbDefaultJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ConfigWriteJob" title="twclient._job_config.ConfigWriteJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigWriteJob</span></code></a></p>
+<p>Set a database profile given in the config file as the default DB profile.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.SetDbDefaultJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#SetDbDefaultJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.SetDbDefaultJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ConfigAddDbJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ConfigAddDbJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigAddDbJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigAddDbJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ConfigWriteJob" title="twclient._job_config.ConfigWriteJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigWriteJob</span></code></a></p>
+<p>Add a database profile to the config file.</p>
+<p>This job adds a new database to the config file, but does not initialize it
+for later use (that’s the <code class="docutils literal notranslate"><span class="pre">InitializeJob</span></code> class or <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">initialize</span></code>
+command). Only databases supported by sqlalchemy can be added, and the
+database must be specified by a sqlalchemy connection URL.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>database_url</strong> (<em>str</em>) – The sqlalchemy connection URL of the database.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py">
+<span class="sig-name descname"><span class="pre">The</span> <span class="pre">parameter</span> <span class="pre">passed</span> <span class="pre">to</span> <span class="pre">__init__.</span></span></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ConfigAddDbJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigAddDbJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigAddDbJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ConfigAddApiJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ConfigAddApiJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigAddApiJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigAddApiJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ConfigWriteJob" title="twclient._job_config.ConfigWriteJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ConfigWriteJob</span></code></a></p>
+<p>Add an API profile to the config file.</p>
+<p>This job adds a set of Twitter credentials to the config file. The
+credential set can involve either a consumer key and secret (OAuth 2) or
+also a token and token secret (OAuth 1a).</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>consumer_key</strong> (<em>str</em>) – The OAuth consumer key.</p></li>
+<li><p><strong>consumer_secret</strong> (<em>str</em>) – The OAuth consumer secret.</p></li>
+<li><p><strong>token</strong> (<em>str</em><em> or </em><em>None</em>) – The OAuth token.</p></li>
+<li><p><strong>token_secret</strong> (<em>str</em><em> or </em><em>None</em>) – The OAth token secret.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ConfigAddApiJob.consumer_key">
+<span class="sig-name descname"><span class="pre">consumer_key</span></span><a class="headerlink" href="#twclient.job.ConfigAddApiJob.consumer_key" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ConfigAddApiJob.consumer_secret">
+<span class="sig-name descname"><span class="pre">consumer_secret</span></span><a class="headerlink" href="#twclient.job.ConfigAddApiJob.consumer_secret" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ConfigAddApiJob.token">
+<span class="sig-name descname"><span class="pre">token</span></span><a class="headerlink" href="#twclient.job.ConfigAddApiJob.token" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ConfigAddApiJob.token_secret">
+<span class="sig-name descname"><span class="pre">token_secret</span></span><a class="headerlink" href="#twclient.job.ConfigAddApiJob.token_secret" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ConfigAddApiJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_config.html#ConfigAddApiJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ConfigAddApiJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ExportJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ExportJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.TargetJob" title="twclient._job_base.TargetJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">TargetJob</span></code></a>, <a class="reference internal" href="#twclient.job.DatabaseJob" title="twclient._job_base.DatabaseJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatabaseJob</span></code></a></p>
+<p>A job exporting data from the database.</p>
+<p>This class represents a job which pulls an export of collected Twitter data
+from the database. Several subclasses are defined for particular kinds of
+commonly used exports. If targets are given, the exports are restricted to
+only those targets (but note that how to do this is export-specific and
+subclasses must implement it). The exports produced are CSV files with
+columns given by the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property, in the order they appear there.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>outfile</strong> (<em>str</em>) – The path to the file where we should write the export (default ‘-’ for
+stdout).</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ExportJob.outfile">
+<span class="sig-name descname"><span class="pre">outfile</span></span><a class="headerlink" href="#twclient.job.ExportJob.outfile" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ExportJob.resolve_mode">
+<span class="sig-name descname"><span class="pre">resolve_mode</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'skip'</span></em><a class="headerlink" href="#twclient.job.ExportJob.resolve_mode" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ExportJob.query">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportJob.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportJob.query" title="Permalink to this definition"></a></dt>
+<dd><p>The sqlalchemy query returning rows to export.</p>
+<p>This method is the main piece of business logic for subclasses, which
+must implement it along with the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property. It should return
+an iterable (or be a generator) of tuples, with the elements of each
+tuple assumed to be in the order specified by the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="twclient.job.ExportJob.columns">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">columns</span></span><a class="headerlink" href="#twclient.job.ExportJob.columns" title="Permalink to this definition"></a></dt>
+<dd><p>The list of column names for the resultset returned by the <code class="docutils literal notranslate"><span class="pre">query</span></code>
+method.</p>
+<p>Subclasses must implement this property along with the <code class="docutils literal notranslate"><span class="pre">query</span></code>
+method.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ExportJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ExportFollowGraphJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ExportFollowGraphJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportFollowGraphJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportFollowGraphJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ExportJob" title="twclient._job_export.ExportJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExportJob</span></code></a></p>
+<p>Export the follow graph.</p>
+<p>This export is a graph in edgelist format, with an edge from
+<code class="docutils literal notranslate"><span class="pre">source_user_id</span></code> to <code class="docutils literal notranslate"><span class="pre">target_user_id</span></code> if the source user follows the
+target user. There is one row per edge (i.e., per pair of users with a
+following relationship).</p>
+<p>If targets are specified, return only the follow graph on the users they
+describe; otherwise, return the entire graph.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ExportFollowGraphJob.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['source_user_id',</span> <span class="pre">'target_user_id']</span></em><a class="headerlink" href="#twclient.job.ExportFollowGraphJob.columns" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ExportFollowGraphJob.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportFollowGraphJob.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportFollowGraphJob.query" title="Permalink to this definition"></a></dt>
+<dd><p>The sqlalchemy query returning rows to export.</p>
+<p>This method is the main piece of business logic for subclasses, which
+must implement it along with the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property. It should return
+an iterable (or be a generator) of tuples, with the elements of each
+tuple assumed to be in the order specified by the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ExportMentionGraphJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ExportMentionGraphJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportMentionGraphJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportMentionGraphJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ExportJob" title="twclient._job_export.ExportJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExportJob</span></code></a></p>
+<p>Export the mention graph.</p>
+<p>This export is a graph in edgelist format, with an edge from
+<code class="docutils literal notranslate"><span class="pre">source_user_id</span></code> to <code class="docutils literal notranslate"><span class="pre">target_user_id</span></code> if the source user has mentioned
+the target user. The third column <code class="docutils literal notranslate"><span class="pre">num_mentions</span></code> gives the number of
+mentions. There is one row per edge (i.e., per pair of users with a mention
+relationship).</p>
+<p>If targets are specified, return the mention graph only on the users they
+specify; otherwise, return the entire graph.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ExportMentionGraphJob.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['source_user_id',</span> <span class="pre">'target_user_id',</span> <span class="pre">'num_mentions']</span></em><a class="headerlink" href="#twclient.job.ExportMentionGraphJob.columns" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ExportMentionGraphJob.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportMentionGraphJob.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportMentionGraphJob.query" title="Permalink to this definition"></a></dt>
+<dd><p>The sqlalchemy query returning rows to export.</p>
+<p>This method is the main piece of business logic for subclasses, which
+must implement it along with the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property. It should return
+an iterable (or be a generator) of tuples, with the elements of each
+tuple assumed to be in the order specified by the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ExportReplyGraphJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ExportReplyGraphJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportReplyGraphJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportReplyGraphJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ExportJob" title="twclient._job_export.ExportJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExportJob</span></code></a></p>
+<p>Export the reply graph.</p>
+<p>This export is a graph in edgelist format, with an edge from
+<code class="docutils literal notranslate"><span class="pre">source_user_id</span></code> to <code class="docutils literal notranslate"><span class="pre">target_user_id</span></code> if the source user has replied to
+the target user. The third column <code class="docutils literal notranslate"><span class="pre">num_mentions</span></code> gives the number of
+mentions. There is one row per edge (i.e., per pair of users with a reply
+relationship).</p>
+<p>If targets are specified, return the reply graph only on the users they
+specify; otherwise, return the entire graph.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ExportReplyGraphJob.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['source_user_id',</span> <span class="pre">'target_user_id',</span> <span class="pre">'num_replies']</span></em><a class="headerlink" href="#twclient.job.ExportReplyGraphJob.columns" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ExportReplyGraphJob.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportReplyGraphJob.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportReplyGraphJob.query" title="Permalink to this definition"></a></dt>
+<dd><p>The sqlalchemy query returning rows to export.</p>
+<p>This method is the main piece of business logic for subclasses, which
+must implement it along with the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property. It should return
+an iterable (or be a generator) of tuples, with the elements of each
+tuple assumed to be in the order specified by the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ExportRetweetGraphJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ExportRetweetGraphJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportRetweetGraphJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportRetweetGraphJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ExportJob" title="twclient._job_export.ExportJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExportJob</span></code></a></p>
+<p>Export the retweet graph.</p>
+<p>This export is a graph in edgelist format, with an edge from
+<code class="docutils literal notranslate"><span class="pre">source_user_id</span></code> to <code class="docutils literal notranslate"><span class="pre">target_user_id</span></code> if the source user has retweeted
+the target user. The third column <code class="docutils literal notranslate"><span class="pre">num_mentions</span></code> gives the number of
+mentions. There is one row per edge (i.e., per pair of users with a retweet
+relationship).</p>
+<p>If targets are specified, return the retweet graph only on the users they
+specify; otherwise, return the entire graph.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ExportRetweetGraphJob.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['source_user_id',</span> <span class="pre">'target_user_id',</span> <span class="pre">'num_retweets']</span></em><a class="headerlink" href="#twclient.job.ExportRetweetGraphJob.columns" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ExportRetweetGraphJob.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportRetweetGraphJob.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportRetweetGraphJob.query" title="Permalink to this definition"></a></dt>
+<dd><p>The sqlalchemy query returning rows to export.</p>
+<p>This method is the main piece of business logic for subclasses, which
+must implement it along with the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property. It should return
+an iterable (or be a generator) of tuples, with the elements of each
+tuple assumed to be in the order specified by the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ExportQuoteGraphJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ExportQuoteGraphJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportQuoteGraphJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportQuoteGraphJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ExportJob" title="twclient._job_export.ExportJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExportJob</span></code></a></p>
+<p>Export the quote graph.</p>
+<p>This export is a graph in edgelist format, with an edge from
+<code class="docutils literal notranslate"><span class="pre">source_user_id</span></code> to <code class="docutils literal notranslate"><span class="pre">target_user_id</span></code> if the source user has
+quote-tweeted the target user. The third column <code class="docutils literal notranslate"><span class="pre">num_mentions</span></code> gives the
+number of mentions. There is one row per edge (i.e., per pair of users with
+a quote-tweet relationship).</p>
+<p>If targets are specified, return the quote graph only on the users they
+specify; otherwise, return the entire graph.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ExportQuoteGraphJob.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['source_user_id',</span> <span class="pre">'target_user_id',</span> <span class="pre">'num_quotes']</span></em><a class="headerlink" href="#twclient.job.ExportQuoteGraphJob.columns" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ExportQuoteGraphJob.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportQuoteGraphJob.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportQuoteGraphJob.query" title="Permalink to this definition"></a></dt>
+<dd><p>The sqlalchemy query returning rows to export.</p>
+<p>This method is the main piece of business logic for subclasses, which
+must implement it along with the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property. It should return
+an iterable (or be a generator) of tuples, with the elements of each
+tuple assumed to be in the order specified by the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ExportTweetsJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ExportTweetsJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportTweetsJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportTweetsJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ExportJob" title="twclient._job_export.ExportJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExportJob</span></code></a></p>
+<p>Export the set of user tweets.</p>
+<p>This export includes all tweets for either all users or a particular set of
+targets. Various relevant fields are included, including in particular the
+text of any retweeted/quoted/replied-to status and a recoded version of the
+client from which the tweet was posted. There is one row per tweet.</p>
+<p>If targets are specified, return only tweets by the users they specify;
+otherwise, return all tweets. Note that because we receive and store full
+tweet objects for quote tweets and retweets, and users can RT or QT any
+other user, not just ones whose tweets were fetched, “all tweets” may
+include some tweets by users whose tweets weren’t explicitly fetched.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ExportTweetsJob.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['tweet_id',</span> <span class="pre">'user_id',</span> <span class="pre">'content',</span> <span class="pre">'retweeted_status_content',</span> <span class="pre">'quoted_status_content',</span> <span class="pre">'in_reply_to_status_content',</span> <span class="pre">'is_retweet',</span> <span class="pre">'is_reply',</span> <span class="pre">'is_quote',</span> <span class="pre">'create_dt',</span> <span class="pre">'lang',</span> <span class="pre">'retweet_count',</span> <span class="pre">'favorite_count',</span> <span class="pre">'source_collapsed']</span></em><a class="headerlink" href="#twclient.job.ExportTweetsJob.columns" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ExportTweetsJob.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportTweetsJob.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportTweetsJob.query" title="Permalink to this definition"></a></dt>
+<dd><p>The sqlalchemy query returning rows to export.</p>
+<p>This method is the main piece of business logic for subclasses, which
+must implement it along with the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property. It should return
+an iterable (or be a generator) of tuples, with the elements of each
+tuple assumed to be in the order specified by the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ExportUserInfoJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ExportUserInfoJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportUserInfoJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportUserInfoJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ExportJob" title="twclient._job_export.ExportJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExportJob</span></code></a></p>
+<p>Export user-level information.</p>
+<p>This export includes user-level information. Besides the Twitter-assigned
+user ID, fields include such things as the profile URL and self-reported
+location, counts of friends, followers and list memberships, verified
+status, and other such user-specific fields. If a given user’s data has
+been fetched more than once, only the most recent fetch will be used. There
+is one row per user.</p>
+<p>If targets are specified, only those users will be included in the export.
+If no targets are specified, the default is to return rows for all users
+who have been fetched with <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">fetch</span> <span class="pre">users</span></code> (i.e., those with rows
+in the <code class="docutils literal notranslate"><span class="pre">user_data</span></code> table).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ExportUserInfoJob.columns">
+<span class="sig-name descname"><span class="pre">columns</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">['user_id',</span> <span class="pre">'profile_url',</span> <span class="pre">'friends_count',</span> <span class="pre">'followers_count',</span> <span class="pre">'listed_count',</span> <span class="pre">'screen_name',</span> <span class="pre">'location',</span> <span class="pre">'display_name',</span> <span class="pre">'description',</span> <span class="pre">'protected',</span> <span class="pre">'verified',</span> <span class="pre">'account_create_dt',</span> <span class="pre">'recorded_tweets_all_time',</span> <span class="pre">'first_tweet_dt',</span> <span class="pre">'last_tweet_dt',</span> <span class="pre">'android_user',</span> <span class="pre">'ios_user',</span> <span class="pre">'desktop_user',</span> <span class="pre">'business_app_user']</span></em><a class="headerlink" href="#twclient.job.ExportUserInfoJob.columns" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ExportUserInfoJob.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportUserInfoJob.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportUserInfoJob.query" title="Permalink to this definition"></a></dt>
+<dd><p>The sqlalchemy query returning rows to export.</p>
+<p>This method is the main piece of business logic for subclasses, which
+must implement it along with the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property. It should return
+an iterable (or be a generator) of tuples, with the elements of each
+tuple assumed to be in the order specified by the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ExportMutualsJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ExportMutualsJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportMutualsJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportMutualsJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ExportJob" title="twclient._job_export.ExportJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExportJob</span></code></a></p>
+<p>Compute mutual friends or followers counts for pairs of some set of users.</p>
+<dl class="py property">
+<dt class="sig sig-object py" id="twclient.job.ExportMutualsJob.columns">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">columns</span></span><a class="headerlink" href="#twclient.job.ExportMutualsJob.columns" title="Permalink to this definition"></a></dt>
+<dd><p>The list of column names for the resultset returned by the <code class="docutils literal notranslate"><span class="pre">query</span></code>
+method.</p>
+<p>Subclasses must implement this property along with the <code class="docutils literal notranslate"><span class="pre">query</span></code>
+method.</p>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="twclient.job.ExportMutualsJob.direction">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">direction</span></span><a class="headerlink" href="#twclient.job.ExportMutualsJob.direction" title="Permalink to this definition"></a></dt>
+<dd><p>The direction (friends or followers) of mutual counts to compute.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ExportMutualsJob.query">
+<span class="sig-name descname"><span class="pre">query</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportMutualsJob.query"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportMutualsJob.query" title="Permalink to this definition"></a></dt>
+<dd><p>The sqlalchemy query returning rows to export.</p>
+<p>This method is the main piece of business logic for subclasses, which
+must implement it along with the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property. It should return
+an iterable (or be a generator) of tuples, with the elements of each
+tuple assumed to be in the order specified by the <code class="docutils literal notranslate"><span class="pre">columns</span></code> property.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ExportMutualFollowersJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ExportMutualFollowersJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportMutualFollowersJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportMutualFollowersJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ExportMutualsJob" title="twclient._job_export.ExportMutualsJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExportMutualsJob</span></code></a></p>
+<p>Export counts of mutual followers.</p>
+<p>This export includes counts of mutual followers between all pairs of users
+from a certain set of eligible users (exactly which set is discussed
+below). That is, if user A and user B are both included, there will be one
+row with a count of the number of users who follow both A and B. Note that
+you must have fetched followers of both A and B for the counts to be
+accurate: if either has not had followers fetched, there will be a row for
+the (A, B) pair but it will record 0 mutual followers. There is one row per
+pair of users in the set of eligible users (for all pairs).</p>
+<p>If targets are specified, the set of eligible users is restricted to only
+the users they describe. Otherwise, the default set of users is those who
+have been fetched with <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">fetch</span> <span class="pre">users</span></code> (i.e., those with rows in
+the <code class="docutils literal notranslate"><span class="pre">user_data</span></code> table).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ExportMutualFollowersJob.direction">
+<span class="sig-name descname"><span class="pre">direction</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'followers'</span></em><a class="headerlink" href="#twclient.job.ExportMutualFollowersJob.direction" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ExportMutualFriendsJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ExportMutualFriendsJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_export.html#ExportMutualFriendsJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ExportMutualFriendsJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ExportMutualsJob" title="twclient._job_export.ExportMutualsJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ExportMutualsJob</span></code></a></p>
+<p>Export counts of mutual friends.</p>
+<p>This export includes counts of mutual friends between all pairs of users
+from a certain set of eligible users (exactly which set is discussed
+below). That is, if user A and user B are both included, there will be one
+row with a count of the number of users who are followed by both A and B.
+Note that you must have fetched friends of both A and B for the counts to
+be accurate: if either has not had friends fetched, there will be a row for
+the (A, B) pair but it will record 0 mutual friends. There is one row per
+pair of users in the set of eligible users (for all pairs).</p>
+<p>If targets are specified, the set of eligible users is restricted to only
+the users they describe. Otherwise, the default set of users is those who
+have been fetched with <code class="docutils literal notranslate"><span class="pre">twitter</span> <span class="pre">fetch</span> <span class="pre">users</span></code> (i.e., those with rows in
+the <code class="docutils literal notranslate"><span class="pre">user_data</span></code> table).</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ExportMutualFriendsJob.direction">
+<span class="sig-name descname"><span class="pre">direction</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'friends'</span></em><a class="headerlink" href="#twclient.job.ExportMutualFriendsJob.direction" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.FetchJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">FetchJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_fetch.html#FetchJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.FetchJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ApiJob" title="twclient._job_base.ApiJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApiJob</span></code></a>, <a class="reference internal" href="#twclient.job.TargetJob" title="twclient._job_base.TargetJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">TargetJob</span></code></a></p>
+<p>A job fetching data from the Twitter API.</p>
+<p>This class represents a job which fetches data from the Twitter API. It
+configures API access and user validation logic, and defers other
+functionality to subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>load_batch_size</strong> (<em>int</em>) – Load new rows to the database in batches of this size. The default
+is None, which loads all data retrieved in one batch. Lower values
+minimize memory usage at the cost of slower loading speeds, while
+higher values do the reverse. Target instances in self.targets do
+not consider this value–it applies only to other rows loaded by
+the FetchJob instance–because there are generally not enough
+targets to consume a significant amount of memory. Followers and
+friends lists in particular can be large enough to cause
+out-of-memory conditions; setting <code class="docutils literal notranslate"><span class="pre">load_batch_size</span></code> to an
+appropriate value (e.g., 5000) can address this problem.</p></li>
+<li><p><strong>randomize</strong> (<em>bool</em>) – Whether to process raw targets in a randomized order. This may
+allow loads which are interrupted partway through to retain some
+useful statistical properties.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.FetchJob.load_batch_size">
+<span class="sig-name descname"><span class="pre">load_batch_size</span></span><a class="headerlink" href="#twclient.job.FetchJob.load_batch_size" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.FetchJob.randomize">
+<span class="sig-name descname"><span class="pre">randomize</span></span><a class="headerlink" href="#twclient.job.FetchJob.randomize" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="twclient.job.FetchJob.users">
+<em class="property"><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">users</span></span><a class="headerlink" href="#twclient.job.FetchJob.users" title="Permalink to this definition"></a></dt>
+<dd><p>The combined set of users referred to by all targets.</p>
+<p>This is the union of all the users referred to by the Target instances
+in self.targets. If the targets have not been resolved, accessing this
+attribute will raise AttributeError.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.FetchJob.validate_targets">
+<span class="sig-name descname"><span class="pre">validate_targets</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_fetch.html#FetchJob.validate_targets"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.FetchJob.validate_targets" title="Permalink to this definition"></a></dt>
+<dd><p>Validate the targets in self.targets.</p>
+<p>This method is a hook called by resolve_targets to ensure that the
+targets in self.targets have resolved into a sane configuration. If any
+error is detected, error.BadTargetError should be raised. The default
+implementation here checks whether there are missing targets (i.e.,
+targets which should have been but were not found in the database), and
+raises error.BadTargetError unless self.allow_missing_targets evaluates
+to True. Subclasses may override with other configurations.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.UserInfoJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">UserInfoJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_fetch.html#UserInfoJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.UserInfoJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.FetchJob" title="twclient._job_fetch.FetchJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">FetchJob</span></code></a></p>
+<p>A job which hydrates users.</p>
+<p>This job resolves its targets to users with <code class="docutils literal notranslate"><span class="pre">resolve_mode</span> <span class="pre">==</span> <span class="pre">'hydrate'</span></code>.
+That is, it fetches data on those users from Twitter’s <code class="docutils literal notranslate"><span class="pre">users/lookup</span></code>
+endpoint, and stores the resulting data in the database. No other work is
+done. The entire job is run in one transaction; if anything goes wrong, no
+users are loaded.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.UserInfoJob.resolve_mode">
+<span class="sig-name descname"><span class="pre">resolve_mode</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'hydrate'</span></em><a class="headerlink" href="#twclient.job.UserInfoJob.resolve_mode" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.UserInfoJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_fetch.html#UserInfoJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.UserInfoJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.TweetsJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">TweetsJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_fetch.html#TweetsJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.TweetsJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.FetchJob" title="twclient._job_fetch.FetchJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">FetchJob</span></code></a></p>
+<p>Fetch user tweets from the Twitter API.</p>
+<p>This job fetches user tweets from Twitter’s statuses/user_timeline endpoint
+and loads them to the database. Several options are provided to control
+which of a given user’s tweets are loaded. The loaded tweets are
+extensively normalized to extract other entities (mentions, mentioned
+users, hashtags, photos and videos, etc). The job is run in one transaction
+per user; if anything goes wrong during loading of a user, the user which
+encountered the error will be rolled back but tweets for previously
+processed users will remain in the database.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>since_timestamp</strong> (<em>float</em><em>, or </em><em>None</em>) – A Unix timestamp. Tweets older than this will not be loaded, and an
+attempt will be made not to fetch them from the API in order to
+minimize usage of rate-limited endpoints.</p></li>
+<li><p><strong>max_tweets</strong> (<em>int</em><em>, or </em><em>None</em>) – Stop loading tweets for each user after this many. If None, load all
+available tweets. After loading max_tweets tweets, no further calls to
+the Twitter endpoint will be made (to minimize usage of rate-limited
+endpoints).</p></li>
+<li><p><strong>old_tweets</strong> (<em>bool</em>) – Should we, for each user, fetch only tweets newer than the newest one
+in the database (if False, default), or fetch all tweets (if True)?
+This can be done efficiently thanks to the Twitter endpoint’s since_id
+parameter and the fact that tweet IDs are sequential.</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.TweetsJob.since_timestamp">
+<span class="sig-name descname"><span class="pre">since_timestamp</span></span><a class="headerlink" href="#twclient.job.TweetsJob.since_timestamp" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>float</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.TweetsJob.max_tweets">
+<span class="sig-name descname"><span class="pre">max_tweets</span></span><a class="headerlink" href="#twclient.job.TweetsJob.max_tweets" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>int</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.TweetsJob.old_tweets">
+<span class="sig-name descname"><span class="pre">old_tweets</span></span><a class="headerlink" href="#twclient.job.TweetsJob.old_tweets" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>bool</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.TweetsJob.resolve_mode">
+<span class="sig-name descname"><span class="pre">resolve_mode</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'skip'</span></em><a class="headerlink" href="#twclient.job.TweetsJob.resolve_mode" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.TweetsJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_fetch.html#TweetsJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.TweetsJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.FollowGraphJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">FollowGraphJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_fetch.html#FollowGraphJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.FollowGraphJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.FetchJob" title="twclient._job_fetch.FetchJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">FetchJob</span></code></a></p>
+<p>Fetch follow-graph edges from the Twitter API.</p>
+<p>This job fetches follow-graph edges from the Twitter API for a given set of
+users. Subclasses must specify which direction of edges to fetch (users’
+friends or followers). The edges are stored in the follow table, which uses
+a type 2 SCD format to allow tracking historical follow-graph state with
+reduced space requirements, and are first loaded to a staging table. The
+job is run in one transaction per user; if anything goes wrong during
+loading of a user, the user which encountered the error will be rolled back
+but edges for previously processed users will remain in the database.</p>
+<p>Note that Twitter sometimes returns the same follower/friend ID more
+than once (probably because of eventual consistency). As a result, there
+is special loading logic for these jobs. Each batch of follower or friend
+IDs is deduped before being inserted (the entire set of IDs at once if
+load_batch_size is None); if an ID in one batch duplicates an ID received
+in a previous batch, the batch is retried one row at a time (which is quite
+slow). Consequently loading these rows is most efficient with
+load_batch_size of None. Other values should be used only if memory is a
+constraint.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.FollowGraphJob.resolve_mode">
+<span class="sig-name descname"><span class="pre">resolve_mode</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'skip'</span></em><a class="headerlink" href="#twclient.job.FollowGraphJob.resolve_mode" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py property">
+<dt class="sig sig-object py" id="twclient.job.FollowGraphJob.direction">
+<em class="property"><span class="pre">abstract</span><span class="w"> </span><span class="pre">property</span><span class="w"> </span></em><span class="sig-name descname"><span class="pre">direction</span></span><a class="headerlink" href="#twclient.job.FollowGraphJob.direction" title="Permalink to this definition"></a></dt>
+<dd><p>The “direction” of follow edges to load.</p>
+<p>Given a set of users, we might want to fetch the users who follow them
+(their “followers”) or the users they follow (their “friends”). This
+attribute, which subclasses must set, should be either “friends” or
+“followers” to specify which direction of fetch is intended.</p>
+</dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.FollowGraphJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_fetch.html#FollowGraphJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.FollowGraphJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.FollowersJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">FollowersJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_fetch.html#FollowersJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.FollowersJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.FollowGraphJob" title="twclient._job_fetch.FollowGraphJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">FollowGraphJob</span></code></a></p>
+<p>A FollowGraphJob which fetches user followers.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.FollowersJob.direction">
+<span class="sig-name descname"><span class="pre">direction</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'followers'</span></em><a class="headerlink" href="#twclient.job.FollowersJob.direction" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.FriendsJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">FriendsJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_fetch.html#FriendsJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.FriendsJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.FollowGraphJob" title="twclient._job_fetch.FollowGraphJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">FollowGraphJob</span></code></a></p>
+<p>A FollowGraphJob which fetches user friends.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.FriendsJob.direction">
+<span class="sig-name descname"><span class="pre">direction</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'friends'</span></em><a class="headerlink" href="#twclient.job.FriendsJob.direction" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.InitializeJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">InitializeJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_initialize.html#InitializeJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.InitializeJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.DatabaseJob" title="twclient._job_base.DatabaseJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatabaseJob</span></code></a></p>
+<p>A job which initializes the selected database and sets up the schema.</p>
+<p>WARNING! This job will drop all data in the selected database! This job
+(re-)initializes the selected database and applies the schema to it. The
+version of the creating package will also be stored to help future versions
+with migrations and compatibility checks.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.InitializeJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_initialize.html#InitializeJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.InitializeJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.RateLimitStatusJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">RateLimitStatusJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_show.html#RateLimitStatusJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.RateLimitStatusJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.ApiJob" title="twclient._job_base.ApiJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">ApiJob</span></code></a></p>
+<p>Check the rate limits for the API keys in the config file.</p>
+<p>This job pulls the rate limit status for each key in the config file and
+prints it to stdout in json format. The job filters by default to only the
+API endpoints we use but can be told to show all of them.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.RateLimitStatusJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_show.html#RateLimitStatusJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.RateLimitStatusJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.TagJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">TagJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_tag.html#TagJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.TagJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.DatabaseJob" title="twclient._job_base.DatabaseJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">DatabaseJob</span></code></a></p>
+<p>A job which uses user tags.</p>
+<p>A TagJob is a class which requires a user tag. It ensures that the database
+schema version is correct, and leaves other logic for subclasses.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters<span class="colon">:</span></dt>
+<dd class="field-odd"><p><strong>tag</strong> (<em>str</em>) – The name of a user tag.</p>
+</dd>
+</dl>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.TagJob.tag">
+<span class="sig-name descname"><span class="pre">tag</span></span><a class="headerlink" href="#twclient.job.TagJob.tag" title="Permalink to this definition"></a></dt>
+<dd><p>The parameter passed to __init__.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type<span class="colon">:</span></dt>
+<dd class="field-odd"><p>str</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.CreateTagJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">CreateTagJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_tag.html#CreateTagJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.CreateTagJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.TagJob" title="twclient._job_tag.TagJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">TagJob</span></code></a></p>
+<p>Create a user tag.</p>
+<p>This job creates a new user tag. If the tag already exists, nothing is done
+and no error is raised. The tag is not applied to any users. (See
+ApplyTagJob for that.)</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.CreateTagJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_tag.html#CreateTagJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.CreateTagJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.DeleteTagJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">DeleteTagJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_tag.html#DeleteTagJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.DeleteTagJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.TagJob" title="twclient._job_tag.TagJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">TagJob</span></code></a></p>
+<p>Delete a user tag.</p>
+<p>This job deletes a user tag. If the tag does not exist, nothing is done and
+no error is raised. Any existing assignments of the tag to users are also
+deleted.</p>
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.DeleteTagJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_tag.html#DeleteTagJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.DeleteTagJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="py class">
+<dt class="sig sig-object py" id="twclient.job.ApplyTagJob">
+<em class="property"><span class="pre">class</span><span class="w"> </span></em><span class="sig-prename descclassname"><span class="pre">twclient.job.</span></span><span class="sig-name descname"><span class="pre">ApplyTagJob</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="o"><span class="pre">**</span></span><span class="n"><span class="pre">kwargs</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_tag.html#ApplyTagJob"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ApplyTagJob" title="Permalink to this definition"></a></dt>
+<dd><p>Bases: <a class="reference internal" href="#twclient.job.TagJob" title="twclient._job_tag.TagJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">TagJob</span></code></a>, <a class="reference internal" href="#twclient.job.TargetJob" title="twclient._job_base.TargetJob"><code class="xref py py-class docutils literal notranslate"><span class="pre">TargetJob</span></code></a></p>
+<p>Apply a user tag to a set of users.</p>
+<p>This job applies an existing user tag to a set of users. If the tag does
+not exist, error.BadTagError is raised. (Use CreateTagJob to create a new
+tag.) The targets are resolved to users with <code class="docutils literal notranslate"><span class="pre">resolve_mode</span> <span class="pre">==</span> <span class="pre">'skip'</span></code>
+(i.e., any requested users which do not exist in the database are not
+looked up from the Twitter API). If any users were not successfully
+resolved, error.BadTargetError is raised unless the allow_missing_targets
+parameter is True. Otherwise, any users which were successfully resolved
+from the targets are given the tag. In particular, if no users were
+successfully resolved and allow_missing_users is True, nothing is done and
+no error is raised. The entire job is run as one transaction; if anything
+goes wrong, no tags are applied.</p>
+<dl class="py attribute">
+<dt class="sig sig-object py" id="twclient.job.ApplyTagJob.resolve_mode">
+<span class="sig-name descname"><span class="pre">resolve_mode</span></span><em class="property"><span class="w"> </span><span class="p"><span class="pre">=</span></span><span class="w"> </span><span class="pre">'skip'</span></em><a class="headerlink" href="#twclient.job.ApplyTagJob.resolve_mode" title="Permalink to this definition"></a></dt>
+<dd></dd></dl>
+
+<dl class="py method">
+<dt class="sig sig-object py" id="twclient.job.ApplyTagJob.run">
+<span class="sig-name descname"><span class="pre">run</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="_modules/twclient/_job_tag.html#ApplyTagJob.run"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#twclient.job.ApplyTagJob.run" title="Permalink to this definition"></a></dt>
+<dd><p>Run the job.</p>
+</dd></dl>
+
+</dd></dl>
+
 </section>
 <section id="module-twclient.models">
 <span id="twclient-models"></span><h2>twclient.models<a class="headerlink" href="#module-twclient.models" title="Permalink to this heading"></a></h2>
@@ -2246,7 +3639,7 @@ After calling resolve(), a list of the User objects are available in the
 <dd class="field-odd"><ul class="simple">
 <li><p><strong>targets</strong> (<em>list</em><em> of </em><em>str</em><em> or </em><em>int</em>) – The raw targets to be resolved to users. These will be deduplicated
 in a way that preserves order.</p></li>
-<li><p><strong>context</strong> (<em>instance</em><em> of </em><em>job.Job</em><em>, or </em><em>None</em>) – The Job instance’s database and API connections will be used as
+<li><p><strong>context</strong> (<em>instance</em><em> of </em><a class="reference internal" href="#twclient.job.Job" title="twclient.job.Job"><em>job.Job</em></a><em>, or </em><em>None</em>) – The Job instance’s database and API connections will be used as
 needed to resolve raw targets to users. If not passed on
 initialization, a context object must be passed to <code class="docutils literal notranslate"><span class="pre">resolve()</span></code>.</p></li>
 </ul>
