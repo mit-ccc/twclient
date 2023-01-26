@@ -47,8 +47,7 @@ go:
 
 This query still leaves a few data formatting issues we could fix: the
 ``source`` field is unstandardized and the ``content`` field is totally
-freeform text which can include newlines. These aren't hard to fix, though
-(remember that we're using Postgres' dialect of SQL):
+freeform text which can include newlines. These aren't hard to fix, though:
 
 .. code-block:: sql
 

@@ -52,11 +52,12 @@ For the full list of exportable datasets, run ``twclient export --help``.
 ~~~~~~~~~~~~~~
 
 Going the SQL route is more flexible if also somewhat more work. You'll need to
-do this if you want to do much customization of the built-in exports. (Allowing
-this sort of flexibility is the point of using a database backend to store the
-Twitter data.) We'll use the PostgreSQL dialect of SQL for examples here, but
-it isn't hard to adapt the queries to the particular syntax of whatever DBMS
-you may be using.
+do this if you want to do much customization of the built-in exports. Of
+course, allowing this sort of flexibility is the point of using a database
+backend to store the Twitter data.
+
+We'll use PostgreSQL's dialect of SQL for examples here, but it isn't much work
+to adapt the queries to SQLite or whatever database you're using.
 
 ~~~~~~~~~~~~~~~~
   SQL Examples
