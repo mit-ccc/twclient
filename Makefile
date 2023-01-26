@@ -7,7 +7,11 @@ lint:
 	# mypy src test
 
 tests:
-	coverage run -m tox
+	coverage erase
+	tox
+	coverage combine
+	coverage xml -o .coverage.xml
+	coverage report -m
 
 doc:
 	cd docs && $(MAKE) html
