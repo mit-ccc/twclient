@@ -38,7 +38,7 @@ def vcr_config():  # pylint: disable=missing-function-docstring
     }
 
 
-def make_commands(dct, target_args=_TARGET_ARGS):
+def make_commands(dct, auth, target_args=_TARGET_ARGS):
     '''
     Make command sequence for end-to-end test
     '''
@@ -52,8 +52,8 @@ def make_commands(dct, target_args=_TARGET_ARGS):
     # program name is passed separately
     commands = [
         ['config', 'add-api',
-            '-k', os.environ['CONSUMER_KEY'],
-            '-m', os.environ['CONSUMER_SECRET'],
+            '-k', auth['CONSUMER_KEY'],
+            '-m', auth['CONSUMER_SECRET'],
             'api'
         ] + frc,
         ['config', 'add-db', '-f', str(dct / 'scratch.db'), 'db'] + frc,
@@ -103,8 +103,17 @@ def test_end_to_end(tmp_path):
 
     if not os.path.exists(_CASSETTE_FILE):
         pytest.skip('Cassette file not found')
+    if 'CONSUMER_KEY' not in os.environ:
+        pytest.skip('Twitter API credentials not found')
+    if 'CONSUMER_SECRET' not in os.environ:
+        pytest.skip('Twitter API credentials not found')
 
-    dat = make_commands(tmp_path)
+    auth = {
+        'CONSUMER_KEY': os.environ['CONSUMER_KEY'],
+        'CONSUMER_SECRET': os.environ['CONSUMER_SECRET'],
+    }
+
+    dat = make_commands(tmp_path, auth)
 
     for cmd in dat['commands']:
         cli(prog='twclient', args=cmd)
