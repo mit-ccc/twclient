@@ -57,8 +57,12 @@
 <ul class="current">
 <li class="toctree-l1 current"><a class="current reference internal" href="#">Getting data from the Twitter API</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#introduction">Introduction</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#database-setup">Database setup</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#api-setup">API setup</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#database-setup">Database setup</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#configuration">Configuration</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#installing-data-model">Installing Data Model</a></li>
+</ul>
+</li>
 <li class="toctree-l2"><a class="reference internal" href="#actually-pulling-data">Actually pulling data</a><ul>
 <li class="toctree-l3"><a class="reference internal" href="#a-word-about-identifiers">A word about identifiers</a></li>
 <li class="toctree-l3"><a class="reference internal" href="#hydrating-users">Hydrating users</a></li>
@@ -137,65 +141,9 @@ Twitter’s new <a class="reference external" href="https://developer.twitter.co
 <p>Enough talk! How do you get started?</p>
 <p>In brief: This package provides a command-line interface for loading data from
 the Twitter REST API into the database of your choice. You can invoke it as
-<code class="docutils literal notranslate"><span class="pre">twclient</span></code>, as in <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-n</span> <span class="pre">wwbrannon</span></code>. You need to set up
-the database, get and set up API credentials, and then you can pull and work
+<code class="docutils literal notranslate"><span class="pre">twclient</span></code>, as in <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">fetch</span> <span class="pre">users</span> <span class="pre">-n</span> <span class="pre">wwbrannon</span></code>. You need to get and
+set up API credentials, set up your database, and then you can pull and work
 with data.</p>
-</section>
-<section id="database-setup">
-<h2>Database setup<a class="headerlink" href="#database-setup" title="Permalink to this heading"></a></h2>
-<p>The first step is to set up a database backend. You can use any DB that
-<a class="reference external" href="https://docs.sqlalchemy.org/en/14/dialects/">sqlalchemy supports</a>, which
-with plugins is quite a few to choose from. This is less intimidating than it
-may sound—in fact it’s positively easy. Two good choices are <a class="reference external" href="https://www.postgresql.org/">Postgres</a>, which we’ve used for the SQL examples in the
-<a class="reference internal" href="export.html"><span class="doc">data export vignette</span></a>, and the extremely lightweight
-<a class="reference external" href="https://www.sqlite.org/index.html">SQLite</a>. Note that while you can use any
-database engine with sqlalchemy support, twclient has been tested only with
-Postgres and SQLite.</p>
-<p>If you want to use one of these, which DB should you choose? If, like me,
-you’re on a Mac, <a class="reference external" href="https://postgresapp.com/">Postgres.app</a> is an excellent
-and user-friendly distribution of Postgres. It’s not the only one: among others
-you can download the database from [its website](<a class="reference external" href="https://www.postgresql.org/">https://www.postgresql.org/</a>),
-use [Amazon RDS](<a class="reference external" href="https://aws.amazon.com/rds/">https://aws.amazon.com/rds/</a>), or [run it with
-Docker](<a class="reference external" href="https://hub.docker.com/_/postgres">https://hub.docker.com/_/postgres</a>). SQLite has the advantage of being
-built into Python, so that you don’t need to install anything to get started.
-(Literally: you can just specify a <a class="reference external" href="https://docs.sqlalchemy.org/en/14/core/engines.html#database-urls">sqlalchemy connection URL</a>, as
-discussed below, for a file-backed SQLite database). But Python doesn’t package
-a shell or client that lets you interact with SQLite without writing Python
-code; if you use SQLite, you may want to install a command-line shell or other
-client via a package manager like <a class="reference external" href="https://brew.sh/">Homebrew</a> (on a Mac) or
-apt-get (on Debian-based Linux). You can also download such a client from the
-<a class="reference external" href="https://www.sqlite.org/index.html">SQLite website</a>. Other DBMSs, like MySQL
-or Oracle, may also work but, again, have not been tested.</p>
-<p>We’ll use Postgres for the rest of this vignette.</p>
-<p>Having set up our database system, we need to do two more things to make it
-usable: tell twclient how to use it, and install the data model. First, we’ll
-use a <code class="docutils literal notranslate"><span class="pre">twclient</span> <span class="pre">config</span></code> subcommand to set up the database:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>config<span class="w"> </span>add-db<span class="w"> </span>-u<span class="w"> </span><span class="s2">&quot;postgresql:///&quot;</span><span class="w"> </span>postgres
-</pre></div>
-</div>
-<p>This command tells twclient to create a persistent profile for a database and
-call it “postgres”, with the database itself identified by a <a class="reference external" href="https://docs.sqlalchemy.org/en/14/core/engines.html#database-urls">sqlalchemy
-connection URL</a>. The
-specific URL we have here, <code class="docutils literal notranslate"><span class="pre">postgresql:///</span></code>, indicates the default database
-on a Postgres DBMS accessed through the default local Unix socket, with
-trust/passwordless authentication, using sqlalchemy’s default Postgres driver.
-(If, like me, you’re using Postgres.app on a Mac, this is likely the URL you
-want to use.) The database profile is stored in a twclient configuration file,
-by default <code class="docutils literal notranslate"><span class="pre">~/.twclientrc</span></code>, so that you won’t need to continually provide the
-database URL for each command.</p>
-<p>Next up, we have to install the data model: create the tables, columns, keys
-and other DB objects the twclient package uses. Be aware that doing this will
-<strong>drop all existing twclient data in your database</strong>. The <code class="docutils literal notranslate"><span class="pre">twclient</span>
-<span class="pre">initialize</span></code> command will do the trick, but to confirm that you understand
-running it will <strong>drop all existing twclient data in your database</strong> you have
-to specify the <code class="docutils literal notranslate"><span class="pre">-y</span></code> flag:</p>
-<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>initialize<span class="w"> </span>-y
-</pre></div>
-</div>
-<p>And that’s it! If you fire up a database client (psql in the case of this
-example), you’ll see a new database schema installed. The tables, columns and
-other objects are documented, in the form of their sqlalchemy model classes, in
-the API documentation for twclient.models.</p>
 </section>
 <section id="api-setup">
 <h2>API setup<a class="headerlink" href="#api-setup" title="Permalink to this heading"></a></h2>
@@ -222,12 +170,78 @@ added one set of credentials here, but you can add arbitrarily many under
 different names. Twclient will seamlessly switch between them as each one hits
 rate limits.</p>
 </section>
+<section id="database-setup">
+<h2>Database setup<a class="headerlink" href="#database-setup" title="Permalink to this heading"></a></h2>
+<section id="configuration">
+<h3>Configuration<a class="headerlink" href="#configuration" title="Permalink to this heading"></a></h3>
+<p>Next, you need to configure a database. The easy, low-effort way to do this is
+to use a file-backed SQLite database. Because SQLite is built into Python and
+doesn’t have a separate server process, you don’t need to install or configure
+anything else to get started. Here’s how:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>config<span class="w"> </span>add-db<span class="w"> </span>-f<span class="w"> </span>/path/to/your/project/sqlite.db<span class="w"> </span>db
+</pre></div>
+</div>
+<p>This command tells twclient to create a persistent profile for a database and
+call it “db”, with the database itself stored in SQLite format in the file you
+specify. The database profile you create is stored in a twclient configuration
+file, by default <code class="docutils literal notranslate"><span class="pre">~/.twclientrc</span></code>, so that you don’t need to keep
+providing the database URL for each command.</p>
+<p>Be aware, though, that if you want to interact with the database via SQL,
+Python doesn’t package a frontend shell or client. SQLite has a <a class="reference external" href="https://www.sqlite.org/index.html">standard
+client</a> you can download, and you can
+also install it from <a class="reference external" href="https://brew.sh/">Homebrew</a> (on a Mac) or your Linux
+distribution’s package manager.</p>
+<p>SQLite is not the only database you can use: twclient can use any
+database <a class="reference external" href="https://docs.sqlalchemy.org/en/14/dialects/">supported by sqlalchemy</a>. In addition to SQLite, We’ve
+also tested with <a class="reference external" href="https://www.postgresql.org/">Postgres</a>, which is used for
+the SQL examples in the <a class="reference internal" href="export.html"><span class="doc">data export vignette</span></a>. Do
+note that while you can use other sqlalchemy-compatible databases, we’ve only
+tested with SQLite and Postgres.</p>
+<p>If you want to use Postgres, you’ll need to do at least a bit of work to set up
+the database. If you’re on a Mac, <a class="reference external" href="https://postgresapp.com/">Postgres.app</a>
+is a highly user-friendly distribution of Postgres. It’s not the only one:
+among others you can download the database from <a class="reference external" href="https://www.postgresql.org/">its website</a>, use <a class="reference external" href="https://aws.amazon.com/rds/">Amazon RDS</a>, or <a class="reference external" href="https://hub.docker.com/_/postgres">run it with Docker</a>.</p>
+<p>You can configure twclient to use a Postgres database (that you’ve already set
+up) as follows:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>twclient<span class="w"> </span>config<span class="w"> </span>add-db<span class="w"> </span>-u<span class="w"> </span><span class="s2">&quot;postgresql:///&quot;</span><span class="w"> </span>postgres
+</pre></div>
+</div>
+<p>The only new thing here is that, instead of a single file passed to the <code class="docutils literal notranslate"><span class="pre">-f</span></code>
+option, we have a <a class="reference external" href="https://docs.sqlalchemy.org/en/14/core/engines.html#database-urls">sqlalchemy connection URL</a> and the
+<code class="docutils literal notranslate"><span class="pre">-u</span></code> option. (<code class="docutils literal notranslate"><span class="pre">-f</span></code> is syntactic sugar for sqlalchemy’s SQLite URL format.)</p>
+<p>The specific URL here, <code class="docutils literal notranslate"><span class="pre">postgresql:///</span></code>, indicates the default
+database on a Postgres server accessed through the default local Unix socket,
+with trust/passwordless authentication, using sqlalchemy’s default Postgres
+driver. (If you’re using Postgres.app on a Mac, this is likely the URL you want
+to use.)</p>
+</section>
+<section id="installing-data-model">
+<h3>Installing Data Model<a class="headerlink" href="#installing-data-model" title="Permalink to this heading"></a></h3>
+<p>Next up, we have to install the data model: create the tables, columns, keys
+and other DB objects the twclient package uses. Be aware that doing this will
+<strong>drop all existing twclient data in your database</strong>. The <code class="docutils literal notranslate"><span class="pre">twclient</span>
+<span class="pre">initialize</span></code> command will do the trick, but to confirm that you understand
+running it will <strong>drop all existing twclient data in your database</strong> you have
+to specify the <code class="docutils literal notranslate"><span class="pre">-y</span></code> flag:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="c1"># if you&#39;ve configured more than one database with `twclient config add-db`,</span>
+<span class="c1"># pass the `-d` option to specify which one to initialize</span>
+twclient<span class="w"> </span>initialize<span class="w"> </span>-y
+</pre></div>
+</div>
+<p>And that’s it! If you fire up a database client you’ll see a new database
+schema installed. The tables, columns and other objects are documented, in the
+form of their sqlalchemy model classes, in the API documentation for
+twclient.models.</p>
+</section>
+</section>
 <section id="actually-pulling-data">
 <h2>Actually pulling data<a class="headerlink" href="#actually-pulling-data" title="Permalink to this heading"></a></h2>
 <p>Now comes the fun part: actually downloading some data. We’ll assume you’ve
 pulled together sets of Twitter users and <a class="reference external" href="https://help.twitter.com/en/using-twitter/twitter-lists">Twitter lists</a> you want to
 retrieve information on. This example will use the following two files, one
-each of individual users and lists of users.</p>
+each of individual users and lists of users. (The usernames, user IDs and lists
+are fake for privacy reasons, so replace them with real ones if you want to run
+this.)</p>
 <p>Here’s <code class="docutils literal notranslate"><span class="pre">users.csv</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">screen_name</span>
 <span class="n">user1</span>
@@ -240,13 +254,13 @@ each of individual users and lists of users.</p>
 </div>
 <p>And here’s <code class="docutils literal notranslate"><span class="pre">lists.csv</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nb">list</span>
-<span class="n">cspan</span><span class="o">/</span><span class="n">members</span><span class="o">-</span><span class="n">of</span><span class="o">-</span><span class="n">congress</span>
-<span class="mi">23965249864</span>
-<span class="mi">182359253</span>
-<span class="n">nytimes</span><span class="o">/</span><span class="n">nyt</span><span class="o">-</span><span class="n">journalists</span>
-<span class="mi">14624234</span>
-<span class="mi">185239864</span>
-<span class="mi">172409353</span>
+<span class="n">myaccount</span><span class="o">/</span><span class="n">mylist</span>
+<span class="mi">2389231097</span>
+<span class="mi">18230127</span>
+<span class="n">big_newspaper</span><span class="o">/</span><span class="n">reporters</span>
+<span class="mi">20218236</span>
+<span class="mi">1937309</span>
+<span class="mi">1824379139</span>
 </pre></div>
 </div>
 <section id="a-word-about-identifiers">
@@ -261,12 +275,12 @@ list-specific slug, separated by a slash. (For example,
 <code class="docutils literal notranslate"><span class="pre">lists.csv</span></code> above, but not for users. That is, you could instead use this
 <code class="docutils literal notranslate"><span class="pre">users_alternative.csv</span></code>:</p>
 <div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">user_id</span>
-<span class="mi">39702507914</span>
-<span class="mi">28723520928</span>
-<span class="mi">1825471204</span>
-<span class="mi">1853209475</span>
-<span class="mi">4382530952834</span>
-<span class="mi">1725438692309</span>
+<span class="mi">137923923763</span>
+<span class="mi">37480133935</span>
+<span class="mi">237290537913</span>
+<span class="mi">3784935713</span>
+<span class="mi">3096490427891</span>
+<span class="mi">612092404590</span>
 </pre></div>
 </div>
 <p>but not one file which mixes user IDs and screen names together. This is
@@ -389,16 +403,39 @@ out of the SCD table.)</p>
 </section>
 <section id="putting-it-all-together">
 <h2>Putting it all together<a class="headerlink" href="#putting-it-all-together" title="Permalink to this heading"></a></h2>
-<p>Here’s all of our hard work in one little script:</p>
+<p>Here’s all of our hard work in one little script (again, remember that the user
+IDs and list IDs are fake for privacy; replace them with real ones if
+you want to run this example):</p>
 <div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="ch">#!/bin/bash</span>
 
 <span class="nb">set</span><span class="w"> </span>-xe
 
-<span class="c1"># We assume you&#39;ve already installed the twclient package (e.g., from PyPI),</span>
-<span class="c1"># set up the database, and gotten API keys, so we won&#39;t show any of that</span>
-<span class="c1"># here. See also the command-line -h/--help option for more info.</span>
+<span class="c1"># We assume you&#39;ve already installed the twclient package (e.g., from PyPI)</span>
+<span class="c1"># and gotten API keys, so we won&#39;t show any of that here. See also the</span>
+<span class="c1"># command-line -h/--help option for more info.</span>
 
-twclient<span class="w"> </span>config<span class="w"> </span>add-db<span class="w"> </span>-u<span class="w"> </span><span class="s2">&quot;postgresql:///&quot;</span><span class="w"> </span>postgres
+<span class="w"> </span>cat<span class="w"> </span><span class="s">&lt;&lt; EOF &gt; users.csv</span>
+<span class="s"> screen_name</span>
+<span class="s"> user1</span>
+<span class="s"> user2</span>
+<span class="s"> user3</span>
+<span class="s"> test1234</span>
+<span class="s"> foobar</span>
+<span class="s"> stuff</span>
+<span class="s"> EOF</span>
+
+<span class="w"> </span>cat<span class="w"> </span><span class="s">&lt;&lt; EOF &gt; lists.csv</span>
+<span class="s"> list</span>
+<span class="s"> cspan/members-of-congress</span>
+<span class="s"> 2389231097</span>
+<span class="s"> 18230127</span>
+<span class="s"> nytimes/nyt-journalists</span>
+<span class="s"> 20218236</span>
+<span class="s"> 1937309</span>
+<span class="s"> 1824379139</span>
+<span class="s"> EOF</span>
+
+twclient<span class="w"> </span>config<span class="w"> </span>add-db<span class="w"> </span>-f<span class="w"> </span>/path/to/your/project/sqlite.db<span class="w"> </span>db
 twclient<span class="w"> </span>initialize<span class="w"> </span>-y
 
 twclient<span class="w"> </span>config<span class="w"> </span>add-api<span class="w"> </span>-n<span class="w"> </span>twitter1<span class="w"> </span><span class="se">\</span>

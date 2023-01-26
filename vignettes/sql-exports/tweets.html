@@ -141,8 +141,7 @@ go:</p>
 </div>
 <p>This query still leaves a few data formatting issues we could fix: the
 <code class="docutils literal notranslate"><span class="pre">source</span></code> field is unstandardized and the <code class="docutils literal notranslate"><span class="pre">content</span></code> field is totally
-freeform text which can include newlines. These aren’t hard to fix, though
-(remember that we’re using Postgres’ dialect of SQL):</p>
+freeform text which can include newlines. These aren’t hard to fix, though:</p>
 <div class="highlight-sql notranslate"><div class="highlight"><pre><span></span><span class="k">select</span>
 <span class="w">    </span><span class="n">tweet_id</span><span class="p">,</span>
 <span class="w">    </span><span class="n">user_id</span><span class="p">,</span>
