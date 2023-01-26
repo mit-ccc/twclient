@@ -19,7 +19,7 @@ _TARGET_ARGS = (
     '-l', '214727905'
 )
 
-_CASSETTE_FILE = 'cassettes/twclient/end-to-end.yaml'
+_CASSETTE_FILE = 'test/twclient/cassettes/test_e2e/test_end_to_end.yaml'
 
 # sqlalchemy made several breaking changes in version 2.0; let's see the
 # warnings about them if using an earlier version
@@ -42,6 +42,8 @@ def make_commands(dct, auth, target_args=_TARGET_ARGS):
     '''
     Make command sequence for end-to-end test
     '''
+
+    target_args = list(target_args)
 
     frc = ['-c', str(dct / 'twclientrc.tmp')]
     fdb = ['-d', 'db']
