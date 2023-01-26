@@ -5,7 +5,7 @@ Jobs for printing information to the screen.
 import json
 import logging
 
-from .job_base import ApiJob
+from ._job_base import ApiJob
 
 from ._utils import export
 

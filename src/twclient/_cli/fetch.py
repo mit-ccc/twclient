@@ -4,7 +4,7 @@ A command to fetch data from the Twitter API.
 
 import logging
 
-from ..job_fetch import (
+from .._job_fetch import (
     UserInfoJob,
     FriendsJob,
     FollowersJob,

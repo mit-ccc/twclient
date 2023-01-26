@@ -4,7 +4,7 @@ Jobs which create, apply or delete user tags.
 
 import logging
 
-from .job_base import DatabaseJob, TargetJob
+from ._job_base import DatabaseJob, TargetJob
 from .error import BadTagError
 from .models import Tag
 from ._utils import export

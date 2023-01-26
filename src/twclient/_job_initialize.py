@@ -4,7 +4,7 @@ Jobs which initialize the database.
 
 import logging
 
-from .job_base import DatabaseJob
+from ._job_base import DatabaseJob
 
 from ._version import __version__
 from .models import SchemaVersion, reinitialize

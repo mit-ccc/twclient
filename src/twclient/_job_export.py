@@ -11,7 +11,7 @@ import sqlalchemy as sa
 from sqlalchemy import sql
 from sqlalchemy.sql.expression import func
 
-from .job_base import DatabaseJob, TargetJob
+from ._job_base import DatabaseJob, TargetJob
 from ._utils import smart_open, grouper, export
 from .models import Follow, StgUser, Tweet, Url, UserData, UserMention
 

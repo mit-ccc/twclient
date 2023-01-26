@@ -12,17 +12,12 @@ from . import models
 from . import target
 from . import twitter_api
 
-_modules = [
-    authpool,
-    config,
-    error,
-    job,
-    models,
-    target,
-    twitter_api
+__all__ = [
+    'authpool',
+    'config',
+    'error',
+    'job',
+    'models',
+    'target',
+    'twitter_api'
 ]
-
-__all__ = []
-for module in _modules:
-    if hasattr(module, '__all__'):
-        __all__ += getattr(module, '__all__')

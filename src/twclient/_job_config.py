@@ -4,7 +4,7 @@ Jobs which modify or display the config file.
 
 import logging
 
-from .job_base import Job
+from ._job_base import Job
 from .error import BadConfigError
 from ._utils import export
 

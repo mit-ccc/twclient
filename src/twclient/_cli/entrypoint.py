@@ -14,8 +14,6 @@ from .initialize import InitializeCommand
 from .tag import TagCommand
 from .export import ExportCommand
 
-from .._utils import export
-
 logger = logging.getLogger(__name__)
 
 
@@ -289,7 +287,6 @@ def _make_parser(prog=None):
     return parser
 
 
-@export
 def cli(prog=None, args=None):
     '''
     The main command-line entrypoint.

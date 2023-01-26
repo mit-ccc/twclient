@@ -4,7 +4,7 @@ A command to print data from the database to the screen.
 
 import logging
 
-from ..job_show import RateLimitStatusJob
+from .._job_show import RateLimitStatusJob
 from . import command as cmd
 
 logger = logging.getLogger(__name__)

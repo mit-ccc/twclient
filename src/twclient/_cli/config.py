@@ -4,7 +4,7 @@ A command to interact with the config file.
 
 import logging
 
-from ..job_config import (
+from .._job_config import (
     ConfigListDbJob,
     ConfigListApiJob,
     ConfigRmDbJob,

@@ -10,7 +10,7 @@ from abc import abstractmethod
 
 import sqlalchemy as sa
 
-from .job_base import TargetJob, ApiJob
+from ._job_base import TargetJob, ApiJob
 from .error import BadTargetError, ForbiddenError, NotFoundError
 from ._utils import grouper, export
 from .models import User, Follow, StgFollow, Tweet

@@ -4,7 +4,7 @@ A command to work with user tags.
 
 import logging
 
-from ..job_tag import (
+from .._job_tag import (
     CreateTagJob,
     DeleteTagJob,
     ApplyTagJob

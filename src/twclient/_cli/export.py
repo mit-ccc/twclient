@@ -4,7 +4,7 @@ A command to export data from the database.
 
 import logging
 
-from ..job_export import (
+from .._job_export import (
     ExportFollowGraphJob,
     ExportMentionGraphJob,
     ExportRetweetGraphJob,
