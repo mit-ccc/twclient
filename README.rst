@@ -21,6 +21,8 @@ twclient
 This package provides a high-level command-line client for the Twitter API,
 with a focus on loading data into a database for analysis or bulk use.
 
+**Documentation**: `mit-ccc.github.io/twclient <https://mit-ccc.github.io/twclient>`__
+
 Why use this project?
 =====================
 
