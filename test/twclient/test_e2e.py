@@ -13,6 +13,14 @@ from src.twclient._cli.entrypoint import cli
 
 from . import utils as ut
 
+
+_TARGET_ARGS = (
+    '-n', 'wwbrannon', 'CCCatMIT', 'RTFC_Boston', 'cortico',
+    '-l', '214727905'
+)
+
+_CASSETTE_FILE = 'cassettes/twclient/end-to-end.yaml'
+
 # sqlalchemy made several breaking changes in version 2.0; let's see the
 # warnings about them if using an earlier version
 os.environ['SQLALCHEMY_WARN_20'] = '1'
@@ -30,15 +38,10 @@ def vcr_config():  # pylint: disable=missing-function-docstring
     }
 
 
-def make_commands(dct):
+def make_commands(dct, target_args=_TARGET_ARGS):
     '''
     Make command sequence for end-to-end test
     '''
-
-    targets = [
-        '-n', 'wwbrannon', 'CCCatMIT', 'RTFC_Boston', 'cortico',
-        '-l', '214727905'
-    ]
 
     frc = ['-c', str(dct / 'twclientrc.tmp')]
     fdb = ['-d', 'db']
@@ -58,8 +61,8 @@ def make_commands(dct):
         ['initialize', '-d', 'db', '-y'] + conf,
         ['tag', 'create', 'users'] + conf,
 
-        ['fetch', 'users'] + targets + conf + fai,
-        ['tag', 'apply', 'users'] + targets + conf,
+        ['fetch', 'users'] + target_args + conf + fai,
+        ['tag', 'apply', 'users'] + target_args + conf,
 
         ['fetch', 'tweets', '-g', 'users'] + conf + fai,
         ['fetch', 'friends', '-g', 'users'] + conf + fai,
@@ -92,11 +95,14 @@ def make_commands(dct):
     }
 
 
-@pytest.mark.vcr('cassettes/twclient/end-to-end.yaml')
+@pytest.mark.vcr(_CASSETTE_FILE)
 def test_end_to_end(tmp_path):
     '''
     End-to-end integration test of twclient functionality
     '''
+
+    if not os.path.exists(_CASSETTE_FILE):
+        pytest.skip('Cassette file not found')
 
     dat = make_commands(tmp_path)
 
