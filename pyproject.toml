@@ -55,7 +55,8 @@ envlist =
     py38
     py39
     py310
-    py311
+    py311sa20
+    py311sa14
     coverage
 
 [gh-actions]
@@ -64,15 +65,31 @@ python =
     3.8: py38
     3.9: py39
     3.10: py310
-    3.11: py311, coverage
+    3.11: py311sa14, py311sa20, coverage
 
 [testenv]
 commands = pytest {posargs}
 passenv = CONSUMER_KEY, CONSUMER_SECRET
 extras = ci
 
+[testenv:py311sa20]
+basepython=python3.11
+deps =
+    sqlalchemy>=2.0.0
+commands = pytest {posargs}
+passenv = CONSUMER_KEY, CONSUMER_SECRET
+extras = ci
+
+[testenv:py311sa14]
+basepython=python3.11
+deps =
+    sqlalchemy<2.0.0
+commands = pytest {posargs}
+passenv = CONSUMER_KEY, CONSUMER_SECRET
+extras = ci
+
 [testenv:coverage]
-basepython=3.11
+basepython=python3.11
 allowlist_externals=rm
 commands =
     coverage erase
