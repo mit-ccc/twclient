@@ -38,8 +38,8 @@ RECORD_MODE = 'none'
 #
 
 HAS_API_CREDS = (
-    'CONSUMER_KEY' not in os.environ and
-    'CONSUMER_SECRET' not in os.environ
+    'CONSUMER_KEY' in os.environ and
+    'CONSUMER_SECRET' in os.environ
 )
 
 if HAS_API_CREDS:
