@@ -13,6 +13,16 @@ from src.twclient._cli.entrypoint import cli
 
 from . import utils as ut
 
+#
+# Config settings
+#
+
+# sqlalchemy made several breaking changes in version 2.0; let's see the
+# warnings about them if using an earlier version
+os.environ['SQLALCHEMY_WARN_20'] = '1'
+
+# see anything that's potentially a problem or is deprecated
+warnings.filterwarnings('always')
 
 _TARGET_ARGS = (
     '-n', 'wwbrannon', 'CCCatMIT', 'RTFC_Boston', 'cortico',
@@ -21,24 +31,44 @@ _TARGET_ARGS = (
 
 _CASSETTE_FILE = 'test/twclient/cassettes/test_e2e/test_end_to_end.yaml'
 
-# sqlalchemy made several breaking changes in version 2.0; let's see the
-# warnings about them if using an earlier version
-os.environ['SQLALCHEMY_WARN_20'] = '1'
+RECORD_MODE = 'none'
 
+#
+# Further setup
+#
 
-# see anything that's potentially a problem or is deprecated
-warnings.filterwarnings('always')
+HAS_API_CREDS = (
+    'CONSUMER_KEY' not in os.environ and
+    'CONSUMER_SECRET' not in os.environ
+)
 
+if HAS_API_CREDS:
+    AUTH = {
+        'CONSUMER_KEY': os.environ['CONSUMER_KEY'],
+        'CONSUMER_SECRET': os.environ['CONSUMER_SECRET'],
+    }
+else:
+    # we're stripping out the authorization headers, so if replaying only
+    # previously captured interactions, creds don't matter. otherwise they do.
+    assert RECORD_MODE == 'none'
+
+    AUTH = {
+        'CONSUMER_KEY': 'dummy',
+        'CONSUMER_SECRET': 'dummy',
+    }
 
 @pytest.fixture(scope="module")
 def vcr_config():  # pylint: disable=missing-function-docstring
     return {
         'filter_headers': ['authorization'],
-        'record_mode': 'none',
+        'record_mode': RECORD_MODE,
     }
 
+#
+# Run test
+#
 
-def make_commands(dct, auth, target_args=_TARGET_ARGS):
+def make_commands(dct, creds, target_args=_TARGET_ARGS):
     '''
     Make command sequence for end-to-end test
     '''
@@ -54,8 +84,8 @@ def make_commands(dct, auth, target_args=_TARGET_ARGS):
     # program name is passed separately
     commands = [
         ['config', 'add-api',
-            '-k', auth['CONSUMER_KEY'],
-            '-m', auth['CONSUMER_SECRET'],
+            '-k', creds['CONSUMER_KEY'],
+            '-m', creds['CONSUMER_SECRET'],
             'api'
         ] + frc,
         ['config', 'add-db', '-f', str(dct / 'scratch.db'), 'db'] + frc,
@@ -105,17 +135,8 @@ def test_end_to_end(tmp_path):
 
     if not os.path.exists(_CASSETTE_FILE):
         pytest.skip('Cassette file not found')
-    if 'CONSUMER_KEY' not in os.environ:
-        pytest.skip('Twitter API credentials not found')
-    if 'CONSUMER_SECRET' not in os.environ:
-        pytest.skip('Twitter API credentials not found')
 
-    auth = {
-        'CONSUMER_KEY': os.environ['CONSUMER_KEY'],
-        'CONSUMER_SECRET': os.environ['CONSUMER_SECRET'],
-    }
-
-    dat = make_commands(tmp_path, auth)
+    dat = make_commands(tmp_path, AUTH)
 
     for cmd in dat['commands']:
         cli(prog='twclient', args=cmd)
