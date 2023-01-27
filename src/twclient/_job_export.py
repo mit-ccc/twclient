@@ -352,13 +352,13 @@ class ExportTweetsJob(ExportJob):
                 twt.retweet_count,
                 twt.favorite_count,
 
-                sa.case(value=twt.source, whens={
+                sa.case({
                     'Twitter for iPhone': 'iPhone',
                     'Twitter for Android': 'Android',
                     'Twitter Web App': 'Web',
                     'Twitter Web Client': 'Web',
                     'TweetDeck': 'Desktop'
-                }, else_='Other')
+                }, value=twt.source, else_='Other')
             ) \
             .join(twr, twr.tweet_id == twt.retweeted_status_id, isouter=True) \
             .join(twq, twq.tweet_id == twt.quoted_status_id, isouter=True) \
@@ -423,12 +423,12 @@ class ExportUserInfoJob(ExportJob):
                 func.min(twt.create_dt).label('first_tweet_dt'),
                 func.max(twt.create_dt).label('last_tweet_dt'),
                 func.max(
-                    sa.case([
+                    sa.case(*[
                         (twt.source.in_(['Twitter for Android']), 1)
                     ], else_=0)
                 ).label('android_user'),
                 func.max(
-                    sa.case([
+                    sa.case(*[
                         (twt.source.in_([
                             'Twitter for iPhone', 'Twitter for iPad', 'iOS',
                             'Tweetbot for iOS'
@@ -436,7 +436,7 @@ class ExportUserInfoJob(ExportJob):
                     ], else_=0)
                 ).label('ios_user'),
                 func.max(
-                    sa.case([
+                    sa.case(*[
                         (twt.source.in_([
                             'Twitter Web App', 'Twitter Web Client',
                             'TweetDeck', 'Twitter for Mac', 'Tweetbot for Mac'
@@ -444,7 +444,7 @@ class ExportUserInfoJob(ExportJob):
                     ], else_=0)
                 ).label('desktop_user'),
                 func.max(
-                    sa.case([
+                    sa.case(*[
                         (twt.source.in_([
                             'SocialFlow', 'Hootsuite', 'Hootsuite Inc.',
                             'Twitter Media Studio'
