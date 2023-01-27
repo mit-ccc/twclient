@@ -56,7 +56,7 @@ envlist =
     py39
     py310
     py311
-    py
+    coverage
 
 [gh-actions]
 python =
@@ -64,14 +64,15 @@ python =
     3.8: py38
     3.9: py39
     3.10: py310
-    3.11: py311
+    3.11: py311, coverage
 
 [testenv]
 commands = pytest {posargs}
 passenv = CONSUMER_KEY, CONSUMER_SECRET
 extras = ci
 
-[testenv:py]
+[testenv:coverage]
+basepython=3.11
 allowlist_externals=rm
 commands =
     coverage erase
