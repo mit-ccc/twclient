@@ -72,8 +72,14 @@ passenv = CONSUMER_KEY, CONSUMER_SECRET
 extras = ci
 
 [testenv:py]
+allowlist_externals=rm
 commands =
+    coverage erase
+    rm -f ./.coverage.xml
     coverage run -p --source=src --omit=tests -m pytest -v {posargs}
+    coverage combine
+    coverage xml -o ./.coverage.xml
+    coverage report -m
 passenv = CONSUMER_KEY, CONSUMER_SECRET
 extras = ci
 """
