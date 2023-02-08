@@ -258,7 +258,7 @@ class NotFoundError(TwitterLogicError):
     @staticmethod
     def tweepy_is_instance(exc):
         if ut.TWEEPY_V4:
-            ret = (isinstance(exc, NotFound))
+            ret = isinstance(exc, NotFound)
         else:
             if exc.response is not None and exc.response.status_code == 404:
                 ret = True  # the HTTP status code
@@ -295,7 +295,7 @@ class ForbiddenError(TwitterLogicError):
         if ut.TWEEPY_V4:
             ret = (isinstance(exc, (Forbidden, Unauthorized)))
         else:
-            ret = (exc.response.status_code in (401, 403))
+            ret = exc.response.status_code in (401, 403)
 
         return ret
 
