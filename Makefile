@@ -36,5 +36,5 @@ devsetup:
 	rm -rf $(ENVPATH)
 	python3 -m venv $(ENVPATH)
 	
-	$(ENVPATH)/bin/pip install -U pip
+	$(ENVPATH)/bin/pip install -U pip build wheel twine
 	$(ENVPATH)/bin/pip install -e .[dev]
