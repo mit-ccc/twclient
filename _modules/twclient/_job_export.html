@@ -10,8 +10,7 @@
     <script src="../../_static/js/html5shiv.min.js"></script>
   <![endif]-->
   
-        <script integrity="sha384-vtXRMe3mGCbOeY7l30aIg8H9p3GdeSe4IFlP6G8JMa7o7lXvnz3GFKzPxzJdPfGK" src="../../_static/jquery.js"></script>
-        <script integrity="sha384-lSZeSIVKp9myfKbDQ3GkN/KHjUc+mzg17VKDN4Y2kUeBSJioB9QSM639vM9fuY//" src="../../_static/_sphinx_javascript_frameworks_compat.js"></script>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
         <script data-url_root="../../" id="documentation_options" src="../../_static/documentation_options.js"></script>
         <script src="../../_static/doctools.js"></script>
         <script src="../../_static/sphinx_highlight.js"></script>
@@ -439,13 +438,13 @@
                 <span class="n">twt</span><span class="o">.</span><span class="n">retweet_count</span><span class="p">,</span>
                 <span class="n">twt</span><span class="o">.</span><span class="n">favorite_count</span><span class="p">,</span>
 
-                <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">(</span><span class="n">value</span><span class="o">=</span><span class="n">twt</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">whens</span><span class="o">=</span><span class="p">{</span>
+                <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">({</span>
                     <span class="s1">&#39;Twitter for iPhone&#39;</span><span class="p">:</span> <span class="s1">&#39;iPhone&#39;</span><span class="p">,</span>
                     <span class="s1">&#39;Twitter for Android&#39;</span><span class="p">:</span> <span class="s1">&#39;Android&#39;</span><span class="p">,</span>
                     <span class="s1">&#39;Twitter Web App&#39;</span><span class="p">:</span> <span class="s1">&#39;Web&#39;</span><span class="p">,</span>
                     <span class="s1">&#39;Twitter Web Client&#39;</span><span class="p">:</span> <span class="s1">&#39;Web&#39;</span><span class="p">,</span>
                     <span class="s1">&#39;TweetDeck&#39;</span><span class="p">:</span> <span class="s1">&#39;Desktop&#39;</span>
-                <span class="p">},</span> <span class="n">else_</span><span class="o">=</span><span class="s1">&#39;Other&#39;</span><span class="p">)</span>
+                <span class="p">},</span> <span class="n">value</span><span class="o">=</span><span class="n">twt</span><span class="o">.</span><span class="n">source</span><span class="p">,</span> <span class="n">else_</span><span class="o">=</span><span class="s1">&#39;Other&#39;</span><span class="p">)</span>
             <span class="p">)</span> \
             <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">twr</span><span class="p">,</span> <span class="n">twr</span><span class="o">.</span><span class="n">tweet_id</span> <span class="o">==</span> <span class="n">twt</span><span class="o">.</span><span class="n">retweeted_status_id</span><span class="p">,</span> <span class="n">isouter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> \
             <span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">twq</span><span class="p">,</span> <span class="n">twq</span><span class="o">.</span><span class="n">tweet_id</span> <span class="o">==</span> <span class="n">twt</span><span class="o">.</span><span class="n">quoted_status_id</span><span class="p">,</span> <span class="n">isouter</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span> \
@@ -510,12 +509,12 @@
                 <span class="n">func</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">create_dt</span><span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;first_tweet_dt&#39;</span><span class="p">),</span>
                 <span class="n">func</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">create_dt</span><span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;last_tweet_dt&#39;</span><span class="p">),</span>
                 <span class="n">func</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
-                    <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">([</span>
+                    <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">(</span><span class="o">*</span><span class="p">[</span>
                         <span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span><span class="s1">&#39;Twitter for Android&#39;</span><span class="p">]),</span> <span class="mi">1</span><span class="p">)</span>
                     <span class="p">],</span> <span class="n">else_</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 <span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;android_user&#39;</span><span class="p">),</span>
                 <span class="n">func</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
-                    <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">([</span>
+                    <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">(</span><span class="o">*</span><span class="p">[</span>
                         <span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span>
                             <span class="s1">&#39;Twitter for iPhone&#39;</span><span class="p">,</span> <span class="s1">&#39;Twitter for iPad&#39;</span><span class="p">,</span> <span class="s1">&#39;iOS&#39;</span><span class="p">,</span>
                             <span class="s1">&#39;Tweetbot for iOS&#39;</span>
@@ -523,7 +522,7 @@
                     <span class="p">],</span> <span class="n">else_</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 <span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;ios_user&#39;</span><span class="p">),</span>
                 <span class="n">func</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
-                    <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">([</span>
+                    <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">(</span><span class="o">*</span><span class="p">[</span>
                         <span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span>
                             <span class="s1">&#39;Twitter Web App&#39;</span><span class="p">,</span> <span class="s1">&#39;Twitter Web Client&#39;</span><span class="p">,</span>
                             <span class="s1">&#39;TweetDeck&#39;</span><span class="p">,</span> <span class="s1">&#39;Twitter for Mac&#39;</span><span class="p">,</span> <span class="s1">&#39;Tweetbot for Mac&#39;</span>
@@ -531,7 +530,7 @@
                     <span class="p">],</span> <span class="n">else_</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
                 <span class="p">)</span><span class="o">.</span><span class="n">label</span><span class="p">(</span><span class="s1">&#39;desktop_user&#39;</span><span class="p">),</span>
                 <span class="n">func</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
-                    <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">([</span>
+                    <span class="n">sa</span><span class="o">.</span><span class="n">case</span><span class="p">(</span><span class="o">*</span><span class="p">[</span>
                         <span class="p">(</span><span class="n">twt</span><span class="o">.</span><span class="n">source</span><span class="o">.</span><span class="n">in_</span><span class="p">([</span>
                             <span class="s1">&#39;SocialFlow&#39;</span><span class="p">,</span> <span class="s1">&#39;Hootsuite&#39;</span><span class="p">,</span> <span class="s1">&#39;Hootsuite Inc.&#39;</span><span class="p">,</span>
                             <span class="s1">&#39;Twitter Media Studio&#39;</span>
