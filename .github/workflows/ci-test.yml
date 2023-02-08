@@ -34,5 +34,10 @@ jobs:
     - name: Run tests
       run: make tests
 
-#     - name: Upload coverage report
-#       run: codecov
+    # - name: Upload coverage report
+    #   uses: codecov/codecov-action@v2
+    #   with:
+    #       files: ./.coverage.xml
+    #       flags: tests
+    #       verbose: true
+    #       fail_ci_if_error: true
