@@ -25,7 +25,7 @@ clean:
 	cd docs && $(MAKE) clean
 
 devsetup:
-	# for local multi-python testing with tox; assumes pyenv already installed
+	@ # for local multi-python testing w/ tox; assumes pyenv already installed
 	pyenv install -s 3.7.12
 	pyenv install -s 3.8.12
 	pyenv install -s 3.9.7
@@ -36,5 +36,8 @@ devsetup:
 	rm -rf $(ENVPATH)
 	python3 -m venv $(ENVPATH)
 	
-	$(ENVPATH)/bin/pip install -U pip build wheel twine
-	$(ENVPATH)/bin/pip install -e .[dev]
+	$(ENVPATH)/bin/python3 -m pip install -U pip build wheel twine
+	
+	@ # or use "-m pip install -e .[dev]" for editable mode
+	$(ENVPATH)/bin/python3 -m build --wheel --outdir ./dist .
+	$(ENVPATH)/bin/python3 -m pip install $$(printf -- '%s[dev]' dist/*)
